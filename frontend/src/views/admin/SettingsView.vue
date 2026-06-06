@@ -5218,7 +5218,7 @@
             <div v-if="form.channel_monitor_enabled">
               <label class="input-label">
                 {{ t('admin.settings.features.channelMonitor.defaultInterval') }}
-                <span class="text-red-500">*</span>
+                <span class="text-red-400">*</span>
               </label>
               <input
                 v-model.number="form.channel_monitor_default_interval_seconds"
@@ -5938,7 +5938,7 @@
                   <div>
                     <label class="input-label"
                       >{{ t("admin.settings.payment.orderTimeout") }}
-                      <span class="text-red-500">*</span></label
+                      <span class="text-red-400">*</span></label
                     ><input
                       v-model.number="form.payment_order_timeout_minutes"
                       type="number"

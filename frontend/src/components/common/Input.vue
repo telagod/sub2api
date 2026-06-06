@@ -2,7 +2,7 @@
   <div class="w-full">
     <label v-if="label" :for="id" class="input-label mb-1.5 block">
       {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
+      <span v-if="required" class="text-red-400">*</span>
     </label>
     <div class="relative">
       <!-- Prefix Icon Slot -->

@@ -90,10 +90,10 @@ const filterLevelOptions = [
 
 const levelBadgeClass = (level: string) => {
   const v = String(level || '').toLowerCase()
-  if (v === 'error' || v === 'fatal') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-  if (v === 'warn' || v === 'warning') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+  if (v === 'error' || v === 'fatal') return 'bg-red-500/10 text-red-400'
+  if (v === 'warn' || v === 'warning') return 'bg-amber-500/10 text-amber-400'
   if (v === 'debug') return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-  return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+  return 'bg-sky-500/10 text-sky-400'
 }
 
 const formatTime = (value: string) => {

@@ -313,10 +313,10 @@ function getLoadBarStyle(loadPct: number): string {
 }
 
 function getLoadTextClass(loadPct: number): string {
-  if (loadPct >= 90) return 'text-red-600 dark:text-red-400'
+  if (loadPct >= 90) return 'text-red-400'
   if (loadPct >= 70) return 'text-orange-600 dark:text-orange-400'
-  if (loadPct >= 50) return 'text-yellow-600 dark:text-yellow-400'
-  return 'text-green-600 dark:text-green-400'
+  if (loadPct >= 50) return 'text-amber-400'
+  return 'text-emerald-400'
 }
 
 function formatDuration(seconds: number): string {

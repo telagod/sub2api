@@ -191,7 +191,7 @@
                   t("admin.groups.accountsAvailable")
                 }}</span>
                 <span
-                  class="ml-1 font-medium text-emerald-600 dark:text-emerald-400"
+                  class="ml-1 font-medium text-emerald-400"
                   >{{ row.active_account_count || 0 }}</span
                 >
                 <span
@@ -204,7 +204,7 @@
                   t("admin.groups.accountsRateLimited")
                 }}</span>
                 <span
-                  class="ml-1 font-medium text-amber-600 dark:text-amber-400"
+                  class="ml-1 font-medium text-amber-400"
                   >{{ row.rate_limited_account_count }}</span
                 >
                 <span
@@ -307,7 +307,7 @@
               </button>
               <button
                 @click="handleDelete(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
               >
                 <Icon name="trash" size="sm" />
                 <span class="text-xs">{{ t("common.delete") }}</span>
@@ -762,7 +762,7 @@
               <input
                 v-model="createForm.allow_image_generation"
                 type="checkbox"
-                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                class="rounded border-gray-300 text-sky-400 focus:ring-blue-500"
               />
               {{ t("admin.groups.imagePricing.allowImageGeneration") }}
             </label>
@@ -770,7 +770,7 @@
               <input
                 v-model="createForm.image_rate_independent"
                 type="checkbox"
-                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                class="rounded border-gray-300 text-sky-400 focus:ring-blue-500"
               />
               {{ t("admin.groups.imagePricing.independentMultiplier") }}
             </label>
@@ -1254,7 +1254,7 @@
                       <button
                         type="button"
                         @click="removeCreateMessagesDispatchMapping(row)"
-                        class="mt-6 flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                        class="mt-6 flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                         :title="
                           t('admin.groups.openaiMessages.removeExactMapping')
                         "
@@ -1561,7 +1561,7 @@
                 <button
                   type="button"
                   @click="removeCreateRoutingRule(rule)"
-                  class="mt-5 p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                  class="mt-5 p-1.5 text-gray-400 hover:text-red-400 transition-colors"
                   :title="t('admin.groups.modelRouting.removeRule')"
                 >
                   <Icon name="trash" size="sm" />
@@ -2050,7 +2050,7 @@
               <input
                 v-model="editForm.allow_image_generation"
                 type="checkbox"
-                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                class="rounded border-gray-300 text-sky-400 focus:ring-blue-500"
               />
               {{ t("admin.groups.imagePricing.allowImageGeneration") }}
             </label>
@@ -2058,7 +2058,7 @@
               <input
                 v-model="editForm.image_rate_independent"
                 type="checkbox"
-                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                class="rounded border-gray-300 text-sky-400 focus:ring-blue-500"
               />
               {{ t("admin.groups.imagePricing.independentMultiplier") }}
             </label>
@@ -2538,7 +2538,7 @@
                       <button
                         type="button"
                         @click="removeEditMessagesDispatchMapping(row)"
-                        class="mt-6 flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                        class="mt-6 flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                         :title="
                           t('admin.groups.openaiMessages.removeExactMapping')
                         "
@@ -2844,7 +2844,7 @@
                 <button
                   type="button"
                   @click="removeEditRoutingRule(rule)"
-                  class="mt-5 p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                  class="mt-5 p-1.5 text-gray-400 hover:text-red-400 transition-colors"
                   :title="t('admin.groups.modelRouting.removeRule')"
                 >
                   <Icon name="trash" size="sm" />
@@ -2954,10 +2954,10 @@
                     group.platform === 'anthropic'
                       ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
                       : group.platform === 'openai'
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        ? 'bg-emerald-500/10 text-emerald-400'
                         : group.platform === 'antigravity'
                           ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                          : 'bg-sky-500/10 text-sky-400',
                   ]"
                 >
                   {{ t("admin.groups.platforms." + group.platform) }}

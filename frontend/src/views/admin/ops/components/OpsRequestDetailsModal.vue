@@ -143,8 +143,8 @@ function openErrorDetail(errorId: number | null | undefined) {
 }
 
 const kindBadgeClass = (kind: string) => {
-  if (kind === 'error') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-  return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+  if (kind === 'error') return 'bg-red-500/10 text-red-400'
+  return 'bg-emerald-500/10 text-emerald-400'
 }
 </script>
 
@@ -257,7 +257,7 @@ const kindBadgeClass = (kind: string) => {
                   <td class="whitespace-nowrap px-4 py-3 text-right">
                     <button
                       v-if="row.kind === 'error' && row.error_id"
-                      class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/30"
+                      class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/10 dark:bg-red-900/20 dark:hover:bg-red-900/30"
                       @click="openErrorDetail(row.error_id)"
                     >
                       {{ t('admin.ops.requestDetails.viewError') }}

@@ -31,11 +31,11 @@ const statusClass = computed(() => {
 
   // Full: red
   if (current >= max && max > 0) {
-    return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+    return 'bg-red-500/10 text-red-400'
   }
   // In use: yellow
   if (current > 0) {
-    return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+    return 'bg-amber-500/10 text-amber-400'
   }
   // Idle: gray
   return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'

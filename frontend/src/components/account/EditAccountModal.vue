@@ -1067,10 +1067,10 @@
                 </button>
               </div>
               <!-- 校验错误提示 -->
-              <p v-if="!isValidWildcardPattern(mapping.from)" class="text-xs text-red-500">
+              <p v-if="!isValidWildcardPattern(mapping.from)" class="text-xs text-red-400">
                 {{ t('admin.accounts.wildcardOnlyAtEnd') }}
               </p>
-              <p v-if="mapping.to.includes('*')" class="text-xs text-red-500">
+              <p v-if="mapping.to.includes('*')" class="text-xs text-red-400">
                 {{ t('admin.accounts.targetNoWildcard') }}
               </p>
             </div>
@@ -2671,7 +2671,7 @@ const codexImageGenerationBridgeBadgeLabel = computed(() => {
 const codexImageGenerationBridgeBadgeClass = computed(() => {
   switch (codexImageGenerationBridgeMode.value) {
     case 'enabled':
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+      return 'bg-emerald-500/10 text-emerald-400 dark:bg-emerald-900/40'
     case 'disabled':
       return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
     default:

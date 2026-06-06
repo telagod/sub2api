@@ -106,11 +106,11 @@ const labelClass = computed(() => {
   if (props.daysRemaining !== null && props.daysRemaining !== undefined) {
     if (props.daysRemaining <= 0 || props.daysRemaining <= 3) {
       // 已过期或紧急（<=3天）：红色
-      return `${base} bg-red-200/80 text-red-800 dark:bg-red-800/50 dark:text-red-300`
+      return `${base} bg-red-200/80 text-red-400 dark:bg-red-800/50`
     }
     if (props.daysRemaining <= 7) {
       // 警告（<=7天）：橙色
-      return `${base} bg-amber-200/80 text-amber-800 dark:bg-amber-800/50 dark:text-amber-300`
+      return `${base} bg-amber-200/80 text-amber-400 dark:bg-amber-800/50`
     }
   }
 
@@ -119,10 +119,10 @@ const labelClass = computed(() => {
     return `${base} bg-orange-200/60 text-orange-800 dark:bg-orange-800/40 dark:text-orange-300`
   }
   if (props.platform === 'openai') {
-    return `${base} bg-emerald-200/60 text-emerald-800 dark:bg-emerald-800/40 dark:text-emerald-300`
+    return `${base} bg-emerald-200/60 text-emerald-800 dark:bg-emerald-800/40`
   }
   if (props.platform === 'gemini') {
-    return `${base} bg-blue-200/60 text-blue-800 dark:bg-blue-800/40 dark:text-blue-300`
+    return `${base} bg-blue-200/60 text-sky-400 dark:bg-blue-800/40`
   }
   return `${base} bg-violet-200/60 text-violet-800 dark:bg-violet-800/40 dark:text-violet-300`
 })
@@ -133,21 +133,21 @@ const badgeClass = computed(() => {
     // Claude: orange theme
     return isSubscription.value
       ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-      : 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
+      : 'bg-amber-50 text-amber-400 dark:bg-amber-900/20'
   } else if (props.platform === 'openai') {
     // OpenAI: green theme
     return isSubscription.value
-      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-      : 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+      ? 'bg-emerald-500/10 text-emerald-400'
+      : 'bg-green-50 text-emerald-400 dark:bg-green-900/20'
   }
   if (props.platform === 'gemini') {
     return isSubscription.value
-      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+      ? 'bg-sky-500/10 text-sky-400'
       : 'bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-400'
   }
   // Fallback: original colors
   return isSubscription.value
     ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
-    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+    : 'bg-emerald-500/10 text-emerald-400'
 })
 </script>

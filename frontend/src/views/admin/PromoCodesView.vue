@@ -113,14 +113,14 @@
             <div class="flex items-center space-x-1">
               <button
                 @click="copyRegisterLink(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-green-50 hover:text-emerald-400 dark:hover:bg-green-900/20 dark:hover:text-green-400"
                 :title="t('admin.promo.copyRegisterLink')"
               >
                 <Icon name="link" size="sm" />
               </button>
               <button
                 @click="handleViewUsages(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-sky-400 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
                 :title="t('admin.promo.viewUsages')"
               >
                 <Icon name="eye" size="sm" />
@@ -134,7 +134,7 @@
               </button>
               <button
                 @click="handleDelete(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                 :title="t('common.delete')"
               >
                 <Icon name="trash" size="sm" />
@@ -333,8 +333,8 @@
           class="flex items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-dark-600"
         >
           <div class="flex items-center gap-3">
-            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-              <Icon name="user" size="sm" class="text-green-600 dark:text-green-400" />
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10">
+              <Icon name="user" size="sm" class="text-emerald-400" />
             </div>
             <div>
               <p class="text-sm font-medium text-gray-900 dark:text-white">
@@ -346,7 +346,7 @@
             </div>
           </div>
           <div class="text-right">
-            <span class="text-sm font-medium text-green-600 dark:text-green-400">
+            <span class="text-sm font-medium text-emerald-400">
               +${{ usage.bonus_amount.toFixed(2) }}
             </span>
           </div>

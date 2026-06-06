@@ -186,7 +186,7 @@
               <div class="border-t border-border py-1">
                 <button
                   @click="handleLogout"
-                  class="dropdown-item w-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                  class="dropdown-item w-full text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
                   <svg
                     class="h-4 w-4"

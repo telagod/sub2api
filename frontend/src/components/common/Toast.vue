@@ -101,8 +101,8 @@ const getToastIconName = (type: string): 'checkCircle' | 'xCircle' | 'exclamatio
 
 const getIconColor = (type: string): string => {
   const colors: Record<string, string> = {
-    success: 'text-green-500',
-    error: 'text-red-500',
+    success: 'text-emerald-400',
+    error: 'text-red-400',
     warning: 'text-yellow-500',
     info: 'text-blue-500'
   }

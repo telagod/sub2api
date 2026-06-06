@@ -264,11 +264,11 @@ function getUpstreamErrorRateThresholdLevel(upstreamErrorRatePercent: number | n
 function getThresholdColorClass(level: ThresholdLevel): string {
   switch (level) {
     case 'critical':
-      return 'text-red-600 dark:text-red-400'
+      return 'text-red-400'
     case 'warning':
-      return 'text-yellow-600 dark:text-yellow-400'
+      return 'text-amber-400'
     default:
-      return 'text-green-600 dark:text-green-400'
+      return 'text-emerald-400'
   }
 }
 
@@ -449,9 +449,9 @@ const healthScoreClass = computed(() => {
   if (isSystemIdle.value) return 'text-gray-400'
   const score = healthScoreValue.value
   if (score == null) return 'text-gray-400'
-  if (score >= 90) return 'text-green-500'
+  if (score >= 90) return 'text-emerald-400'
   if (score >= 60) return 'text-yellow-500'
-  return 'text-red-500'
+  return 'text-red-400'
 })
 
 const circleSize = computed(() => props.fullscreen ? 140 : 100)
@@ -653,8 +653,8 @@ const cpuPercentClass = computed(() => {
   const v = cpuPercentValue.value
   if (v == null) return 'text-gray-900 dark:text-white'
   if (v >= 95) return 'text-rose-600 dark:text-rose-400'
-  if (v >= 80) return 'text-yellow-600 dark:text-yellow-400'
-  return 'text-emerald-600 dark:text-emerald-400'
+  if (v >= 80) return 'text-amber-400'
+  return 'text-emerald-400'
 })
 
 const memPercentValue = computed<number | null>(() => {
@@ -666,8 +666,8 @@ const memPercentClass = computed(() => {
   const v = memPercentValue.value
   if (v == null) return 'text-gray-900 dark:text-white'
   if (v >= 95) return 'text-rose-600 dark:text-rose-400'
-  if (v >= 85) return 'text-yellow-600 dark:text-yellow-400'
-  return 'text-emerald-600 dark:text-emerald-400'
+  if (v >= 85) return 'text-amber-400'
+  return 'text-emerald-400'
 })
 
 const dbConnActiveValue = computed<number | null>(() => {
@@ -711,10 +711,10 @@ const dbMiddleClass = computed(() => {
   if (systemMetrics.value?.db_ok === false) return 'text-rose-600 dark:text-rose-400'
   if (dbUsagePercent.value != null) {
     if (dbUsagePercent.value >= 90) return 'text-rose-600 dark:text-rose-400'
-    if (dbUsagePercent.value >= 70) return 'text-yellow-600 dark:text-yellow-400'
-    return 'text-emerald-600 dark:text-emerald-400'
+    if (dbUsagePercent.value >= 70) return 'text-amber-400'
+    return 'text-emerald-400'
   }
-  if (systemMetrics.value?.db_ok === true) return 'text-emerald-600 dark:text-emerald-400'
+  if (systemMetrics.value?.db_ok === true) return 'text-emerald-400'
   return 'text-gray-900 dark:text-white'
 })
 
@@ -754,10 +754,10 @@ const redisMiddleClass = computed(() => {
   if (systemMetrics.value?.redis_ok === false) return 'text-rose-600 dark:text-rose-400'
   if (redisUsagePercent.value != null) {
     if (redisUsagePercent.value >= 90) return 'text-rose-600 dark:text-rose-400'
-    if (redisUsagePercent.value >= 70) return 'text-yellow-600 dark:text-yellow-400'
-    return 'text-emerald-600 dark:text-emerald-400'
+    if (redisUsagePercent.value >= 70) return 'text-amber-400'
+    return 'text-emerald-400'
   }
-  if (systemMetrics.value?.redis_ok === true) return 'text-emerald-600 dark:text-emerald-400'
+  if (systemMetrics.value?.redis_ok === true) return 'text-emerald-400'
   return 'text-gray-900 dark:text-white'
 })
 
@@ -793,9 +793,9 @@ const goroutineStatusLabel = computed(() => {
 const goroutineStatusClass = computed(() => {
   switch (goroutineStatus.value) {
     case 'ok':
-      return 'text-emerald-600 dark:text-emerald-400'
+      return 'text-emerald-400'
     case 'warning':
-      return 'text-yellow-600 dark:text-yellow-400'
+      return 'text-amber-400'
     case 'critical':
       return 'text-rose-600 dark:text-rose-400'
     default:
@@ -838,9 +838,9 @@ const jobsStatusLabel = computed(() => {
 const jobsStatusClass = computed(() => {
   switch (jobsStatus.value) {
     case 'ok':
-      return 'text-emerald-600 dark:text-emerald-400'
+      return 'text-emerald-400'
     case 'warn':
-      return 'text-yellow-600 dark:text-yellow-400'
+      return 'text-amber-400'
     default:
       return 'text-gray-900 dark:text-white'
   }
@@ -951,7 +951,7 @@ function handleToolbarRefresh() {
         <button
           v-if="!props.fullscreen"
           type="button"
-          class="flex h-8 items-center gap-1.5 rounded-lg bg-blue-100 px-3 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
+          class="flex h-8 items-center gap-1.5 rounded-lg bg-sky-500/10 px-3 text-xs font-bold text-sky-400 transition-colors hover:bg-blue-200 dark:hover:bg-blue-900/50"
           :title="t('admin.ops.alertRules.title')"
           @click="emit('openAlertRules')"
         >
@@ -1012,7 +1012,7 @@ function handleToolbarRefresh() {
                 <div class="space-y-3">
                   <div v-for="(item, idx) in diagnosisReport" :key="idx" class="flex gap-3">
                     <div class="mt-0.5 shrink-0">
-                      <svg v-if="item.type === 'critical'" class="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <svg v-if="item.type === 'critical'" class="h-4 w-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fill-rule="evenodd"
                           d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -1037,7 +1037,7 @@ function handleToolbarRefresh() {
                     <div class="flex-1">
                       <div class="text-xs font-semibold text-gray-900 dark:text-white">{{ item.message }}</div>
                       <div class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">{{ item.impact }}</div>
-                      <div v-if="item.action" class="mt-1 text-[11px] text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                      <div v-if="item.action" class="mt-1 text-[11px] text-sky-400 flex items-center gap-1">
                         <Icon name="lightbulb" size="xs" />
                         {{ item.action }}
                       </div>
@@ -1270,7 +1270,7 @@ function handleToolbarRefresh() {
           <div class="mt-3 text-xs">
             <div class="flex justify-between">
               <span class="text-gray-500">{{ t('admin.ops.exceptions') }}:</span>
-              <span class="font-bold text-red-600 dark:text-red-400">{{ formatNumber((overview.request_count_sla ?? 0) - (overview.success_count ?? 0)) }}</span>
+              <span class="font-bold text-red-400">{{ formatNumber((overview.request_count_sla ?? 0) - (overview.success_count ?? 0)) }}</span>
             </div>
           </div>
         </div>
