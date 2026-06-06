@@ -590,6 +590,10 @@ func (s *AccountTestService) testOpenAIAccountConnection(c *gin.Context, account
 	if isOAuth {
 		req.Host = "chatgpt.com"
 		req.Header.Set("accept", "text/event-stream")
+		// 中性身份对齐：补齐 originator/User-Agent，避免 Go 默认 UA 暴露，与转发链路一致。
+		req.Header.Set("OpenAI-Beta", "responses=experimental")
+		req.Header.Set("originator", neutralUpstreamOriginator)
+		req.Header.Set("User-Agent", buildNeutralUserAgent())
 		if chatgptAccountID != "" {
 			req.Header.Set("chatgpt-account-id", chatgptAccountID)
 		}
@@ -747,9 +751,9 @@ func (s *AccountTestService) testOpenAICompactConnection(c *gin.Context, account
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+authToken)
 	req.Header.Set("OpenAI-Beta", "responses=experimental")
-	req.Header.Set("Originator", "codex_cli_rs")
-	req.Header.Set("User-Agent", codexCLIUserAgent)
-	req.Header.Set("Version", codexCLIVersion)
+	// 中性身份对齐：探针不再伪装官方 Codex CLI（不发 Version），与转发链路一致。
+	req.Header.Set("Originator", neutralUpstreamOriginator)
+	req.Header.Set("User-Agent", buildNeutralUserAgent())
 	probeSessionID := compactProbeSessionID(account.ID)
 	req.Header.Set("Session_ID", probeSessionID)
 	req.Header.Set("Conversation_ID", probeSessionID)
@@ -1603,11 +1607,11 @@ func (s *AccountTestService) testOpenAIImageOAuth(c *gin.Context, ctx context.Co
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("OpenAI-Beta", "responses=experimental")
-	req.Header.Set("originator", "opencode")
+	req.Header.Set("originator", neutralUpstreamOriginator)
 	if customUA := strings.TrimSpace(account.GetOpenAIUserAgent()); customUA != "" {
 		req.Header.Set("User-Agent", customUA)
 	} else {
-		req.Header.Set("User-Agent", codexCLIUserAgent)
+		req.Header.Set("User-Agent", buildNeutralUserAgent())
 	}
 	if chatgptAccountID := strings.TrimSpace(account.GetChatGPTAccountID()); chatgptAccountID != "" {
 		req.Header.Set("chatgpt-account-id", chatgptAccountID)
