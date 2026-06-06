@@ -233,13 +233,13 @@ async function saveAllSettings() {
 
 <template>
   <BaseDialog :show="show" :title="t('admin.ops.settings.title')" width="extra-wide" @close="emit('close')">
-    <div v-if="loading" class="py-10 text-center text-sm text-gray-500">
+    <div v-if="loading" class="py-10 text-center text-sm text-muted-foreground">
       {{ t('common.loading') }}
     </div>
 
     <div v-else-if="runtimeSettings && emailConfig && advancedSettings" class="space-y-6">
       <!-- 验证错误 -->
-      <div v-if="!validation.valid" class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-200">
+      <div v-if="!validation.valid" class="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-400">
         <div class="font-bold">{{ t('admin.ops.settings.validation.title') }}</div>
         <ul class="mt-1 list-disc space-y-1 pl-4">
           <li v-for="msg in validation.errors" :key="msg">{{ msg }}</li>
@@ -247,8 +247,8 @@ async function saveAllSettings() {
       </div>
 
       <!-- 数据采集频率 -->
-      <div class="rounded-2xl bg-gray-50 p-4 dark:bg-dark-700/50">
-        <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.ops.settings.dataCollection') }}</h4>
+      <div class="rounded-lg border border-border bg-metal-surface p-4">
+        <h4 class="mb-3 text-sm font-semibold text-foreground">{{ t('admin.ops.settings.dataCollection') }}</h4>
         <div>
           <label class="input-label">{{ t('admin.ops.settings.evaluationInterval') }}</label>
           <input
@@ -263,8 +263,8 @@ async function saveAllSettings() {
       </div>
 
       <!-- 预警配置 -->
-      <div class="rounded-2xl bg-gray-50 p-4 dark:bg-dark-700/50">
-        <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.ops.settings.alertConfig') }}</h4>
+      <div class="rounded-lg border border-border bg-metal-surface p-4">
+        <h4 class="mb-3 text-sm font-semibold text-foreground">{{ t('admin.ops.settings.alertConfig') }}</h4>
 
         <div class="space-y-4">
           <div class="flex items-center justify-between">
@@ -311,8 +311,8 @@ async function saveAllSettings() {
       </div>
 
       <!-- 评估报告配置 -->
-      <div class="rounded-2xl bg-gray-50 p-4 dark:bg-dark-700/50">
-        <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.ops.settings.reportConfig') }}</h4>
+      <div class="rounded-lg border border-border bg-metal-surface p-4">
+        <h4 class="mb-3 text-sm font-semibold text-foreground">{{ t('admin.ops.settings.reportConfig') }}</h4>
 
         <div class="space-y-4">
           <div class="flex items-center justify-between">
@@ -371,8 +371,8 @@ async function saveAllSettings() {
       </div>
 
       <!-- 指标阈值配置 -->
-      <div class="rounded-2xl bg-gray-50 p-4 dark:bg-dark-700/50">
-        <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.ops.settings.metricThresholds') }}</h4>
+      <div class="rounded-lg border border-border bg-metal-surface p-4">
+        <h4 class="mb-3 text-sm font-semibold text-foreground">{{ t('admin.ops.settings.metricThresholds') }}</h4>
         <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.ops.settings.metricThresholdsHint') }}</p>
 
         <div class="space-y-4">

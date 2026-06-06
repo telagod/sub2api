@@ -8,7 +8,7 @@
             <Icon
               name="search"
               size="md"
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
               v-model="searchQuery"
@@ -101,7 +101,7 @@
           <template #header-select>
             <input
               type="checkbox"
-              class="h-4 w-4 cursor-pointer rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              class="h-4 w-4 cursor-pointer rounded border-border text-primary-600 focus:ring-ring"
               :checked="allVisibleSelected"
               @click.stop
               @change="toggleSelectAllVisible($event)"
@@ -111,7 +111,7 @@
           <template #cell-select="{ row }">
             <input
               type="checkbox"
-              class="h-4 w-4 cursor-pointer rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              class="h-4 w-4 cursor-pointer rounded border-border text-primary-600 focus:ring-ring"
               :checked="selectedProxyIds.has(row.id)"
               @click.stop
               @change="toggleSelectRow(row.id, $event)"
@@ -119,7 +119,7 @@
           </template>
 
           <template #cell-name="{ value }">
-            <span class="font-medium text-gray-900 dark:text-white">{{ value }}</span>
+            <span class="font-medium text-foreground">{{ value }}</span>
           </template>
 
           <template #cell-protocol="{ value }">
@@ -129,7 +129,7 @@
             >
               {{ value.toUpperCase() }}
             </span>
-            <span v-else class="text-sm text-gray-400">-</span>
+            <span v-else class="text-sm text-muted-foreground">-</span>
           </template>
 
           <template #cell-address="{ row }">
@@ -180,7 +180,7 @@
                 <Icon :name="visiblePasswordIds.has(row.id) ? 'eyeOff' : 'eye'" size="sm" />
               </button>
             </div>
-            <span v-else class="text-sm text-gray-400">-</span>
+            <span v-else class="text-sm text-muted-foreground">-</span>
           </template>
 
           <template #cell-location="{ row }">
@@ -194,7 +194,7 @@
               <span v-if="formatLocation(row)" class="text-sm text-gray-700 dark:text-gray-200">
                 {{ formatLocation(row) }}
               </span>
-              <span v-else class="text-sm text-gray-400">-</span>
+              <span v-else class="text-sm text-muted-foreground">-</span>
             </div>
           </template>
 
@@ -230,7 +230,7 @@
               >
                 {{ row.latency_ms }}ms
               </span>
-              <span v-else class="text-sm text-gray-400">-</span>
+              <span v-else class="text-sm text-muted-foreground">-</span>
               <div
                 v-if="typeof row.quality_checked === 'number'"
                 class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
