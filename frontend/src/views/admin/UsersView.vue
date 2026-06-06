@@ -1015,19 +1015,30 @@ const loadAllGroups = async () => {
   }
 }
 // Resolve user's accessible groups: exclusive groups first, then public groups
-const getUserGroups = (user: AdminUser) => {
-  const exclusive: AdminGroup[] = []
+// 预先把可见分组拆成 独占池 / 公共组，仅在 allGroups 变化时计算一次。
+// getUserGroups 在表格模板中每行被调用约 8 次，原实现每次都全量遍历 allGroups
+// 并新建两个数组，大用户量下是主线程热点。这里把公共组做成共享引用、
+// 独占判定只遍历通常很小的独占池，将每次调用从 O(allGroups) 降到 O(独占组数)。
+const groupPools = computed(() => {
+  const exclusivePool: AdminGroup[] = []
   const publicGroups: AdminGroup[] = []
   for (const g of allGroups.value) {
     if (g.status !== 'active' || g.subscription_type !== 'standard') continue
     if (g.is_exclusive) {
-      if (user.allowed_groups?.includes(g.id)) {
-        exclusive.push(g)
-      }
+      exclusivePool.push(g)
     } else {
       publicGroups.push(g)
     }
   }
+  return { exclusivePool, publicGroups }
+})
+
+const getUserGroups = (user: AdminUser) => {
+  const { exclusivePool, publicGroups } = groupPools.value
+  const allowed = user.allowed_groups
+  const exclusive = allowed?.length
+    ? exclusivePool.filter((g) => allowed.includes(g.id))
+    : []
   return { exclusive, publicGroups }
 }
 

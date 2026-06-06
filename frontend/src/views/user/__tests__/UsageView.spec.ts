@@ -294,7 +294,7 @@ describe('user UsageView tooltip', () => {
       const params = call[0] as Record<string, unknown> | undefined
       const config = call[1]
       return (
-        params?.page_size === 100 &&
+        params?.page_size === 1000 &&
         params?.sort_by === 'created_at' &&
         params?.sort_order === 'desc' &&
         config === undefined

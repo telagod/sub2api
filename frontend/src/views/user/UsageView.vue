@@ -959,7 +959,8 @@ const exportToCSV = async () => {
 
   try {
     const allLogs: UsageLog[] = []
-    const pageSize = 100 // Use a larger page size for export to reduce requests
+    // 后端 ParsePagination 上限 1000，用满上限把导出请求数压到 1/10。
+    const pageSize = 1000
     const totalRequests = Math.ceil(pagination.total / pageSize)
 
     for (let page = 1; page <= totalRequests; page++) {

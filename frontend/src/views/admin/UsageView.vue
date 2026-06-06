@@ -496,6 +496,10 @@ const getRequestTypeLabel = (log: AdminUsageLog): string => {
   return t('usage.unknown')
 }
 
+// 导出每页拉取行数。后端 ParsePagination 上限为 1000，串行翻页时用满上限可把
+// 请求数压到 1/10（原为 100），显著缩短大数据导出的总时长与连接占用。
+const EXPORT_PAGE_SIZE = 1000
+
 const exportToExcel = async () => {
   if (exporting.value) return; exporting.value = true; exportProgress.show = true
   const c = new AbortController(); exportAbortController = c
@@ -518,7 +522,7 @@ const exportToExcel = async () => {
     const ws = XLSX.utils.aoa_to_sheet([headers])
     while (true) {
       const res = await adminUsageAPI.list(
-        buildUsageListParams(p, 100, true),
+        buildUsageListParams(p, EXPORT_PAGE_SIZE, true),
         { signal: c.signal }
       )
       if (c.signal.aborted) break; if (p === 1) { total = res.total; exportProgress.total = total }
@@ -540,7 +544,7 @@ const exportToExcel = async () => {
       exportedCount += rows.length
       exportProgress.current = exportedCount
       exportProgress.progress = total > 0 ? Math.min(100, Math.round(exportedCount / total * 100)) : 0
-      if (exportedCount >= total || res.items.length < 100) break; p++
+      if (exportedCount >= total || res.items.length < EXPORT_PAGE_SIZE) break; p++
     }
     if(!c.signal.aborted) {
       const wb = XLSX.utils.book_new()

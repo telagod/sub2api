@@ -6,6 +6,36 @@
 import { i18n, getLocale } from '@/i18n'
 
 /**
+ * Intl formatter 实例缓存。
+ *
+ * 大列表中 formatDate / formatNumber / formatCurrency 会被每行每列重复调用，
+ * 每次 `new Intl.*` 都重新解析 locale 数据，是主线程热点（成百上千行时叠加为长任务）。
+ * 按 (locale + 选项签名) 缓存复用实例 —— 选项均为固定字面量，序列化结果稳定，命中率高。
+ */
+const dateTimeFormatterCache = new Map<string, Intl.DateTimeFormat>()
+const numberFormatterCache = new Map<string, Intl.NumberFormat>()
+
+function getDateTimeFormatter(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = locale + '|' + JSON.stringify(options)
+  let formatter = dateTimeFormatterCache.get(key)
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, options)
+    dateTimeFormatterCache.set(key, formatter)
+  }
+  return formatter
+}
+
+function getNumberFormatter(locale: string, options: Intl.NumberFormatOptions): Intl.NumberFormat {
+  const key = locale + '|' + JSON.stringify(options)
+  let formatter = numberFormatterCache.get(key)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(locale, options)
+    numberFormatterCache.set(key, formatter)
+  }
+  return formatter
+}
+
+/**
  * 格式化相对时间
  * @param date 日期字符串或 Date 对象
  * @returns 相对时间字符串，如 "5m ago", "2h ago", "3d ago"
@@ -44,7 +74,7 @@ export function formatNumber(num: number | null | undefined): string {
 
   // Use Intl.NumberFormat for compact notation if supported and needed
   // Note: Compact notation in 'zh' uses '万/亿', which is appropriate for Chinese
-  const formatter = new Intl.NumberFormat(locale, {
+  const formatter = getNumberFormatter(locale, {
     notation: absNum >= 10000 ? 'compact' : 'standard',
     maximumFractionDigits: 1
   })
@@ -66,7 +96,7 @@ export function formatCurrency(amount: number | null | undefined, currency: stri
   // For very small amounts, show more decimals
   const fractionDigits = amount > 0 && amount < 0.01 ? 6 : 2
 
-  return new Intl.NumberFormat(locale, {
+  return getNumberFormatter(locale, {
     style: 'currency',
     currency: currency,
     minimumFractionDigits: fractionDigits,
@@ -118,7 +148,7 @@ export function formatDate(
   if (isNaN(d.getTime())) return ''
 
   const locale = localeOverride ?? getLocale()
-  return new Intl.DateTimeFormat(locale, options).format(d)
+  return getDateTimeFormatter(locale, options).format(d)
 }
 
 /**
