@@ -1,15 +1,16 @@
 <template>
-  <div class="card overflow-hidden">
-    <div class="overflow-auto">
-      <DataTable
-        :columns="columns"
-        :data="data"
-        :loading="loading"
-        :server-side-sort="serverSideSort"
-        :default-sort-key="defaultSortKey"
-        :default-sort-order="defaultSortOrder"
-        @sort="(key, order) => $emit('sort', key, order)"
-      >
+  <div class="card usage-table-card flex flex-col overflow-hidden">
+    <DataTable
+      :columns="columns"
+      :data="data"
+      :loading="loading"
+      :server-side-sort="serverSideSort"
+      :default-sort-key="defaultSortKey"
+      :default-sort-order="defaultSortOrder"
+      :estimate-row-height="88"
+      :overscan="12"
+      @sort="(key, order) => $emit('sort', key, order)"
+    >
         <template #cell-user="{ row }">
           <div class="text-sm">
             <button
@@ -194,7 +195,6 @@
 
         <template #empty><EmptyState :message="t('usage.noRecords')" /></template>
       </DataTable>
-    </div>
   </div>
 
   <!-- Token Tooltip Portal -->
@@ -531,3 +531,22 @@ const hideTokenTooltip = () => {
   tokenTooltipData.value = null
 }
 </script>
+
+<style scoped>
+.usage-table-card {
+  /*
+   * 给表格一个相对视口的高度上界。
+   *
+   * DataTable 内部根 .table-wrapper 为 flex:1 / min-height:0，需要父级是「有界高度的
+   * flex column」才能启用内部滚动、让 @tanstack/vue-virtual 行虚拟化生效。
+   * 此前外层是不带高度约束的 .overflow-auto（且非 flex 容器），.table-wrapper 的 flex:1
+   * 失效、退化为内容全高，虚拟化器据此判定「整屏可见」从而全量渲染 —— 大 page_size 下
+   * 上万 DOM 节点同帧布局，整页卡死。
+   *
+   * 这里直接用相对视口的 max-height 自带高度源头（不依赖祖先 flex 链是否传导高度），
+   * 数据多时表格在框内虚拟滚动，数据少时按内容自然高度，二者皆正常。
+   */
+  max-height: calc(100vh - 300px);
+  min-height: 360px;
+}
+</style>
