@@ -1,14 +1,6 @@
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <!-- Page header -->
-      <header class="flex items-end justify-between gap-4">
-        <div>
-          <h1 class="text-metal text-2xl font-bold tracking-tight">{{ t('nav.dashboard') }}</h1>
-          <p class="mt-1 text-sm text-muted-foreground">{{ t('admin.dashboard.timeRange') }}: {{ startDate }} — {{ endDate }}</p>
-        </div>
-      </header>
-
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-12">
         <LoadingSpinner />
