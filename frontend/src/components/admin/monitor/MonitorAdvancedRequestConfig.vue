@@ -27,7 +27,7 @@
           />
           <button
             type="button"
-            class="flex-none rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+            class="flex-none rounded p-1 text-muted-foreground hover:bg-red-500/10 hover:text-red-400"
             :title="t('common.delete')"
             @click="removeRow(i)"
           >
@@ -38,7 +38,7 @@
         </div>
         <button
           type="button"
-          class="inline-flex items-center gap-1 rounded border border-dashed border-gray-300 px-2 py-1 text-xs text-gray-500 hover:border-primary-400 hover:text-primary-600 dark:border-dark-600 dark:text-gray-400 dark:hover:border-primary-500 dark:hover:text-primary-400"
+          class="inline-flex items-center gap-1 rounded border border-dashed border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary-400 hover:text-primary-200"
           @click="addRow"
         >
           <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,8 +47,8 @@
           {{ t('admin.channelMonitor.advanced.headerAddRow') }}
         </button>
       </div>
-      <p v-if="headersError" class="mt-1 text-xs text-red-500">{{ headersError }}</p>
-      <p v-else class="mt-1 text-xs text-gray-400">
+      <p v-if="headersError" class="mt-1 text-xs text-red-400">{{ headersError }}</p>
+      <p v-else class="mt-1 text-xs text-muted-foreground">
         {{ t('admin.channelMonitor.advanced.headersHint') }}
       </p>
     </div>
@@ -68,7 +68,7 @@
           {{ opt.label }}
         </button>
       </div>
-      <p class="mt-1 text-xs text-gray-400">
+      <p class="mt-1 text-xs text-muted-foreground">
         {{ bodyModeHint }}
       </p>
     </div>
@@ -79,7 +79,7 @@
         <label class="input-label !mb-0">{{ t('admin.channelMonitor.advanced.bodyJson') }}</label>
         <button
           type="button"
-          class="text-xs text-primary-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline dark:text-primary-400"
+          class="text-xs text-primary-200 hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
           :disabled="!bodyText.trim()"
           @click="formatBody"
         >
@@ -95,8 +95,8 @@
         spellcheck="false"
         @blur="commitBody"
       />
-      <p v-if="bodyError" class="mt-1 text-xs text-red-500">{{ bodyError }}</p>
-      <p v-else class="mt-1 text-xs text-gray-400">
+      <p v-if="bodyError" class="mt-1 text-xs text-red-400">{{ bodyError }}</p>
+      <p v-else class="mt-1 text-xs text-muted-foreground">
         {{ t('admin.channelMonitor.advanced.bodyJsonHint') }}
       </p>
     </div>

@@ -1,11 +1,11 @@
 <template>
   <div class="card p-4">
-    <h3 class="mb-4 text-sm font-semibold text-gray-900 dark:text-white">
+    <h3 class="mb-4 text-sm font-semibold text-foreground">
       {{ t('payment.admin.topUsers') }}
     </h3>
     <div
       v-if="!users?.length"
-      class="flex h-32 items-center justify-center text-sm text-gray-500 dark:text-gray-400"
+      class="flex h-32 items-center justify-center text-sm text-muted-foreground"
     >
       {{ t('payment.admin.noData') }}
     </div>
@@ -13,7 +13,7 @@
       <div
         v-for="(user, idx) in users"
         :key="user.user_id"
-        class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-dark-700"
+        class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-accent"
       >
         <div class="flex items-center gap-3">
           <span
@@ -24,9 +24,9 @@
           >
             {{ idx + 1 }}
           </span>
-          <span class="text-sm text-gray-700 dark:text-gray-300">{{ user.email }}</span>
+          <span class="text-sm text-foreground/85">{{ user.email }}</span>
         </div>
-        <span class="text-sm font-medium text-gray-900 dark:text-white">
+        <span class="text-sm font-medium text-foreground">
           ${{ user.amount.toFixed(2) }}
         </span>
       </div>
