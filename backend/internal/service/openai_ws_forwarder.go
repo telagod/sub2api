@@ -1155,7 +1155,14 @@ func (s *OpenAIGatewayService) buildOpenAIWSHeaders(
 		if chatgptAccountID := account.GetChatGPTAccountID(); chatgptAccountID != "" {
 			headers.Set("chatgpt-account-id", chatgptAccountID)
 		}
-		headers.Set("originator", resolveOpenAIUpstreamOriginator(c, isCodexCLI))
+		// WS Mode 是 Codex 专属协议（携带 turn-state/turn-metadata 头、responses_websockets beta），
+		// 与中性身份不自洽；故 WS 路径统一使用官方 Codex originator 保持指纹自洽。
+		// 需要免风控的中性身份（对齐 openclaw）请走默认 SSE 转发，勿启用 WS Mode。
+		originator := resolveOpenAIUpstreamOriginator(c, isCodexCLI)
+		if originator == neutralUpstreamOriginator {
+			originator = "codex_cli_rs"
+		}
+		headers.Set("originator", originator)
 	}
 
 	betaValue := openAIWSBetaV2Value
