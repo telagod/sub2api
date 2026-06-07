@@ -85,12 +85,16 @@ func (r *accountRepository) Create(ctx context.Context, account *service.Account
 		return service.ErrAccountNilInput
 	}
 
+	encCredentials, encErr := r.cipher.EncryptMap(normalizeJSONMap(account.Credentials))
+	if encErr != nil {
+		return encErr
+	}
 	builder := r.client.Account.Create().
 		SetName(account.Name).
 		SetNillableNotes(account.Notes).
 		SetPlatform(account.Platform).
 		SetType(account.Type).
-		SetCredentials(r.cipher.EncryptMap(normalizeJSONMap(account.Credentials))).
+		SetCredentials(encCredentials).
 		SetExtra(normalizeJSONMap(account.Extra)).
 		SetConcurrency(account.Concurrency).
 		SetPriority(account.Priority).
@@ -326,12 +330,16 @@ func (r *accountRepository) Update(ctx context.Context, account *service.Account
 		schedulable = false
 	}
 
+	encCredentials, encErr := r.cipher.EncryptMap(normalizeJSONMap(account.Credentials))
+	if encErr != nil {
+		return encErr
+	}
 	builder := r.client.Account.UpdateOneID(account.ID).
 		SetName(account.Name).
 		SetNillableNotes(account.Notes).
 		SetPlatform(account.Platform).
 		SetType(account.Type).
-		SetCredentials(r.cipher.EncryptMap(normalizeJSONMap(account.Credentials))).
+		SetCredentials(encCredentials).
 		SetExtra(normalizeJSONMap(account.Extra)).
 		SetConcurrency(account.Concurrency).
 		SetPriority(account.Priority).
@@ -413,8 +421,12 @@ func (r *accountRepository) Update(ctx context.Context, account *service.Account
 }
 
 func (r *accountRepository) UpdateCredentials(ctx context.Context, id int64, credentials map[string]any) error {
-	_, err := r.client.Account.UpdateOneID(id).
-		SetCredentials(r.cipher.EncryptMap(normalizeJSONMap(credentials))).
+	encCredentials, err := r.cipher.EncryptMap(normalizeJSONMap(credentials))
+	if err != nil {
+		return err
+	}
+	_, err = r.client.Account.UpdateOneID(id).
+		SetCredentials(encCredentials).
 		Save(ctx)
 	if err != nil {
 		return translatePersistenceError(err, service.ErrAccountNotFound, nil)
@@ -1451,7 +1463,11 @@ func (r *accountRepository) BulkUpdate(ctx context.Context, ids []int64, updates
 	}
 	// JSONB 需要合并而非覆盖，使用 raw SQL 保持旧行为。
 	if len(updates.Credentials) > 0 {
-		payload, err := json.Marshal(r.cipher.EncryptMap(updates.Credentials))
+		encCredentials, err := r.cipher.EncryptMap(updates.Credentials)
+		if err != nil {
+			return 0, err
+		}
+		payload, err := json.Marshal(encCredentials)
 		if err != nil {
 			return 0, err
 		}

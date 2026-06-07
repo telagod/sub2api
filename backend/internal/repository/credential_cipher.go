@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"log/slog"
 	"strings"
 
@@ -44,14 +45,16 @@ func setPkgCredentialCipher(c *CredentialCipher) { pkgCredentialCipher = c }
 
 // EncryptMap 加密 credentials 中敏感子键的 string 值，返回新 map（不修改入参）。
 //
-// degrade-safe：cipher 为 nil / 未启用 / 无加密器时原样返回（写明文）。
+// degrade-safe：cipher 为 nil / 未启用 / 无加密器时原样返回（写明文），无错误。
+// fail-secure：加密器返回错误时返回 error（绝不静默落明文），由调用方使整个写操作失败，
+// 宁可写失败也不把敏感凭证以明文落库。
 // 幂等 + 防伪造（BLINDSPOT-3）：对已带 enc:v1: 前缀的敏感值，先用 Decrypt 验证——
 //   - 能解密 → 是本系统写出的密文，跳过（幂等，不双重加密）；
-//   - 不能解密 → 是客户端伪造的前缀，剥离后按明文重新加密，
+//   - 不能解密 → 是客户端伪造的前缀，剥离后按明文重新加密（并留审计日志），
 //     防止 {"api_key":"enc:v1:spoofed"} 这类伪造前缀的明文直接落库。
-func (c *CredentialCipher) EncryptMap(in map[string]any) map[string]any {
+func (c *CredentialCipher) EncryptMap(in map[string]any) (map[string]any, error) {
 	if c == nil || !c.enabled || c.enc == nil || in == nil {
-		return in
+		return in, nil
 	}
 	out := make(map[string]any, len(in))
 	for k, v := range in {
@@ -67,19 +70,18 @@ func (c *CredentialCipher) EncryptMap(in map[string]any) map[string]any {
 				out[k] = v
 				continue
 			}
-			// 伪造前缀，剥离当明文重新加密。
+			// 伪造前缀（非本系统密文），剥离当明文重新加密，并留审计线索。
+			slog.Warn("stripping client-forged credential encryption prefix", "key", k)
 			s = body
 		}
 		ct, err := c.enc.Encrypt(s)
 		if err != nil {
-			// 加密失败：保留明文，避免数据丢失（degrade）。
-			slog.Error("credential encrypt failed, storing plaintext", "key", k, "err", err)
-			out[k] = v
-			continue
+			// fail-secure：加密失败绝不静默落明文，向上返回 error 让写操作整体失败。
+			return nil, fmt.Errorf("encrypt credential key %q: %w", k, err)
 		}
 		out[k] = credentialEncPrefixV1 + ct
 	}
-	return out
+	return out, nil
 }
 
 // DecryptMap 解密带 enc:v1: 前缀的 credentials 值，返回新 map（不修改入参）。

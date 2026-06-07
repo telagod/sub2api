@@ -3,6 +3,7 @@
 package repository
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -31,6 +32,12 @@ func credCipherWithKey(t *testing.T, b byte) *CredentialCipher {
 	return NewCredentialCipher(cfg, enc)
 }
 
+// failEncryptor 模拟加密器在运行期失败（如 crypto/rand 耗尽），用于 fail-secure 测试。
+type failEncryptor struct{}
+
+func (failEncryptor) Encrypt(string) (string, error) { return "", errors.New("encrypt boom") }
+func (failEncryptor) Decrypt(string) (string, error) { return "", errors.New("decrypt boom") }
+
 // ── 往返：所有敏感键加密后可解密还原 ─────────────────────────────────────────
 
 func TestCredentialCipher_RoundTrip(t *testing.T) {
@@ -54,7 +61,8 @@ func TestCredentialCipher_RoundTrip(t *testing.T) {
 	// 把 unicode 放进敏感键验证多字节
 	in["api_key"] = "密钥-令牌-🔑"
 
-	enc := c.EncryptMap(in)
+	enc, err := c.EncryptMap(in)
+	require.NoError(t, err)
 	// 每个敏感键都应带前缀且不再是明文
 	for _, k := range []string{
 		"access_token", "refresh_token", "id_token", "api_key", "session_key",
@@ -74,7 +82,8 @@ func TestCredentialCipher_RoundTrip(t *testing.T) {
 
 func TestCredentialCipher_EmptyStringSensitiveValue(t *testing.T) {
 	c := testCredCipher(t, true)
-	enc := c.EncryptMap(map[string]any{"api_key": ""})
+	enc, err := c.EncryptMap(map[string]any{"api_key": ""})
+	require.NoError(t, err)
 	require.True(t, strings.HasPrefix(enc["api_key"].(string), credentialEncPrefixV1))
 	dec := c.DecryptMap(enc)
 	assert.Equal(t, "", dec["api_key"])
@@ -92,7 +101,8 @@ func TestCredentialCipher_SkipsNonSensitive(t *testing.T) {
 		"expires_at":    "2030-01-01",
 		"model_mapping": modelMapping,
 	}
-	enc := c.EncryptMap(in)
+	enc, err := c.EncryptMap(in)
+	require.NoError(t, err)
 	assert.Equal(t, "https://api.example.com/v1", enc["base_url"])
 	assert.Equal(t, "chatgpt", enc["oauth_type"])
 	assert.Equal(t, "proj-123", enc["project_id"])
@@ -108,7 +118,8 @@ func TestCredentialCipher_SkipsNonStringValues(t *testing.T) {
 		"_token_version": int64(7), // 内部字段
 		"flag":           true,     // 非敏感非 string
 	}
-	enc := c.EncryptMap(in)
+	enc, err := c.EncryptMap(in)
+	require.NoError(t, err)
 	assert.Equal(t, 123, enc["api_key"])
 	assert.Equal(t, int64(7), enc["_token_version"])
 	assert.Equal(t, true, enc["flag"])
@@ -127,7 +138,8 @@ func TestCredentialCipher_PlaintextPassthrough(t *testing.T) {
 func TestCredentialCipher_MixedPlaintextAndCiphertext(t *testing.T) {
 	c := testCredCipher(t, true)
 	// 模拟 lazy 迁移中途：api_key 已加密、refresh_token 仍明文
-	enc := c.EncryptMap(map[string]any{"api_key": "new-encrypted"})
+	enc, err := c.EncryptMap(map[string]any{"api_key": "new-encrypted"})
+	require.NoError(t, err)
 	mixed := map[string]any{
 		"api_key":       enc["api_key"],     // 密文
 		"refresh_token": "legacy-plaintext", // 明文
@@ -141,8 +153,10 @@ func TestCredentialCipher_MixedPlaintextAndCiphertext(t *testing.T) {
 
 func TestCredentialCipher_NoDoubleEncrypt(t *testing.T) {
 	c := testCredCipher(t, true)
-	once := c.EncryptMap(map[string]any{"api_key": "sk-abc"})
-	twice := c.EncryptMap(once)
+	once, err := c.EncryptMap(map[string]any{"api_key": "sk-abc"})
+	require.NoError(t, err)
+	twice, err := c.EncryptMap(once)
+	require.NoError(t, err)
 	assert.Equal(t, once["api_key"], twice["api_key"], "系统密文应幂等跳过")
 	// 解密一次即得原文（未被双重加密）
 	dec := c.DecryptMap(twice)
@@ -155,7 +169,8 @@ func TestCredentialCipher_SpoofedPrefixReencrypted(t *testing.T) {
 	c := testCredCipher(t, true)
 	// 客户端发送伪造前缀（非本系统密文）
 	in := map[string]any{"api_key": credentialEncPrefixV1 + "not-real-ciphertext"}
-	enc := c.EncryptMap(in)
+	enc, err := c.EncryptMap(in)
+	require.NoError(t, err)
 	// 应被真正加密（解密验证失败 → 剥离前缀 → 重新加密）
 	require.True(t, strings.HasPrefix(enc["api_key"].(string), credentialEncPrefixV1))
 	require.NotEqual(t, in["api_key"], enc["api_key"], "伪造前缀的值必须被重新加密")
@@ -169,14 +184,25 @@ func TestCredentialCipher_SpoofedPrefixReencrypted(t *testing.T) {
 func TestCredentialCipher_DegradeWhenNotConfigured(t *testing.T) {
 	disabled := testCredCipher(t, false)
 	in := map[string]any{"api_key": "sk-plain"}
-	enc := disabled.EncryptMap(in)
+	enc, err := disabled.EncryptMap(in)
+	require.NoError(t, err)
 	assert.Equal(t, "sk-plain", enc["api_key"], "未配持久 key 不应写密文")
 
 	// 但仍能解密由相同 key 写出的历史密文
 	enabled := testCredCipher(t, true)
-	historical := enabled.EncryptMap(map[string]any{"api_key": "sk-hist"})
+	historical, err := enabled.EncryptMap(map[string]any{"api_key": "sk-hist"})
+	require.NoError(t, err)
 	dec := disabled.DecryptMap(historical) // disabled 同 key，仅 enabled=false
 	assert.Equal(t, "sk-hist", dec["api_key"], "禁用写入仍须能读历史密文")
+}
+
+// ── fail-secure：加密失败返回 error 且绝不返回(含明文的)map ──────────────────
+
+func TestCredentialCipher_EncryptFailureIsFailSecure(t *testing.T) {
+	c := &CredentialCipher{enc: failEncryptor{}, enabled: true}
+	out, err := c.EncryptMap(map[string]any{"api_key": "secret", "base_url": "u"})
+	require.Error(t, err, "加密失败应返回 error")
+	require.Nil(t, out, "fail-secure：加密失败绝不返回可能含明文的 map")
 }
 
 // ── 解密失败容错：异 key/损坏密文保留原样不 panic ──────────────────────────
@@ -184,7 +210,8 @@ func TestCredentialCipher_DegradeWhenNotConfigured(t *testing.T) {
 func TestCredentialCipher_DecryptFailureDegrade(t *testing.T) {
 	cipherA := credCipherWithKey(t, 0x11)
 	cipherB := credCipherWithKey(t, 0x22) // 不同 key
-	enc := cipherA.EncryptMap(map[string]any{"api_key": "secret"})
+	enc, err := cipherA.EncryptMap(map[string]any{"api_key": "secret"})
+	require.NoError(t, err)
 	// 用错误 key 解密：保留密文、不 panic
 	require.NotPanics(t, func() {
 		dec := cipherB.DecryptMap(enc)
@@ -197,14 +224,17 @@ func TestCredentialCipher_DecryptFailureDegrade(t *testing.T) {
 func TestCredentialCipher_NilSafe(t *testing.T) {
 	var nilCipher *CredentialCipher
 	require.NotPanics(t, func() {
-		out := nilCipher.EncryptMap(map[string]any{"api_key": "x"})
+		out, err := nilCipher.EncryptMap(map[string]any{"api_key": "x"})
+		require.NoError(t, err)
 		assert.Equal(t, "x", out["api_key"], "nil cipher EncryptMap 原样返回")
 		out2 := nilCipher.DecryptMap(map[string]any{"api_key": "x"})
 		assert.Equal(t, "x", out2["api_key"], "nil cipher DecryptMap 原样返回")
 	})
 
 	c := testCredCipher(t, true)
-	assert.Nil(t, c.EncryptMap(nil))
+	enc, err := c.EncryptMap(nil)
+	require.NoError(t, err)
+	assert.Nil(t, enc)
 	assert.Nil(t, c.DecryptMap(nil))
 }
 
@@ -213,6 +243,7 @@ func TestCredentialCipher_NilSafe(t *testing.T) {
 func TestCredentialCipher_DoesNotMutateInput(t *testing.T) {
 	c := testCredCipher(t, true)
 	in := map[string]any{"api_key": "sk-orig"}
-	_ = c.EncryptMap(in)
+	_, err := c.EncryptMap(in)
+	require.NoError(t, err)
 	assert.Equal(t, "sk-orig", in["api_key"], "EncryptMap 不应修改入参")
 }
