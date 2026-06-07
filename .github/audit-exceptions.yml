@@ -35,3 +35,10 @@ exceptions:
     mitigation: "Proxy configuration not user-controlled; upgrade when axios releases fix"
     expires_on: "2026-07-10"
     owner: "security@your-domain"
+  - package: picomatch
+    advisory: "GHSA-c2c7-rcm5-vvqj"
+    severity: high
+    reason: "Build-time transitive dep of tailwindcss/vite-plugin-checker; glob patterns are not user-controlled at runtime, not shipped to client bundle"
+    mitigation: "Dev/build-only; upgrade when tailwind/vite bump picomatch to >=2.3.2 / >=4.0.4"
+    expires_on: "2026-09-07"
+    owner: "security@subme"
