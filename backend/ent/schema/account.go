@@ -78,6 +78,7 @@ func (Account) Fields() []ent.Field {
 		// - cookie: {"session_key": "..."}
 		field.JSON("credentials", map[string]any{}).
 			Default(func() map[string]any { return map[string]any{} }).
+			Sensitive().
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),
 
 		// extra: 扩展数据，存储平台特定的额外信息
