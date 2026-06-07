@@ -191,6 +191,9 @@ func mustCreateAccount(t *testing.T, client *dbent.Client, a *service.Account) *
 		a.Extra = map[string]any{}
 	}
 
+	// NOTE: 测试夹具直接写入明文 credentials（绕过 CredentialCipher.EncryptMap），
+	// 有意为之——用于测试历史明文数据的向后兼容读取路径。非生产路径；
+	// 生产写入一律经 accountRepository 写点（Create/Update/...）加密。
 	create := client.Account.Create().
 		SetName(a.Name).
 		SetPlatform(a.Platform).
