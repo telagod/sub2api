@@ -34,7 +34,7 @@ type Account struct {
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
 	// Credentials holds the value of the "credentials" field.
-	Credentials map[string]interface{} `json:"credentials,omitempty"`
+	Credentials map[string]interface{} `json:"-"`
 	// Extra holds the value of the "extra" field.
 	Extra map[string]interface{} `json:"extra,omitempty"`
 	// ProxyID holds the value of the "proxy_id" field.
@@ -440,8 +440,7 @@ func (_m *Account) String() string {
 	builder.WriteString("type=")
 	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
-	builder.WriteString("credentials=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Credentials))
+	builder.WriteString("credentials=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("extra=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Extra))

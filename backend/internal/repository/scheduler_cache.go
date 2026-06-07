@@ -262,6 +262,12 @@ func (c *schedulerCache) UpdateLastUsed(ctx context.Context, updates map[int64]t
 			return err
 		}
 		account.LastUsedAt = ptrTime(updates[ids[i]])
+		// account 由 decodeCachedAccount 解密而来，写回前重新加密（R1 read-modify-write）。
+		encCreds, encErr := pkgCredentialCipher.EncryptMap(account.Credentials)
+		if encErr != nil {
+			return encErr
+		}
+		account.Credentials = encCreds
 		updated, err := json.Marshal(account)
 		if err != nil {
 			return err
@@ -356,6 +362,9 @@ func decodeCachedAccount(val any) (*service.Account, error) {
 	if err := json.Unmarshal(payload, &account); err != nil {
 		return nil, err
 	}
+	// R1: Redis 快照中的敏感凭证为密文，读出统一解密；与 DB 读出口 accountEntityToService 对称。
+	// pkgCredentialCipher 由 NewAccountRepository 在启动构造期设置；nil-safe 时退化为明文直通。
+	account.Credentials = pkgCredentialCipher.DecryptMap(account.Credentials)
 	return &account, nil
 }
 
@@ -379,6 +388,13 @@ func (c *schedulerCache) writeAccounts(ctx context.Context, accounts []service.A
 	}
 
 	for _, account := range accounts {
+		// R1: 写入 Redis 前加密敏感凭证。account 为 range 值拷贝，EncryptMap 返回新 map，
+		// 赋值不影响调用方原 slice。meta 层经 buildSchedulerMetadataAccount 复用此加密态，两层一致。
+		encCreds, encErr := pkgCredentialCipher.EncryptMap(account.Credentials)
+		if encErr != nil {
+			return encErr
+		}
+		account.Credentials = encCreds
 		fullPayload, err := json.Marshal(account)
 		if err != nil {
 			return err
