@@ -15,6 +15,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 
+	"github.com/Wei-Shaw/sub2api/internal/pkg/apikeyhash"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 
 	entsql "entgo.io/ent/dialect/sql"
@@ -23,14 +24,18 @@ import (
 type apiKeyRepository struct {
 	client *dbent.Client
 	sql    sqlExecutor
+	cipher *CredentialCipher
 }
 
-func NewAPIKeyRepository(client *dbent.Client, sqlDB *sql.DB) service.APIKeyRepository {
-	return newAPIKeyRepositoryWithSQL(client, sqlDB)
+func NewAPIKeyRepository(client *dbent.Client, sqlDB *sql.DB, cipher *CredentialCipher) service.APIKeyRepository {
+	return newAPIKeyRepositoryWithSQL(client, sqlDB, cipher)
 }
 
-func newAPIKeyRepositoryWithSQL(client *dbent.Client, sqlq sqlExecutor) *apiKeyRepository {
-	return &apiKeyRepository{client: client, sql: sqlq}
+func newAPIKeyRepositoryWithSQL(client *dbent.Client, sqlq sqlExecutor, cipher *CredentialCipher) *apiKeyRepository {
+	// 注册包级解密器(与 account repo 共用 pkgCredentialCipher),供包级 apiKeyEntityToService 读出口解密。
+	// 所有构造路径统一 set,保证读(包级)/写(r.cipher)同源——吸取 Phase 2 读写不同源的教训。
+	setPkgCredentialCipher(cipher)
+	return &apiKeyRepository{client: client, sql: sqlq, cipher: cipher}
 }
 
 func (r *apiKeyRepository) activeQuery() *dbent.APIKeyQuery {
@@ -39,9 +44,14 @@ func (r *apiKeyRepository) activeQuery() *dbent.APIKeyQuery {
 }
 
 func (r *apiKeyRepository) Create(ctx context.Context, key *service.APIKey) error {
+	keyEncrypted, encrypted, encErr := r.cipher.EncryptValue(key.Key)
+	if encErr != nil {
+		return encErr // fail-secure:加密失败绝不静默落明文
+	}
 	builder := r.client.APIKey.Create().
 		SetUserID(key.UserID).
 		SetKey(key.Key).
+		SetKeyHash(apikeyhash.Hash(key.Key)).
 		SetName(key.Name).
 		SetStatus(key.Status).
 		SetNillableGroupID(key.GroupID).
@@ -53,6 +63,9 @@ func (r *apiKeyRepository) Create(ctx context.Context, key *service.APIKey) erro
 		SetRateLimit1d(key.RateLimit1d).
 		SetRateLimit7d(key.RateLimit7d)
 
+	if encrypted {
+		builder.SetKeyEncrypted(keyEncrypted)
+	}
 	if len(key.IPWhitelist) > 0 {
 		builder.SetIPWhitelist(key.IPWhitelist)
 	}
@@ -685,6 +698,16 @@ func (r *apiKeyRepository) GetRateLimitData(ctx context.Context, id int64) (resu
 	return data, rows.Err()
 }
 
+// decryptAPIKeyKey 返回 api_key 明文:优先解密 key_encrypted 密文列(用户始终可见明文),
+// 无密文(NULL:degrade-safe 未加密 / 历史数据)时回退 key 明文列。包级 pkgCredentialCipher
+// 由 newAPIKeyRepositoryWithSQL/newAccountRepositoryWithSQL 在启动构造期统一注册;nil-safe。
+func decryptAPIKeyKey(m *dbent.APIKey) string {
+	if m.KeyEncrypted != nil && *m.KeyEncrypted != "" {
+		return pkgCredentialCipher.DecryptValue(*m.KeyEncrypted)
+	}
+	return m.Key
+}
+
 func apiKeyEntityToService(m *dbent.APIKey) *service.APIKey {
 	if m == nil {
 		return nil
@@ -692,7 +715,7 @@ func apiKeyEntityToService(m *dbent.APIKey) *service.APIKey {
 	out := &service.APIKey{
 		ID:            m.ID,
 		UserID:        m.UserID,
-		Key:           m.Key,
+		Key:           decryptAPIKeyKey(m),
 		Name:          m.Name,
 		Status:        m.Status,
 		IPWhitelist:   m.IPWhitelist,
