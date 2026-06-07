@@ -873,6 +873,16 @@ totp:
   # 如果留空，每次启动将生成随机密钥，导致现有的 TOTP 配置失效（用户无法使用
   # 双因素认证登录）。
   # Generate with / 生成命令: openssl rand -hex 32
+  #
+  # ALSO USED FOR ACCOUNT CREDENTIAL ENCRYPTION: this key now also encrypts
+  # account credentials (api_key / access_token / refresh_token, etc.) at rest in
+  # both the database and the Redis scheduler snapshot. If left empty (ephemeral
+  # key), credential encryption is SKIPPED and credentials are stored in PLAINTEXT
+  # (degrade-safe, to avoid unrecoverable data after a restart). Set a fixed key
+  # in production to enable credential encryption at rest.
+  # 此密钥现同时用于账号凭证（api_key / access_token / refresh_token 等）的落库加密
+  # （数据库 + Redis 调度快照）。若留空（易失密钥），凭证加密将被跳过、以明文存储
+  # （degrade-safe，避免重启后数据不可解）。生产环境务必设置固定密钥以启用凭证静态加密。
   encryption_key: ""
 
 # =============================================================================
