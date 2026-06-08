@@ -196,6 +196,28 @@ func groupFromServiceBase(g *service.Group) Group {
 	}
 }
 
+var listExtraKeys = map[string]bool{
+	"email_address": true, "email": true, "privacy_mode": true,
+	"model_rate_limits": true, "allow_overages": true,
+	"quota_daily_reset_at": true, "quota_weekly_reset_at": true,
+}
+
+func filterExtraForList(extra map[string]any) map[string]any {
+	if extra == nil {
+		return nil
+	}
+	out := make(map[string]any, len(listExtraKeys))
+	for k, v := range extra {
+		if listExtraKeys[k] {
+			out[k] = v
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
 func AccountFromServiceShallow(a *service.Account) *Account {
 	if a == nil {
 		return nil
@@ -209,7 +231,7 @@ func AccountFromServiceShallow(a *service.Account) *Account {
 		Type:                    a.Type,
 		Credentials:             redactedCreds,
 		CredentialsStatus:       credsStatus,
-		Extra:                   a.Extra,
+		Extra:                   filterExtraForList(a.Extra),
 		ProxyID:                 a.ProxyID,
 		ProxyFallbackOriginID:   a.ProxyFallbackOriginID,
 		ProxyFallbackOriginName: a.ProxyFallbackOriginName,

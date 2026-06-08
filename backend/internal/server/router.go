@@ -13,6 +13,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/service"
 	"github.com/Wei-Shaw/sub2api/internal/web"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 )
@@ -51,6 +52,13 @@ func SetupRouter(
 	refreshFrameOrigins() // 启动时初始化
 
 	// 应用中间件
+	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPaths([]string{
+		"/v1/",        // OpenAI gateway (streaming)
+		"/v1beta/",    // Gemini gateway
+		"/chat/",      // direct chat endpoint
+		"/responses",  // responses API (streaming/websocket)
+		"/backend-api/", // Codex direct
+	})))
 	r.Use(middleware2.RequestLogger())
 	r.Use(middleware2.Logger())
 	r.Use(middleware2.CORS(cfg.CORS))
