@@ -22,6 +22,8 @@
             <Select :model-value="params.status" class="w-36" :options="filterStatusOpts" @update:model-value="(v: any) => { params.status = v; debouncedReload() }" />
             <Select :model-value="params.privacy_mode" class="w-36" :options="filterPrivacyOpts" @update:model-value="(v: any) => { params.privacy_mode = v; debouncedReload() }" />
             <Select :model-value="params.group" class="w-36" :options="filterGroupOpts" @update:model-value="(v: any) => { params.group = v; debouncedReload() }" />
+            <Select :model-value="params.schedulable" class="w-36" :options="filterSchedulableOpts" @update:model-value="(v: any) => { params.schedulable = v; debouncedReload() }" />
+            <Select :model-value="params.has_proxy" class="w-36" :options="filterHasProxyOpts" @update:model-value="(v: any) => { params.has_proxy = v; debouncedReload() }" />
           </template>
           <template #actions>
           <AccountTableActions
@@ -769,6 +771,8 @@ const {
     status: '',
     privacy_mode: '',
     group: '',
+    schedulable: '',
+    has_proxy: '',
     search: '',
     sort_by: sortState.sort_by,
     sort_order: sortState.sort_order
@@ -780,6 +784,8 @@ const filterTypeOpts = computed(() => [{ value: '', label: t('admin.accounts.all
 const filterStatusOpts = computed(() => [{ value: '', label: t('admin.accounts.allStatus') }, { value: 'active', label: t('admin.accounts.status.active') }, { value: 'inactive', label: t('admin.accounts.status.inactive') }, { value: 'error', label: t('admin.accounts.status.error') }, { value: 'rate_limited', label: t('admin.accounts.status.rateLimited') }, { value: 'temp_unschedulable', label: t('admin.accounts.status.tempUnschedulable') }, { value: 'unschedulable', label: t('admin.accounts.status.unschedulable') }])
 const filterPrivacyOpts = computed(() => [{ value: '', label: t('admin.accounts.allPrivacyModes') }, { value: '__unset__', label: t('admin.accounts.privacyUnset') }, { value: 'training_off', label: 'Privacy' }, { value: 'training_set_cf_blocked', label: 'CF' }, { value: 'training_set_failed', label: 'Fail' }])
 const filterGroupOpts = computed(() => [{ value: '', label: t('admin.accounts.allGroups') }, { value: 'ungrouped', label: t('admin.accounts.ungroupedGroup') }, ...(groups.value || []).map(g => ({ value: String(g.id), label: g.name }))])
+const filterSchedulableOpts = computed(() => [{ value: '', label: t('common.all') + ' ' + t('admin.accounts.columns.schedulable') }, { value: 'true', label: t('common.yes') }, { value: 'false', label: t('common.no') }])
+const filterHasProxyOpts = computed(() => [{ value: '', label: t('common.all') + ' ' + t('admin.accounts.columns.proxy') }, { value: 'true', label: t('common.yes') }, { value: 'false', label: t('common.no') }])
 
 const accountActiveFilterCount = computed(() => {
   let count = 0
@@ -788,6 +794,8 @@ const accountActiveFilterCount = computed(() => {
   if (params.status) count++
   if (params.privacy_mode) count++
   if (params.group) count++
+  if (params.schedulable) count++
+  if (params.has_proxy) count++
   return count
 })
 
@@ -797,6 +805,8 @@ const clearAccountFilters = () => {
   params.status = ''
   params.privacy_mode = ''
   params.group = ''
+  params.schedulable = ''
+  params.has_proxy = ''
   debouncedReload()
 }
 
