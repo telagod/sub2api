@@ -7,7 +7,7 @@
       <div class="px-6 py-6 md:px-8">
         <div class="flex flex-col gap-6 lg:flex-row lg:items-start">
           <div
-            class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-foreground text-2xl font-bold text-foreground "
+            class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-foreground text-2xl font-bold text-foreground "
           >
             <img
               v-if="avatarUrl"
@@ -116,14 +116,14 @@
           </div>
 
           <div class="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
-            <div class="rounded-xl border border-border bg-muted p-5">
+            <div class="rounded-lg border border-border bg-muted p-5">
               <ProfileAvatarCard
                 :user="user"
                 embedded
               />
             </div>
 
-            <div class="rounded-xl border border-border bg-muted p-5">
+            <div class="rounded-lg border border-border bg-muted p-5">
               <ProfileEditForm
                 :initial-username="user?.username || ''"
                 embedded

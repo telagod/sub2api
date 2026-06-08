@@ -86,10 +86,10 @@ function methodIcon(type: string): string {
 }
 
 function methodSelectedClass(type: string): string {
-  if (type.includes('alipay')) return 'border-[#02A9F1] bg-blue-50 text-foreground shadow-sm dark:bg-blue-950 text-foreground'
-  if (type.includes('wxpay')) return 'border-[#09BB07] bg-green-50 text-foreground shadow-sm dark:bg-green-950 text-foreground'
-  if (type === 'stripe') return 'border-[#676BE5] bg-indigo-50 text-foreground shadow-sm dark:bg-indigo-950 text-foreground'
-  if (type === 'airwallex') return 'border-[#FF6B3D] bg-orange-50 text-foreground shadow-sm dark:border-[#FF8E3C] dark:bg-orange-950 text-foreground'
-  return 'border-primary-500 bg-primary-50 text-foreground shadow-sm dark:bg-primary-950 text-foreground'
+  if (type.includes('alipay')) return 'border-[#02A9F1] bg-blue-950 text-foreground shadow-sm  text-foreground'
+  if (type.includes('wxpay')) return 'border-[#09BB07] bg-green-950 text-foreground shadow-sm  text-foreground'
+  if (type === 'stripe') return 'border-[#676BE5] bg-indigo-950 text-foreground shadow-sm  text-foreground'
+  if (type === 'airwallex') return 'border-[#FF8E3C] bg-orange-950 text-foreground shadow-sm   text-foreground'
+  return 'border-primary-500 bg-primary-950 text-foreground shadow-sm  text-foreground'
 }
 </script>

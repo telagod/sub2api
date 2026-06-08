@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<Props>(), {
 <template>
   <div class="space-y-6">
     <!-- Header (matches OpsDashboardHeader + overview blocks) -->
-    <div :class="['rounded-xl border border-border bg-card ', props.fullscreen ? 'p-8' : 'p-6']">
+    <div :class="['rounded-lg border border-border bg-card ', props.fullscreen ? 'p-8' : 'p-6']">
       <div class="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
         <div class="space-y-2">
           <div class="h-6 w-44 animate-pulse rounded bg-muted"></div>
@@ -51,15 +51,15 @@ const props = withDefaults(defineProps<Props>(), {
 
     <!-- Row: Concurrency + Throughput (matches OpsDashboard.vue) -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-4">
-      <div :class="['min-h-[360px] rounded-xl border border-border bg-card  lg:col-span-1', props.fullscreen ? 'p-8' : 'p-6']">
+      <div :class="['min-h-[360px] rounded-lg border border-border bg-card  lg:col-span-1', props.fullscreen ? 'p-8' : 'p-6']">
         <div class="h-4 w-44 animate-pulse rounded bg-muted"></div>
         <div class="mt-6 h-72 animate-pulse rounded-lg bg-muted/70"></div>
       </div>
-      <div :class="['min-h-[360px] rounded-xl border border-border bg-card  lg:col-span-1', props.fullscreen ? 'p-8' : 'p-6']">
+      <div :class="['min-h-[360px] rounded-lg border border-border bg-card  lg:col-span-1', props.fullscreen ? 'p-8' : 'p-6']">
         <div class="h-4 w-44 animate-pulse rounded bg-muted"></div>
         <div class="mt-6 h-72 animate-pulse rounded-lg bg-muted/70"></div>
       </div>
-      <div :class="['min-h-[360px] rounded-xl border border-border bg-card  lg:col-span-2', props.fullscreen ? 'p-8' : 'p-6']">
+      <div :class="['min-h-[360px] rounded-lg border border-border bg-card  lg:col-span-2', props.fullscreen ? 'p-8' : 'p-6']">
         <div class="h-4 w-56 animate-pulse rounded bg-muted"></div>
         <div class="mt-6 h-72 animate-pulse rounded-lg bg-muted/70"></div>
       </div>
@@ -70,7 +70,7 @@ const props = withDefaults(defineProps<Props>(), {
       <div
         v-for="i in 3"
         :key="i"
-        :class="['rounded-xl border border-border bg-card ', props.fullscreen ? 'p-8' : 'p-6']"
+        :class="['rounded-lg border border-border bg-card ', props.fullscreen ? 'p-8' : 'p-6']"
       >
         <div class="h-4 w-44 animate-pulse rounded bg-muted"></div>
         <div class="mt-6 h-56 animate-pulse rounded-lg bg-muted/70"></div>
@@ -78,7 +78,7 @@ const props = withDefaults(defineProps<Props>(), {
     </div>
 
     <!-- Alert Events -->
-    <div :class="['rounded-xl border border-border bg-card ', props.fullscreen ? 'p-8' : 'p-6']">
+    <div :class="['rounded-lg border border-border bg-card ', props.fullscreen ? 'p-8' : 'p-6']">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="h-4 w-48 animate-pulse rounded bg-muted"></div>
         <div v-if="!props.fullscreen" class="flex flex-wrap items-center gap-2">

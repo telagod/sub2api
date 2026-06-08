@@ -302,10 +302,10 @@ watch(
 )
 
 function getLoadBarClass(loadPct: number): string {
-  if (loadPct >= 90) return 'bg-red-500 dark:bg-red-600'
-  if (loadPct >= 70) return 'bg-orange-500 dark:bg-orange-600'
-  if (loadPct >= 50) return 'bg-yellow-500 dark:bg-yellow-600'
-  return 'bg-green-500 dark:bg-green-600'
+  if (loadPct >= 90) return 'bg-red-500'
+  if (loadPct >= 70) return 'bg-orange-500'
+  if (loadPct >= 50) return 'bg-yellow-500'
+  return 'bg-green-500'
 }
 
 function getLoadBarStyle(loadPct: number): string {
@@ -314,7 +314,7 @@ function getLoadBarStyle(loadPct: number): string {
 
 function getLoadTextClass(loadPct: number): string {
   if (loadPct >= 90) return 'text-red-400'
-  if (loadPct >= 70) return 'text-orange-600 dark:text-orange-400'
+  if (loadPct >= 70) return 'text-orange-400'
   if (loadPct >= 50) return 'text-amber-400'
   return 'text-emerald-400'
 }

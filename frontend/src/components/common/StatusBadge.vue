@@ -33,7 +33,7 @@ const variantClass = computed(() => {
     case 'danger':
       return 'bg-red-500'
     default:
-      return 'bg-gray-400'
+      return 'bg-muted-foreground'
   }
 })
 </script>

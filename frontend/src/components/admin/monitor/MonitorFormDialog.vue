@@ -356,9 +356,9 @@ function normalizeAPIMode(mode: APIMode | undefined | null): APIMode {
 function apiModeButtonClass(mode: APIMode): string {
   const active = form.api_mode === mode
   if (active) {
-    return 'border-primary-500 bg-white text-primary-700 shadow-sm dark:border-primary-400 dark:bg-primary-500/15 dark:text-primary-300'
+    return 'border-primary-500 bg-primary-500/15 text-primary-300 shadow-sm  '
   }
-  return 'border-blue-100 bg-white/70 text-gray-600 hover:border-primary-300 dark:text-gray-400'
+  return 'border-border bg-card text-muted-foreground hover:border-primary-300'
 }
 
 function templateOptionLabel(tpl: ChannelMonitorTemplate): string {

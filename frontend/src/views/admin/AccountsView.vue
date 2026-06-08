@@ -259,7 +259,7 @@
             </div>
           </template>
           <template #cell-schedulable="{ row }">
-            <button @click="handleToggleSchedulable(row)" :disabled="togglingSchedulable === row.id" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-dark-800" :class="[row.schedulable ? 'bg-primary-400 hover:bg-primary-300' : 'bg-muted hover:bg-accent']" :title="row.schedulable ? t('admin.accounts.schedulableEnabled') : t('admin.accounts.schedulableDisabled')">
+            <button @click="handleToggleSchedulable(row)" :disabled="togglingSchedulable === row.id" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" :class="[row.schedulable ? 'bg-primary-400 hover:bg-primary-300' : 'bg-muted hover:bg-accent']" :title="row.schedulable ? t('admin.accounts.schedulableEnabled') : t('admin.accounts.schedulableDisabled')">
               <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="[row.schedulable ? 'translate-x-4' : 'translate-x-0']" />
             </button>
           </template>
@@ -1111,7 +1111,7 @@ function getOpenAICompactMeta(row: any): { label: string; className: string; dot
     case 'blocked':
       return {
         label: t('admin.accounts.openai.compactUnsupported'),
-        className: 'text-rose-600 dark:text-rose-300',
+        className: 'text-rose-300',
         dotClass: 'bg-rose-500 shadow-[0_0_0_2px_rgba(244,63,94,0.14)]'
       }
     case 'auto':
@@ -1135,8 +1135,8 @@ function getAntigravityTierClass(row: any): string {
   const tier = getAntigravityTierFromRow(row)
   switch (tier) {
     case 'free-tier': return 'bg-muted text-muted-foreground'
-    case 'g1-pro-tier': return 'bg-sky-500/10 text-sky-400 dark:bg-blue-900/40'
-    case 'g1-ultra-tier': return 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300'
+    case 'g1-pro-tier': return 'bg-blue-900/40 text-sky-400'
+    case 'g1-ultra-tier': return 'bg-purple-900/40 text-purple-300'
     default: return ''
   }
 }

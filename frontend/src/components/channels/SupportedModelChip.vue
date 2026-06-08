@@ -201,12 +201,12 @@ const perMillionScale = 1_000_000
 const popoverBorderClass = computed(() =>
   effectivePlatform.value
     ? platformBorderClass(effectivePlatform.value)
-    : 'border-gray-200',
+    : 'border-border',
 )
 const popoverHeaderClass = computed(() =>
   effectivePlatform.value
     ? platformBadgeLightClass(effectivePlatform.value)
-    : 'bg-gray-50 text-gray-700/60 dark:text-gray-300',
+    : 'bg-secondary text-muted-foreground',
 )
 
 function prefixKey(k: string): string {

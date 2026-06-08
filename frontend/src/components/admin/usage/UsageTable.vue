@@ -142,7 +142,7 @@
               @mouseenter="showTokenTooltip($event, row)"
               @mouseleave="hideTokenTooltip"
             >
-              <div class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-gray-100 transition-colors group-hover:bg-sky-500/10 dark:bg-gray-700 dark:group-hover:bg-blue-900/50">
+              <div class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-accent transition-colors group-hover:bg-sky-500/10">
                 <Icon name="infoCircle" size="xs" class="text-muted-foreground group-hover:text-primary-200" />
               </div>
             </div>
@@ -483,10 +483,10 @@ const getRequestTypeLabel = (row: AdminUsageLog): string => {
 
 const getRequestTypeBadgeClass = (row: AdminUsageLog): string => {
   const requestType = resolveUsageRequestType(row)
-  if (requestType === 'ws_v2') return 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200'
-  if (requestType === 'stream') return 'bg-sky-500/10 text-sky-400 dark:bg-blue-900 dark:text-blue-200'
-  if (requestType === 'sync') return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-  return 'bg-amber-500/10 text-amber-400 dark:bg-amber-900 dark:text-amber-200'
+  if (requestType === 'ws_v2') return 'bg-violet-900 text-violet-200'
+  if (requestType === 'stream') return 'bg-blue-900 text-blue-200'
+  if (requestType === 'sync') return 'bg-accent text-muted-foreground'
+  return 'bg-amber-900 text-amber-200'
 }
 
 

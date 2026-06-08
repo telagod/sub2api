@@ -282,9 +282,9 @@ const bodyModeOptions = computed<{ value: BodyOverrideMode; label: string }[]>((
 function bodyModeButtonClass(mode: BodyOverrideMode): string {
   const active = props.bodyOverrideMode === mode
   if (active) {
-    return 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300 dark:border-primary-400'
+    return 'border-primary-500 bg-primary-500/15 text-primary-300  '
   }
-  return 'border-gray-200 bg-white text-gray-600 hover:border-primary-300 dark:text-gray-400'
+  return 'border-border bg-card text-muted-foreground hover:border-primary-300'
 }
 
 const bodyModeHint = computed(() => {

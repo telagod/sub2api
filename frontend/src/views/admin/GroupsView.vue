@@ -112,7 +112,7 @@
                 :class="[
                   'inline-block rounded-full px-2 py-0.5 text-xs font-medium',
                   row.subscription_type === 'subscription'
-                    ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
+                    ? 'bg-violet-900/30 text-violet-400'
                     : 'bg-muted text-foreground/75',
                 ]"
               >
@@ -282,14 +282,14 @@
             <div class="flex items-center gap-1">
               <button
                 @click="handleEdit(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600 dark:hover:bg-secondary dark:hover:text-primary-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600"
               >
                 <Icon name="edit" size="sm" />
                 <span class="text-xs">{{ t("common.edit") }}</span>
               </button>
               <button
                 @click="handleRateMultipliers(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-purple-600 dark:hover:bg-secondary dark:hover:text-purple-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-purple-400"
               >
                 <Icon name="dollar" size="sm" />
                 <span class="text-xs">{{
@@ -298,7 +298,7 @@
               </button>
               <button
                 @click="handleRPMOverrides(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-orange-600 dark:hover:bg-secondary dark:hover:text-orange-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-orange-400"
               >
                 <Icon name="bolt" size="sm" />
                 <span class="text-xs">{{
@@ -307,7 +307,7 @@
               </button>
               <button
                 @click="handleDelete(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400"
               >
                 <Icon name="trash" size="sm" />
                 <span class="text-xs">{{ t("common.delete") }}</span>
@@ -395,7 +395,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
@@ -421,7 +421,7 @@
             <span
               v-for="groupId in createForm.copy_accounts_from_group_ids"
               :key="groupId"
-              class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
+              class="inline-flex items-center gap-1 rounded-full bg-primary-900/30 px-2.5 py-1 text-xs font-medium text-primary-300  "
             >
               {{
                 copyAccountsGroupOptions.find((o) => o.value === groupId)
@@ -435,7 +435,7 @@
                       (id) => id !== groupId,
                     )
                 "
-                class="ml-0.5 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200"
+                class="ml-0.5 text-primary-500 hover:text-primary-700"
               >
                 <Icon name="x" size="xs" />
               </button>
@@ -514,7 +514,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <!-- Tooltip Popover -->
               <div
@@ -593,7 +593,7 @@
           <!-- Subscription limits (only show when subscription type is selected) -->
           <div
             v-if="createForm.subscription_type === 'subscription'"
-            class="space-y-4 border-l-2 border-primary-200 pl-4 dark:border-primary-800"
+            class="space-y-4 border-l-2 border-primary-800 pl-4"
           >
             <div>
               <label class="input-label">{{
@@ -680,14 +680,14 @@
               <div class="flex items-center gap-1.5">
                 <button
                   type="button"
-                  class="rounded px-2 py-1 font-medium text-primary-600 transition-colors hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/20"
+                  class="rounded px-2 py-1 font-medium text-primary-400 transition-colors hover:bg-primary-50 "
                   @click="selectAllModelsListItems(createModelsListState)"
                 >
                   全选
                 </button>
                 <button
                   type="button"
-                  class="rounded px-2 py-1 font-medium text-foreground/75 transition-colors hover:bg-muted dark:hover:bg-secondary"
+                  class="rounded px-2 py-1 font-medium text-foreground/75 transition-colors hover:bg-muted"
                   @click="invertModelsListSelection(createModelsListState)"
                 >
                   反选
@@ -856,7 +856,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
@@ -929,7 +929,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
@@ -987,7 +987,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
@@ -1094,7 +1094,7 @@
 
           <div v-if="createForm.allow_messages_dispatch" class="mt-3">
             <div
-              class="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm  "
+              class="relative overflow-hidden rounded-lg border border-border bg-card shadow-sm  "
             >
               <div
                 class="border-b border-border bg-card/80 px-4 py-3  "
@@ -1102,7 +1102,7 @@
                 <div class="flex items-center gap-2">
                   <div class="h-2 w-2 rounded-full bg-blue-500"></div>
                   <label
-                    class="text-sm font-medium text-foreground dark:text-white"
+                    class="text-sm font-medium text-foreground"
                     >{{
                       t("admin.groups.openaiMessages.familyMappingTitle")
                     }}</label
@@ -1158,24 +1158,24 @@
             </div>
 
             <div
-              class="mt-5 relative overflow-hidden rounded-xl border border-primary-200 bg-card shadow-sm dark:border-primary-900/50 "
+              class="mt-5 relative overflow-hidden rounded-lg border border-primary-900/50 bg-card shadow-sm  "
             >
               <div
-                class="border-b border-primary-100 bg-primary-50/80 px-4 py-3 dark:border-primary-900/40 dark:bg-primary-900/20"
+                class="border-b border-primary-900/40 bg-primary-900/20 px-4 py-3"
               >
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <div class="flex items-center gap-2">
                       <div class="h-2 w-2 rounded-full bg-primary-500"></div>
                       <label
-                        class="text-sm font-medium text-primary-900 dark:text-primary-100"
+                        class="text-sm font-medium text-primary-100"
                         >{{
                           t("admin.groups.openaiMessages.exactMappingTitle")
                         }}</label
                       >
                     </div>
                     <p
-                      class="mt-1 text-xs text-primary-600/90 dark:text-primary-400/90"
+                      class="mt-1 text-xs text-primary-400/90"
                     >
                       {{ t("admin.groups.openaiMessages.exactMappingHint") }}
                     </p>
@@ -1186,7 +1186,7 @@
               <div class="p-4 bg-card/30 ">
                 <div
                   v-if="createForm.exact_model_mappings.length === 0"
-                  class="flex items-center justify-between gap-3 rounded-xl border-2 border-dashed border-primary-200 bg-card px-5 py-4 text-sm text-primary-700 transition-colors hover:border-primary-300 dark:border-primary-900/40  dark:text-primary-300 dark:hover:border-primary-800"
+                  class="flex items-center justify-between gap-3 rounded-lg border-2 border-dashed border-primary-900/40 bg-card px-5 py-4 text-sm text-primary-300 transition-colors hover:border-primary-300   "
                 >
                   <span>{{
                     t("admin.groups.openaiMessages.noExactMappings")
@@ -1194,7 +1194,7 @@
                   <button
                     type="button"
                     @click="addCreateMessagesDispatchMapping"
-                    class="flex items-center gap-1.5 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                    class="flex items-center gap-1.5 text-sm font-medium text-primary-600 transition-colors hover:text-primary-400"
                   >
                     <Icon name="plus" size="sm" />
                     {{ t("admin.groups.openaiMessages.addExactMapping") }}
@@ -1205,7 +1205,7 @@
                   <div
                     v-for="row in createForm.exact_model_mappings"
                     :key="getCreateMessagesDispatchRowKey(row)"
-                    class="group relative rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-md   dark:hover:border-primary-700"
+                    class="group relative rounded-lg border border-border bg-card p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-md  "
                   >
                     <div class="flex items-center gap-4">
                       <div
@@ -1223,11 +1223,11 @@
                                 'admin.groups.openaiMessages.claudeModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-background"
+                            class="input bg-card focus:bg-card "
                           />
                         </div>
                         <div
-                          class="hidden md:flex md:justify-center md:pt-7 text-primary-300 dark:text-primary-700"
+                          class="hidden md:flex md:justify-center md:pt-7 text-primary-700"
                         >
                           <Icon
                             name="arrowRight"
@@ -1247,14 +1247,14 @@
                                 'admin.groups.openaiMessages.targetModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-background"
+                            class="input bg-card focus:bg-card "
                           />
                         </div>
                       </div>
                       <button
                         type="button"
                         @click="removeCreateMessagesDispatchMapping(row)"
-                        class="mt-6 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                        class="mt-6 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400"
                         :title="
                           t('admin.groups.openaiMessages.removeExactMapping')
                         "
@@ -1267,7 +1267,7 @@
                   <button
                     type="button"
                     @click="addCreateMessagesDispatchMapping"
-                    class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card py-3 text-sm font-medium text-muted-foreground transition-all hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600   dark:hover:border-primary-800 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
+                    class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-card py-3 text-sm font-medium text-muted-foreground transition-all hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600  "
                   >
                     <Icon name="plus" size="sm" />
                     {{ t("admin.groups.openaiMessages.addExactMapping") }}
@@ -1399,7 +1399,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-80 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
@@ -1492,13 +1492,13 @@
                       <span
                         v-for="account in rule.accounts"
                         :key="account.id"
-                        class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
+                        class="inline-flex items-center gap-1 rounded-full bg-primary-900/30 px-2.5 py-1 text-xs font-medium text-primary-300  "
                       >
                         {{ account.name }}
                         <button
                           type="button"
                           @click="removeSelectedAccount(rule, account.id)"
-                          class="ml-0.5 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200"
+                          class="ml-0.5 text-primary-500 hover:text-primary-700"
                         >
                           <Icon name="x" size="xs" />
                         </button>
@@ -1536,7 +1536,7 @@
                           :key="account.id"
                           type="button"
                           @click="selectAccount(rule, account)"
-                          class="w-full px-3 py-2 text-left text-sm hover:bg-muted dark:hover:bg-secondary"
+                          class="w-full px-3 py-2 text-left text-sm hover:bg-muted"
                           :class="{
                             'opacity-50': rule.accounts.some(
                               (a) => a.id === account.id,
@@ -1574,7 +1574,7 @@
             v-if="createForm.model_routing_enabled"
             type="button"
             @click="addCreateRoutingRule"
-            class="mt-3 flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+            class="mt-3 flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-400"
           >
             <Icon name="plus" size="sm" />
             {{ t("admin.groups.modelRouting.addRule") }}
@@ -1680,7 +1680,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
@@ -1706,7 +1706,7 @@
             <span
               v-for="groupId in editForm.copy_accounts_from_group_ids"
               :key="groupId"
-              class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
+              class="inline-flex items-center gap-1 rounded-full bg-primary-900/30 px-2.5 py-1 text-xs font-medium text-primary-300  "
             >
               {{
                 copyAccountsGroupOptionsForEdit.find((o) => o.value === groupId)
@@ -1720,7 +1720,7 @@
                       (id) => id !== groupId,
                     )
                 "
-                class="ml-0.5 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200"
+                class="ml-0.5 text-primary-500 hover:text-primary-700"
               >
                 <Icon name="x" size="xs" />
               </button>
@@ -1797,7 +1797,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <!-- Tooltip Popover -->
               <div
@@ -1881,7 +1881,7 @@
           <!-- Subscription limits (only show when subscription type is selected) -->
           <div
             v-if="editForm.subscription_type === 'subscription'"
-            class="space-y-4 border-l-2 border-primary-200 pl-4 dark:border-primary-800"
+            class="space-y-4 border-l-2 border-primary-800 pl-4"
           >
             <div>
               <label class="input-label">{{
@@ -1968,14 +1968,14 @@
               <div class="flex items-center gap-1.5">
                 <button
                   type="button"
-                  class="rounded px-2 py-1 font-medium text-primary-600 transition-colors hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/20"
+                  class="rounded px-2 py-1 font-medium text-primary-400 transition-colors hover:bg-primary-50 "
                   @click="selectAllModelsListItems(editModelsListState)"
                 >
                   全选
                 </button>
                 <button
                   type="button"
-                  class="rounded px-2 py-1 font-medium text-foreground/75 transition-colors hover:bg-muted dark:hover:bg-secondary"
+                  class="rounded px-2 py-1 font-medium text-foreground/75 transition-colors hover:bg-muted"
                   @click="invertModelsListSelection(editModelsListState)"
                 >
                   反选
@@ -2144,7 +2144,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
@@ -2217,7 +2217,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
@@ -2275,7 +2275,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
@@ -2378,7 +2378,7 @@
 
           <div v-if="editForm.allow_messages_dispatch" class="mt-3">
             <div
-              class="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm  "
+              class="relative overflow-hidden rounded-lg border border-border bg-card shadow-sm  "
             >
               <div
                 class="border-b border-border bg-card/80 px-4 py-3  "
@@ -2386,7 +2386,7 @@
                 <div class="flex items-center gap-2">
                   <div class="h-2 w-2 rounded-full bg-blue-500"></div>
                   <label
-                    class="text-sm font-medium text-foreground dark:text-white"
+                    class="text-sm font-medium text-foreground"
                     >{{
                       t("admin.groups.openaiMessages.familyMappingTitle")
                     }}</label
@@ -2442,24 +2442,24 @@
             </div>
 
             <div
-              class="mt-5 relative overflow-hidden rounded-xl border border-primary-200 bg-card shadow-sm dark:border-primary-900/50 "
+              class="mt-5 relative overflow-hidden rounded-lg border border-primary-900/50 bg-card shadow-sm  "
             >
               <div
-                class="border-b border-primary-100 bg-primary-50/80 px-4 py-3 dark:border-primary-900/40 dark:bg-primary-900/20"
+                class="border-b border-primary-900/40 bg-primary-900/20 px-4 py-3"
               >
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <div class="flex items-center gap-2">
                       <div class="h-2 w-2 rounded-full bg-primary-500"></div>
                       <label
-                        class="text-sm font-medium text-primary-900 dark:text-primary-100"
+                        class="text-sm font-medium text-primary-100"
                         >{{
                           t("admin.groups.openaiMessages.exactMappingTitle")
                         }}</label
                       >
                     </div>
                     <p
-                      class="mt-1 text-xs text-primary-600/90 dark:text-primary-400/90"
+                      class="mt-1 text-xs text-primary-400/90"
                     >
                       {{ t("admin.groups.openaiMessages.exactMappingHint") }}
                     </p>
@@ -2470,7 +2470,7 @@
               <div class="p-4 bg-card/30 ">
                 <div
                   v-if="editForm.exact_model_mappings.length === 0"
-                  class="flex items-center justify-between gap-3 rounded-xl border-2 border-dashed border-primary-200 bg-card px-5 py-4 text-sm text-primary-700 transition-colors hover:border-primary-300 dark:border-primary-900/40  dark:text-primary-300 dark:hover:border-primary-800"
+                  class="flex items-center justify-between gap-3 rounded-lg border-2 border-dashed border-primary-900/40 bg-card px-5 py-4 text-sm text-primary-300 transition-colors hover:border-primary-300   "
                 >
                   <span>{{
                     t("admin.groups.openaiMessages.noExactMappings")
@@ -2478,7 +2478,7 @@
                   <button
                     type="button"
                     @click="addEditMessagesDispatchMapping"
-                    class="flex items-center gap-1.5 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                    class="flex items-center gap-1.5 text-sm font-medium text-primary-600 transition-colors hover:text-primary-400"
                   >
                     <Icon name="plus" size="sm" />
                     {{ t("admin.groups.openaiMessages.addExactMapping") }}
@@ -2489,7 +2489,7 @@
                   <div
                     v-for="row in editForm.exact_model_mappings"
                     :key="getEditMessagesDispatchRowKey(row)"
-                    class="group relative rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-md   dark:hover:border-primary-700"
+                    class="group relative rounded-lg border border-border bg-card p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-md  "
                   >
                     <div class="flex items-center gap-4">
                       <div
@@ -2507,11 +2507,11 @@
                                 'admin.groups.openaiMessages.claudeModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-background"
+                            class="input bg-card focus:bg-card "
                           />
                         </div>
                         <div
-                          class="hidden md:flex md:justify-center md:pt-7 text-primary-300 dark:text-primary-700"
+                          class="hidden md:flex md:justify-center md:pt-7 text-primary-700"
                         >
                           <Icon
                             name="arrowRight"
@@ -2531,14 +2531,14 @@
                                 'admin.groups.openaiMessages.targetModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-background"
+                            class="input bg-card focus:bg-card "
                           />
                         </div>
                       </div>
                       <button
                         type="button"
                         @click="removeEditMessagesDispatchMapping(row)"
-                        class="mt-6 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                        class="mt-6 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400"
                         :title="
                           t('admin.groups.openaiMessages.removeExactMapping')
                         "
@@ -2551,7 +2551,7 @@
                   <button
                     type="button"
                     @click="addEditMessagesDispatchMapping"
-                    class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card py-3 text-sm font-medium text-muted-foreground transition-all hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600   dark:hover:border-primary-800 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
+                    class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-card py-3 text-sm font-medium text-muted-foreground transition-all hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600  "
                   >
                     <Icon name="plus" size="sm" />
                     {{ t("admin.groups.openaiMessages.addExactMapping") }}
@@ -2683,7 +2683,7 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-80 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
@@ -2775,13 +2775,13 @@
                       <span
                         v-for="account in rule.accounts"
                         :key="account.id"
-                        class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
+                        class="inline-flex items-center gap-1 rounded-full bg-primary-900/30 px-2.5 py-1 text-xs font-medium text-primary-300  "
                       >
                         {{ account.name }}
                         <button
                           type="button"
                           @click="removeSelectedAccount(rule, account.id, true)"
-                          class="ml-0.5 text-primary-500 hover:text-primary-700 dark:hover:text-primary-200"
+                          class="ml-0.5 text-primary-500 hover:text-primary-700"
                         >
                           <Icon name="x" size="xs" />
                         </button>
@@ -2819,7 +2819,7 @@
                           :key="account.id"
                           type="button"
                           @click="selectAccount(rule, account, true)"
-                          class="w-full px-3 py-2 text-left text-sm hover:bg-muted dark:hover:bg-secondary"
+                          class="w-full px-3 py-2 text-left text-sm hover:bg-muted"
                           :class="{
                             'opacity-50': rule.accounts.some(
                               (a) => a.id === account.id,
@@ -2857,7 +2857,7 @@
             v-if="editForm.model_routing_enabled"
             type="button"
             @click="addEditRoutingRule"
-            class="mt-3 flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+            class="mt-3 flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-400"
           >
             <Icon name="plus" size="sm" />
             {{ t("admin.groups.modelRouting.addRule") }}
@@ -2944,7 +2944,7 @@
               <Icon name="menu" size="md" />
             </div>
             <div class="flex-1">
-              <div class="font-medium text-foreground dark:text-white">
+              <div class="font-medium text-foreground">
                 {{ group.name }}
               </div>
               <div class="text-xs text-muted-foreground">
@@ -2952,11 +2952,11 @@
                   :class="[
                     'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
                     group.platform === 'anthropic'
-                      ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                      ? 'bg-orange-900/30 text-orange-400'
                       : group.platform === 'openai'
                         ? 'bg-emerald-500/10 text-emerald-400'
                         : group.platform === 'antigravity'
-                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                          ? 'bg-purple-900/30 text-purple-400'
                           : 'bg-sky-500/10 text-sky-400',
                   ]"
                 >

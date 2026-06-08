@@ -13,7 +13,7 @@
               <p class="text-xs font-medium text-muted-foreground">
                 {{ t('usage.totalRequests') }}
               </p>
-              <p class="text-xl font-bold text-foreground dark:text-white">
+              <p class="text-xl font-bold text-foreground">
                 {{ usageStats?.total_requests?.toLocaleString() || '0' }}
               </p>
               <p class="text-xs text-muted-foreground">
@@ -33,7 +33,7 @@
               <p class="text-xs font-medium text-muted-foreground">
                 {{ t('usage.totalTokens') }}
               </p>
-              <p class="text-xl font-bold text-foreground dark:text-white">
+              <p class="text-xl font-bold text-foreground">
                 {{ formatTokens(usageStats?.total_tokens || 0) }}
               </p>
               <p class="text-xs text-muted-foreground">
@@ -41,14 +41,14 @@
                 <span> · </span>
                 <span>{{ t('usage.out') }} {{ formatTokens(usageStats?.total_output_tokens || 0) }}</span>
                 <span> · </span>
-                <span class="text-sky-600 dark:text-sky-400">{{ t('usage.cacheHit') }} {{ formatTokens(usageStats?.total_cache_read_tokens || 0) }}</span>
+                <span class="text-sky-400">{{ t('usage.cacheHit') }} {{ formatTokens(usageStats?.total_cache_read_tokens || 0) }}</span>
                 <span> · </span>
                 <span class="text-amber-400">{{ t('usage.cacheCreate') }} {{ formatTokens(usageStats?.total_cache_creation_tokens || 0) }}</span>
               </p>
               <p class="text-xs text-muted-foreground">
                 {{ t('usage.cacheHitRate') }}:
                 <template v-if="cacheStats.totalInput > 0">
-                  <span class="text-sky-600 dark:text-sky-400">{{ formatTokens(cacheStats.cacheRead) }}</span>
+                  <span class="text-sky-400">{{ formatTokens(cacheStats.cacheRead) }}</span>
                   <span class="text-muted-foreground">/</span>
                   <span class="text-foreground/75">{{ formatTokens(cacheStats.totalInput) }}</span>
                   <span class="ml-1">{{ cacheStats.ratePercent }}</span>
@@ -84,14 +84,14 @@
         <!-- Average Duration -->
         <div class="card p-4">
           <div class="flex items-center gap-3">
-            <div class="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/30">
-              <Icon name="clock" size="md" class="text-purple-600 dark:text-purple-400" />
+            <div class="rounded-lg bg-purple-900/30 p-2 ">
+              <Icon name="clock" size="md" class="text-purple-400" />
             </div>
             <div>
               <p class="text-xs font-medium text-muted-foreground">
                 {{ t('usage.avgDuration') }}
               </p>
-              <p class="text-xl font-bold text-foreground dark:text-white">
+              <p class="text-xl font-bold text-foreground">
                 {{ formatDuration(usageStats?.average_duration_ms || 0) }}
               </p>
               <p class="text-xs text-muted-foreground">{{ t('usage.perRequest') }}</p>
@@ -190,17 +190,17 @@
           @sort="handleSort"
         >
           <template #cell-api_key="{ row }">
-            <span class="text-sm text-foreground dark:text-white">{{
+            <span class="text-sm text-foreground">{{
               row.api_key?.name || '-'
             }}</span>
           </template>
 
           <template #cell-model="{ value }">
-            <span class="font-medium text-foreground dark:text-white">{{ value }}</span>
+            <span class="font-medium text-foreground">{{ value }}</span>
           </template>
 
           <template #cell-reasoning_effort="{ row }">
-            <span class="text-sm text-foreground dark:text-white">
+            <span class="text-sm text-foreground">
               {{ formatReasoningEffort(row.reasoning_effort) }}
             </span>
           </template>
@@ -243,7 +243,7 @@
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <span class="font-medium text-foreground dark:text-white">{{ row.image_count }}{{ t('usage.imageUnit') }}</span>
+              <span class="font-medium text-foreground">{{ row.image_count }}{{ t('usage.imageUnit') }}</span>
               <span class="text-muted-foreground">({{ formatImageBillingSize(row, t) }})</span>
             </div>
             <!-- Token 请求 -->
@@ -254,14 +254,14 @@
                   <!-- Input -->
                   <div class="inline-flex items-center gap-1">
                     <Icon name="arrowDown" size="sm" class="text-emerald-400" />
-                    <span class="font-medium text-foreground dark:text-white">{{
+                    <span class="font-medium text-foreground">{{
                       (row.input_tokens ?? 0).toLocaleString()
                     }}</span>
                   </div>
                   <!-- Output -->
                   <div class="inline-flex items-center gap-1">
                     <Icon name="arrowUp" size="sm" class="text-violet-500" />
-                    <span class="font-medium text-foreground dark:text-white">{{
+                    <span class="font-medium text-foreground">{{
                       (row.output_tokens ?? 0).toLocaleString()
                     }}</span>
                   </div>
@@ -274,7 +274,7 @@
                   <!-- Cache Read -->
                   <div v-if="row.cache_read_tokens > 0" class="inline-flex items-center gap-1">
                     <Icon name="inbox" size="sm" class="text-sky-500" />
-                    <span class="font-medium text-sky-600 dark:text-sky-400">{{
+                    <span class="font-medium text-sky-400">{{
                       formatCacheTokens(row.cache_read_tokens)
                     }}</span>
                   </div>
@@ -284,14 +284,14 @@
                     <span class="font-medium text-amber-400">{{
                       formatCacheTokens(row.cache_creation_tokens)
                     }}</span>
-                    <span v-if="row.cache_creation_1h_tokens > 0" class="inline-flex items-center rounded px-1 py-px text-[10px] font-medium leading-tight bg-orange-100 text-orange-600 ring-1 ring-inset ring-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:ring-orange-500/30">1h</span>
-                    <span v-if="row.cache_ttl_overridden" :title="t('usage.cacheTtlOverriddenHint')" class="inline-flex items-center rounded px-1 py-px text-[10px] font-medium leading-tight bg-rose-100 text-rose-600 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:ring-rose-500/30 cursor-help">R</span>
+                    <span v-if="row.cache_creation_1h_tokens > 0" class="inline-flex items-center rounded px-1 py-px text-[10px] font-medium leading-tight bg-orange-500/20 text-orange-400 ring-1 ring-inset ring-orange-500/30">1h</span>
+                    <span v-if="row.cache_ttl_overridden" :title="t('usage.cacheTtlOverriddenHint')" class="inline-flex items-center rounded px-1 py-px text-[10px] font-medium leading-tight bg-rose-500/20 text-rose-400 ring-1 ring-inset ring-rose-500/30 cursor-help">R</span>
                   </div>
                 </div>
                 <div v-if="hasImageOutputTokens(row)" class="flex items-center gap-2">
                   <div class="inline-flex items-center gap-1">
                     <svg class="h-3.5 w-3.5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    <span class="font-medium text-pink-600 dark:text-pink-400">{{ row.image_output_tokens.toLocaleString() }}</span>
+                    <span class="font-medium text-pink-400">{{ row.image_output_tokens.toLocaleString() }}</span>
                   </div>
                 </div>
               </div>
@@ -302,12 +302,12 @@
                 @mouseleave="hideTokenTooltip"
               >
                 <div
-                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-sky-500/10 dark:group-hover:bg-blue-900/50"
+                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-blue-900/50"
                 >
                   <Icon
                     name="infoCircle"
                     size="xs"
-                    class="text-muted-foreground group-hover:text-blue-500 dark:group-hover:text-blue-400"
+                    class="text-muted-foreground group-hover:text-blue-400"
                   />
                 </div>
               </div>
@@ -326,12 +326,12 @@
                 @mouseleave="hideTooltip"
               >
                 <div
-                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-sky-500/10 dark:group-hover:bg-blue-900/50"
+                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-blue-900/50"
                 >
                   <Icon
                     name="infoCircle"
                     size="xs"
-                    class="text-muted-foreground group-hover:text-blue-500 dark:group-hover:text-blue-400"
+                    class="text-muted-foreground group-hover:text-blue-400"
                   />
                 </div>
               </div>
@@ -411,7 +411,7 @@
       }"
     >
       <div
-        class="whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2.5 text-xs text-white shadow-xl"
+        class="whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2.5 text-xs text-white shadow-lg"
       >
         <div class="space-y-1.5">
           <!-- Token Breakdown -->
@@ -477,7 +477,7 @@
         </div>
         <!-- Tooltip Arrow (left side) -->
         <div
-          class="absolute right-full top-1/2 h-0 w-0 -translate-y-1/2 border-b-[6px] border-r-[6px] border-t-[6px] border-b-transparent border-r-gray-900 border-t-transparent dark:border-r-gray-800"
+          class="absolute right-full top-1/2 h-0 w-0 -translate-y-1/2 border-b-[6px] border-r-[6px] border-t-[6px] border-b-transparent border-r-card border-t-transparent"
         ></div>
       </div>
     </div>
@@ -494,7 +494,7 @@
       }"
     >
       <div
-        class="whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2.5 text-xs text-white shadow-xl"
+        class="whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2.5 text-xs text-white shadow-lg"
       >
         <div class="space-y-1.5">
           <!-- Cost Breakdown -->
@@ -599,7 +599,7 @@
         </div>
         <!-- Tooltip Arrow (left side) -->
         <div
-          class="absolute right-full top-1/2 h-0 w-0 -translate-y-1/2 border-b-[6px] border-r-[6px] border-t-[6px] border-b-transparent border-r-gray-900 border-t-transparent dark:border-r-gray-800"
+          class="absolute right-full top-1/2 h-0 w-0 -translate-y-1/2 border-b-[6px] border-r-[6px] border-t-[6px] border-b-transparent border-r-card border-t-transparent"
         ></div>
       </div>
     </div>
@@ -781,10 +781,10 @@ const getRequestTypeLabel = (log: UsageLog): string => {
 
 const getRequestTypeBadgeClass = (log: UsageLog): string => {
   const requestType = resolveUsageRequestType(log)
-  if (requestType === 'ws_v2') return 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200'
-  if (requestType === 'stream') return 'bg-sky-500/10 text-sky-400 dark:bg-blue-900 dark:text-blue-200'
-  if (requestType === 'sync') return 'bg-muted text-foreground text-foreground/85'
-  return 'bg-amber-500/10 text-amber-400 dark:bg-amber-900 dark:text-amber-200'
+  if (requestType === 'ws_v2') return 'bg-violet-900 text-violet-200'
+  if (requestType === 'stream') return 'bg-blue-900 text-blue-200'
+  if (requestType === 'sync') return 'bg-muted text-foreground/85'
+  return 'bg-amber-900 text-amber-200'
 }
 
 

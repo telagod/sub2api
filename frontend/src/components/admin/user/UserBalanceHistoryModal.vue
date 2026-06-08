@@ -258,10 +258,10 @@ const getIconBg = (item: BalanceHistoryItem) => {
       ? 'bg-emerald-500/10'
       : 'bg-red-500/10'
   }
-  if (isSubscriptionType(item.type)) return 'bg-purple-100 dark:bg-purple-900/30'
+  if (isSubscriptionType(item.type)) return 'bg-purple-900/30'
   return item.value >= 0
     ? 'bg-sky-500/10'
-    : 'bg-orange-100 dark:bg-orange-900/30'
+    : 'bg-orange-900/30'
 }
 
 // Icon text color
@@ -271,10 +271,10 @@ const getIconColor = (item: BalanceHistoryItem) => {
       ? 'text-emerald-400'
       : 'text-red-400'
   }
-  if (isSubscriptionType(item.type)) return 'text-purple-600 dark:text-purple-400'
+  if (isSubscriptionType(item.type)) return 'text-purple-400'
   return item.value >= 0
     ? 'text-sky-400'
-    : 'text-orange-600 dark:text-orange-400'
+    : 'text-orange-400'
 }
 
 // Value text color
@@ -284,10 +284,10 @@ const getValueColor = (item: BalanceHistoryItem) => {
       ? 'text-emerald-400'
       : 'text-red-400'
   }
-  if (isSubscriptionType(item.type)) return 'text-purple-600 dark:text-purple-400'
+  if (isSubscriptionType(item.type)) return 'text-purple-400'
   return item.value >= 0
     ? 'text-sky-400'
-    : 'text-orange-600 dark:text-orange-400'
+    : 'text-orange-400'
 }
 
 // Item title

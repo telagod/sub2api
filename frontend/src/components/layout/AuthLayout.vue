@@ -2,14 +2,14 @@
   <div class="relative flex min-h-screen items-center justify-center overflow-hidden p-4">
     <!-- 背景：炭黑 / 冷白 -->
     <div
-      class="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-200 dark:from-dark-950 dark:via-dark-900 dark:to-dark-950"
+      class="absolute inset-0 bg-gradient-to-br from-background via-card to-background"
     ></div>
 
     <!-- 冷钢装饰层 -->
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
       <!-- 顶部中心银色径向高光 -->
       <div
-        class="absolute left-1/2 top-[-10%] h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-white/[0.06] blur-3xl dark:bg-white/[0.05]"
+        class="absolute left-1/2 top-[-10%] h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-white/[0.05] blur-3xl"
       ></div>
       <!-- 底部钢灰微光 -->
       <div
@@ -27,7 +27,7 @@
       <div class="mb-8 text-center">
         <template v-if="settingsLoaded">
           <div
-            class="mb-4 inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-border bg-secondary p-2 "
+            class="mb-4 inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-border bg-secondary p-2 "
           >
             <img :src="siteLogo || '/logo.svg'" alt="Logo" class="h-full w-full object-contain" />
           </div>

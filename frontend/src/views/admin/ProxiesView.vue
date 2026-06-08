@@ -138,7 +138,7 @@
               <div class="relative">
                 <button
                   type="button"
-                  class="rounded p-0.5 text-muted-foreground hover:text-primary-600 dark:hover:text-primary-400"
+                  class="rounded p-0.5 text-muted-foreground hover:text-primary-600"
                   :title="t('admin.proxies.copyProxyUrl')"
                   @click.stop="copyProxyUrl(row)"
                   @contextmenu.prevent="toggleCopyMenu(row.id)"
@@ -148,7 +148,7 @@
                 <!-- 右键展开格式选择菜单 -->
                 <div
                   v-if="copyMenuProxyId === row.id"
-                  class="absolute left-0 top-full z-50 mt-1 w-auto min-w-[180px] rounded-lg border border-border bg-white py-1 shadow-lg dark:border-dark-500"
+                  class="absolute left-0 top-full z-50 mt-1 w-auto min-w-[180px] rounded-lg border border-border bg-card py-1 shadow-lg"
                 >
                   <button
                     v-for="fmt in getCopyFormats(row)"
@@ -202,7 +202,7 @@
             <button
               v-if="(value || 0) > 0"
               type="button"
-              class="inline-flex items-center rounded bg-muted px-2 py-0.5 text-xs font-medium text-primary-700 hover:bg-accent dark:text-primary-300"
+              class="inline-flex items-center rounded bg-muted px-2 py-0.5 text-xs font-medium text-primary-300 hover:bg-accent "
               @click="openAccountsModal(row)"
             >
               {{ t('admin.groups.accountsCount', { count: value || 0 }) }}
@@ -272,7 +272,7 @@
               <button
                 @click="handleTestConnection(row)"
                 :disabled="testingProxyIds.has(row.id)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-50 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-50 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <svg
                   v-if="testingProxyIds.has(row.id)"
@@ -300,7 +300,7 @@
               <button
                 @click="handleQualityCheck(row)"
                 :disabled="qualityCheckingProxyIds.has(row.id)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-blue-50 hover:text-sky-400 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-blue-50 hover:text-sky-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <svg
                   v-if="qualityCheckingProxyIds.has(row.id)"
@@ -327,14 +327,14 @@
               </button>
               <button
                 @click="handleEdit(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600 dark:hover:bg-secondary dark:hover:text-primary-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600"
               >
                 <Icon name="edit" size="sm" />
                 <span class="text-xs">{{ t('common.edit') }}</span>
               </button>
               <button
                 @click="handleDelete(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400"
               >
                 <Icon name="trash" size="sm" />
                 <span class="text-xs">{{ t('common.delete') }}</span>
@@ -384,7 +384,7 @@
             :class="[
               '-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors',
               createMode === 'standard'
-                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                ? 'border-primary-500 text-primary-400'
                 : 'border-transparent text-muted-foreground hover:text-foreground/85/75'
             ]"
           >
@@ -397,7 +397,7 @@
             :class="[
               '-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors',
               createMode === 'batch'
-                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                ? 'border-primary-500 text-primary-400'
                 : 'border-transparent text-muted-foreground hover:text-foreground/85/75'
             ]"
           >
@@ -857,7 +857,7 @@
               </div>
             </div>
             <div class="text-right">
-              <div class="text-2xl font-semibold text-foreground dark:text-white">
+              <div class="text-2xl font-semibold text-foreground">
                 {{ qualityReport.score }}
               </div>
               <div class="text-xs text-muted-foreground">
@@ -887,9 +887,9 @@
                 <th class="px-3 py-2 text-left">{{ t('admin.proxies.qualityTableMessage') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-border bg-white">
+            <tbody class="divide-y divide-border bg-card">
               <tr v-for="item in qualityReport.items" :key="item.target">
-                <td class="px-3 py-2 text-foreground dark:text-white">{{ qualityTargetLabel(item.target) }}</td>
+                <td class="px-3 py-2 text-foreground">{{ qualityTargetLabel(item.target) }}</td>
                 <td class="px-3 py-2">
                   <span class="badge" :class="qualityStatusClass(item.status)">{{ qualityStatusLabel(item.status) }}</span>
                 </td>
@@ -938,9 +938,9 @@
               <th class="px-4 py-2 text-left">{{ t('admin.proxies.accountNotes') }}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-border bg-white">
+          <tbody class="divide-y divide-border bg-card">
             <tr v-for="account in proxyAccounts" :key="account.id">
-              <td class="px-4 py-2 font-medium text-foreground dark:text-white">{{ account.name }}</td>
+              <td class="px-4 py-2 font-medium text-foreground">{{ account.name }}</td>
               <td class="px-4 py-2">
                 <PlatformTypeBadge :platform="account.platform" :type="account.type" />
               </td>

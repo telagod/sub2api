@@ -71,7 +71,7 @@
             <router-link
               v-if="passwordResetEnabled && !backendModeEnabled"
               to="/forgot-password"
-              class="text-sm font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+              class="text-sm font-medium text-primary-400 transition-colors hover:text-primary-500 "
             >
               {{ t('auth.forgotPassword') }}
             </router-link>
@@ -178,7 +178,7 @@
         {{ t('auth.dontHaveAccount') }}
         <router-link
           to="/register"
-          class="font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+          class="font-medium text-primary-400 transition-colors hover:text-primary-500 "
         >
           {{ t('auth.signUp') }}
         </router-link>

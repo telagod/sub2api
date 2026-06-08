@@ -94,14 +94,14 @@ function methodColor(type: string): string {
     alipay_direct: 'bg-blue-400', wxpay_direct: 'bg-green-400',
     stripe: 'bg-purple-500',
   }
-  return c[type] || 'bg-gray-400'
+  return c[type] || 'bg-muted-foreground'
 }
 
 function rankClass(idx: number): string {
   if (idx === 0) return 'bg-amber-500/10 text-amber-400'
-  if (idx === 1) return 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+  if (idx === 1) return 'bg-accent text-muted-foreground'
   if (idx === 2) return 'bg-amber-500/10 text-amber-400'
-  return 'bg-gray-100 text-gray-500 dark:text-gray-400'
+  return 'bg-accent text-muted-foreground'
 }
 
 async function loadDashboard() {

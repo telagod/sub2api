@@ -26,7 +26,7 @@
           :key="group.id"
           class="flex cursor-pointer items-center gap-3 rounded-md border-2 p-3 transition-all"
           :class="selectedGroupId === group.id
-            ? 'border-primary-400 bg-primary-300/10 dark:border-primary-500'
+            ? 'border-primary-400 bg-primary-300/10'
             : 'border-border hover:border-primary-200/40'"
         >
           <input

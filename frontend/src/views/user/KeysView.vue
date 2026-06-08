@@ -102,7 +102,7 @@
               <button
                 :ref="(el) => setGroupButtonRef(row.id, el)"
                 @click="openGroupSelector(row)"
-                class="-mx-2 -my-1 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 transition-all duration-200 hover:bg-muted dark:hover:bg-secondary"
+                class="-mx-2 -my-1 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 transition-all duration-200 hover:bg-muted"
                 :title="t('keys.clickToChangeGroup')"
               >
                 <GroupBadge
@@ -138,13 +138,13 @@
             <div class="text-sm">
               <div class="flex items-center gap-1.5">
                 <span class="text-muted-foreground">{{ t('keys.today') }}:</span>
-                <span class="font-medium text-foreground dark:text-white">
+                <span class="font-medium text-foreground">
                   ${{ (usageStats[row.id]?.today_actual_cost ?? 0).toFixed(4) }}
                 </span>
               </div>
               <div class="mt-0.5 flex items-center gap-1.5">
                 <span class="text-muted-foreground">{{ t('keys.total') }}:</span>
-                <span class="font-medium text-foreground dark:text-white">
+                <span class="font-medium text-foreground">
                   ${{ (usageStats[row.id]?.total_actual_cost ?? 0).toFixed(4) }}
                 </span>
               </div>
@@ -156,7 +156,7 @@
                     'font-medium',
                     row.quota_used >= row.quota ? 'text-red-400' :
                     row.quota_used >= row.quota * 0.8 ? 'text-yellow-500' :
-                    'text-foreground dark:text-white'
+                    'text-foreground'
                   ]">
                     ${{ row.quota_used?.toFixed(2) || '0.00' }} / ${{ row.quota?.toFixed(2) }}
                   </span>
@@ -266,7 +266,7 @@
               <button
                 v-if="row.usage_5h > 0 || row.usage_1d > 0 || row.usage_7d > 0"
                 @click.stop="confirmResetRateLimitFromTable(row)"
-                class="mt-0.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600 dark:hover:bg-secondary dark:hover:text-primary-400"
+                class="mt-0.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600"
                 :title="t('keys.resetRateLimitUsage')"
               >
                 <Icon name="refresh" size="xs" />
@@ -314,7 +314,7 @@
               <!-- Use Key Button -->
               <button
                 @click="openUseKeyModal(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-green-50 hover:text-emerald-400 dark:hover:bg-green-900/20 dark:hover:text-green-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-green-50 hover:text-emerald-400"
               >
                 <Icon name="terminal" size="sm" />
                 <span class="text-xs">{{ t('keys.useKey') }}</span>
@@ -323,7 +323,7 @@
               <button
                 v-if="!publicSettings?.hide_ccs_import_button"
                 @click="importToCcswitch(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-blue-50 hover:text-sky-400 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-blue-50 hover:text-sky-400"
               >
                 <Icon name="upload" size="sm" />
                 <span class="text-xs">{{ t('keys.importToCcSwitch') }}</span>
@@ -334,8 +334,8 @@
                 :class="[
                   'flex flex-col items-center gap-0.5 rounded-lg p-1.5 transition-colors',
                   row.status === 'active'
-                    ? 'text-muted-foreground hover:bg-yellow-50 hover:text-amber-400 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400'
-                    : 'text-muted-foreground hover:bg-green-50 hover:text-emerald-400 dark:hover:bg-green-900/20 dark:hover:text-green-400'
+                    ? 'text-muted-foreground hover:bg-yellow-50 hover:text-amber-400'
+                    : 'text-muted-foreground hover:bg-green-50 hover:text-emerald-400'
                 ]"
               >
                 <Icon v-if="row.status === 'active'" name="ban" size="sm" />
@@ -345,7 +345,7 @@
               <!-- Edit Button -->
               <button
                 @click="editKey(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600 dark:hover:bg-secondary dark:hover:text-primary-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600"
               >
                 <Icon name="edit" size="sm" />
                 <span class="text-xs">{{ t('common.edit') }}</span>
@@ -353,7 +353,7 @@
               <!-- Delete Button -->
               <button
                 @click="confirmDelete(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400"
               >
                 <Icon name="trash" size="sm" />
                 <span class="text-xs">{{ t('common.delete') }}</span>
@@ -465,7 +465,7 @@
               type="text"
               class="input font-mono"
               :placeholder="t('keys.customKeyPlaceholder')"
-              :class="{ 'border-red-500 dark:border-red-500': customKeyError }"
+              :class="{ 'border-red-500': customKeyError }"
             />
             <p v-if="customKeyError" class="mt-1 text-sm text-red-400">{{ customKeyError }}</p>
             <p v-else class="input-hint">{{ t('keys.customKeyHint') }}</p>
@@ -572,7 +572,7 @@
               <label class="input-label">{{ t('keys.quotaUsed') }}</label>
               <div class="flex items-center gap-2">
                 <div class="flex-1 rounded-lg bg-muted px-3 py-2">
-                  <span class="font-medium text-foreground dark:text-white">
+                  <span class="font-medium text-foreground">
                     ${{ selectedKey.quota_used?.toFixed(4) || '0.0000' }}
                   </span>
                   <span class="mx-2 text-muted-foreground">/</span>
@@ -638,7 +638,7 @@
                       'font-medium',
                       selectedKey.usage_5h >= selectedKey.rate_limit_5h ? 'text-red-400' :
                       selectedKey.usage_5h >= selectedKey.rate_limit_5h * 0.8 ? 'text-yellow-500' :
-                      'text-foreground dark:text-white'
+                      'text-foreground'
                     ]">
                       ${{ selectedKey.usage_5h?.toFixed(4) || '0.0000' }}
                     </span>
@@ -684,7 +684,7 @@
                       'font-medium',
                       selectedKey.usage_1d >= selectedKey.rate_limit_1d ? 'text-red-400' :
                       selectedKey.usage_1d >= selectedKey.rate_limit_1d * 0.8 ? 'text-yellow-500' :
-                      'text-foreground dark:text-white'
+                      'text-foreground'
                     ]">
                       ${{ selectedKey.usage_1d?.toFixed(4) || '0.0000' }}
                     </span>
@@ -730,7 +730,7 @@
                       'font-medium',
                       selectedKey.usage_7d >= selectedKey.rate_limit_7d ? 'text-red-400' :
                       selectedKey.usage_7d >= selectedKey.rate_limit_7d * 0.8 ? 'text-yellow-500' :
-                      'text-foreground dark:text-white'
+                      'text-foreground'
                     ]">
                       ${{ selectedKey.usage_7d?.toFixed(4) || '0.0000' }}
                     </span>
@@ -799,7 +799,7 @@
                 :class="[
                   'rounded-lg px-3 py-1.5 text-sm transition-colors',
                   formData.expiration_preset === days
-                    ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
+                    ? 'bg-primary-900/30 text-primary-400'
                     : 'bg-muted text-foreground/75 hover:bg-accent'
                 ]"
               >
@@ -811,7 +811,7 @@
                 :class="[
                   'rounded-lg px-3 py-1.5 text-sm transition-colors',
                   formData.expiration_preset === 'custom'
-                    ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
+                    ? 'bg-primary-900/30 text-primary-400'
                     : 'bg-muted text-foreground/75 hover:bg-accent'
                 ]"
               >
@@ -833,7 +833,7 @@
             <!-- Current expiration display (only in edit mode) -->
             <div v-if="showEditModal && selectedKey?.expires_at" class="text-sm">
               <span class="text-muted-foreground">{{ t('keys.currentExpiration') }}: </span>
-              <span class="font-medium text-foreground dark:text-white">
+              <span class="font-medium text-foreground">
                 {{ formatDateTime(selectedKey.expires_at) }}
               </span>
             </div>
@@ -944,10 +944,10 @@
 	        <div class="grid grid-cols-2 gap-3">
 	          <button
 	            @click="handleCcsClientSelect('claude')"
-	            class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-border hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all"
+	            class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-border hover:border-primary-500 hover:bg-primary-50 transition-all"
 	          >
 	            <Icon name="terminal" size="xl" class="text-foreground/75" />
-	            <span class="font-medium text-foreground dark:text-white">{{
+	            <span class="font-medium text-foreground">{{
 	              t('keys.ccsClientSelect.claudeCode')
 	            }}</span>
 	            <span class="text-xs text-muted-foreground">{{
@@ -956,10 +956,10 @@
 	          </button>
 	          <button
 	            @click="handleCcsClientSelect('gemini')"
-	            class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-border hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all"
+	            class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-border hover:border-primary-500 hover:bg-primary-50 transition-all"
 	          >
 	            <Icon name="sparkles" size="xl" class="text-foreground/75" />
-	            <span class="font-medium text-foreground dark:text-white">{{
+	            <span class="font-medium text-foreground">{{
 	              t('keys.ccsClientSelect.geminiCli')
 	            }}</span>
 	            <span class="text-xs text-muted-foreground">{{
@@ -982,7 +982,7 @@
       <div
         v-if="groupSelectorKeyId !== null && dropdownPosition"
         ref="dropdownRef"
-        class="animate-in fade-in slide-in-from-top-2 fixed z-[100000020] w-max min-w-[380px] overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5 duration-200 dark:ring-white/10"
+        class="animate-in fade-in slide-in-from-top-2 fixed z-[100000020] w-max min-w-[380px] overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5 duration-200 ring-white/10"
         style="pointer-events: auto !important;"
         :style="{
           top: dropdownPosition.top !== undefined ? dropdownPosition.top + 'px' : undefined,
@@ -991,7 +991,7 @@
         }"
       >
         <!-- Search box -->
-        <div class="border-b border-gray-100 p-2">
+        <div class="border-b border-border p-2">
           <div class="relative">
             <svg class="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -999,7 +999,7 @@
             <input
               v-model="groupSearchQuery"
               type="text"
-              class="w-full rounded-lg border border-border bg-card py-1.5 pl-8 pr-3 text-sm text-foreground placeholder-muted-foreground outline-none focus:border-primary-300 focus:ring-1 focus:ring-primary-300 dark:text-white dark:placeholder-muted-foreground dark:focus:border-primary-600 dark:focus:ring-primary-600"
+              class="w-full rounded-lg border border-border bg-card py-1.5 pl-8 pr-3 text-sm text-foreground placeholder-muted-foreground outline-none focus:border-primary-300 focus:ring-1 focus:ring-primary-300"
               :placeholder="t('keys.searchGroup')"
               @click.stop
             />
@@ -1013,11 +1013,11 @@
             @click="changeGroup(selectedKeyForGroup!, option.value)"
             :class="[
               'flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors',
-              'border-b border-gray-100 last:border-0',
+              'border-b border-border last:border-0',
               selectedKeyForGroup?.group_id === option.value ||
               (!selectedKeyForGroup?.group_id && option.value === null)
-                ? 'bg-primary-50 dark:bg-primary-900/20'
-                : 'hover:bg-muted dark:hover:bg-secondary'
+                ? 'bg-primary-900/20'
+                : 'hover:bg-muted'
             ]"
             :title="option.description || undefined"
           >

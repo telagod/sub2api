@@ -336,10 +336,10 @@ function severityBadgeClass(severity: string | undefined): string {
 
 function statusBadgeClass(status: string | undefined): string {
   const s = String(status || '').trim().toLowerCase()
-  if (s === 'firing') return 'bg-red-50 text-red-400 ring-red-600/20 dark:ring-red-500/30'
-  if (s === 'resolved') return 'bg-green-50 text-emerald-400 ring-green-600/20 dark:ring-green-500/30'
-  if (s === 'manual_resolved') return 'bg-slate-50 text-slate-700 ring-slate-600/20/30 dark:ring-slate-500/30'
-  return 'bg-card text-foreground/85 ring-gray-600/20/30 dark:ring-gray-500/30'
+  if (s === 'firing') return 'bg-red-500/10 text-red-400 ring-red-500/30'
+  if (s === 'resolved') return 'bg-green-500/10 text-emerald-400 ring-green-500/30'
+  if (s === 'manual_resolved') return 'bg-accent text-muted-foreground ring-ring/30'
+  return 'bg-card text-foreground/85 ring-ring/30'
 }
 
 function formatStatusLabel(status: string | undefined): string {

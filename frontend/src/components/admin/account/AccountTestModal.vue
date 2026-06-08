@@ -70,7 +70,7 @@
       <div class="group relative">
         <div
           ref="terminalRef"
-          class="max-h-[240px] min-h-[120px] overflow-y-auto rounded-md border border-border bg-background p-4 font-mono text-sm border-border dark:bg-black"
+          class="max-h-[240px] min-h-[120px] overflow-y-auto rounded-md border border-border bg-background p-4 font-mono text-sm border-border"
         >
           <!-- Status Line -->
           <div v-if="status === 'idle'" class="flex items-center gap-2 text-muted-foreground">
@@ -159,7 +159,7 @@
             <img
               :src="previewImageUrl"
               alt="preview"
-              class="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+              class="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-lg"
             />
           </div>
         </Transition>

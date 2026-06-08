@@ -261,22 +261,22 @@ onMounted(() => {
     </div>
 
     <div v-else class="space-y-6">
-      <div class="rounded-2xl bg-card p-4/50">
+      <div class="rounded-lg bg-card p-4/50">
         <div class="mb-3 flex items-center justify-between">
-          <h4 class="text-sm font-semibold text-foreground dark:text-white">{{ t('admin.ops.runtime.alertTitle') }}</h4>
+          <h4 class="text-sm font-semibold text-foreground">{{ t('admin.ops.runtime.alertTitle') }}</h4>
           <button class="btn btn-sm btn-secondary" @click="openAlertEditor">{{ t('common.edit') }}</button>
         </div>
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div class="text-xs text-foreground/75">
             {{ t('admin.ops.runtime.evalIntervalSeconds') }}:
-            <span class="ml-1 font-medium text-foreground dark:text-white">{{ alertSettings.evaluation_interval_seconds }}s</span>
+            <span class="ml-1 font-medium text-foreground">{{ alertSettings.evaluation_interval_seconds }}s</span>
           </div>
           <div
             v-if="alertSettings.silencing?.enabled && alertSettings.silencing.global_until_rfc3339"
             class="text-xs text-foreground/75 md:col-span-2"
           >
             {{ t('admin.ops.runtime.silencing.globalUntil') }}:
-            <span class="ml-1 font-mono text-foreground dark:text-white">{{ alertSettings.silencing.global_until_rfc3339 }}</span>
+            <span class="ml-1 font-mono text-foreground">{{ alertSettings.silencing.global_until_rfc3339 }}</span>
           </div>
 
           <details class="col-span-1 md:col-span-2">
@@ -307,7 +307,7 @@ onMounted(() => {
     <div v-if="draftAlert" class="space-y-4">
       <div
         v-if="!alertValidation.valid"
-        class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-400 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-200"
+        class="rounded-lg border border-amber-900/50 bg-amber-900/20 p-3 text-xs text-amber-200"
       >
         <div class="font-bold">{{ t('admin.ops.runtime.validation.title') }}</div>
         <ul class="mt-1 list-disc space-y-1 pl-4">
@@ -328,8 +328,8 @@ onMounted(() => {
         <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.ops.runtime.evalIntervalHint') }}</p>
       </div>
 
-      <div class="rounded-2xl bg-card p-4/50">
-        <div class="mb-2 text-sm font-semibold text-foreground dark:text-white">{{ t('admin.ops.runtime.metricThresholds') }}</div>
+      <div class="rounded-lg bg-card p-4/50">
+        <div class="mb-2 text-sm font-semibold text-foreground">{{ t('admin.ops.runtime.metricThresholds') }}</div>
         <p class="mb-4 text-xs text-muted-foreground">{{ t('admin.ops.runtime.metricThresholdsHint') }}</p>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -392,8 +392,8 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="rounded-2xl bg-card p-4/50">
-        <div class="mb-2 text-sm font-semibold text-foreground dark:text-white">{{ t('admin.ops.runtime.silencing.title') }}</div>
+      <div class="rounded-lg bg-card p-4/50">
+        <div class="mb-2 text-sm font-semibold text-foreground">{{ t('admin.ops.runtime.silencing.title') }}</div>
 
         <label class="inline-flex items-center gap-2 text-sm text-foreground/85">
           <input v-model="draftAlert.silencing.enabled" type="checkbox" class="h-4 w-4 rounded border-border" />
@@ -422,10 +422,10 @@ onMounted(() => {
             />
           </div>
 
-          <div class="rounded-xl border border-border bg-white p-4">
+          <div class="rounded-lg border border-border bg-card p-4">
             <div class="flex items-start justify-between gap-4">
               <div>
-                <div class="text-xs font-bold text-foreground dark:text-white">{{ t('admin.ops.runtime.silencing.entries.title') }}</div>
+                <div class="text-xs font-bold text-foreground">{{ t('admin.ops.runtime.silencing.entries.title') }}</div>
                 <p class="text-[11px] text-muted-foreground">{{ t('admin.ops.runtime.silencing.entries.hint') }}</p>
               </div>
               <button class="btn btn-sm btn-secondary" type="button" @click="addSilenceEntry">
@@ -444,7 +444,7 @@ onMounted(() => {
                 class="rounded-lg border border-border bg-card p-4"
               >
                 <div class="mb-3 flex items-center justify-between">
-                  <div class="text-xs font-bold text-foreground dark:text-white">
+                  <div class="text-xs font-bold text-foreground">
                     {{ t('admin.ops.runtime.silencing.entries.entryTitle', { n: idx + 1 }) }}
                   </div>
                   <button class="btn btn-sm btn-danger" type="button" @click="removeSilenceEntry(idx)">{{ t('common.delete') }}</button>

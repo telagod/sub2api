@@ -915,7 +915,7 @@
                   type="text"
                   :class="[
                     'input flex-1',
-                    !isValidWildcardPattern(mapping.from) ? 'border-red-500 dark:border-red-500' : ''
+                    !isValidWildcardPattern(mapping.from) ? 'border-red-500' : ''
                   ]"
                   :placeholder="t('admin.accounts.requestModel')"
                 />
@@ -927,7 +927,7 @@
                   type="text"
                   :class="[
                     'input flex-1',
-                    mapping.to.includes('*') ? 'border-red-500 dark:border-red-500' : ''
+                    mapping.to.includes('*') ? 'border-red-500' : ''
                   ]"
                   :placeholder="t('admin.accounts.actualModel')"
                 />
@@ -1390,7 +1390,7 @@
                 <button
                   type="button"
                   @click="removeErrorCode(code)"
-                  class="hover:text-red-900 dark:hover:text-red-300"
+                  class="hover:text-red-900"
                 >
                   <Icon name="x" size="sm" :stroke-width="2" />
                 </button>

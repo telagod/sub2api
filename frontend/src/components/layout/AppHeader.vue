@@ -71,7 +71,7 @@
         <div v-if="user" class="relative" ref="dropdownRef">
           <button
             @click="toggleDropdown"
-            class="flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-accent"
+            class="flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-accent"
             aria-label="User Menu"
           >
             <div class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md border border-border bg-secondary text-sm font-medium text-foreground ">
@@ -186,7 +186,7 @@
               <div class="border-t border-border py-1">
                 <button
                   @click="handleLogout"
-                  class="dropdown-item w-full text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  class="dropdown-item w-full text-red-400 hover:bg-red-50"
                 >
                   <svg
                     class="h-4 w-4"

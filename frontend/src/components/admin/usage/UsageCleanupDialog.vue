@@ -205,13 +205,13 @@ const statusLabel = (status: string) => {
 
 const statusClass = (status: string) => {
   const map: Record<string, string> = {
-    pending: 'bg-amber-500/10 text-amber-400 dark:bg-amber-500/20 dark:text-amber-200',
-    running: 'bg-sky-500/10 text-sky-400 dark:bg-blue-500/20 dark:text-blue-200',
-    succeeded: 'bg-emerald-500/10 text-emerald-400 dark:bg-emerald-500/20 dark:text-emerald-200',
-    failed: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200',
-    canceled: 'bg-gray-200 text-gray-600 dark:text-gray-300'
+    pending: 'bg-amber-500/20 text-amber-400 text-amber-200',
+    running: 'bg-blue-500/20 text-sky-400 text-blue-200',
+    succeeded: 'bg-emerald-500/20 text-emerald-400 text-emerald-200',
+    failed: 'bg-rose-500/20 text-rose-200',
+    canceled: 'bg-accent text-muted-foreground'
   }
-  return map[status] || 'bg-gray-100 text-gray-600'
+  return map[status] || 'bg-accent text-muted-foreground'
 }
 
 const formatDateTime = (value?: string | null) => {

@@ -82,7 +82,7 @@
           <!-- QR Code and Secret -->
           <template v-if="setupData">
             <div class="flex justify-center">
-              <div class="rounded-lg border border-border p-4 bg-white dark:bg-white">
+              <div class="rounded-lg border border-border p-4 bg-white">
                 <img :src="qrCodeDataUrl" alt="QR Code" class="h-48 w-48" />
               </div>
             </div>

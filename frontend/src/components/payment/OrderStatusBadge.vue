@@ -23,13 +23,13 @@ const statusMap: Record<OrderStatus, { key: string; class: string }> = {
   PAID: { key: 'payment.status.paid', class: 'bg-sky-500/10 text-sky-400' },
   RECHARGING: { key: 'payment.status.recharging', class: 'bg-sky-500/10 text-sky-400' },
   COMPLETED: { key: 'payment.status.completed', class: 'bg-emerald-500/10 text-emerald-400' },
-  EXPIRED: { key: 'payment.status.expired', class: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
-  CANCELLED: { key: 'payment.status.cancelled', class: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
+  EXPIRED: { key: 'payment.status.expired', class: 'bg-accent text-muted-foreground' },
+  CANCELLED: { key: 'payment.status.cancelled', class: 'bg-accent text-muted-foreground' },
   FAILED: { key: 'payment.status.failed', class: 'bg-red-500/10 text-red-400' },
-  REFUND_REQUESTED: { key: 'payment.status.refund_requested', class: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
-  REFUNDING: { key: 'payment.status.refunding', class: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
-  REFUNDED: { key: 'payment.status.refunded', class: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-  PARTIALLY_REFUNDED: { key: 'payment.status.partially_refunded', class: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
+  REFUND_REQUESTED: { key: 'payment.status.refund_requested', class: 'bg-orange-900/30 text-orange-400' },
+  REFUNDING: { key: 'payment.status.refunding', class: 'bg-orange-900/30 text-orange-400' },
+  REFUNDED: { key: 'payment.status.refunded', class: 'bg-purple-900/30 text-purple-400' },
+  PARTIALLY_REFUNDED: { key: 'payment.status.partially_refunded', class: 'bg-purple-900/30 text-purple-400' },
   REFUND_FAILED: { key: 'payment.status.refund_failed', class: 'bg-red-500/10 text-red-400' },
 }
 
@@ -40,6 +40,6 @@ const statusLabel = computed(() => {
 
 const statusClass = computed(() => {
   const entry = statusMap[props.status]
-  return entry?.class ?? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+  return entry?.class ?? 'bg-accent text-muted-foreground'
 })
 </script>

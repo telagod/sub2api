@@ -1034,7 +1034,7 @@
                   type="text"
                   :class="[
                     'input flex-1',
-                    !isValidWildcardPattern(mapping.from) ? 'border-red-500 dark:border-red-500' : '',
+                    !isValidWildcardPattern(mapping.from) ? 'border-red-500' : '',
                     mapping.to.includes('*') ? '' : ''
                   ]"
                   :placeholder="t('admin.accounts.requestModel')"
@@ -1047,7 +1047,7 @@
                   type="text"
                   :class="[
                     'input flex-1',
-                    mapping.to.includes('*') ? 'border-red-500 dark:border-red-500' : ''
+                    mapping.to.includes('*') ? 'border-red-500' : ''
                   ]"
                   :placeholder="t('admin.accounts.actualModel')"
                 />
@@ -2669,11 +2669,11 @@ const codexImageGenerationBridgeBadgeLabel = computed(() => {
 const codexImageGenerationBridgeBadgeClass = computed(() => {
   switch (codexImageGenerationBridgeMode.value) {
     case 'enabled':
-      return 'bg-emerald-500/10 text-emerald-400 dark:bg-emerald-900/40'
+      return ' text-emerald-400 bg-emerald-900/40'
     case 'disabled':
-      return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+      return 'bg-rose-900/40 text-rose-300'
     default:
-      return 'bg-slate-100 text-slate-600 dark:text-slate-300'
+      return 'bg-accent text-muted-foreground'
   }
 })
 const openAICompactModeOptions = computed(() => [

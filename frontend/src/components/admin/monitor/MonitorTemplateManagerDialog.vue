@@ -460,18 +460,18 @@ async function doDelete() {
 // --- misc ---
 function tabClass(value: Provider): string {
   return activeProvider.value === value
-    ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400'
-    : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+    ? 'border-b-2 border-primary-500 text-primary-400'
+    : 'border-b-2 border-transparent text-muted-foreground hover:text-foreground'
 }
 
 function modeBadgeClass(mode: BodyOverrideMode): string {
   switch (mode) {
     case 'merge':
-      return 'bg-amber-500/10 text-amber-400 dark:bg-amber-500/15'
+      return 'bg-amber-500/15 text-amber-400 '
     case 'replace':
-      return 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300'
+      return 'bg-purple-500/15 text-purple-300 '
     default:
-      return 'bg-gray-100 text-gray-600 dark:text-gray-300'
+      return 'bg-accent text-muted-foreground'
   }
 }
 
@@ -505,9 +505,9 @@ function normalizeAPIMode(mode: APIMode | undefined | null): APIMode {
 function apiModeButtonClass(mode: APIMode): string {
   const active = form.api_mode === mode
   if (active) {
-    return 'border-primary-500 bg-white text-primary-700 shadow-sm dark:border-primary-400 dark:bg-primary-500/15 dark:text-primary-300'
+    return 'border-primary-500 bg-primary-500/15 text-primary-300 shadow-sm  '
   }
-  return 'border-blue-100 bg-white/70 text-gray-600 hover:border-primary-300 dark:text-gray-400'
+  return 'border-border bg-card text-muted-foreground hover:border-primary-300'
 }
 
 function apiModeLabel(mode: APIMode): string {
@@ -518,8 +518,8 @@ function apiModeLabel(mode: APIMode): string {
 
 function apiModeBadgeClass(mode: APIMode): string {
   if (normalizeAPIMode(mode) === API_MODE_RESPONSES) {
-    return 'bg-sky-500/10 text-sky-400 dark:bg-blue-500/15'
+    return 'bg-blue-500/15 text-sky-400 '
   }
-  return 'bg-emerald-500/10 text-emerald-400 dark:bg-emerald-500/15'
+  return 'bg-emerald-500/15 text-emerald-400 '
 }
 </script>

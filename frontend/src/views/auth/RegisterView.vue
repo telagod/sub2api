@@ -94,7 +94,7 @@
           </label>
           <div class="relative">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="key" size="md" :class="invitationValidation.valid ? 'text-emerald-400' : 'text-gray-400'" />
+              <Icon name="key" size="md" :class="invitationValidation.valid ? 'text-emerald-400' : 'text-muted-foreground'" />
             </div>
             <input
               id="invitation_code"
@@ -142,7 +142,7 @@
           </label>
           <div class="relative">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="gift" size="md" :class="promoValidation.valid ? 'text-emerald-400' : 'text-gray-400'" />
+              <Icon name="gift" size="md" :class="promoValidation.valid ? 'text-emerald-400' : 'text-muted-foreground'" />
             </div>
             <input
               id="promo_code"
@@ -288,7 +288,7 @@
         {{ t('auth.alreadyHaveAccount') }}
         <router-link
           to="/login"
-          class="font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+          class="font-medium text-primary-400 transition-colors hover:text-primary-500 "
         >
           {{ t('auth.signIn') }}
         </router-link>

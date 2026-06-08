@@ -96,10 +96,10 @@ const overallLabel = computed(() => t(`channelStatus.overall.${props.overallStat
 const overallChipClass = computed(() => {
   switch (props.overallStatus) {
     case 'operational':
-      return 'bg-emerald-500/10 text-emerald-400 dark:bg-emerald-500/15'
+      return 'bg-emerald-500/15 text-emerald-400 '
     case 'degraded':
     default:
-      return 'bg-amber-500/10 text-amber-400 dark:bg-amber-500/15'
+      return 'bg-amber-500/15 text-amber-400 '
   }
 })
 

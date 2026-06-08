@@ -6,7 +6,7 @@
         class="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-black/70 p-4 pt-[8vh]"
       >
         <div
-          class="w-full max-w-[680px] overflow-hidden rounded-xl border border-border bg-card  ring-1 ring-white/5"
+          class="w-full max-w-[680px] overflow-hidden rounded-lg border border-border bg-card  ring-1 ring-white/5"
           @click.stop
         >
           <!-- Header with warm gradient -->

@@ -1306,7 +1306,7 @@ const getProgressWidth = (used: number | null | undefined, limit: number | null)
 }
 
 const getProgressClass = (used: number | null | undefined, limit: number | null): string => {
-  if (!limit || limit === 0) return 'bg-gray-400'
+  if (!limit || limit === 0) return 'bg-muted-foreground'
   const usedValue = used ?? 0
   const percentage = (usedValue / limit) * 100
   if (percentage >= 90) return 'bg-red-500'

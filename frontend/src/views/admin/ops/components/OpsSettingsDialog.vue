@@ -269,7 +269,7 @@ async function saveAllSettings() {
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <label class="font-medium text-foreground dark:text-white">{{ t('admin.ops.settings.enableAlert') }}</label>
+              <label class="font-medium text-foreground">{{ t('admin.ops.settings.enableAlert') }}</label>
             </div>
             <Toggle v-model="emailConfig.alert.enabled" />
           </div>
@@ -317,7 +317,7 @@ async function saveAllSettings() {
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <label class="font-medium text-foreground dark:text-white">{{ t('admin.ops.settings.enableReport') }}</label>
+              <label class="font-medium text-foreground">{{ t('admin.ops.settings.enableReport') }}</label>
             </div>
             <Toggle v-model="emailConfig.report.enabled" />
           </div>
@@ -431,8 +431,8 @@ async function saveAllSettings() {
       </div>
 
       <!-- 高级设置 -->
-      <details class="rounded-2xl bg-card/50">
-        <summary class="cursor-pointer p-4 text-sm font-semibold text-foreground dark:text-white">
+      <details class="rounded-lg bg-card/50">
+        <summary class="cursor-pointer p-4 text-sm font-semibold text-foreground">
           {{ t('admin.ops.settings.advancedSettings') }}
         </summary>
         <div class="space-y-4 px-4 pb-4">

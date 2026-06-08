@@ -260,7 +260,7 @@ function platformAccentDotClass(p: string): string {
     case 'openai': return 'bg-emerald-500'
     case 'antigravity': return 'bg-purple-500'
     case 'gemini': return 'bg-blue-500'
-    default: return 'bg-gray-400'
+    default: return 'bg-muted-foreground'
   }
 }
 
@@ -290,7 +290,7 @@ function getProgressWidth(used: number | undefined, limit: number | null | undef
 }
 
 function getProgressBarClass(used: number | undefined, limit: number | null | undefined): string {
-  if (!limit || limit === 0) return 'bg-gray-400'
+  if (!limit || limit === 0) return 'bg-muted-foreground'
   const percentage = ((used || 0) / limit) * 100
   if (percentage >= 90) return 'bg-red-500'
   if (percentage >= 70) return 'bg-orange-500'
@@ -327,7 +327,7 @@ function getExpirationClass(expiresAt: string): string {
 
   if (days <= 0) return 'text-red-400 font-medium'
   if (days <= 3) return 'text-red-400'
-  if (days <= 7) return 'text-orange-600 dark:text-orange-400'
+  if (days <= 7) return 'text-orange-400'
   return 'text-foreground/85'
 }
 

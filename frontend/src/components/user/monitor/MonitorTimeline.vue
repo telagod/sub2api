@@ -74,7 +74,7 @@ const STATUS_COLOR: Record<string, string> = {
   degraded: 'bg-amber-500',
   failed: 'bg-red-500',
   error: 'bg-red-500',
-  empty: 'bg-gray-300',
+  empty: 'bg-muted-foreground/50',
 }
 
 const displayBars = computed<Bar[]>(() => {

@@ -341,10 +341,10 @@ const UserCell = defineComponent({
   emits: ['open'],
   setup(cellProps, { emit }) {
     return () => h('div', { class: 'space-y-0.5' }, [
-      h('div', { class: 'font-mono text-sm text-foreground dark:text-white' }, `#${cellProps.id}`),
+      h('div', { class: 'font-mono text-sm text-foreground' }, `#${cellProps.id}`),
       h(cellProps.clickable ? 'button' : 'div', {
         class: cellProps.clickable
-          ? 'max-w-56 truncate text-left text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline dark:text-primary-400 dark:hover:text-primary-300'
+          ? 'max-w-56 truncate text-left text-sm font-medium text-primary-400 hover:text-primary-700 hover:underline '
           : 'max-w-56 truncate text-sm text-foreground/85',
         type: cellProps.clickable ? 'button' : undefined,
         onClick: cellProps.clickable ? () => emit('open', cellProps.id) : undefined,
@@ -363,7 +363,7 @@ const AmountText = defineComponent({
     return () => h('span', {
       class: amountProps.strong
         ? 'text-sm font-semibold text-emerald-400'
-        : 'text-sm text-foreground dark:text-white',
+        : 'text-sm text-foreground',
     }, `$${formatAmount(amountProps.value)}`)
   },
 })
@@ -390,12 +390,12 @@ const OverviewStat = defineComponent({
     mono: { type: Boolean, default: false },
   },
   setup(statProps) {
-    return () => h('div', { class: 'rounded-lg border border-border bg-white p-3 ' }, [
+    return () => h('div', { class: 'rounded-lg border border-border bg-card p-3 ' }, [
       h('div', { class: 'text-sm text-muted-foreground' }, statProps.label),
       h('div', {
         class: statProps.mono
-          ? 'mt-1 font-mono text-base font-semibold text-foreground dark:text-white'
-          : 'mt-1 text-base font-semibold text-foreground dark:text-white',
+          ? 'mt-1 font-mono text-base font-semibold text-foreground'
+          : 'mt-1 text-base font-semibold text-foreground',
       }, statProps.value),
     ])
   },

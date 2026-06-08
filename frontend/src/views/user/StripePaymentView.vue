@@ -26,7 +26,7 @@
           <div class="card p-6">
             <div class="flex flex-col items-center space-y-4">
               <p class="text-lg font-semibold text-foreground">{{ t('payment.qr.scanWxpay') }}</p>
-              <div class="relative rounded-lg border-2 border-[#2BB741] bg-green-50 p-4 dark:border-[#2BB741]/70 dark:bg-green-950/20">
+              <div class="relative rounded-lg border-2 border-[#2BB741]/70 bg-green-950 p-4  /20">
                 <img :src="wechatQrUrl" alt="WeChat Pay QR" class="h-56 w-56 rounded" />
                 <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
                   <span class="rounded-full bg-[#2BB741] p-2 shadow ring-2 ring-white">

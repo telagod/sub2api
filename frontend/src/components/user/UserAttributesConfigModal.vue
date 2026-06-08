@@ -197,11 +197,11 @@
       <!-- Required & Enabled -->
       <div class="flex items-center gap-6">
         <label class="flex items-center gap-2">
-          <input v-model="form.required" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600" />
+          <input v-model="form.required" type="checkbox" class="h-4 w-4 rounded border-border text-primary-600" />
           <span class="text-sm text-foreground/85">{{ t('admin.users.attributes.required') }}</span>
         </label>
         <label class="flex items-center gap-2">
-          <input v-model="form.enabled" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600" />
+          <input v-model="form.enabled" type="checkbox" class="h-4 w-4 rounded border-border text-primary-600" />
           <span class="text-sm text-foreground/85">{{ t('admin.users.attributes.enabled') }}</span>
         </label>
       </div>

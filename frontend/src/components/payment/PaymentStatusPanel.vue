@@ -185,15 +185,15 @@ const isAlipay = computed(() => props.paymentType.includes('alipay'))
 const isWxpay = computed(() => props.paymentType.includes('wxpay'))
 
 const qrBorderClass = computed(() => {
-  if (isAlipay.value) return 'border-[#00AEEF] bg-blue-50 dark:border-[#00AEEF]/70 dark:bg-blue-950/20'
-  if (isWxpay.value) return 'border-[#2BB741] bg-green-50 dark:border-[#2BB741]/70 dark:bg-green-950/20'
-  return 'border-gray-200 bg-white'
+  if (isAlipay.value) return 'border-[#00AEEF]/70 bg-blue-950  /20'
+  if (isWxpay.value) return 'border-[#2BB741]/70 bg-green-950  /20'
+  return 'border-border bg-card'
 })
 
 const qrLogoBgClass = computed(() => {
   if (isAlipay.value) return 'bg-[#00AEEF]'
   if (isWxpay.value) return 'bg-[#2BB741]'
-  return 'bg-gray-400'
+  return 'bg-muted-foreground'
 })
 
 const scanTitle = computed(() => {

@@ -118,26 +118,26 @@ const planLabel = computed(() => {
 
 const platformClass = computed(() => {
   if (props.platform === 'anthropic') {
-    return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+    return 'bg-orange-900/30 text-orange-400'
   }
   if (props.platform === 'openai') {
     return 'bg-emerald-500/10 text-emerald-400'
   }
   if (props.platform === 'antigravity') {
-    return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+    return 'bg-purple-900/30 text-purple-400'
   }
   return 'bg-sky-500/10 text-sky-400'
 })
 
 const typeClass = computed(() => {
   if (props.platform === 'anthropic') {
-    return 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'
+    return 'bg-orange-900/30 text-orange-400  '
   }
   if (props.platform === 'openai') {
     return 'bg-emerald-500/10 text-emerald-400'
   }
   if (props.platform === 'antigravity') {
-    return 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
+    return 'bg-purple-900/30 text-purple-400  '
   }
   return 'bg-sky-500/10 text-sky-400'
 })

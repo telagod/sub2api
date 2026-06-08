@@ -182,12 +182,12 @@ const kindBadgeClass = (kind: string) => {
 
         <!-- Table -->
         <div v-else class="flex min-h-0 flex-1 flex-col">
-          <div v-if="items.length === 0" class="rounded-xl border border-dashed border-border p-10 text-center">
+          <div v-if="items.length === 0" class="rounded-lg border border-dashed border-border p-10 text-center">
             <div class="text-sm font-medium text-foreground/75">{{ t('admin.ops.requestDetails.empty') }}</div>
             <div class="mt-1 text-xs text-muted-foreground">{{ t('admin.ops.requestDetails.emptyHint') }}</div>
           </div>
 
-          <div v-else class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
+          <div v-else class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border">
             <div class="min-h-0 flex-1 overflow-auto">
               <table class="min-w-full divide-y divide-border">
                 <thead class="sticky top-0 z-10 bg-card">
@@ -218,8 +218,8 @@ const kindBadgeClass = (kind: string) => {
                   </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-border bg-white">
-                <tr v-for="(row, idx) in items" :key="idx" class="hover:bg-card dark:hover:bg-secondary/50">
+              <tbody class="divide-y divide-border bg-card">
+                <tr v-for="(row, idx) in items" :key="idx" class="hover:bg-card/50">
                   <td class="whitespace-nowrap px-4 py-3 text-xs text-foreground/75">
                     {{ formatDateTime(row.created_at) }}
                   </td>
@@ -257,7 +257,7 @@ const kindBadgeClass = (kind: string) => {
                   <td class="whitespace-nowrap px-4 py-3 text-right">
                     <button
                       v-if="row.kind === 'error' && row.error_id"
-                      class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/10 dark:bg-red-900/20 dark:hover:bg-red-900/30"
+                      class="rounded-lg bg-red-900/20 px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/10 "
                       @click="openErrorDetail(row.error_id)"
                     >
                       {{ t('admin.ops.requestDetails.viewError') }}

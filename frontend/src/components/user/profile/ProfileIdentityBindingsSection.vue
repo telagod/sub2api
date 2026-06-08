@@ -284,8 +284,8 @@ const compact = computed(() => props.compact)
 const rowClass = computed(() =>
   props.embedded
     ? compact.value
-      ? 'rounded-2xl border border-gray-100 bg-white p-4 shadow-sm/40'
-      : 'rounded-2xl border border-gray-100 bg-gray-50/70 p-4/30'
+      ? 'rounded-lg border border-border bg-card p-4'
+      : 'rounded-lg border border-border bg-secondary p-4'
     : 'px-6 py-5'
 )
 const emailBound = computed(() => getBindingStatus('email'))
@@ -490,18 +490,18 @@ function providerInitial(provider: UserAuthProvider): string {
 
 function providerIconClass(provider: UserAuthProvider): string {
   if (provider === 'linuxdo') {
-    return 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-300'
+    return 'bg-orange-900/20 text-orange-300'
   }
   if (provider === 'dingtalk') {
-    return 'bg-sky-500/10 text-sky-400 dark:bg-blue-900/20'
+    return 'bg-blue-900/20 text-sky-400 '
   }
   if (provider === 'wechat') {
-    return 'bg-emerald-500/10 text-emerald-400 dark:bg-green-900/20'
+    return 'bg-green-900/20 text-emerald-400 '
   }
   if (provider === 'oidc') {
-    return 'bg-sky-100 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300'
+    return 'bg-sky-900/20 text-sky-300'
   }
-  return 'bg-primary-100 text-primary-600 dark:bg-primary-900/20 dark:text-primary-300'
+  return 'bg-primary-900/20 text-primary-300'
 }
 
 function providerSummary(provider: UserAuthProvider): string {

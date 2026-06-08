@@ -13,7 +13,7 @@
       <div v-for="method in methods" :key="method.type" class="space-y-1">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span :class="['inline-block h-3 w-3 rounded-full', colorMap[method.type] || 'bg-gray-400']"></span>
+            <span :class="['inline-block h-3 w-3 rounded-full', colorMap[method.type] || 'bg-muted-foreground']"></span>
             <span class="text-sm text-foreground/85">
               {{ t('payment.methods.' + method.type, method.type) }}
             </span>
@@ -29,7 +29,7 @@
         </div>
         <div class="h-2 w-full overflow-hidden rounded-full bg-muted">
           <div
-            :class="['h-full rounded-full transition-all', barColorMap[method.type] || 'bg-gray-400']"
+            :class="['h-full rounded-full transition-all', barColorMap[method.type] || 'bg-muted-foreground']"
             :style="{ width: barWidth(method.amount) + '%' }"
           ></div>
         </div>

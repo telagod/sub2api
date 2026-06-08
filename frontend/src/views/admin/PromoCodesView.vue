@@ -113,14 +113,14 @@
             <div class="flex items-center space-x-1">
               <button
                 @click="copyRegisterLink(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-green-50 hover:text-emerald-400 dark:hover:bg-green-900/20 dark:hover:text-green-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-green-50 hover:text-emerald-400"
                 :title="t('admin.promo.copyRegisterLink')"
               >
                 <Icon name="link" size="sm" />
               </button>
               <button
                 @click="handleViewUsages(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-blue-50 hover:text-sky-400 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-blue-50 hover:text-sky-400"
                 :title="t('admin.promo.viewUsages')"
               >
                 <Icon name="eye" size="sm" />
@@ -134,7 +134,7 @@
               </button>
               <button
                 @click="handleDelete(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400"
                 :title="t('common.delete')"
               >
                 <Icon name="trash" size="sm" />
@@ -337,7 +337,7 @@
               <Icon name="user" size="sm" class="text-emerald-400" />
             </div>
             <div>
-              <p class="text-sm font-medium text-foreground dark:text-white">
+              <p class="text-sm font-medium text-foreground">
                 {{ usage.user?.email || t('admin.promo.userPrefix', { id: usage.user_id }) }}
               </p>
               <p class="text-xs text-muted-foreground">

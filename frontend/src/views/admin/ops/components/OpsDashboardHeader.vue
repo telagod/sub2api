@@ -651,8 +651,8 @@ const cpuPercentValue = computed<number | null>(() => {
 
 const cpuPercentClass = computed(() => {
   const v = cpuPercentValue.value
-  if (v == null) return 'text-foreground dark:text-white'
-  if (v >= 95) return 'text-rose-600 dark:text-rose-400'
+  if (v == null) return 'text-foreground'
+  if (v >= 95) return 'text-rose-400'
   if (v >= 80) return 'text-amber-400'
   return 'text-emerald-400'
 })
@@ -664,8 +664,8 @@ const memPercentValue = computed<number | null>(() => {
 
 const memPercentClass = computed(() => {
   const v = memPercentValue.value
-  if (v == null) return 'text-foreground dark:text-white'
-  if (v >= 95) return 'text-rose-600 dark:text-rose-400'
+  if (v == null) return 'text-foreground'
+  if (v >= 95) return 'text-rose-400'
   if (v >= 85) return 'text-amber-400'
   return 'text-emerald-400'
 })
@@ -708,14 +708,14 @@ const dbMiddleLabel = computed(() => {
 })
 
 const dbMiddleClass = computed(() => {
-  if (systemMetrics.value?.db_ok === false) return 'text-rose-600 dark:text-rose-400'
+  if (systemMetrics.value?.db_ok === false) return 'text-rose-400'
   if (dbUsagePercent.value != null) {
-    if (dbUsagePercent.value >= 90) return 'text-rose-600 dark:text-rose-400'
+    if (dbUsagePercent.value >= 90) return 'text-rose-400'
     if (dbUsagePercent.value >= 70) return 'text-amber-400'
     return 'text-emerald-400'
   }
   if (systemMetrics.value?.db_ok === true) return 'text-emerald-400'
-  return 'text-foreground dark:text-white'
+  return 'text-foreground'
 })
 
 const redisConnTotalValue = computed<number | null>(() => {
@@ -751,14 +751,14 @@ const redisMiddleLabel = computed(() => {
 })
 
 const redisMiddleClass = computed(() => {
-  if (systemMetrics.value?.redis_ok === false) return 'text-rose-600 dark:text-rose-400'
+  if (systemMetrics.value?.redis_ok === false) return 'text-rose-400'
   if (redisUsagePercent.value != null) {
-    if (redisUsagePercent.value >= 90) return 'text-rose-600 dark:text-rose-400'
+    if (redisUsagePercent.value >= 90) return 'text-rose-400'
     if (redisUsagePercent.value >= 70) return 'text-amber-400'
     return 'text-emerald-400'
   }
   if (systemMetrics.value?.redis_ok === true) return 'text-emerald-400'
-  return 'text-foreground dark:text-white'
+  return 'text-foreground'
 })
 
 const goroutineCountValue = computed<number | null>(() => {
@@ -797,9 +797,9 @@ const goroutineStatusClass = computed(() => {
     case 'warning':
       return 'text-amber-400'
     case 'critical':
-      return 'text-rose-600 dark:text-rose-400'
+      return 'text-rose-400'
     default:
-      return 'text-foreground dark:text-white'
+      return 'text-foreground'
   }
 })
 
@@ -842,7 +842,7 @@ const jobsStatusClass = computed(() => {
     case 'warn':
       return 'text-amber-400'
     default:
-      return 'text-foreground dark:text-white'
+      return 'text-foreground'
   }
 })
 
@@ -951,7 +951,7 @@ function handleToolbarRefresh() {
         <button
           v-if="!props.fullscreen"
           type="button"
-          class="flex h-8 items-center gap-1.5 rounded-lg bg-sky-500/10 px-3 text-xs font-bold text-sky-400 transition-colors hover:bg-blue-200 dark:hover:bg-blue-900/50"
+          class="flex h-8 items-center gap-1.5 rounded-lg bg-sky-500/10 px-3 text-xs font-bold text-sky-400 transition-colors hover:bg-blue-200"
           :title="t('admin.ops.alertRules.title')"
           @click="emit('openAlertRules')"
         >
@@ -993,18 +993,18 @@ function handleToolbarRefresh() {
 
     <div v-if="overview" class="grid grid-cols-1 gap-6 lg:grid-cols-12">
       <!-- Left: Health + Realtime -->
-      <div :class="['rounded-2xl bg-card  lg:col-span-5', props.fullscreen ? 'p-6' : 'p-4']">
+      <div :class="['rounded-lg bg-card  lg:col-span-5', props.fullscreen ? 'p-6' : 'p-4']">
         <div class="grid h-full grid-cols-1 gap-6 md:grid-cols-[200px_1fr] md:items-center">
           <!-- 1) Health Score -->
           <div
-            class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl py-2 transition-all hover:bg-card/60 dark:hover:bg-card/60 md:border-r md:border-border md:pr-6 dark:md:border-border"
+            class="group relative flex cursor-pointer flex-col items-center justify-center rounded-lg py-2 transition-all hover:bg-card/60 md:border-r md:border-border md:pr-6"
           >
             <!-- Diagnosis Popover (hover) -->
             <div
               class="pointer-events-none absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 opacity-0 transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100 md:left-full md:top-0 md:ml-2 md:mt-0 md:translate-x-0"
             >
-              <div class="rounded-xl bg-card p-4 shadow-xl ring-1 ring-black/5 dark:ring-white/10">
-                <h4 class="mb-3 border-b border-border pb-2 text-sm font-bold text-foreground dark:text-white flex items-center gap-2">
+              <div class="rounded-lg bg-card p-4 shadow-lg ring-1 ring-black/5 ring-white/10">
+                <h4 class="mb-3 border-b border-border pb-2 text-sm font-bold text-foreground flex items-center gap-2">
                   <Icon name="brain" size="sm" class="text-blue-500" />
                   {{ t('admin.ops.diagnosis.title') }}
                 </h4>
@@ -1035,7 +1035,7 @@ function handleToolbarRefresh() {
                       </svg>
                     </div>
                     <div class="flex-1">
-                      <div class="text-xs font-semibold text-foreground dark:text-white">{{ item.message }}</div>
+                      <div class="text-xs font-semibold text-foreground">{{ item.message }}</div>
                       <div class="mt-0.5 text-[11px] text-muted-foreground">{{ item.impact }}</div>
                       <div v-if="item.action" class="mt-1 text-[11px] text-sky-400 flex items-center gap-1">
                         <Icon name="lightbulb" size="xs" />
@@ -1059,7 +1059,7 @@ function handleToolbarRefresh() {
                   :r="radius"
                   :stroke-width="strokeWidth"
                   fill="transparent"
-                  class="text-gray-200 dark:text-dark-700"
+                  class="text-foreground/15"
                   stroke="currentColor"
                 />
                 <circle
@@ -1122,7 +1122,7 @@ function handleToolbarRefresh() {
                   class="rounded px-1.5 py-0.5 text-[9px] font-bold transition-colors sm:px-2 sm:text-[10px]"
                   :class="realtimeWindow === window
                     ? 'bg-blue-500 text-white'
-                    : 'bg-accent text-foreground/75 hover:bg-gray-300 '"
+                    : 'bg-accent text-foreground/75 hover:bg-accent/80 '"
                   @click="realtimeWindow = window"
                 >
                   {{ window }}
@@ -1136,11 +1136,11 @@ function handleToolbarRefresh() {
                 <div :class="[props.fullscreen ? 'text-xs' : 'text-[10px]', 'font-bold uppercase text-muted-foreground']">{{ t('admin.ops.current') }}</div>
                 <div class="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-2">
                   <div class="flex items-baseline gap-1.5">
-                    <span :class="[props.fullscreen ? 'text-4xl' : 'text-xl sm:text-2xl', 'font-black text-foreground dark:text-white']">{{ displayRealTimeQps.toFixed(1) }}</span>
+                    <span :class="[props.fullscreen ? 'text-4xl' : 'text-xl sm:text-2xl', 'font-black text-foreground']">{{ displayRealTimeQps.toFixed(1) }}</span>
                     <span :class="[props.fullscreen ? 'text-sm' : 'text-xs', 'font-bold text-muted-foreground']">QPS</span>
                   </div>
                   <div class="flex items-baseline gap-1.5">
-                    <span :class="[props.fullscreen ? 'text-4xl' : 'text-xl sm:text-2xl', 'font-black text-foreground dark:text-white']">{{ displayRealTimeTps.toFixed(1) }}</span>
+                    <span :class="[props.fullscreen ? 'text-4xl' : 'text-xl sm:text-2xl', 'font-black text-foreground']">{{ displayRealTimeTps.toFixed(1) }}</span>
                     <span :class="[props.fullscreen ? 'text-sm' : 'text-xs', 'font-bold text-muted-foreground']">{{ t('admin.ops.tps') }}</span>
                   </div>
                 </div>
@@ -1153,11 +1153,11 @@ function handleToolbarRefresh() {
                   <div :class="[props.fullscreen ? 'text-xs' : 'text-[10px]', 'font-bold uppercase text-muted-foreground']">{{ t('admin.ops.peak') }}</div>
                   <div :class="[props.fullscreen ? 'text-base' : 'text-sm', 'mt-1 space-y-0.5 font-medium text-foreground/75']">
                     <div class="flex items-baseline gap-1.5">
-                      <span class="font-black text-foreground dark:text-white">{{ realtimeQpsPeakLabel }}</span>
+                      <span class="font-black text-foreground">{{ realtimeQpsPeakLabel }}</span>
                       <span class="text-xs">QPS</span>
                     </div>
                     <div class="flex items-baseline gap-1.5">
-                      <span class="font-black text-foreground dark:text-white">{{ realtimeTpsPeakLabel }}</span>
+                      <span class="font-black text-foreground">{{ realtimeTpsPeakLabel }}</span>
                       <span class="text-xs">{{ t('admin.ops.tps') }}</span>
                     </div>
                   </div>
@@ -1168,11 +1168,11 @@ function handleToolbarRefresh() {
                   <div :class="[props.fullscreen ? 'text-xs' : 'text-[10px]', 'font-bold uppercase text-muted-foreground']">{{ t('admin.ops.average') }}</div>
                   <div :class="[props.fullscreen ? 'text-base' : 'text-sm', 'mt-1 space-y-0.5 font-medium text-foreground/75']">
                     <div class="flex items-baseline gap-1.5">
-                      <span class="font-black text-foreground dark:text-white">{{ realtimeQpsAvgLabel }}</span>
+                      <span class="font-black text-foreground">{{ realtimeQpsAvgLabel }}</span>
                       <span class="text-xs">QPS</span>
                     </div>
                     <div class="flex items-baseline gap-1.5">
-                      <span class="font-black text-foreground dark:text-white">{{ realtimeTpsAvgLabel }}</span>
+                      <span class="font-black text-foreground">{{ realtimeTpsAvgLabel }}</span>
                       <span class="text-xs">{{ t('admin.ops.tps') }}</span>
                     </div>
                   </div>
@@ -1209,7 +1209,7 @@ function handleToolbarRefresh() {
       <!-- Right: 6 cards (3 cols x 2 rows) -->
       <div class="grid h-full grid-cols-1 content-center gap-4 sm:grid-cols-2 lg:col-span-7 lg:grid-cols-3">
         <!-- Card 1: Requests -->
-        <div class="rounded-2xl bg-card p-4 " style="order: 1;">
+        <div class="rounded-lg bg-card p-4 " style="order: 1;">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-bold uppercase text-muted-foreground">{{ t('admin.ops.requestsTitle') }}</span>
@@ -1227,25 +1227,25 @@ function handleToolbarRefresh() {
           <div class="mt-2 space-y-2 text-xs">
             <div class="flex justify-between">
               <span class="text-muted-foreground">{{ t('admin.ops.requests') }}:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ totalRequestsLabel }}</span>
+              <span class="font-bold text-foreground">{{ totalRequestsLabel }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-muted-foreground">{{ t('admin.ops.tokens') }}:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ totalTokensLabel }}</span>
+              <span class="font-bold text-foreground">{{ totalTokensLabel }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-muted-foreground">{{ t('admin.ops.avgQps') }}:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ qpsAvgLabel }}</span>
+              <span class="font-bold text-foreground">{{ qpsAvgLabel }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-muted-foreground">{{ t('admin.ops.avgTps') }}:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ tpsAvgLabel }}</span>
+              <span class="font-bold text-foreground">{{ tpsAvgLabel }}</span>
             </div>
           </div>
         </div>
 
         <!-- Card 2: SLA -->
-        <div class="rounded-2xl bg-card p-4 " style="order: 2;">
+        <div class="rounded-lg bg-card p-4 " style="order: 2;">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="text-[10px] font-bold uppercase text-muted-foreground">{{ t('admin.ops.sla') }}</span>
@@ -1276,7 +1276,7 @@ function handleToolbarRefresh() {
         </div>
 
         <!-- Card 4: Request Duration -->
-        <div class="rounded-2xl bg-card p-4 " style="order: 4;">
+        <div class="rounded-lg bg-card p-4 " style="order: 4;">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-bold uppercase text-muted-foreground">{{ t('admin.ops.latencyDuration') }}</span>
@@ -1292,7 +1292,7 @@ function handleToolbarRefresh() {
             </button>
           </div>
           <div class="mt-2 flex items-baseline gap-2">
-            <div class="text-3xl font-black text-foreground dark:text-white">
+            <div class="text-3xl font-black text-foreground">
               {{ durationP99Ms ?? '-' }}
             </div>
             <span class="text-xs font-bold text-muted-foreground">ms (P99)</span>
@@ -1300,34 +1300,34 @@ function handleToolbarRefresh() {
           <div class="mt-3 grid grid-cols-1 gap-x-3 gap-y-1 text-xs 2xl:grid-cols-2">
             <div class="flex items-baseline gap-1 whitespace-nowrap">
               <span class="text-muted-foreground">P95:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ durationP95Ms ?? '-' }}</span>
+              <span class="font-bold text-foreground">{{ durationP95Ms ?? '-' }}</span>
               <span class="text-muted-foreground">ms</span>
             </div>
             <div class="flex items-baseline gap-1 whitespace-nowrap">
               <span class="text-muted-foreground">P90:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ durationP90Ms ?? '-' }}</span>
+              <span class="font-bold text-foreground">{{ durationP90Ms ?? '-' }}</span>
               <span class="text-muted-foreground">ms</span>
             </div>
             <div class="flex items-baseline gap-1 whitespace-nowrap">
               <span class="text-muted-foreground">P50:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ durationP50Ms ?? '-' }}</span>
+              <span class="font-bold text-foreground">{{ durationP50Ms ?? '-' }}</span>
               <span class="text-muted-foreground">ms</span>
             </div>
             <div class="flex items-baseline gap-1 whitespace-nowrap">
               <span class="text-muted-foreground">Avg:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ durationAvgMs ?? '-' }}</span>
+              <span class="font-bold text-foreground">{{ durationAvgMs ?? '-' }}</span>
               <span class="text-muted-foreground">ms</span>
             </div>
             <div class="flex items-baseline gap-1 whitespace-nowrap">
               <span class="text-muted-foreground">Max:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ durationMaxMs ?? '-' }}</span>
+              <span class="font-bold text-foreground">{{ durationMaxMs ?? '-' }}</span>
               <span class="text-muted-foreground">ms</span>
             </div>
           </div>
         </div>
 
         <!-- Card 5: TTFT -->
-        <div class="rounded-2xl bg-card p-4 " style="order: 5;">
+        <div class="rounded-lg bg-card p-4 " style="order: 5;">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-bold uppercase text-muted-foreground">TTFT</span>
@@ -1378,7 +1378,7 @@ function handleToolbarRefresh() {
         </div>
 
         <!-- Card 3: Request Errors -->
-        <div class="rounded-2xl bg-card p-4 " style="order: 3;">
+        <div class="rounded-lg bg-card p-4 " style="order: 3;">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-bold uppercase text-muted-foreground">{{ t('admin.ops.requestErrors') }}</span>
@@ -1394,17 +1394,17 @@ function handleToolbarRefresh() {
           <div class="mt-3 space-y-1 text-xs">
             <div class="flex justify-between">
               <span class="text-muted-foreground">{{ t('admin.ops.errorCount') }}:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ formatNumber(overview.error_count_sla ?? 0) }}</span>
+              <span class="font-bold text-foreground">{{ formatNumber(overview.error_count_sla ?? 0) }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-muted-foreground">{{ t('admin.ops.businessLimited') }}:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ formatNumber(overview.business_limited_count ?? 0) }}</span>
+              <span class="font-bold text-foreground">{{ formatNumber(overview.business_limited_count ?? 0) }}</span>
             </div>
           </div>
         </div>
 
         <!-- Card 6: Upstream Errors -->
-        <div class="rounded-2xl bg-card p-4 " style="order: 6;">
+        <div class="rounded-lg bg-card p-4 " style="order: 6;">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1">
               <span class="text-[10px] font-bold uppercase text-muted-foreground">{{ t('admin.ops.upstreamErrors') }}</span>
@@ -1420,11 +1420,11 @@ function handleToolbarRefresh() {
           <div class="mt-3 space-y-1 text-xs">
             <div class="flex justify-between">
               <span class="text-muted-foreground">{{ t('admin.ops.errorCountExcl429529') }}:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ formatNumber(overview.upstream_error_count_excl_429_529 ?? 0) }}</span>
+              <span class="font-bold text-foreground">{{ formatNumber(overview.upstream_error_count_excl_429_529 ?? 0) }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-muted-foreground">429/529:</span>
-              <span class="font-bold text-foreground dark:text-white">{{ formatNumber((overview.upstream_429_count ?? 0) + (overview.upstream_529_count ?? 0)) }}</span>
+              <span class="font-bold text-foreground">{{ formatNumber((overview.upstream_429_count ?? 0) + (overview.upstream_529_count ?? 0)) }}</span>
             </div>
           </div>
         </div>
@@ -1435,7 +1435,7 @@ function handleToolbarRefresh() {
     <div v-if="overview" class="mt-2 border-t border-border pt-4 ">
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <!-- CPU -->
-        <div class="rounded-xl bg-card p-3 ">
+        <div class="rounded-lg bg-card p-3 ">
           <div class="flex items-center gap-1">
             <div class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">CPU</div>
             <HelpTooltip v-if="!props.fullscreen" :content="t('admin.ops.tooltips.cpu')" />
@@ -1449,7 +1449,7 @@ function handleToolbarRefresh() {
         </div>
 
         <!-- MEM -->
-        <div class="rounded-xl bg-card p-3 ">
+        <div class="rounded-lg bg-card p-3 ">
           <div class="flex items-center gap-1">
             <div class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{{ t('admin.ops.memory') }}</div>
             <HelpTooltip v-if="!props.fullscreen" :content="t('admin.ops.tooltips.memory')" />
@@ -1467,7 +1467,7 @@ function handleToolbarRefresh() {
         </div>
 
         <!-- DB -->
-        <div class="rounded-xl bg-card p-3 ">
+        <div class="rounded-lg bg-card p-3 ">
           <div class="flex items-center gap-1">
             <div class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{{ t('admin.ops.db') }}</div>
             <HelpTooltip v-if="!props.fullscreen" :content="t('admin.ops.tooltips.db')" />
@@ -1484,7 +1484,7 @@ function handleToolbarRefresh() {
         </div>
 
         <!-- Redis -->
-        <div class="rounded-xl bg-card p-3 ">
+        <div class="rounded-lg bg-card p-3 ">
           <div class="flex items-center gap-1">
             <div class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Redis</div>
             <HelpTooltip v-if="!props.fullscreen" :content="t('admin.ops.tooltips.redis')" />
@@ -1500,7 +1500,7 @@ function handleToolbarRefresh() {
         </div>
 
         <!-- Goroutines -->
-        <div class="rounded-xl bg-card p-3 ">
+        <div class="rounded-lg bg-card p-3 ">
           <div class="flex items-center gap-1">
             <div class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{{ t('admin.ops.goroutines') }}</div>
             <HelpTooltip v-if="!props.fullscreen" :content="t('admin.ops.tooltips.goroutines')" />
@@ -1519,7 +1519,7 @@ function handleToolbarRefresh() {
         </div>
 
         <!-- Jobs -->
-        <div class="rounded-xl bg-card p-3 ">
+        <div class="rounded-lg bg-card p-3 ">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-1">
               <div class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{{ t('admin.ops.jobs') }}</div>
@@ -1550,10 +1550,10 @@ function handleToolbarRefresh() {
         <div
           v-for="hb in jobHeartbeats"
           :key="hb.job_name"
-          class="rounded-xl border border-border bg-card p-4  "
+          class="rounded-lg border border-border bg-card p-4  "
         >
           <div class="flex items-center justify-between gap-3">
-            <div class="truncate text-sm font-semibold text-foreground dark:text-white">{{ hb.job_name }}</div>
+            <div class="truncate text-sm font-semibold text-foreground">{{ hb.job_name }}</div>
             <div class="flex items-center gap-3 text-xs text-muted-foreground">
               <span v-if="hb.last_duration_ms != null" class="font-mono">{{ hb.last_duration_ms }}ms</span>
               <span>{{ formatTimeShort(hb.updated_at) }}</span>
@@ -1574,7 +1574,7 @@ function handleToolbarRefresh() {
 
           <div
             v-if="hb.last_error"
-            class="mt-3 rounded-lg bg-rose-50 p-2 text-xs text-rose-700 dark:bg-rose-900/20 dark:text-rose-300"
+            class="mt-3 rounded-lg bg-rose-900/20 p-2 text-xs text-rose-300"
           >
             {{ hb.last_error }}
           </div>
@@ -1592,7 +1592,7 @@ function handleToolbarRefresh() {
           <input
             v-model="customStartTimeInput"
             type="datetime-local"
-            class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500   dark:text-white"
+            class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500  "
           />
         </div>
         <div>
@@ -1602,7 +1602,7 @@ function handleToolbarRefresh() {
           <input
             v-model="customEndTimeInput"
             type="datetime-local"
-            class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500   dark:text-white"
+            class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500  "
           />
         </div>
         <div class="flex justify-end gap-3 pt-2">

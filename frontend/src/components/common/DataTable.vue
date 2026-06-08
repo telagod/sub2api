@@ -848,20 +848,12 @@ defineExpose({
 
 /* 表体 sticky 列背景 */
 tbody .sticky-col {
-  background-color: white;
-}
-
-.dark tbody .sticky-col {
-  background-color: rgb(17 24 39);
+  background-color: hsl(var(--card));
 }
 
 /* hover 状态保持 */
 tbody tr:hover .sticky-col {
-  background-color: rgb(249 250 251);
-}
-
-.dark tbody tr:hover .sticky-col {
-  background-color: rgb(31 41 55);
+  background-color: hsl(var(--accent) / 0.3);
 }
 
 /* 阴影只在可滚动时显示 */
@@ -904,13 +896,13 @@ tbody tr:hover .sticky-col {
   pointer-events: none;
 }
 
-/* 暗色模式阴影 */
-.dark .is-scrollable .sticky-col-left::after,
-.dark .is-scrollable .sticky-col-left-second::after {
+/* 阴影强度(dark-only) */
+.is-scrollable .sticky-col-left::after,
+.is-scrollable .sticky-col-left-second::after {
   background: linear-gradient(to right, rgba(0, 0, 0, 0.2), transparent);
 }
 
-.dark .is-scrollable .sticky-col-right::before {
+.is-scrollable .sticky-col-right::before {
   background: linear-gradient(to left, rgba(0, 0, 0, 0.2), transparent);
 }
 </style>
@@ -935,40 +927,25 @@ tbody tr:hover .sticky-col {
 }
 
 .table-wrapper::-webkit-scrollbar-track {
-  background-color: rgba(0, 0, 0, 0.03) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
   border-radius: 6px !important;
   margin: 0 4px !important;
 }
-.dark .table-wrapper::-webkit-scrollbar-track {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-}
 
-/* 常驻、不透明的滑块，无视鼠标是否 hover 都在那！ */
 .table-wrapper::-webkit-scrollbar-thumb {
-  background-color: rgba(107, 114, 128, 0.75) !important; 
+  background-color: rgba(156, 163, 175, 0.75) !important;
   border-radius: 6px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
   -webkit-appearance: none !important;
 }
 .table-wrapper::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(75, 85, 99, 0.9) !important;
-}
-
-.dark .table-wrapper::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.75) !important;
-}
-.dark .table-wrapper::-webkit-scrollbar-thumb:hover {
   background-color: rgba(209, 213, 219, 0.9) !important;
 }
 
-/* 3. 仅给真正的 Firefox 留的后路 */
 @supports (-moz-appearance:none) {
   .table-wrapper {
     scrollbar-width: thin !important;
-    scrollbar-color: rgba(156, 163, 175, 0.5) rgba(0, 0, 0, 0.03) !important;
-  }
-  .dark .table-wrapper {
     scrollbar-color: rgba(75, 85, 99, 0.5) rgba(255, 255, 255, 0.05) !important;
   }
 }

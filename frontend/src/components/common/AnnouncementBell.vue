@@ -27,7 +27,7 @@
           @click="closeModal"
         >
           <div
-            class="w-full max-w-[620px] overflow-hidden rounded-xl border border-border bg-card "
+            class="w-full max-w-[620px] overflow-hidden rounded-lg border border-border bg-card "
             @click.stop
           >
             <!-- Header -->
@@ -184,7 +184,7 @@
           @click="closeDetail"
         >
           <div
-            class="w-full max-w-[780px] overflow-hidden rounded-xl border border-border bg-card "
+            class="w-full max-w-[780px] overflow-hidden rounded-lg border border-border bg-card "
             @click.stop
           >
             <!-- Header -->

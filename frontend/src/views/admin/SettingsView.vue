@@ -745,7 +745,7 @@
                     <button
                       type="button"
                       @click="rectifierForm.apikey_signature_patterns.push('')"
-                      class="btn btn-ghost btn-xs text-primary-600 dark:text-primary-400"
+                      class="btn btn-ghost btn-xs text-primary-400"
                     >
                       + {{ t("admin.settings.rectifier.addPattern") }}
                     </button>
@@ -896,7 +896,7 @@
                         v-for="preset in betaPresets[rule.beta_token]"
                         :key="preset.label"
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-md border border-primary-200 bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-800 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50"
+                        class="inline-flex items-center gap-1 rounded-md border border-primary-800 bg-primary-900/30 px-2.5 py-1 text-xs font-medium text-primary-300 transition-colors hover:bg-primary-900/50"
                         @click="applyBetaPreset(rule, preset)"
                         :title="preset.description"
                       >
@@ -956,7 +956,7 @@
                         if (!rule.model_whitelist) rule.model_whitelist = [];
                         rule.model_whitelist.push('');
                       "
-                      class="mb-2 inline-flex items-center gap-1 text-xs text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                      class="mb-2 inline-flex items-center gap-1 text-xs text-primary-600 transition-colors hover:text-primary-400"
                     >
                       <svg
                         class="h-3.5 w-3.5"
@@ -984,7 +984,7 @@
                         v-for="pattern in commonModelPatterns"
                         :key="pattern"
                         type="button"
-                        class="rounded border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:border-primary-700 dark:hover:bg-primary-900/30 dark:hover:text-primary-300"
+                        class="rounded border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:border-primary-300 hover:bg-primary-900/30 hover:text-primary-700"
                         @click="addQuickPattern(rule, pattern)"
                       >
                         {{ pattern }}
@@ -1259,7 +1259,7 @@
                   <button
                     type="button"
                     @click="addOpenAIFastPolicyModelPattern(rule)"
-                    class="mb-2 inline-flex items-center gap-1 text-xs text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                    class="mb-2 inline-flex items-center gap-1 text-xs text-primary-600 transition-colors hover:text-primary-400"
                   >
                     <svg
                       class="h-3.5 w-3.5"
@@ -1418,7 +1418,7 @@
                       <span>{{ suffix }}</span>
                       <button
                         type="button"
-                        class="rounded-full text-muted-foreground hover:bg-accent hover:text-foreground/85 dark:hover:text-white"
+                        class="rounded-full text-muted-foreground hover:bg-accent hover:text-white"
                         @click="
                           removeRegistrationEmailSuffixWhitelistTag(suffix)
                         "
@@ -1433,12 +1433,12 @@
                     </span>
 
                     <div
-                      class="flex min-w-[220px] flex-1 items-center gap-1 rounded border border-transparent px-2 py-1 focus-within:border-primary-300 dark:focus-within:border-primary-700"
+                      class="flex min-w-[220px] flex-1 items-center gap-1 rounded border border-transparent px-2 py-1 focus-within:border-primary-700"
                     >
                       <input
                         v-model="registrationEmailSuffixWhitelistDraft"
                         type="text"
-                        class="w-full bg-transparent text-sm font-mono text-foreground outline-none placeholder:text-muted-foreground dark:placeholder:text-muted-foreground"
+                        class="w-full bg-transparent text-sm font-mono text-foreground outline-none placeholder:text-muted-foreground"
                         :placeholder="
                           t(
                             'admin.settings.registration.emailSuffixWhitelistPlaceholder',
@@ -1833,7 +1833,7 @@
                           href="https://github.com/settings/developers"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="font-medium text-primary-600 hover:underline dark:text-primary-400"
+                          class="font-medium text-primary-400 hover:underline "
                         >OAuth Apps</a>
                         → New OAuth App；Homepage URL 填站点域名，Authorization callback URL 填下面的后端回调地址。
                       </template>
@@ -1844,7 +1844,7 @@
                           href="https://github.com/settings/developers"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="font-medium text-primary-600 hover:underline dark:text-primary-400"
+                          class="font-medium text-primary-400 hover:underline "
                         >OAuth Apps</a>
                         → New OAuth App. Use your site origin as Homepage URL and the backend callback URL below as Authorization callback URL.
                       </template>
@@ -4674,7 +4674,7 @@
 
                 <button
                   type="button"
-                  class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:border-primary-400 hover:text-primary-600 dark:hover:border-primary-500 dark:hover:text-primary-400"
+                  class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:border-primary-400 hover:text-primary-600"
                   @click="addEndpoint"
                 >
                   <svg
@@ -4818,7 +4818,7 @@
                     <button
                       v-if="index > 0"
                       type="button"
-                      class="rounded p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground dark:hover:bg-secondary"
+                      class="rounded p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground"
                       :title="t('admin.settings.customMenu.moveUp')"
                       @click="moveMenuItem(index, -1)"
                     >
@@ -4840,7 +4840,7 @@
                     <button
                       v-if="index < form.custom_menu_items.length - 1"
                       type="button"
-                      class="rounded p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground dark:hover:bg-secondary"
+                      class="rounded p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground"
                       :title="t('admin.settings.customMenu.moveDown')"
                       @click="moveMenuItem(index, 1)"
                     >
@@ -4956,7 +4956,7 @@
               <!-- Add button -->
               <button
                 type="button"
-                class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary-400 hover:text-primary-600 dark:hover:border-primary-500 dark:hover:text-primary-400"
+                class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary-400 hover:text-primary-600"
                 @click="addMenuItem"
               >
                 <svg
@@ -5018,7 +5018,7 @@
                       class="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition"
                       :class="
                         form.login_agreement_mode === 'modal'
-                          ? 'bg-card text-primary-700 shadow-sm dark:text-primary-300'
+                          ? 'bg-card text-primary-300 shadow-sm '
                           : 'text-muted-foreground hover:text-foreground'
                       "
                       @click="form.login_agreement_mode = 'modal'"
@@ -5031,7 +5031,7 @@
                       class="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition"
                       :class="
                         form.login_agreement_mode === 'checkbox'
-                          ? 'bg-card text-primary-700 shadow-sm dark:text-primary-300'
+                          ? 'bg-card text-primary-300 shadow-sm '
                           : 'text-muted-foreground hover:text-foreground'
                       "
                       @click="form.login_agreement_mode = 'checkbox'"
@@ -5156,7 +5156,7 @@
                           <input
                             v-model="doc.id"
                             type="text"
-                            class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-0 dark:placeholder:text-muted-foreground"
+                            class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
                             placeholder="usage-policy"
                           />
                         </div>
@@ -5195,7 +5195,7 @@
             <p class="mt-1.5 text-xs">
               <router-link
                 to="/admin/channels/monitor"
-                class="inline-flex items-center gap-1 text-primary-600 hover:underline dark:text-primary-400"
+                class="inline-flex items-center gap-1 text-primary-400 hover:underline "
               >
                 {{ t('admin.settings.features.channelMonitor.configureLink') }}
                 <span aria-hidden="true">→</span>
@@ -5245,7 +5245,7 @@
             <p class="mt-1.5 text-xs">
               <router-link
                 to="/admin/channels/pricing"
-                class="inline-flex items-center gap-1 text-primary-600 hover:underline dark:text-primary-400"
+                class="inline-flex items-center gap-1 text-primary-400 hover:underline "
               >
                 {{ t('admin.settings.features.availableChannels.configureLink') }}
                 <span aria-hidden="true">→</span>
@@ -5278,7 +5278,7 @@
             <p class="mt-1.5 text-xs">
               <router-link
                 to="/admin/risk-control"
-                class="inline-flex items-center gap-1 text-primary-600 hover:underline dark:text-primary-400"
+                class="inline-flex items-center gap-1 text-primary-400 hover:underline "
               >
                 {{ t('admin.settings.features.riskControl.configureLink') }}
                 <span aria-hidden="true">→</span>
@@ -5476,7 +5476,7 @@
                           {{ entry.aff_code }}
                           <span
                             v-if="entry.aff_code_custom"
-                            class="ml-1 inline-block rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
+                            class="ml-1 inline-block rounded bg-primary-900/30 px-1.5 py-0.5 text-[10px] font-medium text-primary-300  "
                           >{{ t('admin.settings.features.affiliate.customUsers.customBadge') }}</span>
                         </td>
                         <td class="px-3 py-2 text-sm">
@@ -5547,7 +5547,7 @@
                 <!-- Chip showing the picked user; clicking it re-opens the search -->
                 <div
                   v-if="affiliateModal.selectedUser"
-                  class="flex items-center justify-between rounded-md border border-primary-200 bg-primary-50 px-3 py-2 dark:border-primary-700/50 dark:bg-primary-900/20"
+                  class="flex items-center justify-between rounded-md border border-primary-700/50 bg-primary-900/20 px-3 py-2"
                 >
                   <div class="text-sm">
                     <span class="font-medium text-foreground">{{ affiliateModal.selectedUser.email }}</span>
@@ -5579,7 +5579,7 @@
                       v-for="u in affiliateModal.userResults"
                       :key="u.id"
                       type="button"
-                      class="w-full px-3 py-1.5 text-left text-sm hover:bg-accent dark:hover:bg-card"
+                      class="w-full px-3 py-1.5 text-left text-sm hover:bg-card"
                       @click="selectAffiliateUser(u)"
                     >
                       {{ u.email }} <span class="text-xs text-muted-foreground">({{ u.username }})</span>
@@ -5719,7 +5719,7 @@
                   :href="paymentGuideHref"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="ml-2 inline-flex items-center text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                  class="ml-2 inline-flex items-center text-primary-600 hover:text-primary-400"
                 >
                   <svg
                     class="mr-0.5 h-3.5 w-3.5"
@@ -5875,7 +5875,7 @@
                       }}
                     </p>
                     <p
-                      class="mt-1 text-xs font-medium text-primary-600 dark:text-primary-400"
+                      class="mt-1 text-xs font-medium text-primary-400"
                     >
                       {{
                         t("admin.settings.payment.balanceRechargePreview", {
@@ -5924,7 +5924,7 @@
                     </p>
                     <p
                       v-if="(Number(form.payment_recharge_fee_rate) || 0) > 0"
-                      class="mt-1 text-xs font-medium text-primary-600 dark:text-primary-400"
+                      class="mt-1 text-xs font-medium text-primary-400"
                     >
                       {{
                         t("admin.settings.payment.rechargeFeePreview", {
@@ -6112,7 +6112,7 @@
                         'rounded-lg border px-3 py-1.5 text-sm font-medium transition-all',
                         isPaymentTypeEnabled(pt.value)
                           ? 'border-primary-500 bg-primary-500 text-white shadow-sm'
-                          : 'border-border bg-card text-muted-foreground hover:border-border hover:bg-muted dark:hover:border-dark-500',
+                          : 'border-border bg-card text-muted-foreground hover:border-dark-500 hover:bg-muted',
                       ]"
                     >
                       {{ pt.label }}
@@ -6124,7 +6124,7 @@
                       :href="paymentMethodsHref"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="ml-1 text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300"
+                      class="ml-1 text-primary-500 hover:text-primary-400"
                     >
                       {{ t("admin.settings.payment.findProvider") }}
                       <svg
@@ -6580,7 +6580,7 @@
                         class="sr-only peer"
                       />
                       <div
-                        class="w-9 h-5 bg-accent peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-gray-500 peer-checked:bg-primary-600"
+                        class="w-9 h-5 bg-accent peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-600"
                       ></div>
                     </label>
                     <input

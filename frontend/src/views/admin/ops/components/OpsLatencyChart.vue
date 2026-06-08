@@ -74,7 +74,7 @@ const options = computed(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col rounded-xl border border-border bg-card p-6 ">
+  <div class="flex h-full flex-col rounded-lg border border-border bg-card p-6 ">
     <div class="mb-4 flex items-center justify-between">
       <h3 class="flex items-center gap-2 text-sm font-bold text-foreground">
         <svg class="h-4 w-4 text-primary-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">

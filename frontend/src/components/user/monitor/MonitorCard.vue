@@ -87,8 +87,8 @@ import MonitorTimeline from './MonitorTimeline.vue'
 
 const PROVIDER_TINT: Record<string, string> = {
   openai: 'text-emerald-400',
-  anthropic: 'text-orange-600 dark:text-orange-300',
-  gemini: 'text-sky-600 dark:text-sky-300',
+  anthropic: 'text-orange-300',
+  gemini: 'text-sky-300',
 }
 
 const props = defineProps<{
@@ -112,7 +112,7 @@ const {
 } = useChannelMonitorFormat()
 
 const providerTintClass = computed(() =>
-  PROVIDER_TINT[props.item.provider] ?? 'text-gray-500 dark:text-gray-300'
+  PROVIDER_TINT[props.item.provider] ?? 'text-muted-foreground'
 )
 
 const availabilityLabel = computed(() => {

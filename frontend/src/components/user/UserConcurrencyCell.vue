@@ -38,6 +38,6 @@ const statusClass = computed(() => {
     return 'bg-amber-500/10 text-amber-400'
   }
   // Idle: gray
-  return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+  return 'bg-accent text-muted-foreground'
 })
 </script>

@@ -114,7 +114,7 @@ function isGroupMissing(id: number): boolean {
 
 function getPlanNameClass(groupId: number): string {
   const group = getGroup(groupId)
-  return group ? platformTextClass(group.platform) : 'text-gray-900 dark:text-white'
+  return group ? platformTextClass(group.platform) : 'text-foreground'
 }
 
 

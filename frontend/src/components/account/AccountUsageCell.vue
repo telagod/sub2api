@@ -792,18 +792,18 @@ const geminiTierClass = computed(() => {
   const level = geminiUserLevel.value
 
   if (channel === 'client' || channel === 'ai studio') {
-    return 'bg-sky-500/10 text-sky-400 dark:bg-blue-900/40'
+    return 'bg-blue-900/40 text-sky-400'
   }
 
   if (channel === 'google one') {
-    if (level === 'ultra') return 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300'
-    if (level === 'pro') return 'bg-sky-500/10 text-sky-400 dark:bg-blue-900/40'
-    return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+    if (level === 'ultra') return 'bg-purple-900/40 text-purple-300'
+    if (level === 'pro') return 'bg-blue-900/40 text-sky-400'
+    return 'bg-accent text-muted-foreground'
   }
 
   if (channel === 'gcp') {
-    if (level === 'enterprise') return 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300'
-    return 'bg-sky-500/10 text-sky-400 dark:bg-blue-900/40'
+    if (level === 'enterprise') return 'bg-purple-900/40 text-purple-300'
+    return 'bg-blue-900/40 text-sky-400'
   }
 
   return ''
@@ -938,11 +938,11 @@ const antigravityTierLabel = computed(() => {
 const antigravityTierClass = computed(() => {
   switch (antigravityTier.value) {
     case 'free-tier':
-      return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+      return 'bg-accent text-muted-foreground'
     case 'g1-pro-tier':
-      return 'bg-sky-500/10 text-sky-400 dark:bg-blue-900/40'
+      return 'bg-blue-900/40 text-sky-400'
     case 'g1-ultra-tier':
-      return 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300'
+      return 'bg-purple-900/40 text-purple-300'
     default:
       return ''
   }
@@ -988,9 +988,9 @@ const forbiddenLabel = computed(() => {
 
 const forbiddenBadgeClass = computed(() => {
   if (forbiddenType.value === 'validation') {
-    return 'bg-amber-500/10 text-amber-400 dark:bg-yellow-900/40 dark:text-yellow-300'
+    return 'bg-yellow-900/40 text-yellow-300'
   }
-  return 'bg-red-500/10 text-red-400 dark:bg-red-900/40'
+  return 'bg-red-900/40 text-red-400'
 })
 
 const linkCopied = ref(false)

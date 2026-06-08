@@ -24,7 +24,7 @@
               :to="documentRoute(doc)"
               target="_blank"
               rel="noopener noreferrer"
-              class="font-medium text-primary-600 underline-offset-4 transition hover:text-primary-700 hover:underline dark:text-primary-300 dark:hover:text-primary-200"
+              class="font-medium text-primary-600 underline-offset-4 transition hover:text-primary-300 hover:underline "
             >
               {{ doc.title }}
             </RouterLink>
@@ -61,7 +61,7 @@
     <Transition name="agreement-fade">
       <div
         v-if="dialogVisible"
-        class="fixed inset-0 z-[140] flex items-center justify-center overflow-y-auto bg-gray-950/70 p-4"
+        class="fixed inset-0 z-[140] flex items-center justify-center overflow-y-auto bg-black/70 p-4"
       >
         <div class="w-full max-w-[600px] overflow-hidden rounded-lg border border-border bg-card ">
           <div class="border-b border-border bg-card px-6 py-6">

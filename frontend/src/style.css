@@ -133,7 +133,7 @@
   }
   .btn-airwallex {
     @apply bg-[#14171A] text-white;
-    @apply hover:brightness-125 dark:bg-[#7AF0C4] dark:text-gray-950;
+    @apply hover:brightness-125;
   }
   .btn-alipay {
     @apply bg-[#00AEEF] text-white;

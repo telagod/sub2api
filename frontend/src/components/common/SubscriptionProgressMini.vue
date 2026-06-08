@@ -167,7 +167,7 @@
           <router-link
             to="/subscriptions"
             @click="closeTooltip"
-            class="block w-full py-1 text-center text-xs text-primary-600 hover:underline dark:text-primary-400"
+            class="block w-full py-1 text-center text-xs text-primary-400 hover:underline "
           >
             {{ t('subscriptionProgress.viewAll') }}
           </router-link>
@@ -238,7 +238,7 @@ function getProgressDotClass(sub: UserSubscription): string {
 }
 
 function getProgressBarClass(used: number | undefined, limit: number | null | undefined): string {
-  if (!limit || limit === 0) return 'bg-gray-400'
+  if (!limit || limit === 0) return 'bg-muted-foreground'
   const percentage = ((used || 0) / limit) * 100
   if (percentage >= 90) return 'bg-red-500'
   if (percentage >= 70) return 'bg-orange-500'
@@ -274,8 +274,8 @@ function getDaysRemainingClass(expiresAt: string): string {
   const diff = expires.getTime() - now.getTime()
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
   if (days <= 3) return 'text-red-400'
-  if (days <= 7) return 'text-orange-600 dark:text-orange-400'
-  return 'text-gray-500'
+  if (days <= 7) return 'text-orange-400'
+  return 'text-muted-foreground'
 }
 
 function toggleTooltip() {
