@@ -18,7 +18,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <Button @click="$emit('close')"  variant="secondary">{{ t('common.cancel') }}</Button>
-        <Button type="submit" form="balance-form" :disabled="submitting || !form.amount"  :class="operation === 'add' ? 'btn-primary' : 'btn-danger'">{{ submitting ? t('common.saving') : t('common.confirm') }}</Button>
+        <Button type="submit" form="balance-form" :disabled="submitting || !form.amount" :variant="operation === 'add' ? 'default' : 'destructive'">{{ submitting ? t('common.saving') : t('common.confirm') }}</Button>
       </div>
     </template>
   </BaseDialog>
