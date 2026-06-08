@@ -1,5 +1,6 @@
 <template>
-  <div class="card">
+  <Card>
+    <CardContent>
     <div class="border-b border-border px-6 py-4">
       <h2 class="text-lg font-semibold text-foreground">{{ t('dashboard.quickActions') }}</h2>
     </div>
@@ -49,10 +50,12 @@
         />
       </button>
     </div>
-  </div>
+  </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'

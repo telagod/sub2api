@@ -2,7 +2,8 @@
   <AppLayout>
     <div class="space-y-4">
       <!-- Filters -->
-      <div class="card p-4">
+      <Card>
+        <CardContent class="p-4">
         <div class="flex flex-wrap items-center gap-3">
           <div class="flex-1 sm:max-w-64">
             <Input v-model="orderSearch" type="text" :placeholder="t('payment.admin.searchOrders')"  @input="debounceLoadOrders" />
@@ -16,7 +17,8 @@
             </Button>
           </div>
         </div>
-      </div>
+      </CardContent>
+      </Card>
 
       <!-- Table -->
       <OrderTable :orders="orders" :loading="ordersLoading" show-user>
@@ -112,6 +114,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ref, reactive, computed, onMounted } from 'vue'

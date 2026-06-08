@@ -1,7 +1,8 @@
 <template>
   <div class="space-y-6">
     <!-- Date Range Filter -->
-    <div class="card p-4">
+    <Card>
+      <CardContent class="p-4">
       <div class="flex flex-wrap items-center gap-4">
         <div class="flex items-center gap-2">
           <span class="text-sm font-medium text-muted-foreground">{{ t('dashboard.timeRange') }}:</span>
@@ -17,12 +18,14 @@
           </div>
         </div>
       </div>
-    </div>
+    </CardContent>
+    </Card>
 
     <!-- Charts Grid -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <!-- Model Distribution Chart -->
-      <div class="card relative overflow-hidden p-4">
+      <Card class="relative overflow-hidden">
+        <CardContent class="p-4">
         <div v-if="loading" class="absolute inset-0 z-10 flex items-center justify-center bg-card/60">
           <LoadingSpinner size="md" />
         </div>
@@ -55,7 +58,8 @@
             </table>
           </div>
         </div>
-      </div>
+      </CardContent>
+      </Card>
 
       <!-- Token Usage Trend Chart -->
       <TokenUsageTrend :trend-data="trend" :loading="loading" />
@@ -64,6 +68,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'

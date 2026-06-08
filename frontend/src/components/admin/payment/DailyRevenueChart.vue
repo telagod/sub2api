@@ -1,5 +1,6 @@
 <template>
-  <div class="card p-4">
+  <Card>
+    <CardContent class="p-4">
     <h3 class="mb-4 text-sm font-semibold text-foreground">
       {{ t('payment.admin.dailyRevenue') }}
     </h3>
@@ -15,10 +16,12 @@
         {{ t('payment.admin.noData') }}
       </div>
     </div>
-  </div>
+  </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

@@ -44,15 +44,15 @@
             ({{ anyOf.length }}/50)
           </span>
         </div>
-        <button
+        <Button
           type="button"
-          class="btn btn-secondary"
+          variant="secondary"
           :disabled="anyOf.length >= 50"
           @click="addOrGroup"
         >
           <Icon name="plus" size="sm" class="mr-1" />
           {{ t('admin.announcements.form.addOrGroup') }}
-        </button>
+        </Button>
       </div>
 
       <div v-if="anyOf.length === 0" class="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
@@ -75,14 +75,14 @@
             </div>
           </div>
 
-          <button
+          <Button
             type="button"
-            class="btn btn-secondary"
+            variant="secondary"
             @click="removeOrGroup(groupIndex)"
           >
             <Icon name="trash" size="sm" class="mr-1" />
             {{ t('common.delete') }}
-          </button>
+          </Button>
         </div>
 
         <div class="mt-4 space-y-3">
@@ -120,39 +120,38 @@
                 </div>
                 <div class="w-full sm:flex-1">
                   <label class="input-label">{{ t('admin.announcements.form.balanceValue') }}</label>
-                  <input
+                  <Input
                     :value="String(cond.value ?? '')"
                     type="number"
                     step="any"
-                    class="input"
-                    @input="(e) => setBalanceValue(groupIndex, condIndex, (e.target as HTMLInputElement).value)"
+                    @input="(e: Event) => setBalanceValue(groupIndex, condIndex, (e.target as HTMLInputElement).value)"
                   />
                 </div>
               </div>
 
               <div class="flex justify-end">
-                <button
+                <Button
                   type="button"
-                  class="btn btn-secondary"
+                  variant="secondary"
                   @click="removeAndCondition(groupIndex, condIndex)"
                 >
                   <Icon name="trash" size="sm" class="mr-1" />
                   {{ t('common.delete') }}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
 
           <div class="flex justify-end">
-            <button
+            <Button
               type="button"
-              class="btn btn-secondary"
+              variant="secondary"
               :disabled="(group.all_of?.length || 0) >= 50"
               @click="addAndCondition(groupIndex)"
             >
               <Icon name="plus" size="sm" class="mr-1" />
               {{ t('admin.announcements.form.addAndCondition') }}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -165,6 +164,7 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
 import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type {
@@ -176,6 +176,7 @@ import type {
   AnnouncementOperator
 } from '@/types'
 
+import { Input } from '@/components/ui/input'
 import Select from '@/components/common/Select.vue'
 import GroupSelector from '@/components/common/GroupSelector.vue'
 import Icon from '@/components/icons/Icon.vue'

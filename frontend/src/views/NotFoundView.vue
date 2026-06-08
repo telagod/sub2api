@@ -47,7 +47,7 @@
           <Icon name="arrowLeft" size="md" class="mr-2" />
           Go Back
         </Button>
-        <router-link to="/dashboard" class="btn btn-primary">
+        <router-link to="/dashboard" class="inline-flex items-center justify-center gap-2 rounded-md bg-metal-silver font-semibold text-dark-950 border border-white/25 [box-shadow:inset_0_1px_0_rgba(255,255,255,.55),0_1px_2px_rgba(0,0,0,.55)] hover:bg-metal-silver-hover h-10 px-4 py-2 text-sm transition-all duration-150">
           <Icon name="home" size="md" class="mr-2" />
           Go to Dashboard
         </router-link>

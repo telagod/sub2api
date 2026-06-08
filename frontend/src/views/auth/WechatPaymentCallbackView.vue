@@ -1,7 +1,8 @@
 <template>
   <div class="min-h-screen bg-background px-4 py-10">
     <div class="mx-auto max-w-2xl">
-      <div class="card p-6">
+      <Card>
+        <CardContent class="p-6">
         <h1 class="text-lg font-semibold text-foreground">
           {{ callbackTitleText }}
         </h1>
@@ -31,12 +32,14 @@
             {{ backToPaymentText }}
           </Button>
         </div>
-      </div>
+      </CardContent>
+      </Card>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

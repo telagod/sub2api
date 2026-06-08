@@ -435,7 +435,7 @@ onMounted(() => {
                   <div class="text-xs font-bold text-foreground dark:text-white">
                     {{ t('admin.ops.runtime.silencing.entries.entryTitle', { n: idx + 1 }) }}
                   </div>
-                  <Button variant="outline"  class="btn-sm btn-danger" type="button" @click="removeSilenceEntry(idx)">{{ t('common.delete') }}</Button>
+                  <Button variant="destructive" size="sm" type="button" @click="removeSilenceEntry(idx)">{{ t('common.delete') }}</Button>
                 </div>
 
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-2">

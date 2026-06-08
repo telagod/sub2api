@@ -1,5 +1,6 @@
 <template>
-  <div class="card p-6">
+  <Card>
+    <CardContent class="p-6">
     <!-- Toolbar: left filters (multi-line) + right actions -->
     <div class="flex flex-wrap items-end justify-between gap-4">
       <!-- Left: filters (allowed to wrap to multiple rows) -->
@@ -158,10 +159,12 @@
         </Button>
       </div>
     </div>
-  </div>
+  </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ref, onMounted, onUnmounted, toRef, watch, computed } from 'vue'

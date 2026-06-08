@@ -32,7 +32,8 @@
         <OrderStatsCards :stats="stats" />
         <DailyRevenueChart :data="stats.daily_series || []" :loading="loading" />
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div class="card p-4">
+          <Card>
+            <CardContent class="p-4">
             <h3 class="mb-4 text-sm font-semibold text-foreground">{{ t('payment.admin.paymentDistribution') }}</h3>
             <div v-if="!stats.payment_methods?.length" class="flex h-32 items-center justify-center text-sm text-muted-foreground">{{ t('payment.admin.noData') }}</div>
             <div v-else class="space-y-3">
@@ -47,8 +48,10 @@
                 </div>
               </div>
             </div>
-          </div>
-          <div class="card p-4">
+          </CardContent>
+          </Card>
+          <Card>
+            <CardContent class="p-4">
             <h3 class="mb-4 text-sm font-semibold text-foreground">{{ t('payment.admin.topUsers') }}</h3>
             <div v-if="!stats.top_users?.length" class="flex h-32 items-center justify-center text-sm text-muted-foreground">{{ t('payment.admin.noData') }}</div>
             <div v-else class="space-y-2">
@@ -60,7 +63,8 @@
                 <span class="text-sm font-medium text-foreground">&yen;{{ user.amount.toFixed(2) }}</span>
               </div>
             </div>
-          </div>
+          </CardContent>
+          </Card>
         </div>
       </template>
     </div>
@@ -68,6 +72,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'

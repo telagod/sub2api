@@ -58,7 +58,8 @@
           data-test="pre-block-runtime-cards"
           class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,520px)_minmax(0,1fr)]"
         >
-          <div data-test="pre-block-sync-card" class="card">
+          <Card data-test="pre-block-sync-card">
+            <CardContent>
             <div class="flex flex-col gap-4 border-b border-border lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 class="text-lg font-semibold text-foreground dark:text-white">{{ t('admin.riskControl.preBlockSyncStatus') }}</h2>
@@ -83,9 +84,11 @@
                 </div>
               </div>
             </div>
-          </div>
+          </CardContent>
+          </Card>
 
-          <div data-test="pre-block-api-key-load-card" class="card">
+          <Card data-test="pre-block-api-key-load-card">
+            <CardContent>
             <div class="flex flex-col gap-4 border-b border-border lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 class="text-lg font-semibold text-foreground dark:text-white">{{ t('admin.riskControl.preBlockAPIKeyLoad') }}</h2>
@@ -148,10 +151,12 @@
                 {{ t('admin.riskControl.preBlockAPIKeyLoadEmpty') }}
               </p>
             </div>
-          </div>
+          </CardContent>
+          </Card>
         </div>
 
-        <div v-if="showWorkerRuntimeCard" class="card">
+        <Card v-if="showWorkerRuntimeCard">
+          <CardContent>
           <div class="flex flex-col gap-4 border-b border-border lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 class="text-lg font-semibold text-foreground dark:text-white">{{ t('admin.riskControl.workerStatus') }}</h2>
@@ -228,9 +233,11 @@
               </div>
             </div>
           </div>
-        </div>
+        </CardContent>
+        </Card>
 
-        <div class="card">
+        <Card>
+          <CardContent>
           <div class="flex flex-col gap-4 border-b border-border">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
@@ -366,7 +373,8 @@
             @update:page="onPageChange"
             @update:pageSize="onPageSizeChange"
           />
-        </div>
+        </CardContent>
+        </Card>
       </template>
 
       <BaseDialog :show="settingsOpen" :title="t('admin.riskControl.settingsTitle')" width="extra-wide" @close="settingsOpen = false">
@@ -1100,6 +1108,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'

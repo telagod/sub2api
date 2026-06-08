@@ -3,13 +3,16 @@
     <div v-if="loading" class="flex items-center justify-center py-12">
       <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
     </div>
-    <div v-else-if="initError" class="card p-6 text-center">
+    <Card v-else-if="initError">
+      <CardContent class="p-6 text-center">
       <p class="text-sm text-red-400">{{ initError }}</p>
       <Button  variant="secondary" class="mt-4" @click="$emit('back')">{{ t('payment.result.backToRecharge') }}</Button>
-    </div>
+    </CardContent>
+    </Card>
     <!-- Success -->
     <template v-else-if="success">
-      <div class="card p-6">
+      <Card>
+        <CardContent class="p-6">
         <div class="flex flex-col items-center space-y-4 py-4">
           <div class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/30">
             <Icon name="check" size="lg" class="text-emerald-400" />
@@ -33,18 +36,22 @@
           </div>
           <Button  @click="$emit('done')">{{ t('common.confirm') }}</Button>
         </div>
-      </div>
+      </CardContent>
+      </Card>
     </template>
     <template v-else>
       <!-- Amount -->
-      <div class="card overflow-hidden">
+      <Card class="overflow-hidden">
+        <CardContent>
         <div class="bg-metal-raised border-b border-border px-6 py-5 text-center">
           <p class="text-sm font-medium text-muted-foreground">{{ t('payment.actualPay') }}</p>
           <p class="mt-1 text-3xl font-bold text-foreground">¥{{ payAmount.toFixed(2) }}</p>
         </div>
-      </div>
+      </CardContent>
+      </Card>
       <!-- Stripe Payment Element -->
-      <div class="card p-6">
+      <Card>
+        <CardContent class="p-6">
         <div ref="stripeMount" class="min-h-[200px]"></div>
         <p v-if="error" class="mt-4 text-sm text-red-400">{{ error }}</p>
         <Button variant="outline"  class="btn-stripe mt-6 w-full py-3 text-base" :disabled="submitting || !ready" @click="handlePay">
@@ -54,7 +61,8 @@
           </span>
           <span v-else>{{ t('payment.stripePay') }}</span>
         </Button>
-      </div>
+      </CardContent>
+      </Card>
       <!-- Cancel order -->
       <Button  variant="secondary" class="w-full" :disabled="cancelling" @click="handleCancel">
         {{ cancelling ? t('common.processing') : t('payment.qr.cancelOrder') }}
@@ -64,6 +72,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ref, onMounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'

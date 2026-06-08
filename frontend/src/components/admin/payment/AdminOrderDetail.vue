@@ -90,7 +90,7 @@
         <Button variant="outline"
           v-if="order.status === 'PENDING'"
           @click="emit('cancel', order)"
-           class="btn-sm rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-sm text-amber-400 hover:bg-amber-500/20">
+           class="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-sm text-amber-400 hover:bg-amber-500/20">
           {{ t('payment.orders.cancel') }}
         </Button>
         <Button
@@ -102,7 +102,7 @@
         <Button variant="outline"
           v-if="canRefund(order)"
           @click="emit('refund', order)"
-           class="btn-sm rounded-md border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/20">
+           class="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/20">
           {{ t('payment.admin.refund') }}
         </Button>
       </div>

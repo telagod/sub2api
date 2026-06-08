@@ -9,7 +9,8 @@
 
       <template v-else-if="detail">
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div class="card p-5">
+          <Card>
+            <CardContent class="p-5">
             <p class="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Icon name="dollar" size="sm" class="text-primary-500" />
               {{ t('affiliate.stats.rebateRate') }}
@@ -20,20 +21,26 @@
             <p class="mt-1 text-xs text-muted-foreground">
               {{ t('affiliate.stats.rebateRateHint') }}
             </p>
-          </div>
-          <div class="card p-5">
+          </CardContent>
+          </Card>
+          <Card>
+            <CardContent class="p-5">
             <p class="text-sm text-muted-foreground">{{ t('affiliate.stats.invitedUsers') }}</p>
             <p class="mt-2 text-2xl font-semibold text-foreground">
               {{ formatCount(detail.aff_count) }}
             </p>
-          </div>
-          <div class="card p-5">
+          </CardContent>
+          </Card>
+          <Card>
+            <CardContent class="p-5">
             <p class="text-sm text-muted-foreground">{{ t('affiliate.stats.availableQuota') }}</p>
             <p class="mt-2 text-2xl font-semibold text-emerald-400">
               {{ formatCurrency(detail.aff_quota) }}
             </p>
-          </div>
-          <div class="card p-5">
+          </CardContent>
+          </Card>
+          <Card>
+            <CardContent class="p-5">
             <p class="text-sm text-muted-foreground">{{ t('affiliate.stats.totalQuota') }}</p>
             <p class="mt-2 text-2xl font-semibold text-foreground">
               {{ formatCurrency(detail.aff_history_quota) }}
@@ -41,10 +48,12 @@
             <p v-if="detail.aff_frozen_quota > 0" class="mt-1 text-xs text-amber-400">
               {{ t('affiliate.stats.frozenQuota') }}: {{ formatCurrency(detail.aff_frozen_quota) }}
             </p>
-          </div>
+          </CardContent>
+          </Card>
         </div>
 
-        <div class="card p-6">
+        <Card>
+          <CardContent class="p-6">
           <h3 class="text-base font-semibold text-foreground">{{ t('affiliate.title') }}</h3>
           <p class="mt-1 text-sm text-muted-foreground">{{ t('affiliate.description') }}</p>
 
@@ -81,9 +90,11 @@
               <li v-if="detail.aff_frozen_quota > 0">4. {{ t('affiliate.tips.line4') }}</li>
             </ul>
           </div>
-        </div>
+        </CardContent>
+        </Card>
 
-        <div class="card p-6">
+        <Card>
+          <CardContent class="p-6">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 class="text-base font-semibold text-foreground">{{ t('affiliate.transfer.title') }}</h3>
@@ -100,9 +111,11 @@
           <p v-if="detail.aff_quota <= 0" class="mt-3 text-sm text-amber-400">
             {{ t('affiliate.transfer.empty') }}
           </p>
-        </div>
+        </CardContent>
+        </Card>
 
-        <div class="card p-6">
+        <Card>
+          <CardContent class="p-6">
           <h3 class="text-base font-semibold text-foreground">{{ t('affiliate.invitees.title') }}</h3>
           <div v-if="detail.invitees.length === 0" class="mt-4 rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
             {{ t('affiliate.invitees.empty') }}
@@ -131,13 +144,15 @@
               </tbody>
             </table>
           </div>
-        </div>
+        </CardContent>
+        </Card>
       </template>
     </div>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

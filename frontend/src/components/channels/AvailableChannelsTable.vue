@@ -1,5 +1,6 @@
 <template>
-  <div class="card overflow-hidden">
+  <Card class="overflow-hidden">
+    <CardContent>
     <table class="w-full table-fixed border-collapse text-sm">
       <thead>
         <tr class="border-b border-border bg-muted text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -142,10 +143,12 @@
         </tr>
       </tbody>
     </table>
-  </div>
+  </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'

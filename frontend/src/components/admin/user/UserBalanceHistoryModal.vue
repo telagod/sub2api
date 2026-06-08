@@ -157,13 +157,14 @@
         <span class="text-sm text-muted-foreground">
           {{ currentPage }} / {{ totalPages }}
         </span>
-        <button
+        <Button
           :disabled="currentPage >= totalPages"
-          class="btn btn-secondary px-3 py-1 text-sm"
+          variant="secondary"
+          size="sm"
           @click="loadHistory(currentPage + 1)"
         >
           {{ t('pagination.next') }}
-        </button>
+        </Button>
       </div>
     </div>
   </BaseDialog>

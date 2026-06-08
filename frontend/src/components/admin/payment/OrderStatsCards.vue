@@ -1,7 +1,8 @@
 <template>
   <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
     <!-- Today Revenue -->
-    <div class="card p-4">
+    <Card>
+      <CardContent class="p-4">
       <div class="flex items-center gap-3">
         <div class="rounded-md border border-border bg-metal-raised p-2 shadow-metal-edge">
           <Icon name="dollar" size="md" class="text-primary-200" :stroke-width="2" />
@@ -14,10 +15,12 @@
           </p>
         </div>
       </div>
-    </div>
+    </CardContent>
+    </Card>
 
     <!-- Total Revenue -->
-    <div class="card p-4">
+    <Card>
+      <CardContent class="p-4">
       <div class="flex items-center gap-3">
         <div class="rounded-md border border-border bg-metal-raised p-2 shadow-metal-edge">
           <Icon name="creditCard" size="md" class="text-primary-200" :stroke-width="2" />
@@ -30,10 +33,12 @@
           </p>
         </div>
       </div>
-    </div>
+    </CardContent>
+    </Card>
 
     <!-- Today Orders -->
-    <div class="card p-4">
+    <Card>
+      <CardContent class="p-4">
       <div class="flex items-center gap-3">
         <div class="rounded-md border border-border bg-metal-raised p-2 shadow-metal-edge">
           <Icon name="chart" size="md" class="text-primary-200" :stroke-width="2" />
@@ -43,10 +48,12 @@
           <p class="text-xl font-bold text-foreground">{{ stats.today_count }}</p>
         </div>
       </div>
-    </div>
+    </CardContent>
+    </Card>
 
     <!-- Average Amount -->
-    <div class="card p-4">
+    <Card>
+      <CardContent class="p-4">
       <div class="flex items-center gap-3">
         <div class="rounded-md border border-border bg-metal-raised p-2 shadow-metal-edge">
           <Icon name="chart" size="md" class="text-primary-200" :stroke-width="2" />
@@ -56,11 +63,13 @@
           <p class="text-xl font-bold text-foreground">${{ formatMoney(stats.avg_amount) }}</p>
         </div>
       </div>
-    </div>
+    </CardContent>
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import type { DashboardStats } from '@/types/payment'

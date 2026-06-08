@@ -1,5 +1,6 @@
 <template>
-  <div class="card">
+  <Card>
+    <CardContent>
     <div class="flex items-center justify-between border-b border-border px-6 py-4">
       <h2 class="text-lg font-semibold text-foreground">{{ t('dashboard.recentUsage') }}</h2>
       <span class="badge badge-gray">{{ t('dashboard.last7Days') }}</span>
@@ -37,10 +38,12 @@
         </router-link>
       </div>
     </div>
-  </div>
+  </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from 'vue-i18n'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'

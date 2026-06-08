@@ -1,5 +1,6 @@
 <template>
-  <div class="card">
+  <Card>
+    <CardContent>
     <div class="border-b border-border px-6 py-4">
       <h2 class="text-lg font-medium text-foreground">
         {{ t('profile.balanceNotify.title') }}
@@ -27,21 +28,22 @@
           </label>
           <div class="flex items-center gap-2">
             <span class="text-muted-foreground">$</span>
-            <input
+            <Input
               v-model.number="customThreshold"
               type="number"
               min="0"
               step="0.01"
-              class="input flex-1"
+              class="flex-1"
               :placeholder="systemDefaultThreshold > 0 ? `${t('profile.balanceNotify.systemDefault')} $${systemDefaultThreshold}` : t('profile.balanceNotify.thresholdPlaceholder')"
             />
-            <button
+            <Button
               @click="handleThresholdUpdate"
               :disabled="savingThreshold"
-              class="btn btn-primary btn-sm whitespace-nowrap"
+              size="sm"
+              class="whitespace-nowrap"
             >
               {{ savingThreshold ? t('common.saving') : t('common.save') }}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -132,20 +134,21 @@
 
           <!-- Add new email input (hidden when at limit) -->
           <div v-if="canAddMore" class="flex gap-2">
-            <input
+            <Input
               v-model="newEmail"
               type="email"
-              class="input flex-1"
+              class="flex-1"
               :placeholder="t('profile.balanceNotify.emailPlaceholder')"
               @keyup.enter="addPendingEmail"
             />
-            <button
+            <Button
               @click="addPendingEmail"
               :disabled="!newEmail"
-              class="btn btn-secondary whitespace-nowrap"
+              variant="secondary"
+              class="whitespace-nowrap"
             >
               {{ t('common.add') }}
-            </button>
+            </Button>
           </div>
           <p v-else class="text-xs text-muted-foreground">
             {{ t('profile.balanceNotify.maxEmailsReached') }}
@@ -153,10 +156,14 @@
         </div>
       </template>
     </div>
-  </div>
+  </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'

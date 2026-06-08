@@ -1,7 +1,8 @@
 <template>
   <AppLayout>
     <div class="custom-page-layout">
-      <div class="card flex-1 min-h-0 overflow-hidden">
+      <Card class="flex-1 min-h-0 overflow-hidden">
+        <CardContent>
         <div v-if="loading" class="flex h-full items-center justify-center py-12">
           <div
             class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"
@@ -110,12 +111,14 @@
             allowfullscreen
           ></iframe>
         </div>
-      </div>
+      </CardContent>
+      </Card>
     </div>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'

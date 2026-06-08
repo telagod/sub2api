@@ -1,5 +1,6 @@
 <template>
-  <div class="card p-4">
+  <Card>
+    <CardContent class="p-4">
     <div class="mb-4 flex items-center justify-between gap-3">
       <h3 class="text-sm font-semibold text-foreground">
         {{ t('admin.dashboard.groupDistribution') }}
@@ -103,10 +104,12 @@
     >
       {{ t('admin.dashboard.noDataAvailable') }}
     </div>
-  </div>
+  </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'

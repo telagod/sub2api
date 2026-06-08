@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -155,7 +156,8 @@ function onNextPage() {
 </script>
 
 <template>
-  <section class="card p-4 md:p-5">
+  <Card>
+    <CardContent class="p-4 md:p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <h3 class="text-sm font-bold text-foreground">
         {{ t('admin.ops.openaiTokenStats.title') }}
@@ -243,5 +245,6 @@ function onNextPage() {
         {{ t('admin.ops.openaiTokenStats.totalModels', { total }) }}
       </div>
     </div>
-  </section>
+  </CardContent>
+  </Card>
 </template>

@@ -42,7 +42,7 @@
     <!-- Controls -->
     <div class="flex-1 space-y-2">
       <div class="flex items-center gap-2">
-        <label class="btn btn-secondary btn-sm cursor-pointer">
+        <label class="inline-flex items-center justify-center gap-2 rounded bg-metal-raised text-foreground border border-border shadow-metal-edge hover:brightness-110 px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer">
           <input
             type="file"
             :accept="acceptTypes"

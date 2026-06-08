@@ -28,8 +28,8 @@
         <Button @click="$emit('delete')"  variant="destructive" size="sm">{{ t('admin.accounts.bulkActions.delete') }}</Button>
         <Button @click="$emit('reset-status')"  variant="secondary" size="sm">{{ t('admin.accounts.bulkActions.resetStatus') }}</Button>
         <Button @click="$emit('refresh-token')"  variant="secondary" size="sm">{{ t('admin.accounts.bulkActions.refreshToken') }}</Button>
-        <Button @click="$emit('toggle-schedulable', true)"  class="btn-sm">{{ t('admin.accounts.bulkActions.enableScheduling') }}</Button>
-        <Button variant="outline" @click="$emit('toggle-schedulable', false)"  class="btn-warning btn-sm">{{ t('admin.accounts.bulkActions.disableScheduling') }}</Button>
+        <Button @click="$emit('toggle-schedulable', true)" size="sm">{{ t('admin.accounts.bulkActions.enableScheduling') }}</Button>
+        <Button variant="outline" @click="$emit('toggle-schedulable', false)" size="sm" class="btn-warning">{{ t('admin.accounts.bulkActions.disableScheduling') }}</Button>
         <Button @click="$emit('edit-selected')"  size="sm">{{ t('admin.accounts.bulkActions.edit') }}</Button>
       </template>
       <Button @click="$emit('edit-filtered')"  size="sm">

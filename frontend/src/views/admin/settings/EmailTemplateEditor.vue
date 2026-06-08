@@ -1,5 +1,6 @@
 <template>
-  <div class="card">
+  <Card>
+    <CardContent>
     <div
       class="flex flex-col gap-3 border-b border-border px-6 py-4 lg:flex-row lg:items-start lg:justify-between"
     >
@@ -218,10 +219,12 @@
         </div>
       </template>
     </div>
-  </div>
+  </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { computed, onMounted, ref, watch } from "vue";

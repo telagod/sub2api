@@ -4,26 +4,31 @@
       <div v-if="loading" class="flex items-center justify-center py-20">
         <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
       </div>
-      <div v-else-if="initError" class="card p-8 text-center">
+      <Card v-else-if="initError">
+        <CardContent class="p-8 text-center">
         <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10">
           <Icon name="exclamationCircle" size="xl" class="text-red-400" />
         </div>
         <h3 class="text-lg font-semibold text-foreground">{{ t('payment.stripeLoadFailed') }}</h3>
         <p class="mt-2 text-sm text-muted-foreground">{{ initError }}</p>
         <Button  class="mt-6" @click="router.push('/purchase')">{{ t('payment.result.backToRecharge') }}</Button>
-      </div>
+      </CardContent>
+      </Card>
       <template v-else>
         <!-- 金额头部 -->
-        <div v-if="order" class="card overflow-hidden">
+        <Card v-if="order" class="overflow-hidden">
+          <CardContent>
           <div class="border-b border-border bg-metal-raised px-6 py-6 text-center">
             <p class="text-sm font-medium text-muted-foreground">{{ t('payment.actualPay') }}</p>
             <p class="mt-1 text-3xl font-bold text-foreground">{{ formatGatewayAmount(order.pay_amount) }}</p>
           </div>
-        </div>
+        </CardContent>
+        </Card>
 
         <!-- 微信二维码展示 -->
         <template v-if="wechatQrUrl">
-          <div class="card p-6">
+          <Card>
+            <CardContent class="p-6">
             <div class="flex flex-col items-center space-y-4">
               <p class="text-lg font-semibold text-foreground">{{ t('payment.qr.scanWxpay') }}</p>
               <div class="relative rounded-lg border-2 border-[#2BB741] bg-green-50 p-4 dark:border-[#2BB741]/70 dark:bg-green-950/20">
@@ -36,25 +41,31 @@
               </div>
               <p class="text-center text-sm text-muted-foreground">{{ t('payment.qr.scanWxpayHint') }}</p>
             </div>
-          </div>
-          <div class="card p-4 text-center">
+          </CardContent>
+          </Card>
+          <Card>
+            <CardContent class="p-4 text-center">
             <p class="text-sm text-muted-foreground">{{ t('payment.qr.waitingPayment') }}</p>
-          </div>
+          </CardContent>
+          </Card>
         </template>
 
         <!-- 支付宝跳转状态 -->
         <template v-else-if="redirecting">
-          <div class="card p-6">
+          <Card>
+            <CardContent class="p-6">
             <div class="flex flex-col items-center space-y-4 py-4">
               <div class="h-10 w-10 animate-spin rounded-full border-4 border-[#00AEEF] border-t-transparent"></div>
               <p class="text-sm text-muted-foreground">{{ t('payment.qr.payInNewWindowHint') }}</p>
             </div>
-          </div>
+          </CardContent>
+          </Card>
         </template>
 
         <!-- 成功状态 -->
         <template v-else-if="stripeSuccess">
-          <div class="card p-6 text-center">
+          <Card>
+            <CardContent class="p-6 text-center">
             <div class="flex flex-col items-center gap-3 py-4">
               <div class="flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
                 <Icon name="check" size="lg" class="text-emerald-400" />
@@ -62,12 +73,14 @@
               <p class="text-lg font-bold text-foreground">{{ t('payment.result.success') }}</p>
               <p class="text-sm text-muted-foreground">{{ t('payment.stripeSuccessProcessing') }}</p>
             </div>
-          </div>
+          </CardContent>
+          </Card>
         </template>
 
         <!-- 无指定方式或未知方式时展示完整 Payment Element -->
         <template v-else-if="showPaymentElement">
-          <div class="card p-6">
+          <Card>
+            <CardContent class="p-6">
             <div id="stripe-payment-element" class="min-h-[200px]"></div>
             <p v-if="stripeError" class="mt-4 text-sm text-red-400">{{ stripeError }}</p>
             <Button variant="outline"  class="btn-stripe mt-6 w-full py-3 text-base" :disabled="stripeSubmitting || !stripeReady" @click="handleGenericPay">
@@ -77,23 +90,27 @@
               </span>
               <span v-else>{{ t('payment.stripePay') }}</span>
             </Button>
-          </div>
+          </CardContent>
+          </Card>
           <div class="text-center">
             <Button  variant="secondary" @click="router.push('/purchase')">{{ t('payment.result.backToRecharge') }}</Button>
           </div>
         </template>
 
         <!-- 错误状态 -->
-        <div v-if="stripeError && !showPaymentElement" class="card p-4">
+        <Card v-if="stripeError && !showPaymentElement">
+          <CardContent class="p-4">
           <p class="text-sm text-red-400">{{ stripeError }}</p>
           <Button  variant="secondary" class="mt-3 w-full" @click="router.push('/purchase')">{{ t('payment.result.backToRecharge') }}</Button>
-        </div>
+        </CardContent>
+        </Card>
       </template>
     </div>
   </component>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'

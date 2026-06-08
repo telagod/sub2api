@@ -3,13 +3,15 @@
     <div class="flex h-16 items-center justify-between px-4 md:px-6">
       <!-- Left: Mobile Menu Toggle + Page Title -->
       <div class="flex items-center gap-4">
-        <button
+        <Button
           @click="toggleMobileSidebar"
-          class="btn-ghost btn-icon lg:hidden"
+          variant="ghost"
+          size="icon"
+          class="lg:hidden"
           aria-label="Toggle Menu"
         >
           <Icon name="menu" size="md" />
-        </button>
+        </Button>
 
         <div class="hidden lg:block">
           <h1 class="text-lg font-semibold text-foreground">
@@ -213,6 +215,7 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'

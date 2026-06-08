@@ -45,9 +45,8 @@
         <!-- Row 1: Main Stats Cards -->
         <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <!-- 30-Day Total Cost -->
-          <div
-            class="card p-4"
-          >
+          <Card>
+            <CardContent class="p-4">
             <div class="mb-2 flex items-center justify-between">
               <span class="text-xs font-medium text-muted-foreground">{{
                 t('admin.accounts.stats.totalCost')
@@ -68,12 +67,12 @@
                 }})
               </span>
             </p>
-          </div>
+          </CardContent>
+          </Card>
 
           <!-- 30-Day Total Requests -->
-          <div
-            class="card p-4"
-          >
+          <Card>
+            <CardContent class="p-4">
             <div class="mb-2 flex items-center justify-between">
               <span class="text-xs font-medium text-muted-foreground">{{
                 t('admin.accounts.stats.totalRequests')
@@ -88,12 +87,12 @@
             <p class="mt-1 text-xs text-muted-foreground">
               {{ t('admin.accounts.stats.totalCalls') }}
             </p>
-          </div>
+          </CardContent>
+          </Card>
 
           <!-- Daily Average Cost -->
-          <div
-            class="card p-4"
-          >
+          <Card>
+            <CardContent class="p-4">
             <div class="mb-2 flex items-center justify-between">
               <span class="text-xs font-medium text-muted-foreground">{{
                 t('admin.accounts.stats.avgDailyCost')
@@ -119,12 +118,12 @@
                 ({{ t('usage.userBilled') }}: ${{ formatCost(stats.summary.avg_daily_user_cost) }})
               </span>
             </p>
-          </div>
+          </CardContent>
+          </Card>
 
           <!-- Daily Average Requests -->
-          <div
-            class="card p-4"
-          >
+          <Card>
+            <CardContent class="p-4">
             <div class="mb-2 flex items-center justify-between">
               <span class="text-xs font-medium text-muted-foreground">{{
                 t('admin.accounts.stats.avgDailyRequests')
@@ -151,13 +150,15 @@
             <p class="mt-1 text-xs text-muted-foreground">
               {{ t('admin.accounts.stats.avgDailyUsage') }}
             </p>
-          </div>
+          </CardContent>
+          </Card>
         </div>
 
         <!-- Row 2: Today, Highest Cost, Highest Requests -->
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <!-- Today Overview -->
-          <div class="card p-4">
+          <Card>
+            <CardContent class="p-4">
             <div class="mb-3 flex items-center gap-2">
               <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
                 <Icon name="clock" size="sm" class="text-primary-200" />
@@ -196,10 +197,12 @@
                 }}</span>
               </div>
             </div>
-          </div>
+          </CardContent>
+          </Card>
 
           <!-- Highest Cost Day -->
-          <div class="card p-4">
+          <Card>
+            <CardContent class="p-4">
             <div class="mb-3 flex items-center gap-2">
               <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
                 <Icon name="fire" size="sm" class="text-primary-200" />
@@ -238,10 +241,12 @@
                 }}</span>
               </div>
             </div>
-          </div>
+          </CardContent>
+          </Card>
 
           <!-- Highest Request Day -->
-          <div class="card p-4">
+          <Card>
+            <CardContent class="p-4">
             <div class="mb-3 flex items-center gap-2">
               <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
                 <Icon
@@ -284,13 +289,15 @@
                 >
               </div>
             </div>
-          </div>
+          </CardContent>
+          </Card>
         </div>
 
         <!-- Row 3: Token Stats -->
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <!-- Accumulated Tokens -->
-          <div class="card p-4">
+          <Card>
+            <CardContent class="p-4">
             <div class="mb-3 flex items-center gap-2">
               <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
                 <Icon name="cube" size="sm" class="text-primary-200" />
@@ -317,10 +324,12 @@
                 }}</span>
               </div>
             </div>
-          </div>
+          </CardContent>
+          </Card>
 
           <!-- Performance -->
-          <div class="card p-4">
+          <Card>
+            <CardContent class="p-4">
             <div class="mb-3 flex items-center gap-2">
               <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
                 <Icon name="bolt" size="sm" class="text-primary-200" />
@@ -347,10 +356,12 @@
                 >
               </div>
             </div>
-          </div>
+          </CardContent>
+          </Card>
 
           <!-- Recent Activity -->
-          <div class="card p-4">
+          <Card>
+            <CardContent class="p-4">
             <div class="mb-3 flex items-center gap-2">
               <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
                 <Icon
@@ -389,11 +400,13 @@
                 >
               </div>
             </div>
-          </div>
+          </CardContent>
+          </Card>
         </div>
 
         <!-- Usage Trend Chart -->
-        <div class="card p-4">
+        <Card>
+          <CardContent class="p-4">
           <h3 class="mb-4 text-sm font-semibold text-foreground">
             {{ t('admin.accounts.stats.usageTrend') }}
           </h3>
@@ -406,7 +419,8 @@
               {{ t('admin.dashboard.noDataAvailable') }}
             </div>
           </div>
-        </div>
+        </CardContent>
+        </Card>
 
         <!-- Model Distribution -->
         <ModelDistributionChart :model-stats="stats.models" :loading="false" />
@@ -447,6 +461,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'

@@ -13,7 +13,7 @@
     >
       <div>
         <label class="input-label">{{ t('common.name') }}</label>
-        <input v-model="form.name" type="text" required class="input" data-tour="edit-account-form-name" />
+        <Input v-model="form.name" type="text" required data-tour="edit-account-form-name" />
       </div>
       <div>
         <label class="input-label">{{ t('admin.accounts.notes') }}</label>
@@ -30,10 +30,9 @@
       <div v-if="account.type === 'apikey'" class="space-y-4">
         <div>
           <label class="input-label">{{ t('admin.accounts.baseUrl') }}</label>
-          <input
+          <Input
             v-model="editBaseUrl"
             type="text"
-            class="input"
             :placeholder="
               account.platform === 'openai'
                 ? 'https://api.openai.com'
@@ -48,10 +47,10 @@
         </div>
         <div>
           <label class="input-label">{{ t('admin.accounts.apiKey') }}</label>
-          <input
+          <Input
             v-model="editApiKey"
             type="password"
-            class="input font-mono"
+            class="font-mono"
             autocomplete="new-password"
             data-1p-ignore
             data-lpignore="true"
@@ -176,10 +175,10 @@
                 :key="getModelMappingKey(mapping)"
                 class="flex items-center gap-2"
               >
-                <input
+                <Input
                   v-model="mapping.from"
                   type="text"
-                  class="input flex-1"
+                  class="flex-1"
                   :placeholder="t('admin.accounts.requestModel')"
                 />
                 <svg
@@ -195,10 +194,10 @@
                     d="M14 5l7 7m0 0l-7 7m7-7H3"
                   />
                 </svg>
-                <input
+                <Input
                   v-model="mapping.to"
                   type="text"
-                  class="input flex-1"
+                  class="flex-1"
                   :placeholder="t('admin.accounts.actualModel')"
                 />
                 <button
@@ -288,13 +287,12 @@
           </div>
           <div v-if="poolModeEnabled" class="mt-3">
             <label class="input-label">{{ t('admin.accounts.poolModeRetryCount') }}</label>
-            <input
+            <Input
               v-model.number="poolModeRetryCount"
               type="number"
               min="0"
               :max="MAX_POOL_MODE_RETRY_COUNT"
               step="1"
-              class="input"
             />
             <p class="mt-1 text-xs text-muted-foreground">
               {{
@@ -307,10 +305,9 @@
           </div>
           <div v-if="poolModeEnabled" class="mt-3">
             <label class="input-label">{{ t('admin.accounts.poolModeRetryStatusCodes') }}</label>
-            <input
+            <Input
               v-model="poolModeRetryStatusCodesInput"
               type="text"
-              class="input"
               :placeholder="DEFAULT_POOL_MODE_RETRY_STATUS_CODES.join(', ')"
             />
             <p class="mt-1 text-xs text-muted-foreground">
@@ -373,12 +370,12 @@
 
             <!-- Manual input -->
             <div class="flex items-center gap-2">
-              <input
+              <Input
                 v-model.number="customErrorCodeInput"
                 type="number"
                 min="100"
                 max="599"
-                class="input flex-1"
+                class="flex-1"
                 :placeholder="t('admin.accounts.enterErrorCode')"
                 @keyup.enter="addCustomErrorCode"
               />
@@ -489,10 +486,10 @@
                 :key="'oauth-' + getModelMappingKey(mapping)"
                 class="flex items-center gap-2"
               >
-                <input
+                <Input
                   v-model="mapping.from"
                   type="text"
-                  class="input flex-1"
+                  class="flex-1"
                   :placeholder="t('admin.accounts.requestModel')"
                 />
                 <svg
@@ -508,10 +505,10 @@
                     d="M14 5l7 7m0 0l-7 7m7-7H3"
                   />
                 </svg>
-                <input
+                <Input
                   v-model="mapping.to"
                   type="text"
-                  class="input flex-1"
+                  class="flex-1"
                   :placeholder="t('admin.accounts.actualModel')"
                 />
                 <button
@@ -559,20 +556,19 @@
       <div v-if="account.type === 'upstream'" class="space-y-4">
         <div>
           <label class="input-label">{{ t('admin.accounts.upstream.baseUrl') }}</label>
-          <input
+          <Input
             v-model="editBaseUrl"
             type="text"
-            class="input"
             placeholder="https://cloudcode-pa.googleapis.com"
           />
           <p class="input-hint">{{ t('admin.accounts.upstream.baseUrlHint') }}</p>
         </div>
         <div>
           <label class="input-label">{{ t('admin.accounts.upstream.apiKey') }}</label>
-          <input
+          <Input
             v-model="editApiKey"
             type="password"
-            class="input font-mono"
+            class="font-mono"
             placeholder="sk-..."
           />
           <p class="input-hint">{{ t('admin.accounts.leaveEmptyToKeep') }}</p>
@@ -584,10 +580,10 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label class="input-label">Project ID</label>
-            <input
+            <Input
               v-model="editVertexProjectId"
               type="text"
-              class="input font-mono"
+              class="font-mono"
               readonly
               :placeholder="t('admin.accounts.vertexProjectIdPlaceholder')"
             />
@@ -715,10 +711,10 @@
                 :key="getModelMappingKey(mapping)"
                 class="flex items-center gap-2"
               >
-                <input
+                <Input
                   v-model="mapping.from"
                   type="text"
-                  class="input flex-1"
+                  class="flex-1"
                   :placeholder="t('admin.accounts.requestModel')"
                 />
                 <svg
@@ -734,10 +730,10 @@
                     d="M14 5l7 7m0 0l-7 7m7-7H3"
                   />
                 </svg>
-                <input
+                <Input
                   v-model="mapping.to"
                   type="text"
-                  class="input flex-1"
+                  class="flex-1"
                   :placeholder="t('admin.accounts.actualModel')"
                 />
                 <button
@@ -800,29 +796,29 @@
         <template v-if="!isBedrockAPIKeyMode">
           <div>
             <label class="input-label">{{ t('admin.accounts.bedrockAccessKeyId') }}</label>
-            <input
+            <Input
               v-model="editBedrockAccessKeyId"
               type="text"
-              class="input font-mono"
+              class="font-mono"
               placeholder="AKIA..."
             />
           </div>
           <div>
             <label class="input-label">{{ t('admin.accounts.bedrockSecretAccessKey') }}</label>
-            <input
+            <Input
               v-model="editBedrockSecretAccessKey"
               type="password"
-              class="input font-mono"
+              class="font-mono"
               :placeholder="t('admin.accounts.bedrockSecretKeyLeaveEmpty')"
             />
             <p class="input-hint">{{ t('admin.accounts.bedrockSecretKeyLeaveEmpty') }}</p>
           </div>
           <div>
             <label class="input-label">{{ t('admin.accounts.bedrockSessionToken') }}</label>
-            <input
+            <Input
               v-model="editBedrockSessionToken"
               type="password"
-              class="input font-mono"
+              class="font-mono"
               :placeholder="t('admin.accounts.bedrockSecretKeyLeaveEmpty')"
             />
             <p class="input-hint">{{ t('admin.accounts.bedrockSessionTokenHint') }}</p>
@@ -832,10 +828,10 @@
         <!-- API Key field -->
         <div v-if="isBedrockAPIKeyMode">
           <label class="input-label">{{ t('admin.accounts.bedrockApiKeyInput') }}</label>
-          <input
+          <Input
             v-model="editBedrockApiKeyValue"
             type="password"
-            class="input font-mono"
+            class="font-mono"
             :placeholder="t('admin.accounts.bedrockApiKeyLeaveEmpty')"
           />
           <p class="input-hint">{{ t('admin.accounts.bedrockApiKeyLeaveEmpty') }}</p>
@@ -844,10 +840,9 @@
         <!-- Shared: Region -->
         <div>
           <label class="input-label">{{ t('admin.accounts.bedrockRegion') }}</label>
-          <input
+          <Input
             v-model="editBedrockRegion"
             type="text"
-            class="input"
             placeholder="us-east-1"
           />
           <p class="input-hint">{{ t('admin.accounts.bedrockRegionHint') }}</p>
@@ -910,9 +905,9 @@
           <!-- Mapping Mode -->
           <div v-else class="space-y-3">
             <div v-for="(mapping, index) in modelMappings" :key="getModelMappingKey(mapping)" class="flex items-center gap-2">
-              <input v-model="mapping.from" type="text" class="input flex-1" :placeholder="t('admin.accounts.fromModel')" />
+              <Input v-model="mapping.from" type="text" class="flex-1" :placeholder="t('admin.accounts.fromModel')" />
               <span class="text-muted-foreground">→</span>
-              <input v-model="mapping.to" type="text" class="input flex-1" :placeholder="t('admin.accounts.toModel')" />
+              <Input v-model="mapping.to" type="text" class="flex-1" :placeholder="t('admin.accounts.toModel')" />
               <button type="button" @click="modelMappings.splice(index, 1)" class="text-red-400 hover:text-red-300">
                 <Icon name="trash" size="sm" />
               </button>
@@ -968,13 +963,12 @@
           </div>
           <div v-if="poolModeEnabled" class="mt-3">
             <label class="input-label">{{ t('admin.accounts.poolModeRetryCount') }}</label>
-            <input
+            <Input
               v-model.number="poolModeRetryCount"
               type="number"
               min="0"
               :max="MAX_POOL_MODE_RETRY_COUNT"
               step="1"
-              class="input"
             />
             <p class="mt-1 text-xs text-muted-foreground">
               {{
@@ -987,10 +981,9 @@
           </div>
           <div v-if="poolModeEnabled" class="mt-3">
             <label class="input-label">{{ t('admin.accounts.poolModeRetryStatusCodes') }}</label>
-            <input
+            <Input
               v-model="poolModeRetryStatusCodesInput"
               type="text"
-              class="input"
               :placeholder="DEFAULT_POOL_MODE_RETRY_STATUS_CODES.join(', ')"
             />
             <p class="mt-1 text-xs text-muted-foreground">
@@ -1189,41 +1182,37 @@
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label class="input-label">{{ t('admin.accounts.tempUnschedulable.errorCode') }}</label>
-                  <input
+                  <Input
                     v-model.number="rule.error_code"
                     type="number"
                     min="100"
                     max="599"
-                    class="input"
                     :placeholder="t('admin.accounts.tempUnschedulable.errorCodePlaceholder')"
                   />
                 </div>
                 <div>
                   <label class="input-label">{{ t('admin.accounts.tempUnschedulable.durationMinutes') }}</label>
-                  <input
+                  <Input
                     v-model.number="rule.duration_minutes"
                     type="number"
                     min="1"
-                    class="input"
                     :placeholder="t('admin.accounts.tempUnschedulable.durationPlaceholder')"
                   />
                 </div>
                 <div class="sm:col-span-2">
                   <label class="input-label">{{ t('admin.accounts.tempUnschedulable.keywords') }}</label>
-                  <input
+                  <Input
                     v-model="rule.keywords"
                     type="text"
-                    class="input"
                     :placeholder="t('admin.accounts.tempUnschedulable.keywordsPlaceholder')"
                   />
                   <p class="input-hint">{{ t('admin.accounts.tempUnschedulable.keywordsHint') }}</p>
                 </div>
                 <div class="sm:col-span-2">
                   <label class="input-label">{{ t('admin.accounts.tempUnschedulable.description') }}</label>
-                  <input
+                  <Input
                     v-model="rule.description"
                     type="text"
-                    class="input"
                     :placeholder="t('admin.accounts.tempUnschedulable.descriptionPlaceholder')"
                   />
                 </div>
@@ -1291,36 +1280,34 @@
       <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div>
           <label class="input-label">{{ t('admin.accounts.concurrency') }}</label>
-          <input v-model.number="form.concurrency" type="number" min="1" class="input"
+          <Input v-model.number="form.concurrency" type="number" min="1"
             @input="form.concurrency = Math.max(1, form.concurrency || 1)" />
         </div>
         <div>
           <label class="input-label">{{ t('admin.accounts.loadFactor') }}</label>
-          <input v-model.number="form.load_factor" type="number" min="1"
-            class="input" :placeholder="String(form.concurrency || 1)"
+          <Input v-model.number="form.load_factor" type="number" min="1" :placeholder="String(form.concurrency || 1)"
             @input="form.load_factor = (form.load_factor &amp;&amp; form.load_factor >= 1) ? form.load_factor : null" />
           <p class="input-hint">{{ t('admin.accounts.loadFactorHint') }}</p>
         </div>
         <div>
           <label class="input-label">{{ t('admin.accounts.priority') }}</label>
-          <input
+          <Input
             v-model.number="form.priority"
             type="number"
             min="1"
-            class="input"
             data-tour="account-form-priority"
           />
           <p class="input-hint">{{ t('admin.accounts.priorityHint') }}</p>
         </div>
         <div>
           <label class="input-label">{{ t('admin.accounts.billingRateMultiplier') }}</label>
-          <input v-model.number="form.rate_multiplier" type="number" min="0" step="0.001" class="input" />
+          <Input v-model.number="form.rate_multiplier" type="number" min="0" step="0.001" />
           <p class="input-hint">{{ t('admin.accounts.billingRateMultiplierHint') }}</p>
         </div>
       </div>
       <div class="border-t border-border pt-4">
         <label class="input-label">{{ t('admin.accounts.expiresAt') }}</label>
-        <input v-model="expiresAtInput" type="datetime-local" class="input" />
+        <Input v-model="expiresAtInput" type="datetime-local" />
         <p class="input-hint">{{ t('admin.accounts.expiresAtHint') }}</p>
       </div>
 
@@ -1734,17 +1721,17 @@
               :key="getOpenAICompactModelMappingKey(mapping)"
               class="flex items-center gap-2"
             >
-              <input
+              <Input
                 v-model="mapping.from"
                 type="text"
-                class="input flex-1"
+                class="flex-1"
                 :placeholder="t('admin.accounts.fromModel')"
               />
               <span class="text-muted-foreground">→</span>
-              <input
+              <Input
                 v-model="mapping.to"
                 type="text"
-                class="input flex-1"
+                class="flex-1"
                 :placeholder="t('admin.accounts.toModel')"
               />
               <button type="button" @click="removeOpenAICompactModelMapping(index)" class="text-red-400 hover:text-red-300">
@@ -1814,13 +1801,12 @@
         </div>
         <div>
           <label class="input-label">{{ t('admin.accounts.autoPause5hThreshold') }}</label>
-          <input
+          <Input
             v-model.number="autoPause5hThreshold"
             type="number"
             min="0"
             max="100"
             step="0.1"
-            class="input"
             :disabled="autoPause5hDisabled"
             data-testid="auto-pause-5h-threshold"
           />
@@ -1850,13 +1836,12 @@
         </div>
         <div>
           <label class="input-label">{{ t('admin.accounts.autoPause7dThreshold') }}</label>
-          <input
+          <Input
             v-model.number="autoPause7dThreshold"
             type="number"
             min="0"
             max="100"
             step="0.1"
-            class="input"
             :disabled="autoPause7dDisabled"
             data-testid="auto-pause-7d-threshold"
           />
@@ -1907,12 +1892,12 @@
               <label class="input-label">{{ t('admin.accounts.quotaControl.windowCost.limit') }}</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                <input
+                <Input
                   v-model.number="windowCostLimit"
                   type="number"
                   min="0"
                   step="1"
-                  class="input pl-7"
+                  class="pl-7"
                   :placeholder="t('admin.accounts.quotaControl.windowCost.limitPlaceholder')"
                 />
               </div>
@@ -1922,12 +1907,12 @@
               <label class="input-label">{{ t('admin.accounts.quotaControl.windowCost.stickyReserve') }}</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                <input
+                <Input
                   v-model.number="windowCostStickyReserve"
                   type="number"
                   min="0"
                   step="1"
-                  class="input pl-7"
+                  class="pl-7"
                   :placeholder="t('admin.accounts.quotaControl.windowCost.stickyReservePlaceholder')"
                 />
               </div>
@@ -1965,12 +1950,11 @@
           <div v-if="sessionLimitEnabled" class="grid grid-cols-2 gap-4">
             <div>
               <label class="input-label">{{ t('admin.accounts.quotaControl.sessionLimit.maxSessions') }}</label>
-              <input
+              <Input
                 v-model.number="maxSessions"
                 type="number"
                 min="1"
                 step="1"
-                class="input"
                 :placeholder="t('admin.accounts.quotaControl.sessionLimit.maxSessionsPlaceholder')"
               />
               <p class="input-hint">{{ t('admin.accounts.quotaControl.sessionLimit.maxSessionsHint') }}</p>
@@ -1978,12 +1962,12 @@
             <div>
               <label class="input-label">{{ t('admin.accounts.quotaControl.sessionLimit.idleTimeout') }}</label>
               <div class="relative">
-                <input
+                <Input
                   v-model.number="sessionIdleTimeout"
                   type="number"
                   min="1"
                   step="1"
-                  class="input pr-12"
+                  class="pr-12"
                   :placeholder="t('admin.accounts.quotaControl.sessionLimit.idleTimeoutPlaceholder')"
                 />
                 <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">{{ t('common.minutes') }}</span>
@@ -2022,13 +2006,12 @@
           <div v-if="rpmLimitEnabled" class="space-y-4">
             <div>
               <label class="input-label">{{ t('admin.accounts.quotaControl.rpmLimit.baseRpm') }}</label>
-              <input
+              <Input
                 v-model.number="baseRpm"
                 type="number"
                 min="1"
                 max="1000"
                 step="1"
-                class="input"
                 :placeholder="t('admin.accounts.quotaControl.rpmLimit.baseRpmPlaceholder')"
               />
               <p class="input-hint">{{ t('admin.accounts.quotaControl.rpmLimit.baseRpmHint') }}</p>
@@ -2072,12 +2055,11 @@
 
             <div v-if="rpmStrategy === 'tiered'">
               <label class="input-label">{{ t('admin.accounts.quotaControl.rpmLimit.stickyBuffer') }}</label>
-              <input
+              <Input
                 v-model.number="rpmStickyBuffer"
                 type="number"
                 min="1"
                 step="1"
-                class="input"
                 :placeholder="t('admin.accounts.quotaControl.rpmLimit.stickyBufferPlaceholder')"
               />
               <p class="input-hint">{{ t('admin.accounts.quotaControl.rpmLimit.stickyBufferHint') }}</p>
@@ -2234,10 +2216,9 @@
             </button>
           </div>
           <div v-if="customBaseUrlEnabled" class="mt-3">
-            <input
+            <Input
               v-model="customBaseUrl"
               type="text"
-              class="input"
               :placeholder="t('admin.accounts.quotaControl.customBaseUrl.urlHint')"
             />
           </div>
@@ -2373,6 +2354,7 @@
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
 import { ref, reactive, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'

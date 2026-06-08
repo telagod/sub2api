@@ -1,7 +1,8 @@
 <template>
   <div class="min-h-screen bg-background px-4 py-10">
     <div class="mx-auto max-w-2xl">
-      <div v-if="isProcessing" class="card p-6 text-center">
+      <Card v-if="isProcessing">
+        <CardContent class="p-6 text-center">
         <div class="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary-300 border-t-transparent"></div>
         <h1 class="mt-4 text-lg font-semibold text-foreground">
           {{ t('auth.oauth.callbackTitle') }}
@@ -9,9 +10,11 @@
         <p class="mt-2 text-sm text-muted-foreground">
           {{ t('auth.oauth.callbackHint') }}
         </p>
-      </div>
+      </CardContent>
+      </Card>
 
-      <div v-else-if="needsRegistrationCompletion" class="card p-6">
+      <Card v-else-if="needsRegistrationCompletion">
+        <CardContent class="p-6">
         <h1 class="text-lg font-semibold text-foreground">
           {{ t('auth.oidc.callbackTitle', { providerName }) }}
         </h1>
@@ -67,9 +70,11 @@
             {{ isSubmitting ? t('common.processing') : t('auth.oidc.completeRegistration') }}
           </Button>
         </div>
-      </div>
+      </CardContent>
+      </Card>
 
-      <div v-else-if="invalidCallback" class="card p-6 text-center">
+      <Card v-else-if="invalidCallback">
+        <CardContent class="p-6 text-center">
         <h1 class="text-lg font-semibold text-foreground">
           {{ t('auth.oauth.invalidCallbackTitle') }}
         </h1>
@@ -79,9 +84,11 @@
         <Button  class="mt-6" type="button" @click="router.replace('/login')">
           {{ t('auth.backToLogin') }}
         </Button>
-      </div>
+      </CardContent>
+      </Card>
 
-      <div v-else class="card p-6">
+      <Card v-else>
+        <CardContent class="p-6">
         <h1 class="text-lg font-semibold text-foreground">
           {{ t('auth.oauth.callbackTitle') }}
         </h1>
@@ -126,12 +133,14 @@
             </div>
           </div>
         </div>
-      </div>
+      </CardContent>
+      </Card>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { computed, onMounted, ref, watch } from 'vue'

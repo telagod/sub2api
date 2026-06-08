@@ -1,5 +1,6 @@
 <template>
-  <div class="card">
+  <Card>
+    <CardContent>
     <div class="border-b border-border px-6 py-4">
       <h2 class="text-lg font-medium text-foreground">
         {{ t('profile.totp.title') }}
@@ -50,7 +51,7 @@
         </div>
         <Button variant="outline"
           type="button"
-           class="btn-outline-danger" @click="showDisableDialog = true">
+          class="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300" @click="showDisableDialog = true">
           {{ t('profile.totp.disable') }}
         </Button>
       </div>
@@ -93,10 +94,12 @@
       @close="showDisableDialog = false"
       @success="handleDisableSuccess"
     />
-  </div>
+  </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'

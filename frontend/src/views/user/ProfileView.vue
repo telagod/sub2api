@@ -15,10 +15,8 @@
         :wechat-mp-enabled="wechatOAuthMPEnabled"
       />
 
-      <div
-        v-if="contactInfo"
-        class="card p-6"
-      >
+      <Card v-if="contactInfo">
+        <CardContent class="p-6">
         <div class="flex items-center gap-4">
           <div class="rounded-md border border-border bg-metal-raised p-3 text-primary-200 shadow-metal-edge">
             <Icon name="chat" size="lg" />
@@ -30,7 +28,8 @@
             <p class="text-sm font-medium text-foreground/85">{{ contactInfo }}</p>
           </div>
         </div>
-      </div>
+      </CardContent>
+      </Card>
 
       <ProfilePasswordForm />
 
@@ -49,6 +48,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@/components/icons'

@@ -4,7 +4,8 @@
 
     <!-- Success -->
     <template v-if="outcome === 'success'">
-      <div class="card p-6">
+      <Card>
+        <CardContent class="p-6">
         <div class="flex flex-col items-center space-y-4 py-4">
           <div class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/30">
             <Icon name="check" size="lg" class="text-emerald-400" />
@@ -32,12 +33,14 @@
           </div>
           <Button  @click="handleDone">{{ t('common.confirm') }}</Button>
         </div>
-      </div>
+      </CardContent>
+      </Card>
     </template>
 
     <!-- Cancelled -->
     <template v-else-if="outcome === 'cancelled'">
-      <div class="card p-6">
+      <Card>
+        <CardContent class="p-6">
         <div class="flex flex-col items-center space-y-4 py-4">
           <div class="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-metal-raised shadow-metal-edge">
             <svg class="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -48,12 +51,14 @@
           <p class="text-sm text-muted-foreground">{{ t('payment.qr.cancelledDesc') }}</p>
           <Button  @click="handleDone">{{ t('common.confirm') }}</Button>
         </div>
-      </div>
+      </CardContent>
+      </Card>
     </template>
 
     <!-- Expired / Failed -->
     <template v-else-if="outcome === 'expired'">
-      <div class="card p-6">
+      <Card>
+        <CardContent class="p-6">
         <div class="flex flex-col items-center space-y-4 py-4">
           <div class="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/30">
             <svg class="h-8 w-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -64,14 +69,16 @@
           <p class="text-sm text-muted-foreground">{{ t('payment.qr.expiredDesc') }}</p>
           <Button  @click="handleDone">{{ t('common.confirm') }}</Button>
         </div>
-      </div>
+      </CardContent>
+      </Card>
     </template>
 
     <!-- ═══ Active States: QR or Popup waiting ═══ -->
 
     <!-- QR Code Mode -->
     <template v-else-if="qrUrl">
-      <div class="card p-6">
+      <Card>
+        <CardContent class="p-6">
         <div class="flex flex-col items-center space-y-4">
           <p class="text-lg font-semibold text-foreground">{{ scanTitle }}</p>
           <div :class="['relative rounded-lg border-2 p-4', qrBorderClass]">
@@ -88,12 +95,15 @@
             {{ t('payment.qr.openPayWindow') }}
           </Button>
         </div>
-      </div>
-      <div class="card p-4 text-center">
+      </CardContent>
+      </Card>
+      <Card>
+        <CardContent class="p-4 text-center">
         <p class="text-sm text-muted-foreground">{{ t('payment.qr.expiresIn') }}</p>
         <p class="mt-1 text-2xl font-bold tabular-nums text-foreground">{{ countdownDisplay }}</p>
         <p class="mt-1 text-xs text-muted-foreground">{{ t('payment.qr.waitingPayment') }}</p>
-      </div>
+      </CardContent>
+      </Card>
       <Button  variant="secondary" class="w-full" :disabled="cancelling" @click="handleCancel">
         {{ cancelling ? t('common.processing') : t('payment.qr.cancelOrder') }}
       </Button>
@@ -101,7 +111,8 @@
 
     <!-- Waiting for Popup/Redirect Mode -->
     <template v-else>
-      <div class="card p-6">
+      <Card>
+        <CardContent class="p-6">
         <div class="flex flex-col items-center space-y-4 py-4">
           <div class="h-10 w-10 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
           <p class="text-sm text-muted-foreground">{{ t('payment.qr.payInNewWindowHint') }}</p>
@@ -109,11 +120,14 @@
             {{ t('payment.qr.openPayWindow') }}
           </Button>
         </div>
-      </div>
-      <div class="card p-4 text-center">
+      </CardContent>
+      </Card>
+      <Card>
+        <CardContent class="p-4 text-center">
         <p class="mt-1 text-2xl font-bold tabular-nums text-foreground">{{ countdownDisplay }}</p>
         <p class="mt-1 text-xs text-muted-foreground">{{ t('payment.qr.waitingPayment') }}</p>
-      </div>
+      </CardContent>
+      </Card>
       <Button  variant="secondary" class="w-full" :disabled="cancelling" @click="handleCancel">
         {{ cancelling ? t('common.processing') : t('payment.qr.cancelOrder') }}
       </Button>
@@ -122,6 +136,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'

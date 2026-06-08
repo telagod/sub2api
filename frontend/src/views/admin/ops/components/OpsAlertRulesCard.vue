@@ -397,7 +397,7 @@ function cancelDelete() {
       </div>
 
       <div class="flex items-center gap-2">
-        <Button variant="outline"  class="btn-sm btn-primary" :disabled="loading" @click="openCreate">
+        <Button size="sm" :disabled="loading" @click="openCreate">
           {{ t('admin.ops.alertRules.create') }}
         </Button>
         <button
@@ -467,7 +467,7 @@ function cancelDelete() {
               </td>
               <td class="whitespace-nowrap px-4 py-3 text-right text-xs">
                 <Button  variant="secondary" size="sm" @click="openEdit(row)">{{ t('common.edit') }}</Button>
-                <button class="ml-2 btn btn-sm btn-danger" @click="requestDelete(row)">{{ t('common.delete') }}</button>
+                <Button variant="destructive" size="sm" class="ml-2" @click="requestDelete(row)">{{ t('common.delete') }}</Button>
               </td>
             </tr>
           </tbody>

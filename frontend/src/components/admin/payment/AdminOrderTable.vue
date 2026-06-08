@@ -1,6 +1,7 @@
 <template>
   <div class="space-y-4">
-    <div class="card p-4">
+    <Card>
+      <CardContent class="p-4">
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex-1 sm:max-w-64">
           <Input
@@ -36,7 +37,8 @@
           </Button>
         </div>
       </div>
-    </div>
+    </CardContent>
+    </Card>
 
     <DataTable :columns="columns" :data="orders" :loading="loading">
       <template #cell-id="{ value }">
@@ -130,6 +132,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ref, reactive, computed } from 'vue'

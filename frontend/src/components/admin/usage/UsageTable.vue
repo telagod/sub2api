@@ -1,5 +1,6 @@
 <template>
-  <div class="card usage-table-card flex flex-col overflow-hidden">
+  <Card class="usage-table-card flex flex-col overflow-hidden">
+    <CardContent>
     <DataTable
       :columns="columns"
       :data="data"
@@ -195,7 +196,8 @@
 
         <template #empty><EmptyState :message="t('usage.noRecords')" /></template>
       </DataTable>
-  </div>
+  </CardContent>
+  </Card>
 
   <!-- Token Tooltip Portal -->
   <Teleport to="body">
@@ -402,6 +404,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatDateTime, formatReasoningEffort } from '@/utils/format'

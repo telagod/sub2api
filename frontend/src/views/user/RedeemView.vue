@@ -2,7 +2,8 @@
   <AppLayout>
     <div class="mx-auto max-w-2xl space-y-6">
       <!-- Current Balance Card -->
-      <div class="card overflow-hidden">
+      <Card class="overflow-hidden">
+        <CardContent>
         <div class="bg-metal-silver px-6 py-8 text-center">
           <div
             class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-metal-raised shadow-metal-edge"
@@ -17,10 +18,12 @@
             {{ t('redeem.concurrency') }}: {{ user?.concurrency || 0 }} {{ t('redeem.requests') }}
           </p>
         </div>
-      </div>
+      </CardContent>
+      </Card>
 
       <!-- Redeem Form -->
-      <div class="card">
+      <Card>
+        <CardContent>
         <div class="p-6">
           <form @submit.prevent="handleRedeem" class="space-y-5">
             <div>
@@ -74,14 +77,13 @@
             </Button>
           </form>
         </div>
-      </div>
+      </CardContent>
+      </Card>
 
       <!-- Success Message -->
       <transition name="fade">
-        <div
-          v-if="redeemResult"
-          class="card border-emerald-500/30 bg-emerald-500/10"
-        >
+        <Card v-if="redeemResult" class="border-emerald-500/30 bg-emerald-500/10">
+          <CardContent>
           <div class="p-6">
             <div class="flex items-start gap-4">
               <div
@@ -127,15 +129,14 @@
               </div>
             </div>
           </div>
-        </div>
+        </CardContent>
+        </Card>
       </transition>
 
       <!-- Error Message -->
       <transition name="fade">
-        <div
-          v-if="errorMessage"
-          class="card border-red-500/30 bg-red-500/10"
-        >
+        <Card v-if="errorMessage" class="border-red-500/30 bg-red-500/10">
+          <CardContent>
           <div class="p-6">
             <div class="flex items-start gap-4">
               <div
@@ -157,13 +158,13 @@
               </div>
             </div>
           </div>
-        </div>
+        </CardContent>
+        </Card>
       </transition>
 
       <!-- Information Card -->
-      <div
-        class="card"
-      >
+      <Card>
+        <CardContent>
         <div class="p-6">
           <div class="flex items-start gap-4">
             <div
@@ -194,10 +195,12 @@
             </div>
           </div>
         </div>
-      </div>
+      </CardContent>
+      </Card>
 
       <!-- Recent Activity -->
-      <div class="card">
+      <Card>
+        <CardContent>
         <div class="border-b border-border px-6 py-4">
           <h2 class="text-lg font-semibold text-foreground">
             {{ t('redeem.recentActivity') }}
@@ -334,12 +337,14 @@
             </p>
           </div>
         </div>
-      </div>
+      </CardContent>
+      </Card>
     </div>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ref, computed, onMounted } from 'vue'

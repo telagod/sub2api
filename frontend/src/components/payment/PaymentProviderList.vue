@@ -1,5 +1,6 @@
 <template>
-  <div class="card">
+  <Card>
+    <CardContent>
     <!-- Header -->
     <div class="border-b border-border px-4 py-3">
       <div class="flex items-center justify-between">
@@ -19,16 +20,14 @@
              variant="secondary" size="sm" :title="t('common.refresh')">
             <Icon name="refresh" size="sm" :class="loading ? 'animate-spin' : ''" />
           </Button>
-          <button
+          <Button
             type="button"
             @click="emit('create')"
             :disabled="!canCreate"
-            :class="canCreate
-              ? 'btn btn-primary btn-sm'
-              : 'btn btn-secondary btn-sm cursor-not-allowed opacity-50'"
+            size="sm"
           >
             {{ t('admin.settings.payment.createProvider') }}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -85,10 +84,12 @@
         </Button>
       </div>
     </div>
-  </div>
+  </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

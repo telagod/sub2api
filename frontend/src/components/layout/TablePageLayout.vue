@@ -12,9 +12,11 @@
 
     <!-- 滚动区域：表格 -->
     <div class="layout-section-scrollable">
-      <div class="card table-scroll-container">
+      <Card class="table-scroll-container">
+        <CardContent>
         <slot name="table" />
-      </div>
+      </CardContent>
+      </Card>
     </div>
 
     <!-- 固定区域：分页器 -->
@@ -25,6 +27,7 @@
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const isMobile = ref(false)

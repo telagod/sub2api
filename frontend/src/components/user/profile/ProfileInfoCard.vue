@@ -1,9 +1,7 @@
 <template>
   <div class="space-y-6">
-    <section
-      data-testid="profile-overview-hero"
-      class="card overflow-hidden border border-border bg-metal-raised"
-    >
+    <Card data-testid="profile-overview-hero" class="overflow-hidden border border-border bg-metal-raised">
+      <CardContent>
       <div class="px-6 py-6 md:px-8">
         <div class="flex flex-col gap-6 lg:flex-row lg:items-start">
           <div
@@ -96,14 +94,13 @@
           </div>
         </div>
       </div>
-    </section>
+    </CardContent>
+    </Card>
 
     <div class="space-y-6">
       <div data-testid="profile-main-column" class="space-y-6">
-        <section
-          data-testid="profile-basics-panel"
-          class="card border border-border bg-card p-6"
-        >
+        <Card data-testid="profile-basics-panel" class="border border-border bg-card">
+          <CardContent class="p-6">
           <div class="mb-5 flex items-start justify-between gap-4">
             <div>
               <h3 class="text-lg font-semibold text-foreground">
@@ -130,12 +127,11 @@
               />
             </div>
           </div>
-        </section>
+        </CardContent>
+        </Card>
 
-        <section
-          data-testid="profile-auth-bindings-panel"
-          class="card border border-border bg-card p-6"
-        >
+        <Card data-testid="profile-auth-bindings-panel" class="border border-border bg-card">
+          <CardContent class="p-6">
           <ProfileIdentityBindingsSection
             :user="user"
             :linuxdo-enabled="linuxdoEnabled"
@@ -148,14 +144,13 @@
             embedded
             compact
           />
-        </section>
+        </CardContent>
+        </Card>
       </div>
 
       <div data-testid="profile-side-column" class="space-y-6">
-        <section
-          v-if="sourceHints.length"
-          class="card border border-border bg-card p-6"
-        >
+        <Card v-if="sourceHints.length" class="border border-border bg-card">
+          <CardContent class="p-6">
           <h3 class="text-lg font-semibold text-foreground">
             {{ t('profile.linkedProfileSources') }}
           </h3>
@@ -173,13 +168,15 @@
               <span>{{ hint.text }}</span>
             </div>
           </div>
-        </section>
+        </CardContent>
+        </Card>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Card, CardContent } from '@/components/ui/card'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
