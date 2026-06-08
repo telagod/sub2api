@@ -580,7 +580,7 @@ func (r *accountRepository) List(ctx context.Context, params pagination.Paginati
 	return r.ListWithFilters(ctx, params, "", "", "", "", 0, "")
 }
 
-func (r *accountRepository) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64, privacyMode string) ([]service.Account, *pagination.PaginationResult, error) {
+func (r *accountRepository) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64, privacyMode string, extraFilters ...map[string]string) ([]service.Account, *pagination.PaginationResult, error) {
 	q := r.client.Account.Query()
 
 	if platform != "" {
@@ -671,6 +671,26 @@ func (r *accountRepository) ListWithFilters(ctx context.Context, params paginati
 				s.Where(sqljson.ValueEQ(dbaccount.FieldExtra, privacyMode, path))
 			}
 		}))
+	}
+
+	if len(extraFilters) > 0 {
+		ef := extraFilters[0]
+		if v, ok := ef["schedulable"]; ok {
+			switch v {
+			case "true":
+				q = q.Where(dbaccount.SchedulableEQ(true))
+			case "false":
+				q = q.Where(dbaccount.SchedulableEQ(false))
+			}
+		}
+		if v, ok := ef["has_proxy"]; ok {
+			switch v {
+			case "true":
+				q = q.Where(dbaccount.HasProxy())
+			case "false":
+				q = q.Where(dbaccount.Not(dbaccount.HasProxy()))
+			}
+		}
 	}
 
 	total, err := q.Count(ctx)

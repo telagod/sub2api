@@ -257,7 +257,15 @@ func (h *AccountHandler) List(c *gin.Context) {
 		}
 	}
 
-	accounts, total, err := h.adminService.ListAccounts(c.Request.Context(), page, pageSize, platform, accountType, status, search, groupID, privacyMode, sortBy, sortOrder)
+	extraFilters := make(map[string]string)
+	if v := c.Query("schedulable"); v != "" {
+		extraFilters["schedulable"] = v
+	}
+	if v := c.Query("has_proxy"); v != "" {
+		extraFilters["has_proxy"] = v
+	}
+
+	accounts, total, err := h.adminService.ListAccounts(c.Request.Context(), page, pageSize, platform, accountType, status, search, groupID, privacyMode, sortBy, sortOrder, extraFilters)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
