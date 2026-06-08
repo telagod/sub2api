@@ -7,11 +7,8 @@ import { useAppStore } from '@/stores/app'
 import './style.css'
 
 function initThemeClass() {
-  const savedTheme = localStorage.getItem('theme')
-  const shouldUseDark =
-    savedTheme === 'dark' ||
-    (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  document.documentElement.classList.toggle('dark', shouldUseDark)
+  // 冷钢设计系统: dark-only。强制 dark class,忽略 localStorage/system preference。
+  document.documentElement.classList.add('dark')
 }
 
 async function bootstrap() {

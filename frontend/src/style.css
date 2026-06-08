@@ -7,32 +7,8 @@
  * 语义 token 走 HSL CSS 变量；shadcn-vue 组件与全局类共用同一套。
  * ==========================================================================*/
 @layer base {
-  :root {
-    /* 亮面（冷钢之白）：近白银底 + 炭字 */
-    --background: 0 0% 100%;
-    --foreground: 220 10% 10%;
-    --card: 220 14% 98%;
-    --card-foreground: 220 10% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 10% 10%;
-    --primary: 220 9% 22%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 220 13% 95%;
-    --secondary-foreground: 220 10% 20%;
-    --muted: 220 13% 95%;
-    --muted-foreground: 220 6% 45%;
-    --accent: 220 13% 92%;
-    --accent-foreground: 220 10% 15%;
-    --destructive: 0 72% 48%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 13% 88%;
-    --input: 220 13% 88%;
-    --ring: 220 9% 40%;
-    --radius: 0.375rem;
-  }
-
-  .dark {
-    /* 暗面（冷钢主调）：炭黑底 + 银白字 + 铬银强调 */
+  :root, .dark {
+    /* 冷钢 dark-only：炭黑底 + 银白字 + 铬银强调 */
     --background: 220 9% 4%; /* #0a0a0b */
     --foreground: 220 9% 91%; /* #e8eaed */
     --card: 213 7% 9%; /* #16181a gunmetal */
@@ -40,7 +16,7 @@
     --popover: 213 7% 11%;
     --popover-foreground: 220 9% 91%;
     --primary: 220 13% 80%; /* 铬银 #c0c4cc */
-    --primary-foreground: 220 10% 9%; /* 银底配深炭字 */
+    --primary-foreground: 220 10% 9%;
     --secondary: 213 6% 15%;
     --secondary-foreground: 220 9% 88%;
     --muted: 213 6% 13%;
@@ -51,17 +27,8 @@
     --destructive-foreground: 0 0% 98%;
     --border: 213 6% 18%; /* #2a2d31 钢灰 */
     --input: 213 6% 18%;
-    --ring: 220 13% 68%; /* 银 focus 环 */
-  }
-
-  /* Light 模式: metal 渐变是暗色(gunmetal),在浅色主题下用 muted/card 替代 */
-  :root .bg-metal-raised {
-    background-image: none;
-    background-color: hsl(var(--muted));
-  }
-  :root .bg-metal-surface {
-    background-image: none;
-    background-color: hsl(var(--card));
+    --ring: 220 13% 68%;
+    --radius: 0.375rem;
   }
 
   * {
