@@ -319,32 +319,29 @@ func (h *AccountHandler) List(c *gin.Context) {
 		}
 	}
 
-	// 始终获取窗口费用（PostgreSQL 聚合查询）
+	// 批量获取窗口费用（按 startTime 分组，每组 1 条 SQL）
 	if len(windowCostAccountIDs) > 0 {
 		windowCosts = make(map[int64]float64)
-		var mu sync.Mutex
-		g, gctx := errgroup.WithContext(c.Request.Context())
-		g.SetLimit(10) // 限制并发数
-
-		for i := range accounts {
-			acc := &accounts[i]
-			if !acc.IsAnthropicOAuthOrSetupToken() || acc.GetWindowCostLimit() <= 0 {
-				continue
-			}
-			accCopy := acc // 闭包捕获
-			g.Go(func() error {
-				// 使用统一的窗口开始时间计算逻辑（考虑窗口过期情况）
-				startTime := accCopy.GetCurrentWindowStartTime()
-				stats, err := h.accountUsageService.GetAccountWindowStats(gctx, accCopy.ID, startTime)
-				if err == nil && stats != nil {
-					mu.Lock()
-					windowCosts[accCopy.ID] = stats.StandardCost // 使用标准费用
-					mu.Unlock()
+		groups := make(map[time.Time][]int64)
+		for _, id := range windowCostAccountIDs {
+			for i := range accounts {
+				if accounts[i].ID == id {
+					st := accounts[i].GetCurrentWindowStartTime()
+					groups[st] = append(groups[st], id)
+					break
 				}
-				return nil // 不返回错误，允许部分失败
-			})
+			}
 		}
-		_ = g.Wait()
+		for startTime, ids := range groups {
+			statsBatch, err := h.accountUsageService.GetAccountWindowStatsBatch(c.Request.Context(), ids, startTime)
+			if err == nil {
+				for id, stats := range statsBatch {
+					if stats != nil {
+						windowCosts[id] = stats.StandardCost
+					}
+				}
+			}
+		}
 	}
 
 	// Build response with concurrency info
