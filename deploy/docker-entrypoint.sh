@@ -6,11 +6,14 @@ set -e
 # preventing the non-root subme user from writing files.
 if [ "$(id -u)" = "0" ]; then
     mkdir -p /app/data
-    # Use || true to avoid failure on read-only mounted files (e.g. config.yaml:ro)
-    chown -R subme:subme /app/data 2>/dev/null || true
-    # Re-invoke this script as subme so the flag-detection below
-    # also runs under the correct user.
-    exec su-exec subme "$0" "$@"
+    # Detect runtime user: prefer subme, fallback to sub2api (backward-compat
+    # for users migrating from upstream whose volumes may have sub2api ownership).
+    RUN_USER=subme
+    if ! id subme >/dev/null 2>&1; then
+        RUN_USER=sub2api
+    fi
+    chown -R "$RUN_USER:$RUN_USER" /app/data 2>/dev/null || true
+    exec su-exec "$RUN_USER" "$0" "$@"
 fi
 
 # Compatibility: if the first arg looks like a flag (e.g. --help),

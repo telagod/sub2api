@@ -116,6 +116,8 @@ WORKDIR /app
 
 # Copy binary/resources with ownership to avoid extra full-layer chown copy
 COPY --from=backend-builder --chown=subme:subme /app/subme /app/subme
+# Backward-compat: users migrating from upstream may have CMD /app/sub2api
+RUN ln -s /app/subme /app/sub2api
 COPY --from=backend-builder --chown=subme:subme /app/backend/resources /app/resources
 
 # Create data directory

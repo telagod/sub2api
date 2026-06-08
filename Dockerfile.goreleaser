@@ -44,6 +44,8 @@ WORKDIR /app
 
 # Copy pre-built binary from GoReleaser
 COPY subme /app/subme
+# Backward-compat: users migrating from upstream may have CMD /app/sub2api
+RUN ln -s /app/subme /app/sub2api
 
 # Create data directory
 RUN mkdir -p /app/data && chown -R subme:subme /app
