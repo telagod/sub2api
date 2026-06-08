@@ -22,8 +22,8 @@ const (
 	schedulerSnapshotPrefix     = "sched:"
 	schedulerLockPrefix         = "sched:lock:"
 
-	defaultSchedulerSnapshotMGetChunkSize  = 128
-	defaultSchedulerSnapshotWriteChunkSize = 256
+	defaultSchedulerSnapshotMGetChunkSize  = 256
+	defaultSchedulerSnapshotWriteChunkSize = 1024
 
 	// snapshotGraceTTLSeconds 旧快照过期的宽限期（秒）。
 	// 替代立即 DEL，让正在读取旧版本的 reader 有足够时间完成 ZRANGE。
