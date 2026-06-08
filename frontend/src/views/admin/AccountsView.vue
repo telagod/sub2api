@@ -407,7 +407,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, toRaw, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, toRaw, watch, triggerRef } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
@@ -1306,7 +1306,12 @@ const handleBulkRefreshToken = async () => {
 const updateSchedulableInList = (accountIds: number[], schedulable: boolean) => {
   if (accountIds.length === 0) return
   const idSet = new Set(accountIds)
-  accounts.value = accounts.value.map((account) => (idSet.has(account.id) ? { ...account, schedulable } : account))
+  for (let i = 0; i < accounts.value.length; i++) {
+    if (idSet.has(accounts.value[i].id)) {
+      accounts.value[i] = { ...accounts.value[i], schedulable }
+    }
+  }
+  triggerRef(accounts)
 }
 const normalizeBulkSchedulableResult = (
   result: {
@@ -1547,9 +1552,8 @@ const patchAccountInList = (updatedAccount: Account) => {
     }
     return
   }
-  const nextAccounts = [...accounts.value]
-  nextAccounts[index] = mergedAccount
-  accounts.value = nextAccounts
+  accounts.value[index] = mergedAccount
+  triggerRef(accounts)
   syncAccountRefs(mergedAccount)
 }
 const handleAccountUpdated = (updatedAccount: Account) => {
