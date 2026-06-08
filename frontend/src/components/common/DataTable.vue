@@ -171,7 +171,7 @@
             :data-row-id="resolveRowKey(sortedData[virtualRow.index], virtualRow.index)"
             :data-index="virtualRow.index"
             :ref="measureElement"
-            class="hover:bg-accent/40"
+            class="transition-colors duration-75 hover:bg-accent/30"
           >
             <td
               v-for="(column, colIndex) in columns"

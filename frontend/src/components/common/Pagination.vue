@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex items-center justify-between border-t border-border bg-card px-4 py-3 sm:px-6"
+    class="flex items-center justify-between px-4 py-3 sm:px-6"
   >
     <div class="flex flex-1 items-center justify-between sm:hidden">
       <!-- Mobile pagination -->
@@ -67,50 +67,43 @@
         </div>
       </div>
 
-      <!-- Desktop pagination buttons -->
-      <nav
-        class="relative z-0 inline-flex -space-x-px rounded-md shadow-sm"
-        aria-label="Pagination"
-      >
-        <!-- Previous button -->
+      <!-- Desktop pagination buttons (Vercel-style) -->
+      <nav class="inline-flex items-center gap-1" aria-label="Pagination">
         <button
           @click="goToPage(page - 1)"
           :disabled="page === 1"
-          class="relative inline-flex items-center rounded-l-md border border-border bg-card px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
           :aria-label="t('pagination.previous')"
         >
-          <Icon name="chevronLeft" size="md" />
+          <Icon name="chevronLeft" size="sm" />
         </button>
 
-        <!-- Page numbers -->
         <button
           v-for="(pageNum, index) in visiblePages"
           :key="`${pageNum}-${index}`"
           @click="typeof pageNum === 'number' && goToPage(pageNum)"
           :disabled="typeof pageNum !== 'number'"
           :class="[
-            'relative inline-flex items-center border px-4 py-2 text-sm font-medium',
+            'inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-[13px] font-medium transition-colors',
             pageNum === page
-              ? 'z-10 border-border bg-secondary text-foreground '
-              : 'border-border bg-card text-foreground/85 hover:bg-accent',
-            typeof pageNum !== 'number' && 'cursor-default'
+              ? 'bg-foreground text-background'
+              : typeof pageNum === 'number'
+                ? 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                : 'cursor-default text-muted-foreground'
           ]"
-          :aria-label="
-            typeof pageNum === 'number' ? t('pagination.goToPage', { page: pageNum }) : undefined
-          "
+          :aria-label="typeof pageNum === 'number' ? t('pagination.goToPage', { page: pageNum }) : undefined"
           :aria-current="pageNum === page ? 'page' : undefined"
         >
           {{ pageNum }}
         </button>
 
-        <!-- Next button -->
         <button
           @click="goToPage(page + 1)"
           :disabled="page === totalPages"
-          class="relative inline-flex items-center rounded-r-md border border-border bg-card px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
           :aria-label="t('pagination.next')"
         >
-          <Icon name="chevronRight" size="md" />
+          <Icon name="chevronRight" size="sm" />
         </button>
       </nav>
     </div>
