@@ -169,12 +169,35 @@ func (s *DashboardService) GetGroupStatsWithFilters(ctx context.Context, startTi
 	return stats, nil
 }
 
+// groupUsageSummaryCache 缓存全表聚合结果，避免每次 dashboard 请求都 full-scan usage_logs。
+var groupUsageSummaryCache atomic.Value // *groupUsageSummaryCacheEntry
+
+type groupUsageSummaryCacheEntry struct {
+	results   []usagestats.GroupUsageSummary
+	todayKey  string
+	updatedAt time.Time
+}
+
+const groupUsageSummaryCacheTTL = 30 * time.Second
+
 // GetGroupUsageSummary returns today's and cumulative cost for all groups.
+// Uses a 30-second in-process cache to avoid full-scanning usage_logs on every call.
 func (s *DashboardService) GetGroupUsageSummary(ctx context.Context, todayStart time.Time) ([]usagestats.GroupUsageSummary, error) {
+	todayKey := todayStart.Format(time.RFC3339)
+	if cached, ok := groupUsageSummaryCache.Load().(*groupUsageSummaryCacheEntry); ok {
+		if cached.todayKey == todayKey && time.Since(cached.updatedAt) < groupUsageSummaryCacheTTL {
+			return cached.results, nil
+		}
+	}
 	results, err := s.usageRepo.GetAllGroupUsageSummary(ctx, todayStart)
 	if err != nil {
 		return nil, fmt.Errorf("get group usage summary: %w", err)
 	}
+	groupUsageSummaryCache.Store(&groupUsageSummaryCacheEntry{
+		results:   results,
+		todayKey:  todayKey,
+		updatedAt: time.Now(),
+	})
 	return results, nil
 }
 
