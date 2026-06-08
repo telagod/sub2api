@@ -8,16 +8,16 @@ import (
 	"strings"
 	"time"
 
-	dbent "github.com/Wei-Shaw/sub2api/ent"
-	"github.com/Wei-Shaw/sub2api/ent/apikey"
-	"github.com/Wei-Shaw/sub2api/ent/group"
-	"github.com/Wei-Shaw/sub2api/ent/predicate"
-	"github.com/Wei-Shaw/sub2api/ent/schema/mixins"
-	"github.com/Wei-Shaw/sub2api/ent/user"
-	"github.com/Wei-Shaw/sub2api/internal/service"
+	dbent "github.com/telagod/subme/ent"
+	"github.com/telagod/subme/ent/apikey"
+	"github.com/telagod/subme/ent/group"
+	"github.com/telagod/subme/ent/predicate"
+	"github.com/telagod/subme/ent/schema/mixins"
+	"github.com/telagod/subme/ent/user"
+	"github.com/telagod/subme/internal/service"
 
-	"github.com/Wei-Shaw/sub2api/internal/pkg/apikeyhash"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
+	"github.com/telagod/subme/internal/pkg/apikeyhash"
+	"github.com/telagod/subme/internal/pkg/pagination"
 
 	entsql "entgo.io/ent/dialect/sql"
 )

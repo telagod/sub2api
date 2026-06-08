@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Wei-Shaw/sub2api/internal/pkg/proxyurl"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/proxyutil"
+	"github.com/telagod/subme/internal/pkg/proxyurl"
+	"github.com/telagod/subme/internal/pkg/proxyutil"
 )
 
 // ForbiddenError 表示上游返回 403 Forbidden

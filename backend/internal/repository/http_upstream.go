@@ -19,12 +19,12 @@ import (
 
 	"github.com/andybalholm/brotli"
 
-	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/proxyurl"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/proxyutil"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/tlsfingerprint"
-	"github.com/Wei-Shaw/sub2api/internal/service"
-	"github.com/Wei-Shaw/sub2api/internal/util/urlvalidator"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/pkg/proxyurl"
+	"github.com/telagod/subme/internal/pkg/proxyutil"
+	"github.com/telagod/subme/internal/pkg/tlsfingerprint"
+	"github.com/telagod/subme/internal/service"
+	"github.com/telagod/subme/internal/util/urlvalidator"
 )
 
 // 默认配置常量

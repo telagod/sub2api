@@ -17,12 +17,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/claude"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/geminicli"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/openai_compat"
-	"github.com/Wei-Shaw/sub2api/internal/util/urlvalidator"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/pkg/claude"
+	"github.com/telagod/subme/internal/pkg/geminicli"
+	"github.com/telagod/subme/internal/pkg/openai"
+	"github.com/telagod/subme/internal/pkg/openai_compat"
+	"github.com/telagod/subme/internal/util/urlvalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

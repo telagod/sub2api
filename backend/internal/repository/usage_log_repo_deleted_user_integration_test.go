@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/usagestats"
-	"github.com/Wei-Shaw/sub2api/internal/service"
+	"github.com/telagod/subme/internal/pkg/pagination"
+	"github.com/telagod/subme/internal/pkg/usagestats"
+	"github.com/telagod/subme/internal/service"
 	"github.com/stretchr/testify/require"
 )
 

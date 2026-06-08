@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/antigravity"
-	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/pkg/antigravity"
+	infraerrors "github.com/telagod/subme/internal/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 

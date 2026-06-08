@@ -8,8 +8,8 @@ import (
 	"math/rand/v2"
 	"time"
 
-	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/apikeyhash"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/pkg/apikeyhash"
 	"github.com/dgraph-io/ristretto"
 )
 

@@ -6,12 +6,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/handler"
-	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
-	"github.com/Wei-Shaw/sub2api/internal/server/routes"
-	"github.com/Wei-Shaw/sub2api/internal/service"
-	"github.com/Wei-Shaw/sub2api/internal/web"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/handler"
+	middleware2 "github.com/telagod/subme/internal/server/middleware"
+	"github.com/telagod/subme/internal/server/routes"
+	"github.com/telagod/subme/internal/service"
+	"github.com/telagod/subme/internal/web"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"

@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	dbent "github.com/Wei-Shaw/sub2api/ent"
-	"github.com/Wei-Shaw/sub2api/ent/authidentity"
-	"github.com/Wei-Shaw/sub2api/ent/authidentitychannel"
-	"github.com/Wei-Shaw/sub2api/ent/identityadoptiondecision"
-	"github.com/Wei-Shaw/sub2api/internal/service"
+	dbent "github.com/telagod/subme/ent"
+	"github.com/telagod/subme/ent/authidentity"
+	"github.com/telagod/subme/ent/authidentitychannel"
+	"github.com/telagod/subme/ent/identityadoptiondecision"
+	"github.com/telagod/subme/internal/service"
 	"github.com/stretchr/testify/require"
 )
 
