@@ -35,7 +35,7 @@
       </div>
 
       <!-- Usage data -->
-      <div v-else-if="usageInfo" class="space-y-1">
+      <div v-else-if="usageInfo" class="space-y-0.5">
         <!-- API error (degraded response) -->
         <div v-if="usageInfo.error" class="text-xs text-amber-400 truncate max-w-[200px]" :title="usageInfo.error">
           {{ usageInfo.error }}

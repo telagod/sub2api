@@ -1,57 +1,17 @@
 <template>
-  <div>
-    <!-- Window stats row (above progress bar) -->
-    <div
-      v-if="windowStats && (windowStats.requests > 0 || windowStats.tokens > 0)"
-      class="mb-0.5 flex items-center"
-    >
-      <div class="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-        <span class="rounded bg-secondary px-1.5 py-0.5">
-          {{ formatRequests }} req
-        </span>
-        <span class="rounded bg-secondary px-1.5 py-0.5">
-          {{ formatTokens }}
-        </span>
-        <span class="rounded bg-secondary px-1.5 py-0.5" :title="t('usage.accountBilled')">
-          A ${{ formatAccountCost }}
-        </span>
-        <span
-          v-if="windowStats?.user_cost != null"
-          class="rounded bg-secondary px-1.5 py-0.5"
-          :title="t('usage.userBilled')"
-        >
-          U ${{ formatUserCost }}
-        </span>
-      </div>
-    </div>
-
-    <!-- Progress bar row -->
-    <div class="flex items-center gap-1">
-      <!-- Label badge (fixed width for alignment) -->
-      <span
-        :class="['w-[32px] shrink-0 rounded px-1 text-center text-[10px] font-medium', labelClass]"
-      >
-        {{ label }}
-      </span>
-
-      <!-- Progress bar container -->
-      <div class="h-1.5 w-8 shrink-0 overflow-hidden rounded-full bg-muted">
-        <div
-          :class="['h-full transition-all duration-300', barClass]"
-          :style="{ width: barWidth }"
-        ></div>
-      </div>
-
-      <!-- Percentage -->
-      <span :class="['w-[32px] shrink-0 text-right text-[10px] font-medium', textClass]">
-        {{ displayPercent }}
-      </span>
-
-      <!-- Reset time -->
-      <span v-if="shouldShowResetTime" class="shrink-0 text-[10px] text-muted-foreground">
-        {{ formatResetTime }}
-      </span>
-    </div>
+  <div class="flex items-center gap-1">
+    <span
+      :class="['w-[28px] shrink-0 rounded px-1 text-center text-[10px] font-medium', labelClass]"
+    >{{ label }}</span>
+    <span :class="['text-[11px] font-mono font-medium tabular-nums', percentClass]">{{ displayPercent }}</span>
+    <span v-if="shouldShowResetTime" class="text-[10px] text-muted-foreground">{{ formatResetTime }}</span>
+    <template v-if="windowStats && (windowStats.requests > 0 || windowStats.tokens > 0)">
+      <span class="text-[9px] text-muted-foreground/60">·</span>
+      <span class="text-[9px] text-muted-foreground tabular-nums">{{ formatRequests }}r</span>
+      <span class="text-[9px] text-muted-foreground tabular-nums">{{ formatTokens }}t</span>
+      <span class="text-[9px] text-emerald-400/80 tabular-nums">${{ formatAccountCost }}</span>
+      <span v-if="windowStats.user_cost != null" class="text-[9px] text-muted-foreground tabular-nums">u${{ formatUserCost }}</span>
+    </template>
   </div>
 </template>
 
@@ -64,7 +24,7 @@ import { formatCompactNumber } from '@/utils/format'
 
 const props = defineProps<{
   label: string
-  utilization: number // Percentage (0-100+)
+  utilization: number
   resetsAt?: string | null
   color: 'indigo' | 'emerald' | 'purple' | 'amber'
   windowStats?: WindowStats | null
@@ -73,71 +33,38 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-// Reactive clock for countdown — only runs when a reset time is shown,
-// to avoid creating many idle timers across large account lists.
 const now = ref(new Date())
 const { pause: pauseClock, resume: resumeClock } = useIntervalFn(
-  () => {
-    now.value = new Date()
-  },
+  () => { now.value = new Date() },
   60_000,
   { immediate: false },
 )
 if (props.resetsAt) resumeClock()
 watch(
   () => props.resetsAt,
-  (val) => {
-    if (val) {
-      now.value = new Date()
-      resumeClock()
-    } else {
-      pauseClock()
-    }
-  },
+  (val) => { if (val) { now.value = new Date(); resumeClock() } else { pauseClock() } },
 )
 
-// Label background colors
 const labelClass = computed(() => {
   const colors = {
     indigo: 'bg-indigo-900/40 text-indigo-300',
-    emerald: ' text-emerald-400 bg-emerald-900/40',
-    purple: 'bg-purple-900/40 text-purple-300  ',
-    amber: ' text-amber-400 bg-amber-900/40'
+    emerald: 'bg-emerald-900/40 text-emerald-400',
+    purple: 'bg-purple-900/40 text-purple-300',
+    amber: 'bg-amber-900/40 text-amber-400'
   }
   return colors[props.color]
 })
 
-// Progress bar color based on utilization
-const barClass = computed(() => {
-  if (props.utilization >= 100) {
-    return 'bg-red-500'
-  } else if (props.utilization >= 80) {
-    return 'bg-amber-500'
-  } else {
-    return 'bg-green-500'
-  }
+const percentClass = computed(() => {
+  if (props.utilization >= 100) return 'text-red-400'
+  if (props.utilization >= 80) return 'text-amber-400'
+  if (props.utilization >= 50) return 'text-foreground/85'
+  return 'text-muted-foreground'
 })
 
-// Text color based on utilization
-const textClass = computed(() => {
-  if (props.utilization >= 100) {
-    return 'text-red-400'
-  } else if (props.utilization >= 80) {
-    return 'text-amber-400'
-  } else {
-    return 'text-muted-foreground'
-  }
-})
-
-// Bar width (capped at 100%)
-const barWidth = computed(() => {
-  return `${Math.min(props.utilization, 100)}%`
-})
-
-// Display percentage (cap at 999% for readability)
 const displayPercent = computed(() => {
-  const percent = Math.round(props.utilization)
-  return percent > 999 ? '>999%' : `${percent}%`
+  const p = Math.round(props.utilization)
+  return p > 999 ? '>999%' : `${p}%`
 })
 
 const shouldShowResetTime = computed(() => {
@@ -145,38 +72,19 @@ const shouldShowResetTime = computed(() => {
   return Boolean(props.showNowWhenIdle && props.utilization <= 0)
 })
 
-// Format reset time
 const formatResetTime = computed(() => {
-  // For rolling windows, when utilization is 0%, treat as immediately available.
-  if (props.showNowWhenIdle && props.utilization <= 0) {
-    return t('usage.resetNow')
-  }
-
+  if (props.showNowWhenIdle && props.utilization <= 0) return t('usage.resetNow')
   if (!props.resetsAt) return '-'
-
   const date = new Date(props.resetsAt)
   const diffMs = date.getTime() - now.value.getTime()
-
-  // resetsAt 已过期：utilization>0 说明后端窗口数据还没刷新（active poll 没回写），
-  // 显示「待刷新」以区别于真正可用的「现在」。
-  if (diffMs <= 0) {
-    return props.utilization > 0 ? t('usage.resetPending') : t('usage.resetNow')
-  }
-
+  if (diffMs <= 0) return props.utilization > 0 ? t('usage.resetPending') : t('usage.resetNow')
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-
-  if (diffHours >= 24) {
-    const days = Math.floor(diffHours / 24)
-    return `${days}d ${diffHours % 24}h`
-  } else if (diffHours > 0) {
-    return `${diffHours}h ${diffMins}m`
-  } else {
-    return `${diffMins}m`
-  }
+  if (diffHours >= 24) return `${Math.floor(diffHours / 24)}d${diffHours % 24}h`
+  if (diffHours > 0) return `${diffHours}h${diffMins}m`
+  return `${diffMins}m`
 })
 
-// Window stats formatters
 const formatRequests = computed(() => {
   if (!props.windowStats) return ''
   return formatCompactNumber(props.windowStats.requests, { allowBillions: false })
@@ -188,13 +96,12 @@ const formatTokens = computed(() => {
 })
 
 const formatAccountCost = computed(() => {
-  if (!props.windowStats) return '0.00'
+  if (!props.windowStats) return '0'
   return props.windowStats.cost.toFixed(2)
 })
 
 const formatUserCost = computed(() => {
-  if (!props.windowStats || props.windowStats.user_cost == null) return '0.00'
+  if (!props.windowStats?.user_cost) return '0'
   return props.windowStats.user_cost.toFixed(2)
 })
-
 </script>
