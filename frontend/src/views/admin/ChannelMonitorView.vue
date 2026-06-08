@@ -135,9 +135,10 @@ import HelpTooltip from '@/components/common/HelpTooltip.vue'
 import Icon from '@/components/icons/Icon.vue'
 import Toggle from '@/components/common/Toggle.vue'
 import MonitorFiltersBar from '@/components/admin/monitor/MonitorFiltersBar.vue'
-import MonitorFormDialog from '@/components/admin/monitor/MonitorFormDialog.vue'
-import MonitorTemplateManagerDialog from '@/components/admin/monitor/MonitorTemplateManagerDialog.vue'
-import MonitorRunResultDialog from '@/components/admin/monitor/MonitorRunResultDialog.vue'
+import { defineAsyncComponent } from 'vue'
+const MonitorFormDialog = defineAsyncComponent(() => import('@/components/admin/monitor/MonitorFormDialog.vue'))
+const MonitorTemplateManagerDialog = defineAsyncComponent(() => import('@/components/admin/monitor/MonitorTemplateManagerDialog.vue'))
+const MonitorRunResultDialog = defineAsyncComponent(() => import('@/components/admin/monitor/MonitorRunResultDialog.vue'))
 import MonitorPrimaryModelCell from '@/components/admin/monitor/MonitorPrimaryModelCell.vue'
 import MonitorActionsCell from '@/components/admin/monitor/MonitorActionsCell.vue'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'

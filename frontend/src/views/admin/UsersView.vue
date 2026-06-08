@@ -759,19 +759,20 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
 import Select from '@/components/common/Select.vue'
-import UserAttributesConfigModal from '@/components/user/UserAttributesConfigModal.vue'
+import { defineAsyncComponent } from 'vue'
+const UserAttributesConfigModal = defineAsyncComponent(() => import('@/components/user/UserAttributesConfigModal.vue'))
 import UserConcurrencyCell from '@/components/user/UserConcurrencyCell.vue'
 import PlatformUsageBreakdown from '@/components/user/PlatformUsageBreakdown.vue'
 import PlatformCostCell from '@/components/user/PlatformCostCell.vue'
 import UserPlatformQuotaCell from '@/components/user/UserPlatformQuotaCell.vue'
-import UserCreateModal from '@/components/admin/user/UserCreateModal.vue'
-import UserEditModal from '@/components/admin/user/UserEditModal.vue'
-import UserPlatformQuotaModal from '@/components/admin/user/UserPlatformQuotaModal.vue'
-import UserApiKeysModal from '@/components/admin/user/UserApiKeysModal.vue'
-import UserAllowedGroupsModal from '@/components/admin/user/UserAllowedGroupsModal.vue'
-import UserBalanceModal from '@/components/admin/user/UserBalanceModal.vue'
-import UserBalanceHistoryModal from '@/components/admin/user/UserBalanceHistoryModal.vue'
-import GroupReplaceModal from '@/components/admin/user/GroupReplaceModal.vue'
+const UserCreateModal = defineAsyncComponent(() => import('@/components/admin/user/UserCreateModal.vue'))
+const UserEditModal = defineAsyncComponent(() => import('@/components/admin/user/UserEditModal.vue'))
+const UserPlatformQuotaModal = defineAsyncComponent(() => import('@/components/admin/user/UserPlatformQuotaModal.vue'))
+const UserApiKeysModal = defineAsyncComponent(() => import('@/components/admin/user/UserApiKeysModal.vue'))
+const UserAllowedGroupsModal = defineAsyncComponent(() => import('@/components/admin/user/UserAllowedGroupsModal.vue'))
+const UserBalanceModal = defineAsyncComponent(() => import('@/components/admin/user/UserBalanceModal.vue'))
+const UserBalanceHistoryModal = defineAsyncComponent(() => import('@/components/admin/user/UserBalanceHistoryModal.vue'))
+const GroupReplaceModal = defineAsyncComponent(() => import('@/components/admin/user/GroupReplaceModal.vue'))
 
 const appStore = useAppStore()
 

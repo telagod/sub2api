@@ -81,8 +81,13 @@ export default defineConfig(({ mode }) => {
               return 'vendor-vue'
             }
 
-            // UI 工具库（较大，单独分离）
-            if (id.includes('/@vueuse/') || id.includes('/xlsx/')) {
+            // xlsx 单独分离（~200KB，仅导出功能用到）
+            if (id.includes('/xlsx/')) {
+              return 'vendor-xlsx'
+            }
+
+            // UI 工具库
+            if (id.includes('/@vueuse/')) {
               return 'vendor-ui'
             }
 

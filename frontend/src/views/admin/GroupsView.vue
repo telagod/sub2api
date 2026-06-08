@@ -3045,8 +3045,9 @@ import EmptyState from "@/components/common/EmptyState.vue";
 import Select from "@/components/common/Select.vue";
 import PlatformIcon from "@/components/common/PlatformIcon.vue";
 import Icon from "@/components/icons/Icon.vue";
-import GroupRateMultipliersModal from "@/components/admin/group/GroupRateMultipliersModal.vue";
-import GroupRPMOverridesModal from "@/components/admin/group/GroupRPMOverridesModal.vue";
+import { defineAsyncComponent } from 'vue'
+const GroupRateMultipliersModal = defineAsyncComponent(() => import("@/components/admin/group/GroupRateMultipliersModal.vue"))
+const GroupRPMOverridesModal = defineAsyncComponent(() => import("@/components/admin/group/GroupRPMOverridesModal.vue"))
 import GroupCapacityBadge from "@/components/common/GroupCapacityBadge.vue";
 import { VueDraggable } from "vue-draggable-plus";
 import { createStableObjectKeyResolver } from "@/utils/stableObjectKey";
