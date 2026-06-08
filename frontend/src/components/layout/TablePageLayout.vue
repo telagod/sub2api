@@ -44,10 +44,28 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 桌面端：Flexbox 布局 */
+/* Flexbox 布局，响应式高度适配不同 padding 断点 */
 .table-page-layout {
-  @apply flex flex-col gap-6;
-  height: calc(100vh - 64px - 4rem); /* 减去 header + lg:p-8 的上下padding */
+  @apply flex flex-col gap-4 sm:gap-5 lg:gap-6;
+  height: calc(100vh - 64px - 1.5rem); /* p-3 */
+}
+
+@media (min-width: 640px) {
+  .table-page-layout {
+    height: calc(100vh - 64px - 2rem); /* sm:p-4 */
+  }
+}
+
+@media (min-width: 768px) {
+  .table-page-layout {
+    height: calc(100vh - 64px - 3rem); /* md:p-6 */
+  }
+}
+
+@media (min-width: 1024px) {
+  .table-page-layout {
+    height: calc(100vh - 64px - 4rem); /* lg:p-8 */
+  }
 }
 
 .layout-section-fixed {
@@ -84,11 +102,11 @@ onUnmounted(() => {
 }
 
 .table-scroll-container :deep(th) {
-  @apply px-5 py-4 text-left text-sm font-medium text-muted-foreground border-b border-border;
+  @apply px-3 py-3 text-left text-sm font-medium text-muted-foreground border-b border-border sm:px-4 lg:px-5 lg:py-4;
 }
 
 .table-scroll-container :deep(td) {
-  @apply px-5 py-4 text-sm text-foreground/85 border-b border-border;
+  @apply px-3 py-3 text-sm text-foreground/85 border-b border-border sm:px-4 lg:px-5 lg:py-4;
 }
 
 /* 移动端：恢复正常滚动 */
