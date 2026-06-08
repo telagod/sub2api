@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -350,7 +349,7 @@ func (h *AccountHandler) List(c *gin.Context) {
 	for i := range accounts {
 		acc := &accounts[i]
 		item := AccountWithConcurrency{
-			Account:            dto.AccountFromService(acc),
+			Account:            dto.AccountFromServiceShallow(acc),
 			CurrentConcurrency: concurrencyCounts[acc.ID],
 		}
 
@@ -398,33 +397,27 @@ func buildAccountsListETag(
 	platform, accountType, status, search string,
 	lite bool,
 ) string {
-	payload := struct {
-		Total       int64                    `json:"total"`
-		Page        int                      `json:"page"`
-		PageSize    int                      `json:"page_size"`
-		Platform    string                   `json:"platform"`
-		AccountType string                   `json:"type"`
-		Status      string                   `json:"status"`
-		Search      string                   `json:"search"`
-		Lite        bool                     `json:"lite"`
-		Items       []AccountWithConcurrency `json:"items"`
-	}{
-		Total:       total,
-		Page:        page,
-		PageSize:    pageSize,
-		Platform:    platform,
-		AccountType: accountType,
-		Status:      status,
-		Search:      search,
-		Lite:        lite,
-		Items:       items,
+	h := sha256.New()
+	fmt.Fprintf(h, "%d:%d:%d:%s:%s:%s:%s:%v:", total, page, pageSize, platform, accountType, status, search, lite)
+	for i := range items {
+		a := items[i].Account
+		fmt.Fprintf(h, "%d:%s:%s:%v:%d", a.ID, a.Status, a.ErrorMessage, a.Schedulable, items[i].CurrentConcurrency)
+		if items[i].CurrentWindowCost != nil {
+			fmt.Fprintf(h, ":w%.2f", *items[i].CurrentWindowCost)
+		}
+		if items[i].ActiveSessions != nil {
+			fmt.Fprintf(h, ":s%d", *items[i].ActiveSessions)
+		}
+		if items[i].CurrentRPM != nil {
+			fmt.Fprintf(h, ":r%d", *items[i].CurrentRPM)
+		}
+		if a.LastUsedAt != nil {
+			fmt.Fprintf(h, ":u%d", *a.LastUsedAt)
+		}
+		h.Write([]byte{';'})
 	}
-	raw, err := json.Marshal(payload)
-	if err != nil {
-		return ""
-	}
-	sum := sha256.Sum256(raw)
-	return "\"" + hex.EncodeToString(sum[:]) + "\""
+	sum := h.Sum(nil)
+	return "\"" + hex.EncodeToString(sum) + "\""
 }
 
 func ifNoneMatchMatched(ifNoneMatch, etag string) bool {
