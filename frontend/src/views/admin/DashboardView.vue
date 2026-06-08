@@ -10,150 +10,177 @@
         <!-- Row 1: Core Stats -->
         <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <!-- Total API Keys -->
-          <div class="card card-hover p-5">
-            <div class="flex items-start gap-3">
-              <div class="kpi-icon"><Icon name="key" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
-              <div class="min-w-0 flex-1">
-                <p class="kpi-label">{{ t('admin.dashboard.apiKeys') }}</p>
-                <p class="kpi-value">{{ stats.total_api_keys }}</p>
-                <p class="kpi-sub"><span class="text-emerald-400">{{ stats.active_api_keys }}</span> {{ t('common.active') }}</p>
+          <Card>
+            <CardContent class="p-5">
+              <div class="flex items-start gap-3">
+                <div class="kpi-icon"><Icon name="key" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
+                <div class="min-w-0 flex-1">
+                  <p class="kpi-label">{{ t('admin.dashboard.apiKeys') }}</p>
+                  <p class="kpi-value">{{ stats.total_api_keys }}</p>
+                  <p class="kpi-sub"><span class="text-emerald-400">{{ stats.active_api_keys }}</span> {{ t('common.active') }}</p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Service Accounts -->
-          <div class="card card-hover p-5">
-            <div class="flex items-start gap-3">
-              <div class="kpi-icon"><Icon name="server" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
-              <div class="min-w-0 flex-1">
-                <p class="kpi-label">{{ t('admin.dashboard.accounts') }}</p>
-                <p class="kpi-value">{{ stats.total_accounts }}</p>
-                <p class="kpi-sub">
-                  <span class="text-emerald-400">{{ stats.normal_accounts }} {{ t('common.active') }}</span>
-                  <span v-if="stats.error_accounts > 0" class="ml-1 text-red-400">{{ stats.error_accounts }} {{ t('common.error') }}</span>
-                </p>
+          <Card>
+            <CardContent class="p-5">
+              <div class="flex items-start gap-3">
+                <div class="kpi-icon"><Icon name="server" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
+                <div class="min-w-0 flex-1">
+                  <p class="kpi-label">{{ t('admin.dashboard.accounts') }}</p>
+                  <p class="kpi-value">{{ stats.total_accounts }}</p>
+                  <p class="kpi-sub">
+                    <span class="text-emerald-400">{{ stats.normal_accounts }} {{ t('common.active') }}</span>
+                    <span v-if="stats.error_accounts > 0" class="ml-1 text-red-400">{{ stats.error_accounts }} {{ t('common.error') }}</span>
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Today Requests -->
-          <div class="card card-hover p-5">
-            <div class="flex items-start gap-3">
-              <div class="kpi-icon"><Icon name="chart" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
-              <div class="min-w-0 flex-1">
-                <p class="kpi-label">{{ t('admin.dashboard.todayRequests') }}</p>
-                <p class="kpi-value">{{ stats.today_requests }}</p>
-                <p class="kpi-sub">{{ t('common.total') }}: {{ formatNumber(stats.total_requests) }}</p>
+          <Card>
+            <CardContent class="p-5">
+              <div class="flex items-start gap-3">
+                <div class="kpi-icon"><Icon name="chart" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
+                <div class="min-w-0 flex-1">
+                  <p class="kpi-label">{{ t('admin.dashboard.todayRequests') }}</p>
+                  <p class="kpi-value">{{ stats.today_requests }}</p>
+                  <p class="kpi-sub">{{ t('common.total') }}: {{ formatNumber(stats.total_requests) }}</p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- New Users Today -->
-          <div class="card card-hover p-5">
-            <div class="flex items-start gap-3">
-              <div class="kpi-icon"><Icon name="userPlus" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
-              <div class="min-w-0 flex-1">
-                <p class="kpi-label">{{ t('admin.dashboard.users') }}</p>
-                <p class="kpi-value text-emerald-400">+{{ stats.today_new_users }}</p>
-                <p class="kpi-sub">{{ t('common.total') }}: {{ formatNumber(stats.total_users) }}</p>
+          <Card>
+            <CardContent class="p-5">
+              <div class="flex items-start gap-3">
+                <div class="kpi-icon"><Icon name="userPlus" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
+                <div class="min-w-0 flex-1">
+                  <p class="kpi-label">{{ t('admin.dashboard.users') }}</p>
+                  <p class="kpi-value text-emerald-400">+{{ stats.today_new_users }}</p>
+                  <p class="kpi-sub">{{ t('common.total') }}: {{ formatNumber(stats.total_users) }}</p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         <!-- Row 2: Token Stats -->
         <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <!-- Today Tokens -->
-          <div class="card card-hover p-5">
-            <div class="flex items-start gap-3">
-              <div class="kpi-icon"><Icon name="cube" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
-              <div class="min-w-0 flex-1">
-                <p class="kpi-label">{{ t('admin.dashboard.todayTokens') }}</p>
-                <p class="kpi-value">{{ formatTokens(stats.today_tokens) }}</p>
-                <p class="kpi-sub flex flex-wrap items-center gap-x-1">
-                  <span class="font-medium text-foreground" :title="t('admin.dashboard.actual')">${{ formatCost(stats.today_actual_cost) }}</span>
-                  <span class="text-muted-foreground/50">/</span>
-                  <span :title="t('admin.dashboard.accountCost')">${{ formatCost(stats.today_account_cost) }}</span>
-                  <span class="text-muted-foreground/50">/</span>
-                  <span :title="t('admin.dashboard.standard')">${{ formatCost(stats.today_cost) }}</span>
-                </p>
+          <Card>
+            <CardContent class="p-5">
+              <div class="flex items-start gap-3">
+                <div class="kpi-icon"><Icon name="cube" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
+                <div class="min-w-0 flex-1">
+                  <p class="kpi-label">{{ t('admin.dashboard.todayTokens') }}</p>
+                  <p class="kpi-value">{{ formatTokens(stats.today_tokens) }}</p>
+                  <p class="kpi-sub flex flex-wrap items-center gap-x-1">
+                    <span class="font-medium text-foreground" :title="t('admin.dashboard.actual')">${{ formatCost(stats.today_actual_cost) }}</span>
+                    <span class="text-muted-foreground/50">/</span>
+                    <span :title="t('admin.dashboard.accountCost')">${{ formatCost(stats.today_account_cost) }}</span>
+                    <span class="text-muted-foreground/50">/</span>
+                    <span :title="t('admin.dashboard.standard')">${{ formatCost(stats.today_cost) }}</span>
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Total Tokens -->
-          <div class="card card-hover p-5">
-            <div class="flex items-start gap-3">
-              <div class="kpi-icon"><Icon name="database" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
-              <div class="min-w-0 flex-1">
-                <p class="kpi-label">{{ t('admin.dashboard.totalTokens') }}</p>
-                <p class="kpi-value">{{ formatTokens(stats.total_tokens) }}</p>
-                <p class="kpi-sub flex flex-wrap items-center gap-x-1">
-                  <span class="font-medium text-foreground" :title="t('admin.dashboard.actual')">${{ formatCost(stats.total_actual_cost) }}</span>
-                  <span class="text-muted-foreground/50">/</span>
-                  <span :title="t('admin.dashboard.accountCost')">${{ formatCost(stats.total_account_cost) }}</span>
-                  <span class="text-muted-foreground/50">/</span>
-                  <span :title="t('admin.dashboard.standard')">${{ formatCost(stats.total_cost) }}</span>
-                </p>
+          <Card>
+            <CardContent class="p-5">
+              <div class="flex items-start gap-3">
+                <div class="kpi-icon"><Icon name="database" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
+                <div class="min-w-0 flex-1">
+                  <p class="kpi-label">{{ t('admin.dashboard.totalTokens') }}</p>
+                  <p class="kpi-value">{{ formatTokens(stats.total_tokens) }}</p>
+                  <p class="kpi-sub flex flex-wrap items-center gap-x-1">
+                    <span class="font-medium text-foreground" :title="t('admin.dashboard.actual')">${{ formatCost(stats.total_actual_cost) }}</span>
+                    <span class="text-muted-foreground/50">/</span>
+                    <span :title="t('admin.dashboard.accountCost')">${{ formatCost(stats.total_account_cost) }}</span>
+                    <span class="text-muted-foreground/50">/</span>
+                    <span :title="t('admin.dashboard.standard')">${{ formatCost(stats.total_cost) }}</span>
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Performance (RPM/TPM) -->
-          <div class="card card-hover p-5">
-            <div class="flex items-start gap-3">
-              <div class="kpi-icon"><Icon name="bolt" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
-              <div class="min-w-0 flex-1">
-                <p class="kpi-label">{{ t('admin.dashboard.performance') }}</p>
-                <div class="flex items-baseline gap-2">
-                  <p class="kpi-value">{{ formatTokens(stats.rpm) }}</p>
-                  <span class="text-xs text-muted-foreground">RPM</span>
-                </div>
-                <div class="mt-0.5 flex items-baseline gap-2">
-                  <p class="text-sm font-semibold text-primary-200">{{ formatTokens(stats.tpm) }}</p>
-                  <span class="text-xs text-muted-foreground">TPM</span>
+          <Card>
+            <CardContent class="p-5">
+              <div class="flex items-start gap-3">
+                <div class="kpi-icon"><Icon name="bolt" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
+                <div class="min-w-0 flex-1">
+                  <p class="kpi-label">{{ t('admin.dashboard.performance') }}</p>
+                  <div class="flex items-baseline gap-2">
+                    <p class="kpi-value">{{ formatTokens(stats.rpm) }}</p>
+                    <span class="text-xs text-muted-foreground">RPM</span>
+                  </div>
+                  <div class="mt-0.5 flex items-baseline gap-2">
+                    <p class="text-sm font-semibold text-primary-200">{{ formatTokens(stats.tpm) }}</p>
+                    <span class="text-xs text-muted-foreground">TPM</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Avg Response Time -->
-          <div class="card card-hover p-5">
-            <div class="flex items-start gap-3">
-              <div class="kpi-icon"><Icon name="clock" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
-              <div class="min-w-0 flex-1">
-                <p class="kpi-label">{{ t('admin.dashboard.avgResponse') }}</p>
-                <p class="kpi-value">{{ formatDuration(stats.average_duration_ms) }}</p>
-                <p class="kpi-sub">{{ stats.active_users }} {{ t('admin.dashboard.activeUsers') }}</p>
+          <Card>
+            <CardContent class="p-5">
+              <div class="flex items-start gap-3">
+                <div class="kpi-icon"><Icon name="clock" size="md" class="text-primary-200" :stroke-width="1.75" /></div>
+                <div class="min-w-0 flex-1">
+                  <p class="kpi-label">{{ t('admin.dashboard.avgResponse') }}</p>
+                  <p class="kpi-value">{{ formatDuration(stats.average_duration_ms) }}</p>
+                  <p class="kpi-sub">{{ stats.active_users }} {{ t('admin.dashboard.activeUsers') }}</p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         <!-- Charts Section -->
         <div class="space-y-6">
           <!-- Date Range Filter -->
-          <div class="card p-4">
-            <div class="flex flex-wrap items-center gap-4">
-              <div class="flex items-center gap-2">
-                <span class="text-sm font-medium text-muted-foreground">{{ t('admin.dashboard.timeRange') }}:</span>
-                <DateRangePicker
-                  v-model:start-date="startDate"
-                  v-model:end-date="endDate"
-                  @change="onDateRangeChange"
-                />
-              </div>
-              <button @click="loadDashboardStats" :disabled="chartsLoading" class="btn btn-secondary btn-sm">
-                {{ t('common.refresh') }}
-              </button>
-              <div class="ml-auto flex items-center gap-2">
-                <span class="text-sm font-medium text-muted-foreground">{{ t('admin.dashboard.granularity') }}:</span>
-                <div class="w-28">
-                  <Select v-model="granularity" :options="granularityOptions" @change="loadChartData" />
+          <Card>
+            <CardContent class="p-4">
+              <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium text-muted-foreground">{{ t('admin.dashboard.timeRange') }}:</span>
+                  <DateRangePicker
+                    v-model:start-date="startDate"
+                    v-model:end-date="endDate"
+                    @change="onDateRangeChange"
+                  />
+                </div>
+                <Button variant="secondary" size="sm" @click="loadDashboardStats" :disabled="chartsLoading">
+                  {{ t('common.refresh') }}
+                </Button>
+                <div class="ml-auto flex items-center gap-2">
+                  <span class="text-sm font-medium text-muted-foreground">{{ t('admin.dashboard.granularity') }}:</span>
+                  <div class="w-28">
+                    <Select :model-value="granularity" @update:model-value="(val) => { granularity = String(val) as 'day' | 'hour'; loadChartData() }">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem v-for="opt in granularityOptions" :key="opt.value" :value="opt.value">
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Charts Grid -->
           <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -175,20 +202,22 @@
           </div>
 
           <!-- User Usage Trend (Full Width) -->
-          <div class="card p-5">
-            <h3 class="mb-4 text-sm font-semibold text-foreground">
-              {{ t('admin.dashboard.recentUsage') }} (Top 12)
-            </h3>
-            <div class="h-64">
-              <div v-if="userTrendLoading" class="flex h-full items-center justify-center">
-                <LoadingSpinner size="md" />
+          <Card>
+            <CardContent class="p-5">
+              <h3 class="mb-4 text-sm font-semibold text-foreground">
+                {{ t('admin.dashboard.recentUsage') }} (Top 12)
+              </h3>
+              <div class="h-64">
+                <div v-if="userTrendLoading" class="flex h-full items-center justify-center">
+                  <LoadingSpinner size="md" />
+                </div>
+                <Line v-else-if="userTrendChartData" :data="userTrendChartData" :options="lineOptions" />
+                <div v-else class="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  {{ t('admin.dashboard.noDataAvailable') }}
+                </div>
               </div>
-              <Line v-else-if="userTrendChartData" :data="userTrendChartData" :options="lineOptions" />
-              <div v-else class="flex h-full items-center justify-center text-sm text-muted-foreground">
-                {{ t('admin.dashboard.noDataAvailable') }}
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </template>
     </div>
@@ -214,7 +243,15 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import Icon from '@/components/icons/Icon.vue'
 import DateRangePicker from '@/components/common/DateRangePicker.vue'
-import Select from '@/components/common/Select.vue'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import ModelDistributionChart from '@/components/charts/ModelDistributionChart.vue'
 import TokenUsageTrend from '@/components/charts/TokenUsageTrend.vue'
 
