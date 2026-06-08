@@ -139,15 +139,15 @@
             <input type="checkbox" :checked="isSelected(row.id)" @change="toggleSel(row.id)" class="rounded border-border text-primary-600 focus:ring-ring" />
           </template>
           <template #cell-name="{ row, value }">
-            <div class="flex flex-col">
-              <span class="font-medium text-foreground">{{ value }}</span>
-              <span
-                v-if="row.extra?.email_address || row.extra?.email || row.credentials?.email"
-                class="text-xs text-muted-foreground truncate max-w-[200px]"
-                :title="String(row.extra?.email_address || row.extra?.email || row.credentials?.email)"
-              >
-                {{ row.extra?.email_address || row.extra?.email || row.credentials?.email }}
-              </span>
+            <div class="flex flex-col gap-0.5">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-foreground text-sm truncate max-w-[180px]">{{ value }}</span>
+                <PlatformTypeBadge :platform="row.platform" :type="row.type" :plan-type="row.credentials?.plan_type" :privacy-mode="row.extra?.privacy_mode" class="shrink-0" />
+              </div>
+              <div class="flex items-center gap-2 text-[10px] text-muted-foreground">
+                <span v-if="row.extra?.email_address || row.extra?.email || row.credentials?.email" class="truncate max-w-[160px]">{{ row.extra?.email_address || row.extra?.email || row.credentials?.email }}</span>
+                <AccountCapacityCell :account="row" />
+              </div>
             </div>
           </template>
           <template #cell-notes="{ value }">
@@ -445,7 +445,7 @@ const exportingData = ref(false)
 const showAccountToolsDropdown = ref(false)
 const accountToolsDropdownRef = ref<HTMLElement | null>(null)
 const hiddenColumns = reactive<Set<string>>(new Set())
-const DEFAULT_HIDDEN_COLUMNS = ['today_stats', 'groups', 'proxy', 'notes', 'priority', 'rate_multiplier', 'last_used_at', 'created_at', 'expires_at']
+const DEFAULT_HIDDEN_COLUMNS = ['platform_type', 'capacity', 'today_stats', 'groups', 'proxy', 'notes', 'priority', 'rate_multiplier', 'last_used_at', 'created_at', 'expires_at']
 const HIDDEN_COLUMNS_KEY = 'account-hidden-columns'
 
 // Sorting settings
@@ -1099,17 +1099,17 @@ const allColumns = computed(() => {
   const c = [
     { key: 'select', label: '', sortable: false },
     { key: 'name', label: t('admin.accounts.columns.name'), sortable: true },
-    { key: 'platform_type', label: t('admin.accounts.columns.platformType'), sortable: false },
-    { key: 'capacity', label: t('admin.accounts.columns.capacity'), sortable: false },
     { key: 'status', label: t('admin.accounts.columns.status'), sortable: true },
-    { key: 'schedulable', label: t('admin.accounts.columns.schedulable'), sortable: true },
+    { key: 'schedulable', label: '⚙', sortable: true },
+    { key: 'usage', label: t('admin.accounts.columns.usageWindows'), sortable: false },
     { key: 'today_stats', label: t('admin.accounts.columns.todayStats'), sortable: false }
   ]
   if (!authStore.isSimpleMode) {
     c.push({ key: 'groups', label: t('admin.accounts.columns.groups'), sortable: false })
   }
   c.push(
-    { key: 'usage', label: t('admin.accounts.columns.usageWindows'), sortable: false },
+    { key: 'platform_type', label: t('admin.accounts.columns.platformType'), sortable: false },
+    { key: 'capacity', label: t('admin.accounts.columns.capacity'), sortable: false },
     { key: 'proxy', label: t('admin.accounts.columns.proxy'), sortable: false },
     { key: 'priority', label: t('admin.accounts.columns.priority'), sortable: true },
     { key: 'rate_multiplier', label: t('admin.accounts.columns.billingRateMultiplier'), sortable: true },
