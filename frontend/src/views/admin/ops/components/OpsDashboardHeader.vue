@@ -930,7 +930,7 @@ function handleToolbarRefresh() {
         <button
           v-if="!props.fullscreen"
           type="button"
-          class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors hover:bg-accent  dark:text-muted-foreground dark:hover:bg-dark-600"
+          class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors hover:bg-accent "
           :disabled="loading"
           :title="t('common.refresh')"
           @click="handleToolbarRefresh"
@@ -965,7 +965,7 @@ function handleToolbarRefresh() {
         <button
           v-if="!props.fullscreen"
           type="button"
-          class="flex h-8 items-center gap-1.5 rounded-lg bg-muted px-3 text-xs font-bold text-foreground/85 transition-colors hover:bg-accent  dark:text-foreground/75 dark:hover:bg-dark-600"
+          class="flex h-8 items-center gap-1.5 rounded-lg bg-muted px-3 text-xs font-bold text-foreground/85 transition-colors hover:bg-accent "
           :title="t('admin.ops.settings.title')"
           @click="emit('openSettings')"
         >
@@ -980,7 +980,7 @@ function handleToolbarRefresh() {
         <button
           v-if="!props.fullscreen"
           type="button"
-          class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-foreground/85 transition-colors hover:bg-accent  dark:text-foreground/75 dark:hover:bg-dark-600"
+          class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-foreground/85 transition-colors hover:bg-accent "
           :title="t('admin.ops.fullscreen.enter')"
           @click="emit('enterFullscreen')"
         >
@@ -997,14 +997,14 @@ function handleToolbarRefresh() {
         <div class="grid h-full grid-cols-1 gap-6 md:grid-cols-[200px_1fr] md:items-center">
           <!-- 1) Health Score -->
           <div
-            class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl py-2 transition-all hover:bg-card/60 dark:hover:bg-dark-800/60 md:border-r md:border-border md:pr-6 dark:md:border-dark-700"
+            class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl py-2 transition-all hover:bg-card/60 dark:hover:bg-card/60 md:border-r md:border-border md:pr-6 dark:md:border-border"
           >
             <!-- Diagnosis Popover (hover) -->
             <div
               class="pointer-events-none absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 opacity-0 transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100 md:left-full md:top-0 md:ml-2 md:mt-0 md:translate-x-0"
             >
-              <div class="rounded-xl bg-card p-4 shadow-xl ring-1 ring-black/5 dark:bg-card dark:ring-white/10">
-                <h4 class="mb-3 border-b border-border pb-2 text-sm font-bold text-foreground dark:border-border dark:text-white flex items-center gap-2">
+              <div class="rounded-xl bg-card p-4 shadow-xl ring-1 ring-black/5 dark:ring-white/10">
+                <h4 class="mb-3 border-b border-border pb-2 text-sm font-bold text-foreground dark:text-white flex items-center gap-2">
                   <Icon name="brain" size="sm" class="text-blue-500" />
                   {{ t('admin.ops.diagnosis.title') }}
                 </h4>
@@ -1045,7 +1045,7 @@ function handleToolbarRefresh() {
                   </div>
                 </div>
 
-                <div class="mt-3 border-t border-border pt-2 text-[10px] text-muted-foreground dark:border-border">
+                <div class="mt-3 border-t border-border pt-2 text-[10px] text-muted-foreground">
                   {{ t('admin.ops.diagnosis.footer') }}
                 </div>
               </div>
@@ -1122,7 +1122,7 @@ function handleToolbarRefresh() {
                   class="rounded px-1.5 py-0.5 text-[9px] font-bold transition-colors sm:px-2 sm:text-[10px]"
                   :class="realtimeWindow === window
                     ? 'bg-blue-500 text-white'
-                    : 'bg-accent text-foreground/75 hover:bg-gray-300  dark:text-muted-foreground dark:hover:bg-dark-600'"
+                    : 'bg-accent text-foreground/75 hover:bg-gray-300 '"
                   @click="realtimeWindow = window"
                 >
                   {{ window }}
@@ -1608,7 +1608,7 @@ function handleToolbarRefresh() {
         <div class="flex justify-end gap-3 pt-2">
           <button
             type="button"
-            class="rounded-lg bg-muted px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-accent  dark:text-foreground/75 dark:hover:bg-dark-600"
+            class="rounded-lg bg-muted px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-accent "
             @click="handleCustomTimeRangeCancel"
           >
             {{ t('common.cancel') }}

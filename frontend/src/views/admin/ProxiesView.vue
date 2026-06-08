@@ -148,12 +148,12 @@
                 <!-- 右键展开格式选择菜单 -->
                 <div
                   v-if="copyMenuProxyId === row.id"
-                  class="absolute left-0 top-full z-50 mt-1 w-auto min-w-[180px] rounded-lg border border-border bg-white py-1 shadow-lg dark:border-dark-500 dark:bg-dark-700"
+                  class="absolute left-0 top-full z-50 mt-1 w-auto min-w-[180px] rounded-lg border border-border bg-white py-1 shadow-lg dark:border-dark-500"
                 >
                   <button
                     v-for="fmt in getCopyFormats(row)"
                     :key="fmt.label"
-                    class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-muted dark:hover:bg-dark-600"
+                    class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-muted"
                     @click.stop="copyFormat(fmt.value)"
                   >
                     <span class="truncate font-mono text-foreground/75">{{ fmt.label }}</span>
@@ -174,7 +174,7 @@
               <button
                 v-if="row.password"
                 type="button"
-                class="ml-1 rounded p-0.5 text-muted-foreground hover:text-foreground/75 dark:hover:text-foreground/75"
+                class="ml-1 rounded p-0.5 text-muted-foreground hover:text-foreground/75/75"
                 @click.stop="visiblePasswordIds.has(row.id) ? visiblePasswordIds.delete(row.id) : visiblePasswordIds.add(row.id)"
               >
                 <Icon :name="visiblePasswordIds.has(row.id) ? 'eyeOff' : 'eye'" size="sm" />
@@ -202,14 +202,14 @@
             <button
               v-if="(value || 0) > 0"
               type="button"
-              class="inline-flex items-center rounded bg-muted px-2 py-0.5 text-xs font-medium text-primary-700 hover:bg-accent dark:bg-dark-600 dark:text-primary-300 dark:hover:bg-dark-500"
+              class="inline-flex items-center rounded bg-muted px-2 py-0.5 text-xs font-medium text-primary-700 hover:bg-accent dark:text-primary-300"
               @click="openAccountsModal(row)"
             >
               {{ t('admin.groups.accountsCount', { count: value || 0 }) }}
             </button>
             <span
               v-else
-              class="inline-flex items-center rounded bg-muted px-2 py-0.5 text-xs font-medium text-foreground dark:bg-dark-600 dark:text-foreground/75"
+              class="inline-flex items-center rounded bg-muted px-2 py-0.5 text-xs font-medium text-foreground"
             >
               {{ t('admin.groups.accountsCount', { count: 0 }) }}
             </span>
@@ -327,7 +327,7 @@
               </button>
               <button
                 @click="handleEdit(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600 dark:hover:bg-dark-700 dark:hover:text-primary-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600 dark:hover:bg-secondary dark:hover:text-primary-400"
               >
                 <Icon name="edit" size="sm" />
                 <span class="text-xs">{{ t('common.edit') }}</span>
@@ -375,7 +375,7 @@
     >
       <!-- Tab Switch -->
       <div
-        class="mb-6 flex items-center justify-between gap-3 border-b border-border dark:border-dark-600"
+        class="mb-6 flex items-center justify-between gap-3 border-b border-border"
       >
         <div class="flex min-w-0 shrink-0">
           <button
@@ -385,7 +385,7 @@
               '-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors',
               createMode === 'standard'
                 ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                : 'border-transparent text-muted-foreground hover:text-foreground/85 dark:hover:text-foreground/75'
+                : 'border-transparent text-muted-foreground hover:text-foreground/85/75'
             ]"
           >
             <Icon name="plus" size="sm" class="mr-1.5 inline" />
@@ -398,7 +398,7 @@
               '-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors',
               createMode === 'batch'
                 ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                : 'border-transparent text-muted-foreground hover:text-foreground/85 dark:hover:text-foreground/75'
+                : 'border-transparent text-muted-foreground hover:text-foreground/85/75'
             ]"
           >
             <svg
@@ -484,7 +484,7 @@
             />
             <button
               type="button"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground/75 dark:hover:text-foreground/75"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground/75/75"
               @click="createPasswordVisible = !createPasswordVisible"
             >
               <Icon :name="createPasswordVisible ? 'eyeOff' : 'eye'" size="md" />
@@ -546,7 +546,7 @@
         </div>
 
         <!-- Parse Result -->
-        <div v-if="batchParseResult.total > 0" class="rounded-lg bg-card p-4 dark:bg-dark-700">
+        <div v-if="batchParseResult.total > 0" class="rounded-lg bg-card p-4">
             <div class="flex items-center gap-4 text-sm">
               <div class="flex items-center gap-1.5">
               <Icon name="checkCircle" size="sm" :stroke-width="2" class="text-primary-500" />
@@ -713,7 +713,7 @@
             />
             <button
               type="button"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground/75 dark:hover:text-foreground/75"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground/75/75"
               @click="editPasswordVisible = !editPasswordVisible"
             >
               <Icon :name="editPasswordVisible ? 'eyeOff' : 'eye'" size="md" />
@@ -846,7 +846,7 @@
       @close="closeQualityReportDialog"
     >
       <div v-if="qualityReport" class="space-y-4">
-        <div class="rounded-lg border border-border bg-card p-4 dark:border-dark-600 dark:bg-dark-700">
+        <div class="rounded-lg border border-border bg-card p-4">
           <div class="flex items-center justify-between gap-4">
             <div>
               <div class="text-sm text-muted-foreground">
@@ -876,9 +876,9 @@
           </div>
         </div>
 
-        <div class="max-h-80 overflow-auto rounded-lg border border-border dark:border-dark-600">
-          <table class="min-w-full divide-y divide-border text-sm dark:divide-dark-700">
-            <thead class="bg-card text-xs uppercase text-muted-foreground dark:bg-dark-800 dark:text-dark-400">
+        <div class="max-h-80 overflow-auto rounded-lg border border-border">
+          <table class="min-w-full divide-y divide-border text-sm">
+            <thead class="bg-card text-xs uppercase text-muted-foreground">
               <tr>
                 <th class="px-3 py-2 text-left">{{ t('admin.proxies.qualityTableTarget') }}</th>
                 <th class="px-3 py-2 text-left">{{ t('admin.proxies.qualityTableStatus') }}</th>
@@ -887,7 +887,7 @@
                 <th class="px-3 py-2 text-left">{{ t('admin.proxies.qualityTableMessage') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-border bg-white dark:divide-dark-700 dark:bg-dark-900">
+            <tbody class="divide-y divide-border bg-white">
               <tr v-for="item in qualityReport.items" :key="item.target">
                 <td class="px-3 py-2 text-foreground dark:text-white">{{ qualityTargetLabel(item.target) }}</td>
                 <td class="px-3 py-2">
@@ -930,15 +930,15 @@
         {{ t('admin.proxies.accountsEmpty') }}
       </div>
       <div v-else class="max-h-80 overflow-auto">
-        <table class="min-w-full divide-y divide-border text-sm dark:divide-dark-700">
-          <thead class="bg-card text-xs uppercase text-muted-foreground dark:bg-dark-800 dark:text-dark-400">
+        <table class="min-w-full divide-y divide-border text-sm">
+          <thead class="bg-card text-xs uppercase text-muted-foreground">
             <tr>
               <th class="px-4 py-2 text-left">{{ t('admin.proxies.accountName') }}</th>
               <th class="px-4 py-2 text-left">{{ t('admin.accounts.columns.platformType') }}</th>
               <th class="px-4 py-2 text-left">{{ t('admin.proxies.accountNotes') }}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-border bg-white dark:divide-dark-700 dark:bg-dark-900">
+          <tbody class="divide-y divide-border bg-white">
             <tr v-for="account in proxyAccounts" :key="account.id">
               <td class="px-4 py-2 font-medium text-foreground dark:text-white">{{ account.name }}</td>
               <td class="px-4 py-2">

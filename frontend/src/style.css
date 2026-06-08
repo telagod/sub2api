@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ============================================================================
- * COLD STEEL · 冷钢黑白金属设计系统
+ * COLD STEEL · Vercel-inspired Design System
  * 语义 token 走 HSL CSS 变量；shadcn-vue 组件与全局类共用同一套。
  * ==========================================================================*/
 @layer base {
@@ -45,7 +45,7 @@
     font-feature-settings: 'cv11', 'ss01';
   }
 
-  /* 滚动条 — 冷钢细钢轨 */
+  /* 滚动条 — minimal scrollbar */
   @supports (-moz-appearance: none) {
     * {
       scrollbar-width: thin;
@@ -68,14 +68,14 @@
     transition: background-color 0.2s ease;
   }
   *:hover::-webkit-scrollbar-thumb {
-    @apply bg-dark-600/60;
+    @apply bg-foreground/20;
   }
   *:hover::-webkit-scrollbar-thumb:hover {
-    @apply bg-dark-500;
+    @apply bg-foreground/30;
   }
 
   ::selection {
-    @apply bg-primary-300/25 text-foreground;
+    @apply bg-foreground/15 text-foreground;
   }
 }
 
@@ -157,7 +157,7 @@
     @apply rounded-lg p-2;
   }
 
-  /* ============ 输入框 — 深炭凹陷 + 钢边 + 银 focus ============ */
+  /* ============ 输入框 — clean border + subtle focus ============ */
   .input {
     @apply w-full rounded-lg px-3 py-2 text-[13px];
     @apply bg-background text-foreground;
@@ -189,7 +189,7 @@
     -moz-appearance: textfield;
   }
 
-  /* ============ 玻璃 → 退化为 gunmetal 金属面（去玻璃感） ============ */
+  /* ============ 玻璃 → flat surface ============ */
   .glass {
     @apply bg-card/95;
   }
@@ -197,7 +197,7 @@
     @apply bg-card rounded-lg border border-border;
   }
 
-  /* ============ 卡片 — gunmetal 表面 + 金属边缘高光 ============ */
+  /* ============ 卡片 — flat card ============ */
   .card {
     @apply bg-card text-card-foreground;
     @apply rounded-lg border border-border;
@@ -331,7 +331,7 @@
     @apply w-full max-h-[85vh] sm:max-h-[80vh];
     @apply bg-card;
     @apply rounded-xl border border-border;
-    box-shadow: 0 16px 70px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
     @apply flex flex-col;
   }
   .modal-header {
@@ -531,7 +531,7 @@
   /* ============ 进度条 ============ */
   .progress {
     @apply h-2 overflow-hidden rounded-full bg-dark-800;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+    
   }
   .progress-bar {
     @apply h-full;
@@ -543,7 +543,7 @@
   .switch {
     @apply relative h-6 w-11 cursor-pointer rounded-full;
     @apply bg-dark-700;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+    
     @apply transition-colors duration-200;
   }
   .switch-active {
@@ -601,7 +601,7 @@
     overflow-x: auto;
   }
   .table-wrapper thead.sticky {
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4);
+    
   }
 }
 
@@ -614,11 +614,8 @@
   }
 
   /* 金属表面工具类 */
-  .metal-surface {
-    @apply bg-card border border-border;
-  }
   .metal-edge {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+    
   }
   /* 拉丝扫光（叠加层用 ::before 实现亦可，此处提供静态版） */
   .metal-sheen {

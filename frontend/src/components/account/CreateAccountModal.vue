@@ -2804,7 +2804,7 @@
             >
               {{ t('admin.accounts.mixedSchedulingTooltip') }}
               <div
-                class="absolute bottom-full left-3 border-4 border-transparent border-b-metal-raised"
+                class="absolute bottom-full left-3 border-4 border-transparent border-b-border"
               ></div>
             </div>
           </div>
@@ -2831,7 +2831,7 @@
             >
               {{ t('admin.accounts.allowOveragesTooltip') }}
               <div
-                class="absolute bottom-full left-3 border-4 border-transparent border-b-metal-raised"
+                class="absolute bottom-full left-3 border-4 border-transparent border-b-border"
               ></div>
             </div>
           </div>

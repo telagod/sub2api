@@ -113,7 +113,7 @@
                   'inline-block rounded-full px-2 py-0.5 text-xs font-medium',
                   row.subscription_type === 'subscription'
                     ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
-                    : 'bg-muted text-foreground/75 dark:bg-accent dark:text-foreground/75',
+                    : 'bg-muted text-foreground/75',
                 ]"
               >
                 {{
@@ -195,7 +195,7 @@
                   >{{ row.active_account_count || 0 }}</span
                 >
                 <span
-                  class="ml-1 inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-medium text-foreground  dark:text-foreground/75"
+                  class="ml-1 inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-medium text-foreground "
                   >{{ t("admin.groups.accountsUnit") }}</span
                 >
               </div>
@@ -208,7 +208,7 @@
                   >{{ row.rate_limited_account_count }}</span
                 >
                 <span
-                  class="ml-1 inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-medium text-foreground  dark:text-foreground/75"
+                  class="ml-1 inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-medium text-foreground "
                   >{{ t("admin.groups.accountsUnit") }}</span
                 >
               </div>
@@ -221,7 +221,7 @@
                   >{{ row.account_count || 0 }}</span
                 >
                 <span
-                  class="ml-1 inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-medium text-foreground  dark:text-foreground/75"
+                  class="ml-1 inline-flex items-center rounded bg-muted px-1.5 py-0.5 font-medium text-foreground "
                   >{{ t("admin.groups.accountsUnit") }}</span
                 >
               </div>
@@ -282,14 +282,14 @@
             <div class="flex items-center gap-1">
               <button
                 @click="handleEdit(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600 dark:hover:bg-dark-700 dark:hover:text-primary-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary-600 dark:hover:bg-secondary dark:hover:text-primary-400"
               >
                 <Icon name="edit" size="sm" />
                 <span class="text-xs">{{ t("common.edit") }}</span>
               </button>
               <button
                 @click="handleRateMultipliers(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-purple-600 dark:hover:bg-dark-700 dark:hover:text-purple-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-purple-600 dark:hover:bg-secondary dark:hover:text-purple-400"
               >
                 <Icon name="dollar" size="sm" />
                 <span class="text-xs">{{
@@ -298,7 +298,7 @@
               </button>
               <button
                 @click="handleRPMOverrides(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-orange-600 dark:hover:bg-dark-700 dark:hover:text-orange-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-orange-600 dark:hover:bg-secondary dark:hover:text-orange-400"
               >
                 <Icon name="bolt" size="sm" />
                 <span class="text-xs">{{
@@ -395,13 +395,13 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.copyAccounts.tooltip") }}
@@ -514,14 +514,14 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <!-- Tooltip Popover -->
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="mb-2 text-xs font-medium">
                     {{ t("admin.groups.exclusiveTooltip.title") }}
@@ -529,7 +529,7 @@
                   <p class="mb-2 text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.exclusiveTooltip.description") }}
                   </p>
-                  <div class="rounded bg-card p-2 dark:bg-accent">
+                  <div class="rounded bg-card p-2">
                     <p class="text-xs leading-relaxed text-foreground/75">
                       <span
                         class="inline-flex items-center gap-1 text-primary-400"
@@ -687,7 +687,7 @@
                 </button>
                 <button
                   type="button"
-                  class="rounded px-2 py-1 font-medium text-foreground/75 transition-colors hover:bg-muted dark:text-foreground/75 dark:hover:bg-dark-700"
+                  class="rounded px-2 py-1 font-medium text-foreground/75 transition-colors hover:bg-muted dark:hover:bg-secondary"
                   @click="invertModelsListSelection(createModelsListState)"
                 >
                   反选
@@ -722,7 +722,7 @@
                 <button
                   type="button"
                   :disabled="index === 0"
-                  class="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85 disabled:opacity-40 dark:hover:bg-dark-600 dark:hover:text-foreground"
+                  class="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85 disabled:opacity-40"
                   @click="moveCreateModelsListItem(index, index - 1)"
                 >
                   <Icon name="arrowUp" size="sm" />
@@ -730,7 +730,7 @@
                 <button
                   type="button"
                   :disabled="index === createModelsListState.items.length - 1"
-                  class="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85 disabled:opacity-40 dark:hover:bg-dark-600 dark:hover:text-foreground"
+                  class="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85 disabled:opacity-40"
                   @click="moveCreateModelsListItem(index, index + 1)"
                 >
                   <Icon name="arrowDown" size="sm" />
@@ -829,7 +829,7 @@
           <p class="mt-3 text-xs text-muted-foreground">
             {{ t("admin.groups.imagePricing.modeHint") }}
           </p>
-          <div class="mt-2 rounded-lg bg-card p-3 text-xs text-foreground/85 dark:bg-card dark:text-foreground/75">
+          <div class="mt-2 rounded-lg bg-card p-3 text-xs text-foreground/85">
             <div class="mb-1 font-medium">
               {{ t("admin.groups.imagePricing.finalPricePreview") }}
             </div>
@@ -856,13 +856,13 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.supportedScopes.tooltip") }}
@@ -929,13 +929,13 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.mcpXml.tooltip") }}
@@ -987,13 +987,13 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.claudeCode.tooltip") }}
@@ -1223,7 +1223,7 @@
                                 'admin.groups.openaiMessages.claudeModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-dark-900"
+                            class="input bg-card focus:bg-card  dark:focus:bg-background"
                           />
                         </div>
                         <div
@@ -1247,7 +1247,7 @@
                                 'admin.groups.openaiMessages.targetModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-dark-900"
+                            class="input bg-card focus:bg-card  dark:focus:bg-background"
                           />
                         </div>
                       </div>
@@ -1267,7 +1267,7 @@
                   <button
                     type="button"
                     @click="addCreateMessagesDispatchMapping"
-                    class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card py-3 text-sm font-medium text-muted-foreground transition-all hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600   dark:text-muted-foreground dark:hover:border-primary-800 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
+                    class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card py-3 text-sm font-medium text-muted-foreground transition-all hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600   dark:hover:border-primary-800 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
                   >
                     <Icon name="plus" size="sm" />
                     {{ t("admin.groups.openaiMessages.addExactMapping") }}
@@ -1399,13 +1399,13 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-80 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.modelRouting.tooltip") }}
@@ -1536,7 +1536,7 @@
                           :key="account.id"
                           type="button"
                           @click="selectAccount(rule, account)"
-                          class="w-full px-3 py-2 text-left text-sm hover:bg-muted dark:hover:bg-dark-700"
+                          class="w-full px-3 py-2 text-left text-sm hover:bg-muted dark:hover:bg-secondary"
                           :class="{
                             'opacity-50': rule.accounts.some(
                               (a) => a.id === account.id,
@@ -1680,13 +1680,13 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.copyAccounts.tooltipEdit") }}
@@ -1797,14 +1797,14 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <!-- Tooltip Popover -->
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="mb-2 text-xs font-medium">
                     {{ t("admin.groups.exclusiveTooltip.title") }}
@@ -1812,7 +1812,7 @@
                   <p class="mb-2 text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.exclusiveTooltip.description") }}
                   </p>
-                  <div class="rounded bg-card p-2 dark:bg-accent">
+                  <div class="rounded bg-card p-2">
                     <p class="text-xs leading-relaxed text-foreground/75">
                       <span
                         class="inline-flex items-center gap-1 text-primary-400"
@@ -1975,7 +1975,7 @@
                 </button>
                 <button
                   type="button"
-                  class="rounded px-2 py-1 font-medium text-foreground/75 transition-colors hover:bg-muted dark:text-foreground/75 dark:hover:bg-dark-700"
+                  class="rounded px-2 py-1 font-medium text-foreground/75 transition-colors hover:bg-muted dark:hover:bg-secondary"
                   @click="invertModelsListSelection(editModelsListState)"
                 >
                   反选
@@ -2010,7 +2010,7 @@
                 <button
                   type="button"
                   :disabled="index === 0"
-                  class="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85 disabled:opacity-40 dark:hover:bg-dark-600 dark:hover:text-foreground"
+                  class="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85 disabled:opacity-40"
                   @click="moveEditModelsListItem(index, index - 1)"
                 >
                   <Icon name="arrowUp" size="sm" />
@@ -2018,7 +2018,7 @@
                 <button
                   type="button"
                   :disabled="index === editModelsListState.items.length - 1"
-                  class="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85 disabled:opacity-40 dark:hover:bg-dark-600 dark:hover:text-foreground"
+                  class="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85 disabled:opacity-40"
                   @click="moveEditModelsListItem(index, index + 1)"
                 >
                   <Icon name="arrowDown" size="sm" />
@@ -2117,7 +2117,7 @@
           <p class="mt-3 text-xs text-muted-foreground">
             {{ t("admin.groups.imagePricing.modeHint") }}
           </p>
-          <div class="mt-2 rounded-lg bg-card p-3 text-xs text-foreground/85 dark:bg-card dark:text-foreground/75">
+          <div class="mt-2 rounded-lg bg-card p-3 text-xs text-foreground/85">
             <div class="mb-1 font-medium">
               {{ t("admin.groups.imagePricing.finalPricePreview") }}
             </div>
@@ -2144,13 +2144,13 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.supportedScopes.tooltip") }}
@@ -2217,13 +2217,13 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.mcpXml.tooltip") }}
@@ -2275,13 +2275,13 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-72 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.claudeCode.tooltip") }}
@@ -2507,7 +2507,7 @@
                                 'admin.groups.openaiMessages.claudeModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-dark-900"
+                            class="input bg-card focus:bg-card  dark:focus:bg-background"
                           />
                         </div>
                         <div
@@ -2531,7 +2531,7 @@
                                 'admin.groups.openaiMessages.targetModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-dark-900"
+                            class="input bg-card focus:bg-card  dark:focus:bg-background"
                           />
                         </div>
                       </div>
@@ -2551,7 +2551,7 @@
                   <button
                     type="button"
                     @click="addEditMessagesDispatchMapping"
-                    class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card py-3 text-sm font-medium text-muted-foreground transition-all hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600   dark:text-muted-foreground dark:hover:border-primary-800 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
+                    class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card py-3 text-sm font-medium text-muted-foreground transition-all hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-600   dark:hover:border-primary-800 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
                   >
                     <Icon name="plus" size="sm" />
                     {{ t("admin.groups.openaiMessages.addExactMapping") }}
@@ -2683,13 +2683,13 @@
                 name="questionCircle"
                 size="sm"
                 :stroke-width="2"
-                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:text-muted-foreground dark:hover:text-primary-400"
+                class="cursor-help text-muted-foreground transition-colors hover:text-primary-500 dark:hover:text-primary-400"
               />
               <div
                 class="pointer-events-none absolute bottom-full left-0 z-50 mb-2 w-80 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <div
-                  class="rounded-lg bg-background p-3 text-white shadow-lg dark:bg-card"
+                  class="rounded-lg bg-background p-3 text-white shadow-lg"
                 >
                   <p class="text-xs leading-relaxed text-foreground/75">
                     {{ t("admin.groups.modelRouting.tooltip") }}
@@ -2819,7 +2819,7 @@
                           :key="account.id"
                           type="button"
                           @click="selectAccount(rule, account, true)"
-                          class="w-full px-3 py-2 text-left text-sm hover:bg-muted dark:hover:bg-dark-700"
+                          class="w-full px-3 py-2 text-left text-sm hover:bg-muted dark:hover:bg-secondary"
                           :class="{
                             'opacity-50': rule.accounts.some(
                               (a) => a.id === account.id,

@@ -120,7 +120,7 @@
         <div class="overflow-x-auto">
           <table class="w-full min-w-[800px] text-sm">
             <thead>
-              <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground dark:border-dark-700 dark:text-muted-foreground">
+              <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <th class="py-2 pr-4">ID</th>
                 <th class="py-2 pr-4">{{ t('admin.backup.columns.status') }}</th>
                 <th class="py-2 pr-4">{{ t('admin.backup.columns.fileName') }}</th>
@@ -198,8 +198,8 @@
       <transition name="modal">
         <div v-if="showR2Guide" class="fixed inset-0 z-50 flex items-center justify-center p-4" @mousedown.self="showR2Guide = false">
           <div class="fixed inset-0 bg-black/50" @click="showR2Guide = false"></div>
-          <div class="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-2xl dark:bg-dark-800">
-            <button type="button" class="absolute right-4 top-4 text-muted-foreground hover:text-foreground/75 dark:hover:text-foreground" @click="showR2Guide = false">
+          <div class="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-2xl">
+            <button type="button" class="absolute right-4 top-4 text-muted-foreground hover:text-foreground/75" @click="showR2Guide = false">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
 
@@ -243,7 +243,7 @@
                 {{ t('admin.backup.r2Guide.step3.title') }}
               </h3>
               <p class="ml-8 text-sm text-foreground/75">{{ t('admin.backup.r2Guide.step3.desc') }}</p>
-              <code class="ml-8 mt-1 block rounded bg-muted px-3 py-2 text-xs text-foreground dark:bg-dark-700 text-foreground/85">https://&lt;{{ t('admin.backup.r2Guide.step3.accountId') }}&gt;.r2.cloudflarestorage.com</code>
+              <code class="ml-8 mt-1 block rounded bg-muted px-3 py-2 text-xs text-foreground text-foreground/85">https://&lt;{{ t('admin.backup.r2Guide.step3.accountId') }}&gt;.r2.cloudflarestorage.com</code>
             </div>
 
             <!-- Step 4: Fill form -->
@@ -252,11 +252,11 @@
                 <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">4</span>
                 {{ t('admin.backup.r2Guide.step4.title') }}
               </h3>
-              <div class="ml-8 overflow-hidden rounded-lg border border-border dark:border-dark-600">
+              <div class="ml-8 overflow-hidden rounded-lg border border-border">
                 <table class="w-full text-sm">
                   <tbody>
                     <tr v-for="(row, i) in r2ConfigRows" :key="i" class="border-b border-border last:border-0">
-                      <td class="whitespace-nowrap bg-card px-3 py-2 font-medium text-foreground/85 dark:bg-dark-700 dark:text-foreground/75">{{ row.field }}</td>
+                      <td class="whitespace-nowrap bg-card px-3 py-2 font-medium text-foreground/85">{{ row.field }}</td>
                       <td class="px-3 py-2 text-foreground/75"><code class="text-xs">{{ row.value }}</code></td>
                     </tr>
                   </tbody>
@@ -585,7 +585,7 @@ function statusClass(status: string): string {
     case 'failed':
       return 'bg-red-500/10 text-red-400'
     default:
-      return 'bg-muted text-foreground/85 dark:bg-dark-800 dark:text-foreground/75'
+      return 'bg-muted text-foreground/85'
   }
 }
 

@@ -49,7 +49,7 @@
           <!-- Admin API Key Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.adminApiKey.title") }}
@@ -138,7 +138,7 @@
                       {{ t("admin.settings.adminApiKey.currentKey") }}
                     </label>
                     <code
-                      class="rounded bg-accent px-2 py-1 font-mono text-sm text-foreground dark:bg-accent dark:text-foreground"
+                      class="rounded bg-accent px-2 py-1 font-mono text-sm text-foreground"
                     >
                       {{ adminApiKeyMasked }}
                     </code>
@@ -206,7 +206,7 @@
           <!-- Overload Cooldown (529) Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.overloadCooldown.title") }}
@@ -241,7 +241,7 @@
 
                 <div
                   v-if="overloadCooldownForm.enabled"
-                  class="space-y-4 border-t border-border pt-4 dark:border-border"
+                  class="space-y-4 border-t border-border pt-4"
                 >
                   <div>
                     <label
@@ -265,7 +265,7 @@
                 </div>
 
                 <div
-                  class="flex justify-end border-t border-border pt-4 dark:border-border"
+                  class="flex justify-end border-t border-border pt-4"
                 >
                   <button
                     type="button"
@@ -307,7 +307,7 @@
           <!-- Rate Limit Cooldown (429) Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.rateLimit429Cooldown.title") }}
@@ -342,7 +342,7 @@
 
                 <div
                   v-if="rateLimit429CooldownForm.enabled"
-                  class="space-y-4 border-t border-border pt-4 dark:border-border"
+                  class="space-y-4 border-t border-border pt-4"
                 >
                   <div>
                     <label
@@ -372,7 +372,7 @@
                 </div>
 
                 <div
-                  class="flex justify-end border-t border-border pt-4 dark:border-border"
+                  class="flex justify-end border-t border-border pt-4"
                 >
                   <button
                     type="button"
@@ -414,7 +414,7 @@
           <!-- Stream Timeout Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.streamTimeout.title") }}
@@ -452,7 +452,7 @@
                 <!-- Settings - Only show when enabled -->
                 <div
                   v-if="streamTimeoutForm.enabled"
-                  class="space-y-4 border-t border-border pt-4 dark:border-border"
+                  class="space-y-4 border-t border-border pt-4"
                 >
                   <!-- Action -->
                   <div>
@@ -552,7 +552,7 @@
 
                 <!-- Save Button -->
                 <div
-                  class="flex justify-end border-t border-border pt-4 dark:border-border"
+                  class="flex justify-end border-t border-border pt-4"
                 >
                   <button
                     type="button"
@@ -594,7 +594,7 @@
           <!-- Request Rectifier Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.rectifier.title") }}
@@ -632,7 +632,7 @@
                 <!-- Sub-toggles (only show when master is enabled) -->
                 <div
                   v-if="rectifierForm.enabled"
-                  class="space-y-4 border-t border-border pt-4 dark:border-border"
+                  class="space-y-4 border-t border-border pt-4"
                 >
                   <!-- Thinking Signature Rectifier -->
                   <div class="flex items-center justify-between">
@@ -689,7 +689,7 @@
                   <!-- Custom Patterns (only when apikey_signature_enabled) -->
                   <div
                     v-if="rectifierForm.apikey_signature_enabled"
-                    class="ml-4 space-y-3 border-l-2 border-border pl-4 dark:border-border"
+                    class="ml-4 space-y-3 border-l-2 border-border pl-4"
                   >
                     <div>
                       <label
@@ -754,7 +754,7 @@
 
                 <!-- Save Button -->
                 <div
-                  class="flex justify-end border-t border-border pt-4 dark:border-border"
+                  class="flex justify-end border-t border-border pt-4"
                 >
                   <button
                     type="button"
@@ -793,7 +793,7 @@
           <!-- Beta Policy Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.betaPolicy.title") }}
@@ -819,7 +819,7 @@
                 <div
                   v-for="rule in betaPolicyForm.rules"
                   :key="rule.beta_token"
-                  class="rounded-lg border border-border p-4 dark:border-border"
+                  class="rounded-lg border border-border p-4"
                 >
                   <div class="mb-3 flex items-center gap-2">
                     <span
@@ -828,7 +828,7 @@
                       {{ getBetaDisplayName(rule.beta_token) }}
                     </span>
                     <span
-                      class="rounded bg-accent px-2 py-0.5 text-xs text-muted-foreground dark:bg-accent dark:text-muted-foreground"
+                      class="rounded bg-accent px-2 py-0.5 text-xs text-muted-foreground"
                     >
                       {{ rule.beta_token }}
                     </span>
@@ -984,7 +984,7 @@
                         v-for="pattern in commonModelPatterns"
                         :key="pattern"
                         type="button"
-                        class="rounded border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-border dark:text-muted-foreground dark:hover:border-primary-700 dark:hover:bg-primary-900/30 dark:hover:text-primary-300"
+                        class="rounded border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:border-primary-700 dark:hover:bg-primary-900/30 dark:hover:text-primary-300"
                         @click="addQuickPattern(rule, pattern)"
                       >
                         {{ pattern }}
@@ -1033,7 +1033,7 @@
 
                 <!-- Save Button -->
                 <div
-                  class="flex justify-end border-t border-border pt-4 dark:border-border"
+                  class="flex justify-end border-t border-border pt-4"
                 >
                   <button
                     type="button"
@@ -1072,7 +1072,7 @@
           <!-- OpenAI Fast/Flex Policy Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.openaiFastPolicy.title") }}
@@ -1085,7 +1085,7 @@
               <!-- Empty state -->
               <div
                 v-if="openaiFastPolicyForm.rules.length === 0"
-                class="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground dark:border-border dark:text-muted-foreground"
+                class="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground"
               >
                 {{ t("admin.settings.openaiFastPolicy.empty") }}
               </div>
@@ -1094,7 +1094,7 @@
               <div
                 v-for="(rule, ruleIndex) in openaiFastPolicyForm.rules"
                 :key="ruleIndex"
-                class="rounded-lg border border-border p-4 dark:border-border"
+                class="rounded-lg border border-border p-4"
               >
                 <div class="mb-3 flex items-center justify-between">
                   <span
@@ -1356,7 +1356,7 @@
           <!-- Registration Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.registration.title") }}
@@ -1383,7 +1383,7 @@
 
               <!-- Email Verification -->
               <div
-                class="flex items-center justify-between border-t border-border pt-4 dark:border-border"
+                class="flex items-center justify-between border-t border-border pt-4"
               >
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -1397,7 +1397,7 @@
               </div>
 
               <!-- Email Suffix Whitelist -->
-              <div class="border-t border-border pt-4 dark:border-border">
+              <div class="border-t border-border pt-4">
                 <label class="font-medium text-foreground">{{
                   t("admin.settings.registration.emailSuffixWhitelist")
                 }}</label>
@@ -1407,18 +1407,18 @@
                   }}
                 </p>
                 <div
-                  class="mt-3 rounded-lg border border-border bg-card p-2 dark:border-border dark:bg-accent"
+                  class="mt-3 rounded-lg border border-border bg-card p-2"
                 >
                   <div class="flex flex-wrap items-center gap-2">
                     <span
                       v-for="suffix in registrationEmailSuffixWhitelistTags"
                       :key="suffix"
-                      class="inline-flex items-center gap-1 rounded bg-accent px-2 py-1 text-xs font-mono text-foreground/85 dark:bg-accent dark:text-foreground"
+                      class="inline-flex items-center gap-1 rounded bg-accent px-2 py-1 text-xs font-mono text-foreground/85"
                     >
                       <span>{{ suffix }}</span>
                       <button
                         type="button"
-                        class="rounded-full text-muted-foreground hover:bg-accent hover:text-foreground/85 dark:hover:bg-dark-500 dark:hover:text-white"
+                        class="rounded-full text-muted-foreground hover:bg-accent hover:text-foreground/85 dark:hover:text-white"
                         @click="
                           removeRegistrationEmailSuffixWhitelistTag(suffix)
                         "
@@ -1438,7 +1438,7 @@
                       <input
                         v-model="registrationEmailSuffixWhitelistDraft"
                         type="text"
-                        class="w-full bg-transparent text-sm font-mono text-foreground outline-none placeholder:text-muted-foreground dark:text-foreground dark:placeholder:text-muted-foreground"
+                        class="w-full bg-transparent text-sm font-mono text-foreground outline-none placeholder:text-muted-foreground dark:placeholder:text-muted-foreground"
                         :placeholder="
                           t(
                             'admin.settings.registration.emailSuffixWhitelistPlaceholder',
@@ -1467,7 +1467,7 @@
 
               <!-- Promo Code -->
               <div
-                class="flex items-center justify-between border-t border-border pt-4 dark:border-border"
+                class="flex items-center justify-between border-t border-border pt-4"
               >
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -1482,7 +1482,7 @@
 
               <!-- Invitation Code -->
               <div
-                class="flex items-center justify-between border-t border-border pt-4 dark:border-border"
+                class="flex items-center justify-between border-t border-border pt-4"
               >
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -1497,7 +1497,7 @@
               <!-- Password Reset - Only show when email verification is enabled -->
               <div
                 v-if="form.email_verify_enabled"
-                class="flex items-center justify-between border-t border-border pt-4 dark:border-border"
+                class="flex items-center justify-between border-t border-border pt-4"
               >
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -1512,7 +1512,7 @@
               <!-- Frontend URL - Only show when password reset is enabled -->
               <div
                 v-if="form.email_verify_enabled && form.password_reset_enabled"
-                class="border-t border-border pt-4 dark:border-border"
+                class="border-t border-border pt-4"
               >
                 <label
                   class="mb-2 block text-sm font-medium text-foreground/85"
@@ -1534,7 +1534,7 @@
 
               <!-- TOTP 2FA -->
               <div
-                class="flex items-center justify-between border-t border-border pt-4 dark:border-border"
+                class="flex items-center justify-between border-t border-border pt-4"
               >
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -1562,7 +1562,7 @@
           <!-- API Key IP ACL Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.apiKeyAcl.title") }}
@@ -1589,7 +1589,7 @@
           <!-- Cloudflare Turnstile Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.turnstile.title") }}
@@ -1615,7 +1615,7 @@
               <!-- Turnstile Keys - Only show when enabled -->
               <div
                 v-if="form.turnstile_enabled"
-                class="border-t border-border pt-4 dark:border-border"
+                class="border-t border-border pt-4"
               >
                 <div class="grid grid-cols-1 gap-6">
                   <div>
@@ -1672,7 +1672,7 @@
           <!-- LinuxDo Connect OAuth 登录 -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.linuxdo.title") }}
@@ -1696,7 +1696,7 @@
 
               <div
                 v-if="form.linuxdo_connect_enabled"
-                class="border-t border-border pt-4 dark:border-border"
+                class="border-t border-border pt-4"
               >
                 <div class="grid grid-cols-1 gap-6">
                   <div>
@@ -1773,7 +1773,7 @@
                       </button>
                       <code
                         v-if="linuxdoRedirectUrlSuggestion"
-                        class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground dark:bg-card dark:text-foreground/85"
+                        class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground"
                       >
                         {{ linuxdoRedirectUrlSuggestion }}
                       </code>
@@ -1790,7 +1790,7 @@
           <!-- GitHub / Google 邮箱快捷登录 -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ localText("邮箱快捷登录", "Email OAuth Sign-in") }}
@@ -1806,7 +1806,7 @@
             </div>
             <div class="space-y-6 p-6">
               <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                <div class="rounded-lg border border-border p-4 dark:border-border">
+                <div class="rounded-lg border border-border p-4">
                   <div class="flex items-start justify-between gap-4">
                     <div>
                       <h3 class="font-medium text-foreground">
@@ -1825,7 +1825,7 @@
                   </div>
 
                   <div v-if="form.github_oauth_enabled" class="mt-4 space-y-4">
-                    <div class="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground dark:bg-card dark:text-foreground/85">
+                    <div class="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
                       <template v-if="isZhLocale">
                         开通引导：GitHub Settings → Developer settings →
                         <a
@@ -1895,7 +1895,7 @@
                         </button>
                         <code
                           v-if="githubOAuthRedirectUrlSuggestion"
-                          class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground dark:bg-card dark:text-foreground/85"
+                          class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground"
                         >
                           {{ githubOAuthRedirectUrlSuggestion }}
                         </code>
@@ -1916,7 +1916,7 @@
                   </div>
                 </div>
 
-                <div class="rounded-lg border border-border p-4 dark:border-border">
+                <div class="rounded-lg border border-border p-4">
                   <div class="flex items-start justify-between gap-4">
                     <div>
                       <h3 class="font-medium text-foreground">
@@ -1935,7 +1935,7 @@
                   </div>
 
                   <div v-if="form.google_oauth_enabled" class="mt-4 space-y-4">
-                    <div class="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground dark:bg-card dark:text-foreground/85">
+                    <div class="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
                       {{
                         localText(
                           "开通引导：Google Cloud Console → APIs & Services → OAuth consent screen 完成同意屏幕；Credentials → Create Credentials → OAuth client ID，类型选择 Web application，并把下面地址加入 Authorized redirect URIs。",
@@ -1989,7 +1989,7 @@
                         </button>
                         <code
                           v-if="googleOAuthRedirectUrlSuggestion"
-                          class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground dark:bg-card dark:text-foreground/85"
+                          class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground"
                         >
                           {{ googleOAuthRedirectUrlSuggestion }}
                         </code>
@@ -2016,7 +2016,7 @@
           <!-- WeChat Connect OAuth 登录 -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.wechatConnect.title") }}
@@ -2043,11 +2043,11 @@
 
               <div
                 v-if="form.wechat_connect_enabled"
-                class="space-y-6 border-t border-border pt-4 dark:border-border"
+                class="space-y-6 border-t border-border pt-4"
               >
                 <div class="space-y-4">
                   <div
-                    class="rounded-lg border border-border p-4 dark:border-border"
+                    class="rounded-lg border border-border p-4"
                   >
                     <div class="flex items-start justify-between gap-4">
                       <div>
@@ -2120,7 +2120,7 @@
                   </div>
 
                   <div
-                    class="rounded-lg border border-border p-4 dark:border-border"
+                    class="rounded-lg border border-border p-4"
                   >
                     <div class="flex items-start justify-between gap-4">
                       <div>
@@ -2198,7 +2198,7 @@
                   </div>
 
                   <div
-                    class="rounded-lg border border-border p-4 dark:border-border"
+                    class="rounded-lg border border-border p-4"
                   >
                     <div class="flex items-start justify-between gap-4">
                       <div>
@@ -2326,7 +2326,7 @@
                       </button>
                       <code
                         v-if="wechatRedirectUrlSuggestion"
-                        class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground dark:bg-card dark:text-foreground/85"
+                        class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground"
                       >
                         {{ wechatRedirectUrlSuggestion }}
                       </code>
@@ -2358,7 +2358,7 @@
           <!-- DingTalk Connect OAuth 登录 -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.dingtalk.title") }}
@@ -2382,7 +2382,7 @@
 
               <div
                 v-if="form.dingtalk_connect_enabled"
-                class="border-t border-border pt-4 dark:border-border"
+                class="border-t border-border pt-4"
               >
                 <div class="grid grid-cols-1 gap-6">
                   <div>
@@ -2453,7 +2453,7 @@
                   </div>
 
                   <!-- Corp Restriction Policy -->
-                  <div class="border-t border-border pt-4 dark:border-border">
+                  <div class="border-t border-border pt-4">
                     <label class="mb-2 block text-sm font-medium text-foreground/85">
                       {{ t("admin.settings.dingtalk.corpPolicy.label") }}
                     </label>
@@ -2646,7 +2646,7 @@
           <!-- Generic OIDC OAuth 登录 -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.oidc.title") }}
@@ -2670,7 +2670,7 @@
 
               <div
                 v-if="form.oidc_connect_enabled"
-                class="space-y-6 border-t border-border pt-4 dark:border-border"
+                class="space-y-6 border-t border-border pt-4"
               >
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   <div>
@@ -2873,7 +2873,7 @@
                       </button>
                       <code
                         v-if="oidcRedirectUrlSuggestion"
-                        class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground dark:bg-card dark:text-foreground/85"
+                        class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground"
                       >
                         {{ oidcRedirectUrlSuggestion }}
                       </code>
@@ -2958,7 +2958,7 @@
 
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   <div
-                    class="flex items-center justify-between rounded border border-border px-4 py-3 dark:border-border"
+                    class="flex items-center justify-between rounded border border-border px-4 py-3"
                   >
                     <div>
                       <label class="font-medium text-foreground">
@@ -2972,7 +2972,7 @@
                   </div>
 
                   <div
-                    class="flex items-center justify-between rounded border border-border px-4 py-3 dark:border-border"
+                    class="flex items-center justify-between rounded border border-border px-4 py-3"
                   >
                     <div>
                       <label class="font-medium text-foreground">
@@ -2986,7 +2986,7 @@
                   </div>
 
                   <div
-                    class="flex items-center justify-between rounded border border-border px-4 py-3 dark:border-border"
+                    class="flex items-center justify-between rounded border border-border px-4 py-3"
                   >
                     <div>
                       <label class="font-medium text-foreground">
@@ -3059,7 +3059,7 @@
           <!-- Default Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.defaults.title") }}
@@ -3125,7 +3125,7 @@
                 </div>
               </div>
 
-              <div class="border-t border-border pt-4 dark:border-border">
+              <div class="border-t border-border pt-4">
                 <div class="mb-3 flex items-center justify-between">
                   <div>
                     <label class="font-medium text-foreground">
@@ -3149,7 +3149,7 @@
 
                 <div
                   v-if="form.default_subscriptions.length === 0"
-                  class="rounded border border-dashed border-border px-4 py-3 text-sm text-muted-foreground dark:border-border dark:text-muted-foreground"
+                  class="rounded border border-dashed border-border px-4 py-3 text-sm text-muted-foreground"
                 >
                   {{ t("admin.settings.defaults.defaultSubscriptionsEmpty") }}
                 </div>
@@ -3158,7 +3158,7 @@
                   <div
                     v-for="(item, index) in form.default_subscriptions"
                     :key="`default-sub-${index}`"
-                    class="grid grid-cols-1 gap-3 rounded border border-border p-3 md:grid-cols-[1fr_160px_auto] dark:border-border"
+                    class="grid grid-cols-1 gap-3 rounded border border-border p-3 md:grid-cols-[1fr_160px_auto]"
                   >
                     <div>
                       <label
@@ -3264,7 +3264,7 @@
               </div>
 
               <!-- ★ 新增：系统全局默认平台限额矩阵 -->
-              <div class="border-t border-border pt-4 dark:border-border">
+              <div class="border-t border-border pt-4">
                 <div class="mb-3">
                   <label class="font-medium text-foreground">
                     {{ t("admin.settings.defaults.defaultPlatformQuotas") }}
@@ -3332,7 +3332,7 @@
 
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.authSourceDefaults.title") }}
@@ -3343,7 +3343,7 @@
             </div>
             <div class="space-y-6 p-6">
               <div
-                class="flex items-center justify-between rounded border border-border px-4 py-3 dark:border-border"
+                class="flex items-center justify-between rounded border border-border px-4 py-3"
               >
                 <div>
                   <label class="font-medium text-foreground">
@@ -3360,7 +3360,7 @@
                 <div
                   v-for="authSource in authSourceDefaultsMeta"
                   :key="authSource.source"
-                  class="rounded-md border border-border p-4 dark:border-border"
+                  class="rounded-md border border-border p-4"
                 >
                   <div class="flex items-center justify-between gap-4">
                     <div>
@@ -3382,7 +3382,7 @@
                   <div
                     v-if="authSourceDefaults[authSource.source].grant_on_signup"
                     :data-testid="`auth-source-${authSource.source}-panel`"
-                    class="mt-4 space-y-4 border-t border-border pt-4 dark:border-border"
+                    class="mt-4 space-y-4 border-t border-border pt-4"
                   >
                     <p class="text-sm text-muted-foreground">
                       {{ t("admin.settings.authSourceDefaults.enabledHint") }}
@@ -3425,7 +3425,7 @@
                     </div>
 
                     <div
-                      class="flex items-center justify-between rounded border border-border px-4 py-3 dark:border-border"
+                      class="flex items-center justify-between rounded border border-border px-4 py-3"
                     >
                       <div>
                         <label
@@ -3477,7 +3477,7 @@
                         authSourceDefaults[authSource.source].subscriptions
                           .length === 0
                       "
-                      class="rounded border border-dashed border-border px-4 py-3 text-sm text-muted-foreground dark:border-border dark:text-muted-foreground"
+                      class="rounded border border-dashed border-border px-4 py-3 text-sm text-muted-foreground"
                     >
                       {{ t("admin.settings.authSourceDefaults.noSourceSubscriptions") }}
                     </div>
@@ -3488,7 +3488,7 @@
                           authSource.source
                         ].subscriptions"
                         :key="`${authSource.source}-sub-${index}`"
-                        class="grid grid-cols-1 gap-3 rounded border border-border p-3 md:grid-cols-[1fr_160px_auto] dark:border-border"
+                        class="grid grid-cols-1 gap-3 rounded border border-border p-3 md:grid-cols-[1fr_160px_auto]"
                       >
                         <div>
                           <label
@@ -3602,7 +3602,7 @@
                     </div>
 
                     <!-- ★ 新增：auth source 平台限额覆盖区块 -->
-                    <div class="border-t border-border pt-4 dark:border-border">
+                    <div class="border-t border-border pt-4">
                       <div class="mb-3">
                         <label class="font-medium text-foreground">
                           {{ t("admin.settings.authSourceDefaults.platformQuotasOverride") }}
@@ -3675,7 +3675,7 @@
           <!-- Claude Code Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.claudeCode.title") }}
@@ -3727,7 +3727,7 @@
           <!-- Gateway Scheduling Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.scheduling.title") }}
@@ -3772,7 +3772,7 @@
           <!-- Gateway Forwarding Behavior -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.gatewayForwarding.title") }}
@@ -3966,7 +3966,7 @@
           <!-- Web Search Emulation -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.webSearchEmulation.title") }}
@@ -4010,7 +4010,7 @@
 
                 <div
                   v-if="webSearchConfig.providers.length === 0"
-                  class="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground dark:border-border"
+                  class="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground"
                 >
                   {{ t("admin.settings.webSearchEmulation.noProviders") }}
                 </div>
@@ -4087,7 +4087,7 @@
                   <!-- Expanded content -->
                   <div
                     v-if="expandedProviders[pIdx]"
-                    class="space-y-3 border-t border-border px-4 pb-4 pt-3 dark:border-border"
+                    class="space-y-3 border-t border-border px-4 pb-4 pt-3"
                   >
                     <!-- API Key with inline show/copy -->
                     <div>
@@ -4118,7 +4118,7 @@
                         >
                           <button
                             type="button"
-                            class="rounded p-1 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground/85"
+                            class="rounded p-1 text-muted-foreground hover:text-muted-foreground/85"
                             :title="
                               apiKeyVisible[pIdx]
                                 ? t(
@@ -4167,7 +4167,7 @@
                           </button>
                           <button
                             type="button"
-                            class="rounded p-1 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground/85"
+                            class="rounded p-1 text-muted-foreground hover:text-muted-foreground/85"
                             :class="{
                               'opacity-30 cursor-not-allowed':
                                 !provider.api_key,
@@ -4253,7 +4253,7 @@
                           provider.quota_limit != null &&
                           provider.quota_limit > 0
                         "
-                        class="flex-1 rounded-full bg-accent dark:bg-accent"
+                        class="flex-1 rounded-full bg-accent"
                         style="height: 6px"
                       >
                         <div
@@ -4323,7 +4323,7 @@
             @click.self="wsTestDialogOpen = false"
           >
             <div
-              class="mx-4 w-full max-w-lg rounded-md bg-card p-6  dark:bg-card"
+              class="mx-4 w-full max-w-lg rounded-md bg-card p-6 "
             >
               <h3
                 class="mb-4 text-lg font-semibold text-foreground"
@@ -4356,7 +4356,7 @@
               <!-- Test results -->
               <div
                 v-if="wsTestResult"
-                class="mt-4 max-h-80 overflow-y-auto rounded-lg bg-muted p-4 dark:bg-accent"
+                class="mt-4 max-h-80 overflow-y-auto rounded-lg bg-muted p-4"
               >
                 <p
                   class="mb-2 text-sm font-medium text-foreground/85"
@@ -4374,7 +4374,7 @@
                 <div
                   v-for="(r, rIdx) in wsTestResult.results"
                   :key="rIdx"
-                  class="mt-2 border-t border-border pt-2 first:mt-0 first:border-0 first:pt-0 dark:border-border"
+                  class="mt-2 border-t border-border pt-2 first:mt-0 first:border-0 first:pt-0"
                 >
                   <a
                     :href="r.url"
@@ -4401,7 +4401,7 @@
 
         <!-- Usage Records Settings -->
         <div class="card">
-          <div class="border-b border-border px-6 py-4 dark:border-border">
+          <div class="border-b border-border px-6 py-4">
             <h2 class="text-lg font-semibold text-foreground">
               {{ t('admin.settings.usageRecords.title') }}
             </h2>
@@ -4435,7 +4435,7 @@
           <!-- Site Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.site.title") }}
@@ -4516,7 +4516,7 @@
               </div>
 
               <!-- Global Table Preferences -->
-              <div class="border-t border-border pt-4 dark:border-border">
+              <div class="border-t border-border pt-4">
                 <h3 class="text-sm font-medium text-foreground">
                   {{ t("admin.settings.site.tablePreferencesTitle") }}
                 </h3>
@@ -4578,7 +4578,7 @@
                   <div
                     v-for="(ep, index) in form.custom_endpoints"
                     :key="index"
-                    class="rounded-lg border border-border p-4 dark:border-border"
+                    class="rounded-lg border border-border p-4"
                   >
                     <div class="mb-3 flex items-center justify-between">
                       <span
@@ -4674,7 +4674,7 @@
 
                 <button
                   type="button"
-                  class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-border dark:text-muted-foreground dark:hover:border-primary-500 dark:hover:text-primary-400"
+                  class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:border-primary-400 hover:text-primary-600 dark:hover:border-primary-500 dark:hover:text-primary-400"
                   @click="addEndpoint"
                 >
                   <svg
@@ -4771,7 +4771,7 @@
 
               <!-- Hide CCS Import Button -->
               <div
-                class="flex items-center justify-between border-t border-border pt-4 dark:border-border"
+                class="flex items-center justify-between border-t border-border pt-4"
               >
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -4789,7 +4789,7 @@
           <!-- Custom Menu Items -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.customMenu.title") }}
@@ -4803,7 +4803,7 @@
               <div
                 v-for="(item, index) in form.custom_menu_items"
                 :key="item.id || index"
-                class="rounded-lg border border-border p-4 dark:border-border"
+                class="rounded-lg border border-border p-4"
               >
                 <div class="mb-3 flex items-center justify-between">
                   <span
@@ -4818,7 +4818,7 @@
                     <button
                       v-if="index > 0"
                       type="button"
-                      class="rounded p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground dark:hover:bg-dark-700"
+                      class="rounded p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground dark:hover:bg-secondary"
                       :title="t('admin.settings.customMenu.moveUp')"
                       @click="moveMenuItem(index, -1)"
                     >
@@ -4840,7 +4840,7 @@
                     <button
                       v-if="index < form.custom_menu_items.length - 1"
                       type="button"
-                      class="rounded p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground dark:hover:bg-dark-700"
+                      class="rounded p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground dark:hover:bg-secondary"
                       :title="t('admin.settings.customMenu.moveDown')"
                       @click="moveMenuItem(index, 1)"
                     >
@@ -4956,7 +4956,7 @@
               <!-- Add button -->
               <button
                 type="button"
-                class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-border dark:text-muted-foreground dark:hover:border-primary-500 dark:hover:text-primary-400"
+                class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary-400 hover:text-primary-600 dark:hover:border-primary-500 dark:hover:text-primary-400"
                 @click="addMenuItem"
               >
                 <svg
@@ -4982,7 +4982,7 @@
 	        <!-- Tab: Login Agreement -->
 	        <div v-show="activeTab === 'agreement'" class="space-y-6">
 	          <div class="card">
-	            <div class="border-b border-border px-6 py-4 dark:border-border">
+	            <div class="border-b border-border px-6 py-4">
 	              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
 	                <div>
 	                  <h2 class="text-lg font-semibold text-foreground">
@@ -5012,14 +5012,14 @@
 	                  <label class="mb-2 block text-sm font-medium text-foreground/85">
 	                    {{ localText("展示形式", "Display mode") }}
 	                  </label>
-	                  <div class="grid grid-cols-2 gap-2 rounded-lg bg-accent p-1 dark:bg-accent">
+	                  <div class="grid grid-cols-2 gap-2 rounded-lg bg-accent p-1">
                     <button
                       type="button"
                       class="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition"
                       :class="
                         form.login_agreement_mode === 'modal'
-                          ? 'bg-card text-primary-700 shadow-sm dark:bg-card dark:text-primary-300'
-                          : 'text-muted-foreground hover:text-foreground dark:text-foreground/85 dark:hover:text-foreground'
+                          ? 'bg-card text-primary-700 shadow-sm dark:text-primary-300'
+                          : 'text-muted-foreground hover:text-foreground'
                       "
                       @click="form.login_agreement_mode = 'modal'"
                     >
@@ -5031,8 +5031,8 @@
                       class="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition"
                       :class="
                         form.login_agreement_mode === 'checkbox'
-                          ? 'bg-card text-primary-700 shadow-sm dark:bg-card dark:text-primary-300'
-                          : 'text-muted-foreground hover:text-foreground dark:text-foreground/85 dark:hover:text-foreground'
+                          ? 'bg-card text-primary-700 shadow-sm dark:text-primary-300'
+                          : 'text-muted-foreground hover:text-foreground'
                       "
                       @click="form.login_agreement_mode = 'checkbox'"
                     >
@@ -5093,11 +5093,11 @@
                   <div
                     v-for="(doc, index) in form.login_agreement_documents"
                     :key="doc.id || index"
-                    class="rounded-lg border border-border bg-card p-4 dark:border-border dark:bg-card"
+                    class="rounded-lg border border-border bg-card p-4"
                   >
                     <div class="mb-3 flex items-center justify-between gap-3">
                       <div class="flex min-w-0 items-center gap-3">
-                        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md bg-accent text-foreground/85 dark:bg-accent dark:text-foreground">
+                        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md bg-accent text-foreground/85">
                           <Icon
                             :name="
                               index === 1
@@ -5149,14 +5149,14 @@
                         <label class="mb-1 block text-xs font-medium text-muted-foreground">
                           {{ localText("路由标识", "Route slug") }}
                         </label>
-                        <div class="flex overflow-hidden rounded-lg border border-border bg-card focus-within:border-ring focus-within:ring-1 focus-within:ring-ring dark:border-border dark:bg-card">
-                          <span class="inline-flex flex-shrink-0 items-center border-r border-border bg-muted px-3 text-sm text-muted-foreground dark:border-border dark:bg-card dark:text-muted-foreground">
+                        <div class="flex overflow-hidden rounded-lg border border-border bg-card focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+                          <span class="inline-flex flex-shrink-0 items-center border-r border-border bg-muted px-3 text-sm text-muted-foreground">
                             /legal/
                           </span>
                           <input
                             v-model="doc.id"
                             type="text"
-                            class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-0 dark:text-foreground dark:placeholder:text-dark-500"
+                            class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-0 dark:placeholder:text-muted-foreground"
                             placeholder="usage-policy"
                           />
                         </div>
@@ -5185,7 +5185,7 @@
         <div v-show="activeTab === 'features'" class="space-y-6">
 
         <div class="card">
-          <div class="border-b border-border px-6 py-4 dark:border-border">
+          <div class="border-b border-border px-6 py-4">
             <h2 class="text-lg font-semibold text-foreground">
               {{ t('admin.settings.features.channelMonitor.title') }}
             </h2>
@@ -5235,7 +5235,7 @@
         </div>
 
         <div class="card">
-          <div class="border-b border-border px-6 py-4 dark:border-border">
+          <div class="border-b border-border px-6 py-4">
             <h2 class="text-lg font-semibold text-foreground">
               {{ t('admin.settings.features.availableChannels.title') }}
             </h2>
@@ -5268,7 +5268,7 @@
         </div>
 
         <div class="card">
-          <div class="border-b border-border px-6 py-4 dark:border-border">
+          <div class="border-b border-border px-6 py-4">
             <h2 class="text-lg font-semibold text-foreground">
               {{ t('admin.settings.features.riskControl.title') }}
             </h2>
@@ -5302,7 +5302,7 @@
 
         <!-- Affiliate (邀请返利) feature card -->
         <div class="card">
-          <div class="border-b border-border px-6 py-4 dark:border-border">
+          <div class="border-b border-border px-6 py-4">
             <h2 class="text-lg font-semibold text-foreground">
               {{ t('admin.settings.features.affiliate.title') }}
             </h2>
@@ -5396,7 +5396,7 @@
               </div>
 
               <!-- 专属用户管理 -->
-              <div class="border-t border-border pt-6 dark:border-border">
+              <div class="border-t border-border pt-6">
                 <div class="mb-3 flex items-center justify-between">
                   <div>
                     <h3 class="text-sm font-semibold text-foreground">
@@ -5434,7 +5434,7 @@
                 </div>
 
                 <div class="overflow-hidden rounded-lg border border-border">
-                  <table class="min-w-full divide-y divide-border dark:divide-border">
+                  <table class="min-w-full divide-y divide-border">
                     <thead class="bg-muted">
                       <tr>
                         <th class="px-3 py-2 text-left">
@@ -5451,7 +5451,7 @@
                         <th class="px-3 py-2 text-left text-xs font-medium uppercase text-muted-foreground">{{ t('admin.settings.features.affiliate.customUsers.col.actions') }}</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-border bg-card dark:divide-border dark:bg-card">
+                    <tbody class="divide-y divide-border bg-card">
                       <tr v-if="affiliateState.loading">
                         <td colspan="6" class="px-3 py-6 text-center text-sm text-muted-foreground">
                           {{ t('common.loading') }}
@@ -5537,7 +5537,7 @@
           class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           @click.self="closeAffiliateModal"
         >
-          <div class="w-full max-w-md rounded-lg bg-card p-6  dark:bg-card">
+          <div class="w-full max-w-md rounded-lg bg-card p-6 ">
             <h3 class="mb-4 text-lg font-semibold">
               {{ affiliateModal.mode === 'add' ? t('admin.settings.features.affiliate.modal.addTitle') : t('admin.settings.features.affiliate.modal.editTitle') }}
             </h3>
@@ -5579,7 +5579,7 @@
                       v-for="u in affiliateModal.userResults"
                       :key="u.id"
                       type="button"
-                      class="w-full px-3 py-1.5 text-left text-sm hover:bg-accent dark:hover:bg-dark-800"
+                      class="w-full px-3 py-1.5 text-left text-sm hover:bg-accent dark:hover:bg-card"
                       @click="selectAffiliateUser(u)"
                     >
                       {{ u.email }} <span class="text-xs text-muted-foreground">({{ u.username }})</span>
@@ -5662,7 +5662,7 @@
           class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           @click.self="affiliateBatchModal.open = false"
         >
-          <div class="w-full max-w-md rounded-lg bg-card p-6  dark:bg-card">
+          <div class="w-full max-w-md rounded-lg bg-card p-6 ">
             <h3 class="mb-4 text-lg font-semibold">
               {{ t('admin.settings.features.affiliate.batchModal.title', { count: affiliateState.selected.length }) }}
             </h3>
@@ -5708,7 +5708,7 @@
           <!-- Payment System Settings -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.payment.title") }}
@@ -5781,7 +5781,7 @@
                       t("admin.settings.payment.preview")
                     }}</label>
                     <div
-                      class="rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground dark:border-border dark:bg-card dark:text-foreground/85"
+                      class="rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground"
                     >
                       {{
                         (form.payment_product_name_prefix || "subme") +
@@ -5985,7 +5985,7 @@
                           'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
                           form.payment_cancel_rate_limit_enabled
                             ? 'bg-primary-500'
-                            : 'bg-muted dark:bg-accent',
+                            : 'bg-muted',
                         ]"
                         @click="
                           form.payment_cancel_rate_limit_enabled =
@@ -6012,7 +6012,7 @@
                           'text-sm whitespace-nowrap',
                           form.payment_cancel_rate_limit_enabled
                             ? 'text-foreground/85'
-                            : 'text-muted-foreground dark:text-muted-foreground',
+                            : 'text-muted-foreground',
                         ]"
                         >{{
                           t("admin.settings.payment.cancelRateLimitEvery")
@@ -6037,7 +6037,7 @@
                           'text-sm whitespace-nowrap',
                           form.payment_cancel_rate_limit_enabled
                             ? 'text-foreground/85'
-                            : 'text-muted-foreground dark:text-muted-foreground',
+                            : 'text-muted-foreground',
                         ]"
                         >{{
                           t("admin.settings.payment.cancelRateLimitAllowMax")
@@ -6056,7 +6056,7 @@
                           'text-sm whitespace-nowrap',
                           form.payment_cancel_rate_limit_enabled
                             ? 'text-foreground/85'
-                            : 'text-muted-foreground dark:text-muted-foreground',
+                            : 'text-muted-foreground',
                         ]"
                         >{{
                           t("admin.settings.payment.cancelRateLimitTimes")
@@ -6075,7 +6075,7 @@
                           'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
                           form.payment_alipay_force_qrcode
                             ? 'bg-primary-500'
-                            : 'bg-muted dark:bg-accent',
+                            : 'bg-muted',
                         ]"
                         @click="
                           form.payment_alipay_force_qrcode =
@@ -6112,7 +6112,7 @@
                         'rounded-lg border px-3 py-1.5 text-sm font-medium transition-all',
                         isPaymentTypeEnabled(pt.value)
                           ? 'border-primary-500 bg-primary-500 text-white shadow-sm'
-                          : 'border-border bg-card text-muted-foreground hover:border-border hover:bg-muted dark:border-border dark:bg-card dark:text-foreground/85 dark:hover:border-dark-500',
+                          : 'border-border bg-card text-muted-foreground hover:border-border hover:bg-muted dark:hover:border-dark-500',
                       ]"
                     >
                       {{ pt.label }}
@@ -6220,7 +6220,7 @@
           <!-- SMTP Settings - Only show when email verification is enabled -->
           <div v-if="form.email_verify_enabled" class="card">
             <div
-              class="flex items-center justify-between border-b border-border px-6 py-4 dark:border-border"
+              class="flex items-center justify-between border-b border-border px-6 py-4"
             >
               <div>
                 <h2 class="text-lg font-semibold text-foreground">
@@ -6365,7 +6365,7 @@
 
               <!-- Use TLS Toggle -->
               <div
-                class="flex items-center justify-between border-t border-border pt-4 dark:border-border"
+                class="flex items-center justify-between border-t border-border pt-4"
               >
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -6383,7 +6383,7 @@
           <!-- Send Test Email - Only show when email verification is enabled -->
           <div v-if="form.email_verify_enabled" class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h2 class="text-lg font-semibold text-foreground">
                 {{ t("admin.settings.testEmail.title") }}
@@ -6450,7 +6450,7 @@
           <!-- 订阅到期提醒 -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h3 class="text-base font-medium text-foreground">
                 {{ t("admin.settings.subscriptionExpiryNotify.title") }}
@@ -6481,7 +6481,7 @@
           <!-- Balance Low Notification -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h3 class="text-base font-medium text-foreground">
                 {{ t("admin.settings.balanceNotify.title") }}
@@ -6541,7 +6541,7 @@
           <!-- Account Quota Notification -->
           <div class="card">
             <div
-              class="border-b border-border px-6 py-4 dark:border-border"
+              class="border-b border-border px-6 py-4"
             >
               <h3 class="text-base font-medium text-foreground">
                 {{ t("admin.settings.quotaNotify.title") }}
@@ -6580,7 +6580,7 @@
                         class="sr-only peer"
                       />
                       <div
-                        class="w-9 h-5 bg-accent peer-focus:outline-none rounded-full peer dark:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-gray-500 peer-checked:bg-primary-600"
+                        class="w-9 h-5 bg-accent peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-gray-500 peer-checked:bg-primary-600"
                       ></div>
                     </label>
                     <input

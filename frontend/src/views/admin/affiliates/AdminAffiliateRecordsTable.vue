@@ -349,7 +349,7 @@ const UserCell = defineComponent({
         type: cellProps.clickable ? 'button' : undefined,
         onClick: cellProps.clickable ? () => emit('open', cellProps.id) : undefined,
       }, cellProps.email || '-'),
-      h('div', { class: 'max-w-56 truncate text-sm text-muted-foreground dark:text-dark-400' }, cellProps.username || '-'),
+      h('div', { class: 'max-w-56 truncate text-sm text-muted-foreground' }, cellProps.username || '-'),
     ])
   },
 })
@@ -376,7 +376,7 @@ const NullableAmountText = defineComponent({
     return () => {
       const value = amountProps.value
       if (value === null || value === undefined) {
-        return h('span', { class: 'text-sm text-muted-foreground dark:text-dark-500' }, '-')
+        return h('span', { class: 'text-sm text-muted-foreground' }, '-')
       }
       return h(AmountText, { value })
     }
@@ -390,8 +390,8 @@ const OverviewStat = defineComponent({
     mono: { type: Boolean, default: false },
   },
   setup(statProps) {
-    return () => h('div', { class: 'rounded-lg border border-border bg-white p-3  dark:bg-dark-900' }, [
-      h('div', { class: 'text-sm text-muted-foreground dark:text-dark-400' }, statProps.label),
+    return () => h('div', { class: 'rounded-lg border border-border bg-white p-3 ' }, [
+      h('div', { class: 'text-sm text-muted-foreground' }, statProps.label),
       h('div', {
         class: statProps.mono
           ? 'mt-1 font-mono text-base font-semibold text-foreground dark:text-white'

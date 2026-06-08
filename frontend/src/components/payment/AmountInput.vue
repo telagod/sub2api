@@ -14,7 +14,7 @@
             'rounded-md border-2 px-4 py-3 text-center font-medium transition-colors',
             modelValue === amt
               ? 'border-primary-300/50 bg-secondary text-primary-200 '
-              : 'border-border bg-card text-foreground/85 hover:border-dark-600',
+              : 'border-border bg-card text-foreground/85 hover:border-border',
           ]"
           @click="selectAmount(amt)"
         >

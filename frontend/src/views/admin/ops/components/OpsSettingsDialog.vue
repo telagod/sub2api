@@ -431,7 +431,7 @@ async function saveAllSettings() {
       </div>
 
       <!-- 高级设置 -->
-      <details class="rounded-2xl bg-card dark:bg-dark-700/50">
+      <details class="rounded-2xl bg-card/50">
         <summary class="cursor-pointer p-4 text-sm font-semibold text-foreground dark:text-white">
           {{ t('admin.ops.settings.advancedSettings') }}
         </summary>

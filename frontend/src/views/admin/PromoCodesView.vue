@@ -98,13 +98,13 @@
           </template>
 
           <template #cell-expires_at="{ value }">
-            <span class="text-sm text-muted-foreground dark:text-dark-400">
+            <span class="text-sm text-muted-foreground">
               {{ value ? formatDateTime(value) : t('admin.promo.neverExpires') }}
             </span>
           </template>
 
           <template #cell-created_at="{ value }">
-            <span class="text-sm text-muted-foreground dark:text-dark-400">
+            <span class="text-sm text-muted-foreground">
               {{ formatDateTime(value) }}
             </span>
           </template>
@@ -127,7 +127,7 @@
               </button>
               <button
                 @click="handleEdit(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground/85 dark:hover:bg-dark-600 dark:hover:text-foreground/75"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground/85/75"
                 :title="t('common.edit')"
               >
                 <Icon name="edit" size="sm" />
@@ -330,7 +330,7 @@
         <div
           v-for="usage in usages"
           :key="usage.id"
-          class="flex items-center justify-between rounded-lg border border-border p-3 dark:border-dark-600"
+          class="flex items-center justify-between rounded-lg border border-border p-3"
         >
           <div class="flex items-center gap-3">
             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10">

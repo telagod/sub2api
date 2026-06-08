@@ -275,7 +275,7 @@ function getDaysRemainingClass(expiresAt: string): string {
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
   if (days <= 3) return 'text-red-400'
   if (days <= 7) return 'text-orange-600 dark:text-orange-400'
-  return 'text-gray-500 dark:text-dark-400'
+  return 'text-gray-500'
 }
 
 function toggleTooltip() {

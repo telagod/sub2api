@@ -209,7 +209,7 @@ const statusClass = (status: string) => {
     running: 'bg-sky-500/10 text-sky-400 dark:bg-blue-500/20 dark:text-blue-200',
     succeeded: 'bg-emerald-500/10 text-emerald-400 dark:bg-emerald-500/20 dark:text-emerald-200',
     failed: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200',
-    canceled: 'bg-gray-200 text-gray-600 dark:bg-dark-600 dark:text-gray-300'
+    canceled: 'bg-gray-200 text-gray-600 dark:text-gray-300'
   }
   return map[status] || 'bg-gray-100 text-gray-600'
 }

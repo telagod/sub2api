@@ -49,7 +49,7 @@
               <div class="absolute left-0 top-0 bottom-0 w-1 rounded-full bg-foreground"></div>
               <div class="pl-6">
                 <div
-                  class="markdown-body prose prose-sm max-w-none dark:prose-invert"
+                  class="markdown-body prose prose-sm max-w-none"
                   v-html="renderedContent"
                 ></div>
               </div>

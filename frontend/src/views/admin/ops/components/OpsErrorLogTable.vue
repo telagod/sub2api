@@ -301,11 +301,11 @@ function getTypeBadge(log: OpsErrorLog): { label: string; className: string } {
     return { label: t('admin.ops.errorLog.typeRouting'), className: 'bg-purple-50 text-purple-700 ring-purple-600/20 dark:bg-purple-900/30 dark:text-purple-400 dark:ring-purple-500/30' }
   }
   if (phase === 'internal' && owner === 'platform') {
-    return { label: t('admin.ops.errorLog.typeInternal'), className: 'bg-gray-100 text-gray-800 ring-gray-600/20 dark:bg-dark-700 dark:text-gray-200 dark:ring-dark-500/40' }
+    return { label: t('admin.ops.errorLog.typeInternal'), className: 'bg-gray-100 text-gray-800 ring-gray-600/20 dark:text-gray-200 dark:ring-dark-500/40' }
   }
 
     const fallback = phase || owner || t('common.unknown')
-    return { label: fallback, className: 'bg-gray-50 text-gray-700 ring-gray-600/10 dark:bg-dark-900 dark:text-gray-300 dark:ring-dark-700' }
+    return { label: fallback, className: 'bg-gray-50 text-gray-700 ring-gray-600/10 dark:text-gray-300 dark:ring-dark-700' }
 }
 
 interface Props {

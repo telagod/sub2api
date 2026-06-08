@@ -165,7 +165,7 @@
 
       <template #table>
         <!-- Tab 切换栏 -->
-        <div v-if="errorViewEnabled" class="mb-0 flex gap-2 border-b border-border px-4 pt-3 dark:border-dark-700">
+        <div v-if="errorViewEnabled" class="mb-0 flex gap-2 border-b border-border px-4 pt-3">
           <button class="tab" :class="{ 'tab-active': activeTab === 'usage' }" @click="activeTab = 'usage'">
             {{ t('usage.tabs.usage') }}
           </button>
@@ -302,12 +302,12 @@
                 @mouseleave="hideTokenTooltip"
               >
                 <div
-                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-sky-500/10 dark:bg-accent dark:group-hover:bg-blue-900/50"
+                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-sky-500/10 dark:group-hover:bg-blue-900/50"
                 >
                   <Icon
                     name="infoCircle"
                     size="xs"
-                    class="text-muted-foreground group-hover:text-blue-500 dark:text-muted-foreground dark:group-hover:text-blue-400"
+                    class="text-muted-foreground group-hover:text-blue-500 dark:group-hover:text-blue-400"
                   />
                 </div>
               </div>
@@ -326,12 +326,12 @@
                 @mouseleave="hideTooltip"
               >
                 <div
-                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-sky-500/10 dark:bg-accent dark:group-hover:bg-blue-900/50"
+                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-sky-500/10 dark:group-hover:bg-blue-900/50"
                 >
                   <Icon
                     name="infoCircle"
                     size="xs"
-                    class="text-muted-foreground group-hover:text-blue-500 dark:text-muted-foreground dark:group-hover:text-blue-400"
+                    class="text-muted-foreground group-hover:text-blue-500 dark:group-hover:text-blue-400"
                   />
                 </div>
               </div>
@@ -411,7 +411,7 @@
       }"
     >
       <div
-        class="whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2.5 text-xs text-white shadow-xl dark:border-border dark:bg-card"
+        class="whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2.5 text-xs text-white shadow-xl"
       >
         <div class="space-y-1.5">
           <!-- Token Breakdown -->
@@ -494,7 +494,7 @@
       }"
     >
       <div
-        class="whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2.5 text-xs text-white shadow-xl dark:border-border dark:bg-card"
+        class="whitespace-nowrap rounded-lg border border-border bg-background px-3 py-2.5 text-xs text-white shadow-xl"
       >
         <div class="space-y-1.5">
           <!-- Cost Breakdown -->
@@ -783,7 +783,7 @@ const getRequestTypeBadgeClass = (log: UsageLog): string => {
   const requestType = resolveUsageRequestType(log)
   if (requestType === 'ws_v2') return 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200'
   if (requestType === 'stream') return 'bg-sky-500/10 text-sky-400 dark:bg-blue-900 dark:text-blue-200'
-  if (requestType === 'sync') return 'bg-muted text-foreground dark:bg-accent text-foreground/85'
+  if (requestType === 'sync') return 'bg-muted text-foreground text-foreground/85'
   return 'bg-amber-500/10 text-amber-400 dark:bg-amber-900 dark:text-amber-200'
 }
 

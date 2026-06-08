@@ -109,7 +109,7 @@
           </template>
 
           <template #cell-created_at="{ value }">
-            <span class="text-sm text-muted-foreground dark:text-dark-400">{{ formatDateTime(value) }}</span>
+            <span class="text-sm text-muted-foreground">{{ formatDateTime(value) }}</span>
           </template>
 
           <template #cell-actions="{ row }">
@@ -123,7 +123,7 @@
               </button>
               <button
                 @click="openEditDialog(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground/85 dark:hover:bg-dark-600 dark:hover:text-foreground/75"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground/85/75"
                 :title="t('common.edit')"
               >
                 <Icon name="edit" size="sm" />
