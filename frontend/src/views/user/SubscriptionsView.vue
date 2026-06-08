@@ -9,7 +9,7 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else-if="subscriptions.length === 0" class="card p-12 text-center">
+      <Card v-else-if="subscriptions.length === 0"><CardContent class="p-12 text-center">
         <div
           class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
         >
@@ -21,7 +21,7 @@
         <p class="text-muted-foreground">
           {{ t('userSubscriptions.noActiveSubscriptionsDesc') }}
         </p>
-      </div>
+      </CardContent></Card>
 
       <!-- Subscriptions Grid -->
       <div v-else class="grid gap-6 lg:grid-cols-2">
@@ -243,6 +243,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'

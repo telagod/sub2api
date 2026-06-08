@@ -287,9 +287,6 @@ import type { BackupS3Config, BackupScheduleConfig, BackupRecord } from '@/api/a
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 const { t } = useI18n()
 const appStore = useAppStore()

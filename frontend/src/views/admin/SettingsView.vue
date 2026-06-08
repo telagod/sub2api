@@ -47,18 +47,16 @@
         <!-- Tab: Security — Admin API Key -->
         <div v-show="activeTab === 'security'" class="space-y-6">
           <!-- Admin API Key Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.adminApiKey.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.adminApiKey.description") }}
-              </p>
-            </div>
-            <div class="space-y-4 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-4">
               <!-- Security Warning -->
               <div
                 class="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4"
@@ -94,11 +92,11 @@
                 <span class="text-muted-foreground">
                   {{ t("admin.settings.adminApiKey.notConfigured") }}
                 </span>
-                <button
+                <Button
                   type="button"
                   @click="createAdminApiKey"
                   :disabled="adminApiKeyOperating"
-                  class="btn btn-primary btn-sm"
+                  size="sm"
                 >
                   <svg
                     v-if="adminApiKeyOperating"
@@ -125,7 +123,7 @@
                       ? t("admin.settings.adminApiKey.creating")
                       : t("admin.settings.adminApiKey.create")
                   }}
-                </button>
+                </Button>
               </div>
 
               <!-- Key Exists -->
@@ -144,26 +142,26 @@
                     </code>
                   </div>
                   <div class="flex gap-2">
-                    <button
+                    <Button
                       type="button"
                       @click="regenerateAdminApiKey"
                       :disabled="adminApiKeyOperating"
-                      class="btn btn-secondary btn-sm"
+                  variant="secondary" size="sm"
                     >
                       {{
                         adminApiKeyOperating
                           ? t("admin.settings.adminApiKey.regenerating")
                           : t("admin.settings.adminApiKey.regenerate")
                       }}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
                       @click="deleteAdminApiKey"
                       :disabled="adminApiKeyOperating"
-                      class="btn btn-secondary btn-sm text-red-400 hover:text-red-300"
+                  variant="secondary" size="sm" class="text-red-400 hover:text-red-300"
                     >
                       {{ t("admin.settings.adminApiKey.delete") }}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -183,39 +181,37 @@
                     >
                       {{ newAdminApiKey }}
                     </code>
-                    <button
+                    <Button
                       type="button"
                       @click="copyNewKey"
-                      class="btn btn-primary btn-sm flex-shrink-0"
+                  size="sm" class="flex-shrink-0"
                     >
                       {{ t("admin.settings.adminApiKey.copyKey") }}
-                    </button>
+                    </Button>
                   </div>
                   <p class="text-xs text-emerald-400">
                     {{ t("admin.settings.adminApiKey.usage") }}
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
         <!-- /Tab: Security — Admin API Key -->
 
         <!-- Tab: Gateway -->
         <div v-show="activeTab === 'gateway'" class="space-y-6">
           <!-- Overload Cooldown (529) Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.overloadCooldown.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.overloadCooldown.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <div
                 v-if="overloadCooldownLoading"
                 class="flex items-center gap-2 text-muted-foreground"
@@ -236,7 +232,7 @@
                       {{ t("admin.settings.overloadCooldown.enabledHint") }}
                     </p>
                   </div>
-                  <Toggle v-model="overloadCooldownForm.enabled" />
+                  <Switch v-model="overloadCooldownForm.enabled" />
                 </div>
 
                 <div
@@ -267,11 +263,11 @@
                 <div
                   class="flex justify-end border-t border-border pt-4 dark:border-border"
                 >
-                  <button
+                  <Button
                     type="button"
                     @click="saveOverloadCooldownSettings"
                     :disabled="overloadCooldownSaving"
-                    class="btn btn-primary btn-sm"
+                  size="sm"
                   >
                     <svg
                       v-if="overloadCooldownSaving"
@@ -298,25 +294,23 @@
                         ? t("common.saving")
                         : t("common.save")
                     }}
-                  </button>
+                  </Button>
                 </div>
               </template>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Rate Limit Cooldown (429) Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.rateLimit429Cooldown.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.rateLimit429Cooldown.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <div
                 v-if="rateLimit429CooldownLoading"
                 class="flex items-center gap-2 text-muted-foreground"
@@ -337,7 +331,7 @@
                       {{ t("admin.settings.rateLimit429Cooldown.enabledHint") }}
                     </p>
                   </div>
-                  <Toggle v-model="rateLimit429CooldownForm.enabled" />
+                  <Switch v-model="rateLimit429CooldownForm.enabled" />
                 </div>
 
                 <div
@@ -374,11 +368,11 @@
                 <div
                   class="flex justify-end border-t border-border pt-4 dark:border-border"
                 >
-                  <button
+                  <Button
                     type="button"
                     @click="saveRateLimit429CooldownSettings"
                     :disabled="rateLimit429CooldownSaving"
-                    class="btn btn-primary btn-sm"
+                  size="sm"
                   >
                     <svg
                       v-if="rateLimit429CooldownSaving"
@@ -405,25 +399,23 @@
                         ? t("common.saving")
                         : t("common.save")
                     }}
-                  </button>
+                  </Button>
                 </div>
               </template>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Stream Timeout Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.streamTimeout.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.streamTimeout.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <!-- Loading State -->
               <div
                 v-if="streamTimeoutLoading"
@@ -446,7 +438,7 @@
                       {{ t("admin.settings.streamTimeout.enabledHint") }}
                     </p>
                   </div>
-                  <Toggle v-model="streamTimeoutForm.enabled" />
+                  <Switch v-model="streamTimeoutForm.enabled" />
                 </div>
 
                 <!-- Settings - Only show when enabled -->
@@ -554,11 +546,11 @@
                 <div
                   class="flex justify-end border-t border-border pt-4 dark:border-border"
                 >
-                  <button
+                  <Button
                     type="button"
                     @click="saveStreamTimeoutSettings"
                     :disabled="streamTimeoutSaving"
-                    class="btn btn-primary btn-sm"
+                  size="sm"
                   >
                     <svg
                       v-if="streamTimeoutSaving"
@@ -585,25 +577,23 @@
                         ? t("common.saving")
                         : t("common.save")
                     }}
-                  </button>
+                  </Button>
                 </div>
               </template>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Request Rectifier Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.rectifier.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.rectifier.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <!-- Loading State -->
               <div
                 v-if="rectifierLoading"
@@ -626,7 +616,7 @@
                       {{ t("admin.settings.rectifier.enabledHint") }}
                     </p>
                   </div>
-                  <Toggle v-model="rectifierForm.enabled" />
+                  <Switch v-model="rectifierForm.enabled" />
                 </div>
 
                 <!-- Sub-toggles (only show when master is enabled) -->
@@ -649,7 +639,7 @@
                         }}
                       </p>
                     </div>
-                    <Toggle
+                    <Switch
                       v-model="rectifierForm.thinking_signature_enabled"
                     />
                   </div>
@@ -667,7 +657,7 @@
                         {{ t("admin.settings.rectifier.thinkingBudgetHint") }}
                       </p>
                     </div>
-                    <Toggle v-model="rectifierForm.thinking_budget_enabled" />
+                    <Switch v-model="rectifierForm.thinking_budget_enabled" />
                   </div>
 
                   <!-- API Key Signature Rectifier -->
@@ -683,7 +673,7 @@
                         {{ t("admin.settings.rectifier.apikeySignatureHint") }}
                       </p>
                     </div>
-                    <Toggle v-model="rectifierForm.apikey_signature_enabled" />
+                    <Switch v-model="rectifierForm.apikey_signature_enabled" />
                   </div>
 
                   <!-- Custom Patterns (only when apikey_signature_enabled) -->
@@ -717,7 +707,7 @@
                           t('admin.settings.rectifier.apikeyPatternPlaceholder')
                         "
                       />
-                      <button
+                      <Button
                         type="button"
                         @click="
                           rectifierForm.apikey_signature_patterns.splice(
@@ -725,7 +715,7 @@
                             1,
                           )
                         "
-                        class="btn btn-ghost btn-xs text-red-400 hover:text-red-300"
+                  variant="ghost" size="sm" class="text-red-400 hover:text-red-300 h-auto px-1.5 py-0.5"
                       >
                         <svg
                           class="h-4 w-4"
@@ -740,15 +730,15 @@
                             d="M6 18L18 6M6 6l12 12"
                           />
                         </svg>
-                      </button>
+                      </Button>
                     </div>
-                    <button
+                    <Button
                       type="button"
                       @click="rectifierForm.apikey_signature_patterns.push('')"
-                      class="btn btn-ghost btn-xs text-primary-600 dark:text-primary-400"
+                  variant="ghost" size="sm" class="text-primary-600 dark:text-primary-400 h-auto px-1.5 py-0.5"
                     >
                       + {{ t("admin.settings.rectifier.addPattern") }}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -756,11 +746,11 @@
                 <div
                   class="flex justify-end border-t border-border pt-4 dark:border-border"
                 >
-                  <button
+                  <Button
                     type="button"
                     @click="saveRectifierSettings"
                     :disabled="rectifierSaving"
-                    class="btn btn-primary btn-sm"
+                  size="sm"
                   >
                     <svg
                       v-if="rectifierSaving"
@@ -785,24 +775,22 @@
                     {{
                       rectifierSaving ? t("common.saving") : t("common.save")
                     }}
-                  </button>
+                  </Button>
                 </div>
               </template>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
           <!-- Beta Policy Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.betaPolicy.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.betaPolicy.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <!-- Loading State -->
               <div
                 v-if="betaPolicyLoading"
@@ -1035,11 +1023,11 @@
                 <div
                   class="flex justify-end border-t border-border pt-4 dark:border-border"
                 >
-                  <button
+                  <Button
                     type="button"
                     @click="saveBetaPolicySettings"
                     :disabled="betaPolicySaving"
-                    class="btn btn-primary btn-sm"
+                  size="sm"
                   >
                     <svg
                       v-if="betaPolicySaving"
@@ -1064,24 +1052,22 @@
                     {{
                       betaPolicySaving ? t("common.saving") : t("common.save")
                     }}
-                  </button>
+                  </Button>
                 </div>
               </template>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
           <!-- OpenAI Fast/Flex Policy Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.openaiFastPolicy.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.openaiFastPolicy.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <!-- Empty state -->
               <div
                 v-if="openaiFastPolicyForm.rules.length === 0"
@@ -1322,10 +1308,10 @@
 
               <!-- Add Rule Button -->
               <div>
-                <button
+                <Button
                   type="button"
                   @click="addOpenAIFastPolicyRule"
-                  class="btn btn-secondary btn-sm inline-flex items-center gap-1"
+                  variant="secondary" size="sm" class="inline-flex items-center gap-1"
                 >
                   <svg
                     class="h-4 w-4"
@@ -1341,31 +1327,29 @@
                     />
                   </svg>
                   {{ t("admin.settings.openaiFastPolicy.addRule") }}
-                </button>
+                </Button>
                 <p class="mt-2 text-xs text-muted-foreground">
                   {{ t("admin.settings.openaiFastPolicy.saveHint") }}
                 </p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
         <!-- /Tab: Gateway -->
 
         <!-- Tab: Security — Registration, Turnstile, LinuxDo -->
         <div v-show="activeTab === 'security'" class="space-y-6">
           <!-- Registration Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.registration.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.registration.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <!-- Enable Registration -->
               <div class="flex items-center justify-between">
                 <div>
@@ -1378,7 +1362,7 @@
                     }}
                   </p>
                 </div>
-                <Toggle v-model="form.registration_enabled" />
+                <Switch v-model="form.registration_enabled" />
               </div>
 
               <!-- Email Verification -->
@@ -1393,7 +1377,7 @@
                     {{ t("admin.settings.registration.emailVerificationHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.email_verify_enabled" />
+                <Switch v-model="form.email_verify_enabled" />
               </div>
 
               <!-- Email Suffix Whitelist -->
@@ -1477,7 +1461,7 @@
                     {{ t("admin.settings.registration.promoCodeHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.promo_code_enabled" />
+                <Switch v-model="form.promo_code_enabled" />
               </div>
 
               <!-- Invitation Code -->
@@ -1492,7 +1476,7 @@
                     {{ t("admin.settings.registration.invitationCodeHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.invitation_code_enabled" />
+                <Switch v-model="form.invitation_code_enabled" />
               </div>
               <!-- Password Reset - Only show when email verification is enabled -->
               <div
@@ -1507,7 +1491,7 @@
                     {{ t("admin.settings.registration.passwordResetHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.password_reset_enabled" />
+                <Switch v-model="form.password_reset_enabled" />
               </div>
               <!-- Frontend URL - Only show when password reset is enabled -->
               <div
@@ -1551,27 +1535,25 @@
                     {{ t("admin.settings.registration.totpKeyNotConfigured") }}
                   </p>
                 </div>
-                <Toggle
+                <Switch
                   v-model="form.totp_enabled"
                   :disabled="!form.totp_encryption_key_configured"
                 />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- API Key IP ACL Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.apiKeyAcl.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.apiKeyAcl.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <div class="flex items-center justify-between gap-4">
                 <div>
                   <label class="font-medium text-foreground">
@@ -1581,24 +1563,22 @@
                     {{ t("admin.settings.apiKeyAcl.trustForwardedIpHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.api_key_acl_trust_forwarded_ip" />
+                <Switch v-model="form.api_key_acl_trust_forwarded_ip" />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Cloudflare Turnstile Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.turnstile.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.turnstile.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <!-- Enable Turnstile -->
               <div class="flex items-center justify-between">
                 <div>
@@ -1609,7 +1589,7 @@
                     {{ t("admin.settings.turnstile.enableTurnstileHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.turnstile_enabled" />
+                <Switch v-model="form.turnstile_enabled" />
               </div>
 
               <!-- Turnstile Keys - Only show when enabled -->
@@ -1666,22 +1646,20 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- LinuxDo Connect OAuth 登录 -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.linuxdo.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.linuxdo.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <div class="flex items-center justify-between">
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -1691,7 +1669,7 @@
                     {{ t("admin.settings.linuxdo.enableHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.linuxdo_connect_enabled" />
+                <Switch v-model="form.linuxdo_connect_enabled" />
               </div>
 
               <div
@@ -1764,13 +1742,13 @@
                     <div
                       class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
                     >
-                      <button
+                      <Button
                         type="button"
-                        class="btn btn-secondary btn-sm w-fit"
+                  variant="secondary" size="sm" class="w-fit"
                         @click="setAndCopyLinuxdoRedirectUrl"
                       >
                         {{ t("admin.settings.linuxdo.quickSetCopy") }}
-                      </button>
+                      </Button>
                       <code
                         v-if="linuxdoRedirectUrlSuggestion"
                         class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground dark:bg-card dark:text-foreground/85"
@@ -1784,27 +1762,25 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- GitHub / Google 邮箱快捷登录 -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ localText("邮箱快捷登录", "Email OAuth Sign-in") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{
                   localText(
                     "开启 GitHub 或 Google 邮箱授权登录后，系统会读取已验证邮箱，存在则直接登录，不存在则自动注册。",
                     "After GitHub or Google email OAuth is enabled, the system reads a verified email, signs in matching users, and auto-registers missing users.",
                   )
                 }}
-              </p>
-            </div>
-            <div class="space-y-6 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-6">
               <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
                 <div class="rounded-lg border border-border p-4 dark:border-border">
                   <div class="flex items-start justify-between gap-4">
@@ -1821,7 +1797,7 @@
                         }}
                       </p>
                     </div>
-                    <Toggle v-model="form.github_oauth_enabled" />
+                    <Switch v-model="form.github_oauth_enabled" />
                   </div>
 
                   <div v-if="form.github_oauth_enabled" class="mt-4 space-y-4">
@@ -1886,13 +1862,13 @@
                         placeholder="https://your-domain.com/api/v1/auth/oauth/github/callback"
                       />
                       <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                        <button
+                        <Button
                           type="button"
-                          class="btn btn-secondary btn-sm w-fit"
+                  variant="secondary" size="sm" class="w-fit"
                           @click="setAndCopyEmailOAuthRedirectUrl('github')"
                         >
                           {{ localText("生成并复制", "Generate and copy") }}
-                        </button>
+                        </Button>
                         <code
                           v-if="githubOAuthRedirectUrlSuggestion"
                           class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground dark:bg-card dark:text-foreground/85"
@@ -1931,7 +1907,7 @@
                         }}
                       </p>
                     </div>
-                    <Toggle v-model="form.google_oauth_enabled" />
+                    <Switch v-model="form.google_oauth_enabled" />
                   </div>
 
                   <div v-if="form.google_oauth_enabled" class="mt-4 space-y-4">
@@ -1980,13 +1956,13 @@
                         placeholder="https://your-domain.com/api/v1/auth/oauth/google/callback"
                       />
                       <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                        <button
+                        <Button
                           type="button"
-                          class="btn btn-secondary btn-sm w-fit"
+                  variant="secondary" size="sm" class="w-fit"
                           @click="setAndCopyEmailOAuthRedirectUrl('google')"
                         >
                           {{ localText("生成并复制", "Generate and copy") }}
-                        </button>
+                        </Button>
                         <code
                           v-if="googleOAuthRedirectUrlSuggestion"
                           class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground dark:bg-card dark:text-foreground/85"
@@ -2010,22 +1986,20 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- WeChat Connect OAuth 登录 -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.wechatConnect.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.wechatConnect.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <div class="flex items-center justify-between">
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -2035,7 +2009,7 @@
                     {{ t("admin.settings.wechatConnect.enabledHint") }}
                   </p>
                 </div>
-                <Toggle
+                <Switch
                   v-model="form.wechat_connect_enabled"
                   data-testid="wechat-connect-enabled"
                 />
@@ -2063,7 +2037,7 @@
                           }}
                         </p>
                       </div>
-                      <Toggle
+                      <Switch
                         :model-value="form.wechat_connect_open_enabled"
                         data-testid="wechat-connect-open-enabled"
                         @update:model-value="handleWeChatOpenEnabledChange"
@@ -2136,7 +2110,7 @@
                           }}
                         </p>
                       </div>
-                      <Toggle
+                      <Switch
                         :model-value="form.wechat_connect_mp_enabled"
                         data-testid="wechat-connect-mp-enabled"
                         @update:model-value="handleWeChatMPEnabledChange"
@@ -2214,7 +2188,7 @@
                           }}
                         </p>
                       </div>
-                      <Toggle
+                      <Switch
                         :model-value="form.wechat_connect_mobile_enabled"
                         data-testid="wechat-connect-mobile-enabled"
                         @update:model-value="handleWeChatMobileEnabledChange"
@@ -2317,13 +2291,13 @@
                     <div
                       class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
                     >
-                      <button
+                      <Button
                         type="button"
-                        class="btn btn-secondary btn-sm w-fit"
+                  variant="secondary" size="sm" class="w-fit"
                         @click="setAndCopyWeChatRedirectUrl"
                       >
                         {{ t("admin.settings.wechatConnect.generateAndCopy") }}
-                      </button>
+                      </Button>
                       <code
                         v-if="wechatRedirectUrlSuggestion"
                         class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground dark:bg-card dark:text-foreground/85"
@@ -2352,22 +2326,20 @@
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- DingTalk Connect OAuth 登录 -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.dingtalk.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.dingtalk.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <div class="flex items-center justify-between">
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -2377,7 +2349,7 @@
                     {{ t("admin.settings.dingtalk.enableHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.dingtalk_connect_enabled" />
+                <Switch v-model="form.dingtalk_connect_enabled" />
               </div>
 
               <div
@@ -2499,7 +2471,7 @@
                         {{ t("admin.settings.dingtalk.bypassRegistrationHint") }}
                       </p>
                     </div>
-                    <Toggle v-model="form.dingtalk_connect_bypass_registration" />
+                    <Switch v-model="form.dingtalk_connect_bypass_registration" />
                   </div>
 
                   <!-- 身份同步开关（仅 internal_only 模式下可见） -->
@@ -2516,7 +2488,7 @@
                           {{ t("admin.settings.dingtalk.syncDisplayNameHint") }}
                         </p>
                       </div>
-                      <Toggle v-model="form.dingtalk_connect_sync_display_name" />
+                      <Switch v-model="form.dingtalk_connect_sync_display_name" />
                     </div>
                     <div v-if="form.dingtalk_connect_sync_display_name" class="space-y-2">
                       <div class="flex items-center gap-2">
@@ -2562,7 +2534,7 @@
                           {{ t("admin.settings.dingtalk.syncCorpEmailPermissionHint") }}
                         </p>
                       </div>
-                      <Toggle v-model="form.dingtalk_connect_sync_corp_email" />
+                      <Switch v-model="form.dingtalk_connect_sync_corp_email" />
                     </div>
                     <div v-if="form.dingtalk_connect_sync_corp_email" class="space-y-2">
                       <div class="flex items-center gap-2">
@@ -2608,7 +2580,7 @@
                           {{ t("admin.settings.dingtalk.syncDeptPermissionHint") }}
                         </p>
                       </div>
-                      <Toggle v-model="form.dingtalk_connect_sync_dept" />
+                      <Switch v-model="form.dingtalk_connect_sync_dept" />
                     </div>
                     <div v-if="form.dingtalk_connect_sync_dept" class="space-y-2">
                       <div class="flex items-center gap-2">
@@ -2640,22 +2612,20 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Generic OIDC OAuth 登录 -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.oidc.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.oidc.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <div class="flex items-center justify-between">
                 <div>
                   <label class="font-medium text-foreground">{{
@@ -2665,7 +2635,7 @@
                     {{ t("admin.settings.oidc.enableHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.oidc_connect_enabled" />
+                <Switch v-model="form.oidc_connect_enabled" />
               </div>
 
               <div
@@ -2864,13 +2834,13 @@
                     <div
                       class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
                     >
-                      <button
+                      <Button
                         type="button"
-                        class="btn btn-secondary btn-sm w-fit"
+                  variant="secondary" size="sm" class="w-fit"
                         @click="setAndCopyOIDCRedirectUrl"
                       >
                         {{ t("admin.settings.oidc.quickSetCopy") }}
-                      </button>
+                      </Button>
                       <code
                         v-if="oidcRedirectUrlSuggestion"
                         class="select-all break-all rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground dark:bg-card dark:text-foreground/85"
@@ -2965,7 +2935,7 @@
                         {{ t("admin.settings.oidc.usePkce") }}
                       </label>
                     </div>
-                    <Toggle
+                    <Switch
                       v-model="form.oidc_connect_use_pkce"
                       data-testid="oidc-connect-use-pkce"
                     />
@@ -2979,7 +2949,7 @@
                         {{ t("admin.settings.oidc.validateIdToken") }}
                       </label>
                     </div>
-                    <Toggle
+                    <Switch
                       v-model="form.oidc_connect_validate_id_token"
                       data-testid="oidc-connect-validate-id-token"
                     />
@@ -2993,7 +2963,7 @@
                         {{ t("admin.settings.oidc.requireEmailVerified") }}
                       </label>
                     </div>
-                    <Toggle
+                    <Switch
                       v-model="form.oidc_connect_require_email_verified"
                     />
                   </div>
@@ -3049,26 +3019,24 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
         <!-- /Tab: Security — Registration, Turnstile, LinuxDo, OIDC -->
 
         <!-- Tab: Users -->
         <div v-show="activeTab === 'users'" class="space-y-6">
           <!-- Default Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.defaults.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.defaults.description") }}
-              </p>
-            </div>
-            <div class="space-y-6 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-6">
               <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <label
@@ -3137,14 +3105,14 @@
                       }}
                     </p>
                   </div>
-                  <button
+                  <Button
                     type="button"
-                    class="btn btn-secondary btn-sm"
+                  variant="secondary" size="sm"
                     @click="addDefaultSubscription"
                     :disabled="subscriptionGroups.length === 0"
                   >
                     {{ t("admin.settings.defaults.addDefaultSubscription") }}
-                  </button>
+                  </Button>
                 </div>
 
                 <div
@@ -3251,13 +3219,13 @@
                       />
                     </div>
                     <div class="flex items-end">
-                      <button
+                      <Button
                         type="button"
-                        class="btn btn-secondary default-sub-delete-btn w-full text-red-400 hover:text-red-300"
+                  variant="secondary" class="default-sub-delete-btn w-full text-red-400 hover:text-red-300"
                         @click="removeDefaultSubscription(index)"
                       >
                         {{ t("common.delete") }}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -3327,21 +3295,19 @@
                 </div>
               </div>
               <!-- /全局平台限额矩阵 -->
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.authSourceDefaults.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.authSourceDefaults.description") }}
-              </p>
-            </div>
-            <div class="space-y-6 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-6">
               <div
                 class="flex items-center justify-between rounded border border-border px-4 py-3 dark:border-border"
               >
@@ -3353,7 +3319,7 @@
                     {{ t("admin.settings.authSourceDefaults.requireEmailHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.force_email_on_third_party_signup" />
+                <Switch v-model="form.force_email_on_third_party_signup" />
               </div>
 
               <div class="space-y-4">
@@ -3371,7 +3337,7 @@
                         {{ authSource.description }}
                       </p>
                     </div>
-                    <Toggle
+                    <Switch
                       v-model="
                         authSourceDefaults[authSource.source].grant_on_signup
                       "
@@ -3439,7 +3405,7 @@
                           {{ t("admin.settings.authSourceDefaults.grantOnFirstBindHint") }}
                         </p>
                       </div>
-                      <Toggle
+                      <Switch
                         v-model="
                           authSourceDefaults[authSource.source]
                             .grant_on_first_bind
@@ -3458,9 +3424,9 @@
                           {{ t("admin.settings.authSourceDefaults.defaultSubscriptionsHint") }}
                         </p>
                       </div>
-                      <button
+                      <Button
                         type="button"
-                        class="btn btn-secondary btn-sm"
+                  variant="secondary" size="sm"
                         @click="
                           addAuthSourceDefaultSubscription(authSource.source)
                         "
@@ -3469,7 +3435,7 @@
                         {{
                           t("admin.settings.defaults.addDefaultSubscription")
                         }}
-                      </button>
+                      </Button>
                     </div>
 
                     <div
@@ -3585,9 +3551,9 @@
                           />
                         </div>
                         <div class="flex items-end">
-                          <button
+                          <Button
                             type="button"
-                            class="btn btn-secondary w-full text-red-400 hover:text-red-300"
+                  variant="secondary" class="w-full text-red-400 hover:text-red-300"
                             @click="
                               removeAuthSourceDefaultSubscription(
                                 authSource.source,
@@ -3596,7 +3562,7 @@
                             "
                           >
                             {{ t("common.delete") }}
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -3665,26 +3631,24 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
         <!-- /Tab: Users -->
 
         <!-- Tab: Gateway — Claude Code, Scheduling -->
         <div v-show="activeTab === 'gateway'" class="space-y-6">
           <!-- Claude Code Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.claudeCode.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.claudeCode.description") }}
-              </p>
-            </div>
-            <div class="p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <div>
                 <label
                   class="mb-2 block text-sm font-medium text-foreground/85"
@@ -3721,22 +3685,20 @@
                   {{ t("admin.settings.claudeCode.maxVersionHint") }}
                 </p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Gateway Scheduling Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.scheduling.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.scheduling.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <div class="flex items-center justify-between">
                 <div>
                   <label
@@ -3748,7 +3710,7 @@
                     {{ t("admin.settings.scheduling.allowUngroupedKeyHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.allow_ungrouped_key_scheduling" />
+                <Switch v-model="form.allow_ungrouped_key_scheduling" />
               </div>
 
               <div class="flex items-center justify-between">
@@ -3764,24 +3726,22 @@
                     }}
                   </p>
                 </div>
-                <Toggle v-model="form.openai_advanced_scheduler_enabled" />
+                <Switch v-model="form.openai_advanced_scheduler_enabled" />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Gateway Forwarding Behavior -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.gatewayForwarding.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.gatewayForwarding.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <!-- Fingerprint Unification -->
               <div class="flex items-center justify-between">
                 <div>
@@ -3802,7 +3762,7 @@
                     }}
                   </p>
                 </div>
-                <Toggle v-model="form.enable_fingerprint_unification" />
+                <Switch v-model="form.enable_fingerprint_unification" />
               </div>
 
               <!-- Metadata Passthrough -->
@@ -3823,7 +3783,7 @@
                     }}
                   </p>
                 </div>
-                <Toggle v-model="form.enable_metadata_passthrough" />
+                <Switch v-model="form.enable_metadata_passthrough" />
               </div>
 
               <!-- CCH Signing -->
@@ -3838,7 +3798,7 @@
                     {{ t("admin.settings.gatewayForwarding.cchSigningHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.enable_cch_signing" />
+                <Switch v-model="form.enable_cch_signing" />
               </div>
 
               <!-- Anthropic Cache TTL 1h Injection -->
@@ -3861,7 +3821,7 @@
                     }}
                   </p>
                 </div>
-                <Toggle
+                <Switch
                   v-model="form.enable_anthropic_cache_ttl_1h_injection"
                 />
               </div>
@@ -3886,7 +3846,7 @@
                     }}
                   </p>
                 </div>
-                <Toggle v-model="form.rewrite_message_cache_control" />
+                <Switch v-model="form.rewrite_message_cache_control" />
               </div>
 
               <!-- Antigravity UA 版本 -->
@@ -3959,23 +3919,21 @@
                     {{ t("admin.settings.gatewayForwarding.openaiAllowClaudeCodeCodexPluginDesc") }}
                   </p>
                 </div>
-                <Toggle v-model="form.openai_allow_claude_code_codex_plugin" />
+                <Switch v-model="form.openai_allow_claude_code_codex_plugin" />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
           <!-- Web Search Emulation -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.webSearchEmulation.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.webSearchEmulation.description") }}
-              </p>
-            </div>
-            <div class="space-y-5 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-5">
               <!-- Global Toggle -->
               <div class="flex items-center justify-between">
                 <div>
@@ -3988,7 +3946,7 @@
                     {{ t("admin.settings.webSearchEmulation.enabledHint") }}
                   </p>
                 </div>
-                <Toggle v-model="webSearchConfig.enabled" />
+                <Switch v-model="webSearchConfig.enabled" />
               </div>
 
               <!-- Providers -->
@@ -3999,13 +3957,13 @@
                   >
                     {{ t("admin.settings.webSearchEmulation.providers") }}
                   </label>
-                  <button
+                  <Button
                     type="button"
-                    class="btn btn-secondary btn-sm"
+                  variant="secondary" size="sm"
                     @click="addWebSearchProvider"
                   >
                     {{ t("admin.settings.webSearchEmulation.addProvider") }}
-                  </button>
+                  </Button>
                 </div>
 
                 <div
@@ -4302,13 +4260,13 @@
                           :proxies="webSearchProxies"
                         />
                       </div>
-                      <button
+                      <Button
                         type="button"
-                        class="btn btn-secondary btn-sm whitespace-nowrap"
+                  variant="secondary" size="sm" class="whitespace-nowrap"
                         @click="openTestDialog()"
                       >
                         {{ t("admin.settings.webSearchEmulation.test") }}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -4340,9 +4298,9 @@
                   "
                   @keyup.enter="testWebSearchProvider()"
                 />
-                <button
+                <Button
                   type="button"
-                  class="btn btn-primary btn-sm"
+                  size="sm"
                   :disabled="wsTestLoading"
                   @click="testWebSearchProvider()"
                 >
@@ -4351,7 +4309,7 @@
                       ? t("admin.settings.webSearchEmulation.testing")
                       : t("admin.settings.webSearchEmulation.test")
                   }}
-                </button>
+                </Button>
               </div>
               <!-- Test results -->
               <div
@@ -4388,28 +4346,28 @@
                 </div>
               </div>
               <div class="mt-4 flex justify-end">
-                <button
+                <Button
                   type="button"
-                  class="btn btn-secondary btn-sm"
+                  variant="secondary" size="sm"
                   @click="wsTestDialogOpen = false"
                 >
                   {{ t("common.close") }}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
 
         <!-- Usage Records Settings -->
-        <div class="card">
-          <div class="border-b border-border px-6 py-4 dark:border-border">
-            <h2 class="text-lg font-semibold text-foreground">
+        <Card>
+          <CardHeader>
+            <CardTitle class="text-lg">
               {{ t('admin.settings.usageRecords.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-muted-foreground">
+            </CardTitle>
+            <CardDescription>
               {{ t('admin.settings.usageRecords.description') }}
-            </p>
-          </div>
-          <div class="space-y-4 p-6">
+            </CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-4">
             <!-- User error requests visibility -->
             <div class="flex items-center justify-between">
               <div>
@@ -4420,31 +4378,26 @@
                   {{ t('admin.settings.user_error_view.description') }}
                 </p>
               </div>
-              <label class="toggle">
-                <input v-model="form.allow_user_view_error_requests" type="checkbox" />
-                <span class="toggle-slider"></span>
-              </label>
+              <Switch v-model="form.allow_user_view_error_requests" />
             </div>
-          </div>
-        </div>
-        </div>
+          </CardContent>
+        </Card>
+        </CardContent>
         <!-- /Tab: Gateway — Claude Code, Scheduling -->
 
         <!-- Tab: General -->
         <div v-show="activeTab === 'general'" class="space-y-6">
           <!-- Site Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.site.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.site.description") }}
-              </p>
-            </div>
-            <div class="space-y-6 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-6">
               <!-- Backend Mode -->
               <div
                 class="flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/10 p-4"
@@ -4457,7 +4410,7 @@
                     {{ t("admin.settings.site.backendModeDescription") }}
                   </p>
 	                </div>
-	                <Toggle v-model="form.backend_mode_enabled" />
+	                <Switch v-model="form.backend_mode_enabled" />
 	              </div>
 
 	              <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -4781,24 +4734,22 @@
                     {{ t("admin.settings.site.hideCcsImportButtonHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.hide_ccs_import_button" />
+                <Switch v-model="form.hide_ccs_import_button" />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Custom Menu Items -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.customMenu.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.customMenu.description") }}
-              </p>
-            </div>
-            <div class="space-y-4 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-4">
               <!-- Existing menu items -->
               <div
                 v-for="(item, index) in form.custom_menu_items"
@@ -4974,39 +4925,39 @@
                 </svg>
                 {{ t("admin.settings.customMenu.add") }}
               </button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 	        </div>
 	        <!-- /Tab: General -->
 
 	        <!-- Tab: Login Agreement -->
 	        <div v-show="activeTab === 'agreement'" class="space-y-6">
-	          <div class="card">
-	            <div class="border-b border-border px-6 py-4 dark:border-border">
+	          <Card>
+	            <CardHeader>
 	              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
 	                <div>
-	                  <h2 class="text-lg font-semibold text-foreground">
+	                  <CardTitle class="text-lg">
 	                    {{ localText("登录条款确认", "Login agreement") }}
-	                  </h2>
-	                  <p class="mt-1 text-sm text-muted-foreground">
+	                  </CardTitle>
+	                  <CardDescription>
 	                    {{
 	                      localText(
 	                        "控制登录页是否要求用户先阅读并同意服务条款、隐私政策或其他 Markdown 文档。",
 	                        "Control whether the login page requires users to accept Markdown policy documents first.",
 	                      )
 	                    }}
-	                  </p>
+	                  </CardDescription>
 	                </div>
 	                <div class="flex items-center gap-3">
 	                  <span class="text-sm text-foreground/85">
 	                    {{ form.login_agreement_enabled ? localText("已启用", "Enabled") : localText("未启用", "Disabled") }}
 	                  </span>
-	                  <Toggle v-model="form.login_agreement_enabled" />
+	                  <Switch v-model="form.login_agreement_enabled" />
 	                </div>
 	              </div>
-	            </div>
+	            </CardHeader>
 
-	            <div class="space-y-6 p-6">
+	            <CardContent class="space-y-6">
 	              <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
 	                <div>
 	                  <label class="mb-2 block text-sm font-medium text-foreground/85">
@@ -5079,14 +5030,14 @@
                       }}
                     </p>
                   </div>
-                  <button
+                  <Button
                     type="button"
-                    class="btn btn-primary btn-sm inline-flex items-center gap-1.5"
+                  size="sm" class="inline-flex items-center gap-1.5"
                     @click="addLoginAgreementDocument"
                   >
                     <Icon name="plus" size="sm" />
                     {{ localText("添加文档", "Add document") }}
-                  </button>
+                  </Button>
                 </div>
 
                 <div class="mt-4 space-y-3">
@@ -5176,22 +5127,22 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
         <!-- /Tab: Login Agreement -->
 
 	        <!-- Tab: Features (功能开关) -->
         <div v-show="activeTab === 'features'" class="space-y-6">
 
-        <div class="card">
-          <div class="border-b border-border px-6 py-4 dark:border-border">
-            <h2 class="text-lg font-semibold text-foreground">
+        <Card>
+          <CardHeader>
+            <CardTitle class="text-lg">
               {{ t('admin.settings.features.channelMonitor.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-muted-foreground">
+            </CardTitle>
+            <CardDescription>
               {{ t('admin.settings.features.channelMonitor.description') }}
-            </p>
+            </CardDescription>
             <p class="mt-1.5 text-xs">
               <router-link
                 to="/admin/channels/monitor"
@@ -5201,8 +5152,8 @@
                 <span aria-hidden="true">→</span>
               </router-link>
             </p>
-          </div>
-          <div class="space-y-5 p-6">
+          </CardHeader>
+          <CardContent class="space-y-5">
             <div class="flex items-center justify-between">
               <div>
                 <label class="text-sm font-medium text-foreground/85">
@@ -5212,7 +5163,7 @@
                   {{ t('admin.settings.features.channelMonitor.enabledHint') }}
                 </p>
               </div>
-              <Toggle v-model="form.channel_monitor_enabled" />
+              <Switch v-model="form.channel_monitor_enabled" />
             </div>
 
             <div v-if="form.channel_monitor_enabled">
@@ -5231,17 +5182,17 @@
                 {{ t('admin.settings.features.channelMonitor.defaultIntervalHint') }}
               </p>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div class="card">
-          <div class="border-b border-border px-6 py-4 dark:border-border">
-            <h2 class="text-lg font-semibold text-foreground">
+        <Card>
+          <CardHeader>
+            <CardTitle class="text-lg">
               {{ t('admin.settings.features.availableChannels.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-muted-foreground">
+            </CardTitle>
+            <CardDescription>
               {{ t('admin.settings.features.availableChannels.description') }}
-            </p>
+            </CardDescription>
             <p class="mt-1.5 text-xs">
               <router-link
                 to="/admin/channels/pricing"
@@ -5251,8 +5202,8 @@
                 <span aria-hidden="true">→</span>
               </router-link>
             </p>
-          </div>
-          <div class="space-y-5 p-6">
+          </CardHeader>
+          <CardContent class="space-y-5">
             <div class="flex items-center justify-between">
               <div>
                 <label class="text-sm font-medium text-foreground/85">
@@ -5262,19 +5213,19 @@
                   {{ t('admin.settings.features.availableChannels.enabledHint') }}
                 </p>
               </div>
-              <Toggle v-model="form.available_channels_enabled" />
+              <Switch v-model="form.available_channels_enabled" />
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div class="card">
-          <div class="border-b border-border px-6 py-4 dark:border-border">
-            <h2 class="text-lg font-semibold text-foreground">
+        <Card>
+          <CardHeader>
+            <CardTitle class="text-lg">
               {{ t('admin.settings.features.riskControl.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-muted-foreground">
+            </CardTitle>
+            <CardDescription>
               {{ t('admin.settings.features.riskControl.description') }}
-            </p>
+            </CardDescription>
             <p class="mt-1.5 text-xs">
               <router-link
                 to="/admin/risk-control"
@@ -5284,8 +5235,8 @@
                 <span aria-hidden="true">→</span>
               </router-link>
             </p>
-          </div>
-          <div class="space-y-5 p-6">
+          </CardHeader>
+          <CardContent class="space-y-5">
             <div class="flex items-center justify-between">
               <div>
                 <label class="text-sm font-medium text-foreground/85">
@@ -5295,22 +5246,22 @@
                   {{ t('admin.settings.features.riskControl.enabledHint') }}
                 </p>
               </div>
-              <Toggle v-model="form.risk_control_enabled" />
+              <Switch v-model="form.risk_control_enabled" />
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <!-- Affiliate (邀请返利) feature card -->
-        <div class="card">
-          <div class="border-b border-border px-6 py-4 dark:border-border">
-            <h2 class="text-lg font-semibold text-foreground">
+        <Card>
+          <CardHeader>
+            <CardTitle class="text-lg">
               {{ t('admin.settings.features.affiliate.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-muted-foreground">
+            </CardTitle>
+            <CardDescription>
               {{ t('admin.settings.features.affiliate.description') }}
-            </p>
-          </div>
-          <div class="space-y-5 p-6">
+            </CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-5">
             <div class="flex items-center justify-between">
               <div>
                 <label class="text-sm font-medium text-foreground/85">
@@ -5320,7 +5271,7 @@
                   {{ t('admin.settings.features.affiliate.enabledHint') }}
                 </p>
               </div>
-              <Toggle v-model="form.affiliate_enabled" />
+              <Switch v-model="form.affiliate_enabled" />
             </div>
 
             <div v-if="form.affiliate_enabled" class="space-y-6">
@@ -5406,13 +5357,13 @@
                       {{ t('admin.settings.features.affiliate.customUsers.description') }}
                     </p>
                   </div>
-                  <button
+                  <Button
                     type="button"
-                    class="btn btn-primary btn-sm"
+                  size="sm"
                     @click="openAffiliateModal(null)"
                   >
                     + {{ t('admin.settings.features.affiliate.customUsers.addButton') }}
-                  </button>
+                  </Button>
                 </div>
 
                 <div class="mb-3 flex items-center gap-2">
@@ -5423,14 +5374,14 @@
                     :placeholder="t('admin.settings.features.affiliate.customUsers.searchPlaceholder')"
                     @input="onAffiliateSearchInput"
                   />
-                  <button
+                  <Button
                     v-if="affiliateState.selected.length > 0"
                     type="button"
-                    class="btn btn-secondary btn-sm"
+                  variant="secondary" size="sm"
                     @click="openAffiliateBatchModal"
                   >
                     {{ t('admin.settings.features.affiliate.customUsers.batchButton', { count: affiliateState.selected.length }) }}
-                  </button>
+                  </Button>
                 </div>
 
                 <div class="overflow-hidden rounded-lg border border-border">
@@ -5507,29 +5458,29 @@
                     {{ t('admin.settings.features.affiliate.customUsers.totalLabel', { total: affiliateState.total }) }}
                   </span>
                   <div class="flex items-center gap-2">
-                    <button
+                    <Button
                       type="button"
-                      class="btn btn-secondary btn-sm"
+                  variant="secondary" size="sm"
                       :disabled="affiliateState.page <= 1"
                       @click="changeAffiliatePage(affiliateState.page - 1)"
                     >
                       {{ t('pagination.previous') }}
-                    </button>
+                    </Button>
                     <span class="text-muted-foreground">{{ affiliateState.page }} / {{ Math.max(1, Math.ceil(affiliateState.total / affiliateState.pageSize)) }}</span>
-                    <button
+                    <Button
                       type="button"
-                      class="btn btn-secondary btn-sm"
+                  variant="secondary" size="sm"
                       :disabled="affiliateState.page >= Math.ceil(affiliateState.total / affiliateState.pageSize)"
                       @click="changeAffiliatePage(affiliateState.page + 1)"
                     >
                       {{ t('pagination.next') }}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <!-- Affiliate add/edit modal -->
         <div
@@ -5640,17 +5591,17 @@
               </p>
               <span v-else></span>
               <div class="flex gap-2">
-                <button type="button" class="btn btn-secondary" @click="closeAffiliateModal">
+                <Button type="button"
+                  variant="secondary" @click="closeAffiliateModal">
                   {{ t('common.cancel') }}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  class="btn btn-primary"
                   :disabled="affiliateModal.saving || !affiliateModalCanSubmit"
                   @click="submitAffiliateModal"
                 >
                   {{ affiliateModal.saving ? t('common.saving') : t('common.save') }}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -5685,17 +5636,17 @@
               {{ t('admin.settings.features.affiliate.batchModal.clearHint') }}
             </p>
             <div class="mt-6 flex justify-end gap-2">
-              <button type="button" class="btn btn-secondary" @click="affiliateBatchModal.open = false">
+              <Button type="button"
+                  variant="secondary" @click="affiliateBatchModal.open = false">
                 {{ t('common.cancel') }}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                class="btn btn-primary"
                 :disabled="affiliateBatchModal.saving"
                 @click="submitAffiliateBatchModal"
               >
                 {{ affiliateBatchModal.saving ? t('common.saving') : t('common.save') }}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -5706,14 +5657,12 @@
         <!-- Tab: Payment -->
         <div v-show="activeTab === 'payment'" class="space-y-6">
           <!-- Payment System Settings -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card>
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.payment.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.payment.description") }}
                 <a
                   :href="paymentGuideHref"
@@ -5736,9 +5685,9 @@
                   </svg>
                   {{ t("admin.settings.payment.configGuide") }}
                 </a>
-              </p>
-            </div>
-            <div class="space-y-4 p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-4">
               <!-- Enable toggle -->
               <div class="flex items-center justify-between">
                 <div>
@@ -5749,7 +5698,7 @@
                     {{ t("admin.settings.payment.enabledHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.payment_enabled" />
+                <Switch v-model="form.payment_enabled" />
               </div>
               <template v-if="form.payment_enabled">
                 <!-- Row 1: Product name -->
@@ -6173,8 +6122,8 @@
                   </div>
                 </div>
               </template>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Provider Management -->
           <PaymentProviderList
@@ -6197,8 +6146,8 @@
 
         <div v-show="activeTab === 'email'" class="space-y-6">
           <!-- Email disabled hint - show when email_verify_enabled is off -->
-          <div v-if="!form.email_verify_enabled" class="card">
-            <div class="p-6">
+          <Card v-if="!form.email_verify_enabled">
+            <CardContent>
               <div class="flex items-start gap-3">
                 <Icon
                   name="mail"
@@ -6214,27 +6163,25 @@
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- SMTP Settings - Only show when email verification is enabled -->
-          <div v-if="form.email_verify_enabled" class="card">
-            <div
-              class="flex items-center justify-between border-b border-border px-6 py-4 dark:border-border"
-            >
+          <Card v-if="form.email_verify_enabled">
+            <CardHeader>
               <div>
-                <h2 class="text-lg font-semibold text-foreground">
+                <CardTitle class="text-lg">
                   {{ t("admin.settings.smtp.title") }}
-                </h2>
-                <p class="mt-1 text-sm text-muted-foreground">
+                </CardTitle>
+                <CardDescription>
                   {{ t("admin.settings.smtp.description") }}
-                </p>
+                </CardDescription>
               </div>
-              <button
+              <Button
                 type="button"
                 @click="testSmtpConnection"
                 :disabled="testingSmtp || loadFailed"
-                class="btn btn-secondary btn-sm"
+                  variant="secondary" size="sm"
               >
                 <svg
                   v-if="testingSmtp"
@@ -6261,9 +6208,9 @@
                     ? t("admin.settings.smtp.testing")
                     : t("admin.settings.smtp.testConnection")
                 }}
-              </button>
-            </div>
-            <div class="space-y-6 p-6">
+              </Button>
+            </CardHeader>
+            <CardContent class="space-y-6">
               <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <label
@@ -6375,24 +6322,22 @@
                     {{ t("admin.settings.smtp.useTlsHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.smtp_use_tls" />
+                <Switch v-model="form.smtp_use_tls" />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Send Test Email - Only show when email verification is enabled -->
-          <div v-if="form.email_verify_enabled" class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
-              <h2 class="text-lg font-semibold text-foreground">
+          <Card v-if="form.email_verify_enabled">
+            <CardHeader>
+              <CardTitle class="text-lg">
                 {{ t("admin.settings.testEmail.title") }}
-              </h2>
-              <p class="mt-1 text-sm text-muted-foreground">
+              </CardTitle>
+              <CardDescription>
                 {{ t("admin.settings.testEmail.description") }}
-              </p>
-            </div>
-            <div class="p-6">
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <div class="flex items-end gap-4">
                 <div class="flex-1">
                   <label
@@ -6409,13 +6354,13 @@
                     "
                   />
                 </div>
-                <button
+                <Button
                   type="button"
                   @click="sendTestEmail"
                   :disabled="
                     sendingTestEmail || !testEmailAddress || loadFailed
                   "
-                  class="btn btn-secondary"
+                  variant="secondary"
                 >
                   <svg
                     v-if="sendingTestEmail"
@@ -6442,23 +6387,21 @@
                       ? t("admin.settings.testEmail.sending")
                       : t("admin.settings.testEmail.sendTestEmail")
                   }}
-                </button>
+                </Button>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- 订阅到期提醒 -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
+          <Card>
+            <CardHeader>
               <h3 class="text-base font-medium text-foreground">
                 {{ t("admin.settings.subscriptionExpiryNotify.title") }}
               </h3>
-              <p class="mt-1 text-sm text-muted-foreground">
+              <CardDescription>
                 {{ t("admin.settings.subscriptionExpiryNotify.description") }}
-              </p>
-            </div>
+              </CardDescription>
+            </CardHeader>
             <div class="px-6 py-6">
               <div class="flex items-center justify-between gap-4">
                 <div>
@@ -6471,32 +6414,30 @@
                     {{ t("admin.settings.subscriptionExpiryNotify.enabledHint") }}
                   </p>
                 </div>
-                <Toggle v-model="form.subscription_expiry_notify_enabled" />
+                <Switch v-model="form.subscription_expiry_notify_enabled" />
               </div>
             </div>
-          </div>
+          </Card>
 
           <EmailTemplateEditor />
 
           <!-- Balance Low Notification -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
+          <Card>
+            <CardHeader>
               <h3 class="text-base font-medium text-foreground">
                 {{ t("admin.settings.balanceNotify.title") }}
               </h3>
-              <p class="mt-1 text-sm text-muted-foreground">
+              <CardDescription>
                 {{ t("admin.settings.balanceNotify.description") }}
-              </p>
-            </div>
+              </CardDescription>
+            </CardHeader>
             <div class="px-6 py-6 space-y-4">
               <div class="flex items-center justify-between">
                 <label
                   class="mb-0 block text-sm font-medium text-foreground/85"
                   >{{ t("admin.settings.balanceNotify.enabled") }}</label
                 >
-                <Toggle v-model="form.balance_low_notify_enabled" />
+                <Switch v-model="form.balance_low_notify_enabled" />
               </div>
               <div v-if="form.balance_low_notify_enabled">
                 <label
@@ -6536,27 +6477,25 @@
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
 
           <!-- Account Quota Notification -->
-          <div class="card">
-            <div
-              class="border-b border-border px-6 py-4 dark:border-border"
-            >
+          <Card>
+            <CardHeader>
               <h3 class="text-base font-medium text-foreground">
                 {{ t("admin.settings.quotaNotify.title") }}
               </h3>
-              <p class="mt-1 text-sm text-muted-foreground">
+              <CardDescription>
                 {{ t("admin.settings.quotaNotify.description") }}
-              </p>
-            </div>
+              </CardDescription>
+            </CardHeader>
             <div class="px-6 py-6 space-y-4">
               <div class="flex items-center justify-between">
                 <label
                   class="mb-0 block text-sm font-medium text-foreground/85"
                   >{{ t("admin.settings.quotaNotify.enabled") }}</label
                 >
-                <Toggle v-model="form.account_quota_notify_enabled" />
+                <Switch v-model="form.account_quota_notify_enabled" />
               </div>
               <div v-if="form.account_quota_notify_enabled">
                 <label
@@ -6591,28 +6530,28 @@
                         t('admin.settings.quotaNotify.emailPlaceholder')
                       "
                     />
-                    <button
+                    <Button
                       @click="form.account_quota_notify_emails.splice(index, 1)"
-                      class="btn btn-secondary px-2"
+                  variant="secondary" class="px-2"
                       type="button"
                     >
                       <Icon name="x" size="xs" class="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
-                  <button
+                  <Button
                     @click="addQuotaNotifyEmail"
-                    class="btn btn-secondary btn-sm"
+                  variant="secondary" size="sm"
                     type="button"
                   >
                     + {{ t("admin.settings.quotaNotify.addEmail") }}
-                  </button>
+                  </Button>
                 </div>
                 <p class="mt-1 text-xs text-muted-foreground">
                   {{ t("admin.settings.quotaNotify.emailsHint") }}
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
         <!-- /Tab: Email -->
 
@@ -6623,10 +6562,9 @@
 
         <!-- Save Button -->
         <div v-show="activeTab !== 'backup'" class="flex justify-end">
-          <button
+          <Button
             type="submit"
             :disabled="saving || loadFailed"
-            class="btn btn-primary"
           >
             <svg
               v-if="saving"
@@ -6653,7 +6591,7 @@
                 ? t("admin.settings.saving")
                 : t("admin.settings.saveSettings")
             }}
-          </button>
+          </Button>
         </div>
       </form>
 
@@ -6688,7 +6626,7 @@
         @confirm="handleAffiliateConfirm"
         @cancel="cancelAffiliateConfirm"
       />
-    </div>
+    </Card>
   </AppLayout>
 </template>
 
@@ -6728,13 +6666,15 @@ import type {
 import type { ProviderInstance } from "@/types/payment";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import Icon from "@/components/icons/Icon.vue";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import Select from "@/components/common/Select.vue";
 import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
 import PaymentProviderList from "@/components/payment/PaymentProviderList.vue";
 import PaymentProviderDialog from "@/components/payment/PaymentProviderDialog.vue";
 import GroupBadge from "@/components/common/GroupBadge.vue";
 import GroupOptionItem from "@/components/common/GroupOptionItem.vue";
-import Toggle from "@/components/common/Toggle.vue";
+import { Switch } from "@/components/ui/switch";
 import ProxySelector from "@/components/common/ProxySelector.vue";
 import ImageUpload from "@/components/common/ImageUpload.vue";
 import BackupSettings from "@/views/admin/BackupView.vue";
