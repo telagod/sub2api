@@ -13,11 +13,11 @@
                 size="md"
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
               />
-              <input
+              <Input
                 v-model="searchQuery"
                 type="text"
                 :placeholder="t('admin.groups.searchGroups')"
-                class="input pl-10"
+                class="pl-10"
                 @input="handleSearch"
               />
             </div>
@@ -48,10 +48,9 @@
           <div
             class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-3 lg:w-auto"
           >
-            <button
+            <Button variant="secondary"
               @click="loadGroups"
               :disabled="loading"
-              class="btn btn-secondary"
               :title="t('common.refresh')"
             >
               <Icon
@@ -59,23 +58,21 @@
                 size="md"
                 :class="loading ? 'animate-spin' : ''"
               />
-            </button>
-            <button
+            </Button>
+            <Button variant="secondary"
               @click="openSortModal"
-              class="btn btn-secondary"
               :title="t('admin.groups.sortOrder')"
             >
               <Icon name="arrowsUpDown" size="md" class="mr-2" />
               {{ t("admin.groups.sortOrder") }}
-            </button>
-            <button
+            </Button>
+            <Button
               @click="openCreateModal"
-              class="btn btn-primary"
               data-tour="groups-create-btn"
             >
               <Icon name="plus" size="md" class="mr-2" />
               {{ t("admin.groups.createGroup") }}
-            </button>
+            </Button>
           </div>
         </div>
       </template>
@@ -352,11 +349,10 @@
       >
         <div>
           <label class="input-label">{{ t("admin.groups.form.name") }}</label>
-          <input
+          <Input
             v-model="createForm.name"
             type="text"
             required
-            class="input"
             :placeholder="t('admin.groups.enterGroupName')"
             data-tour="group-form-name"
           />
@@ -365,12 +361,11 @@
           <label class="input-label">{{
             t("admin.groups.form.description")
           }}</label>
-          <textarea
+          <Textarea
             v-model="createForm.description"
             rows="3"
-            class="input"
             :placeholder="t('admin.groups.optionalDescription')"
-          ></textarea>
+           />
         </div>
         <div>
           <label class="input-label">{{
@@ -477,25 +472,23 @@
           <label class="input-label">{{
             t("admin.groups.form.rateMultiplier")
           }}</label>
-          <input
+          <Input
             v-model.number="createForm.rate_multiplier"
             type="number"
             step="0.001"
             min="0.001"
             required
-            class="input"
             data-tour="group-form-multiplier"
           />
           <p class="input-hint">{{ t("admin.groups.rateMultiplierHint") }}</p>
         </div>
         <div>
           <label class="input-label">{{ t("admin.groups.form.rpmLimit") }}</label>
-          <input
+          <Input
             v-model.number="createForm.rpm_limit"
             type="number"
             min="0"
             step="1"
-            class="input"
             :placeholder="t('admin.groups.form.rpmLimitPlaceholder')"
           />
           <p class="input-hint">{{ t("admin.groups.form.rpmLimitHint") }}</p>
@@ -548,23 +541,13 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <button
-              type="button"
-              @click="createForm.is_exclusive = !createForm.is_exclusive"
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                createForm.is_exclusive
-                  ? 'bg-primary-500'
-                  : 'bg-muted ',
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform',
-                  createForm.is_exclusive ? 'translate-x-6' : 'translate-x-1',
-                ]"
-              />
-            </button>
+            <Switch
+
+              :checked="createForm.is_exclusive"
+
+              @update:checked="(val: boolean) => createForm.is_exclusive = val"
+
+            />
             <span class="text-sm text-muted-foreground">
               {{
                 createForm.is_exclusive
@@ -599,12 +582,11 @@
               <label class="input-label">{{
                 t("admin.groups.subscription.dailyLimit")
               }}</label>
-              <input
+              <Input
                 v-model.number="createForm.daily_limit_usd"
                 type="number"
                 step="0.01"
                 min="0"
-                class="input"
                 :placeholder="t('admin.groups.subscription.noLimit')"
               />
             </div>
@@ -612,12 +594,11 @@
               <label class="input-label">{{
                 t("admin.groups.subscription.weeklyLimit")
               }}</label>
-              <input
+              <Input
                 v-model.number="createForm.weekly_limit_usd"
                 type="number"
                 step="0.01"
                 min="0"
-                class="input"
                 :placeholder="t('admin.groups.subscription.noLimit')"
               />
             </div>
@@ -625,12 +606,11 @@
               <label class="input-label">{{
                 t("admin.groups.subscription.monthlyLimit")
               }}</label>
-              <input
+              <Input
                 v-model.number="createForm.monthly_limit_usd"
                 type="number"
                 step="0.01"
                 min="0"
-                class="input"
                 :placeholder="t('admin.groups.subscription.noLimit')"
               />
             </div>
@@ -647,23 +627,13 @@
                 {{ t("admin.groups.modelsList.hint") }}
               </p>
             </div>
-            <button
-              type="button"
-              @click="createModelsListState.enabled = !createModelsListState.enabled"
-              :class="[
-                'relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors',
-                createModelsListState.enabled
-                  ? 'bg-primary-500'
-                  : 'bg-muted ',
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform',
-                  createModelsListState.enabled ? 'translate-x-6' : 'translate-x-1',
-                ]"
-              />
-            </button>
+            <Switch
+
+              :checked="createModelsListState.enabled"
+
+              @update:checked="(val: boolean) => createModelsListState.enabled = val"
+
+            />
           </div>
           <div
             v-if="createModelsListState.enabled"
@@ -782,46 +752,42 @@
             <label class="input-label">{{
               t("admin.groups.imagePricing.imageMultiplier")
             }}</label>
-            <input
+            <Input
               v-model.number="createForm.image_rate_multiplier"
               type="number"
               step="0.0001"
               min="0"
-              class="input"
               placeholder="1"
             />
           </div>
           <div class="grid grid-cols-3 gap-3">
             <div>
               <label class="input-label">1K ($)</label>
-              <input
+              <Input
                 v-model.number="createForm.image_price_1k"
                 type="number"
                 step="0.001"
                 min="0"
-                class="input"
                 placeholder="0.134"
               />
             </div>
             <div>
               <label class="input-label">2K ($)</label>
-              <input
+              <Input
                 v-model.number="createForm.image_price_2k"
                 type="number"
                 step="0.001"
                 min="0"
-                class="input"
                 placeholder="0.201"
               />
             </div>
             <div>
               <label class="input-label">4K ($)</label>
-              <input
+              <Input
                 v-model.number="createForm.image_price_4k"
                 type="number"
                 step="0.001"
                 min="0"
-                class="input"
                 placeholder="0.268"
               />
             </div>
@@ -948,23 +914,13 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <button
-              type="button"
-              @click="createForm.mcp_xml_inject = !createForm.mcp_xml_inject"
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                createForm.mcp_xml_inject
-                  ? 'bg-primary-500'
-                  : 'bg-muted ',
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform',
-                  createForm.mcp_xml_inject ? 'translate-x-6' : 'translate-x-1',
-                ]"
-              />
-            </button>
+            <Switch
+
+              :checked="createForm.mcp_xml_inject"
+
+              @update:checked="(val: boolean) => createForm.mcp_xml_inject = val"
+
+            />
             <span class="text-sm text-muted-foreground">
               {{
                 createForm.mcp_xml_inject
@@ -1006,27 +962,13 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <button
-              type="button"
-              @click="
-                createForm.claude_code_only = !createForm.claude_code_only
-              "
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                createForm.claude_code_only
-                  ? 'bg-primary-500'
-                  : 'bg-muted ',
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform',
-                  createForm.claude_code_only
-                    ? 'translate-x-6'
-                    : 'translate-x-1',
-                ]"
-              />
-            </button>
+            <Switch
+
+              :checked="createForm.claude_code_only"
+
+              @update:checked="(val: boolean) => createForm.claude_code_only = val"
+
+            />
             <span class="text-sm text-muted-foreground">
               {{
                 createForm.claude_code_only
@@ -1065,28 +1007,13 @@
             <label class="text-sm text-foreground/75">{{
               t("admin.groups.openaiMessages.allowDispatch")
             }}</label>
-            <button
-              type="button"
-              @click="
-                createForm.allow_messages_dispatch =
-                  !createForm.allow_messages_dispatch
-              "
-              class="relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-              :class="
-                createForm.allow_messages_dispatch
-                  ? 'bg-primary-500'
-                  : 'bg-muted '
-              "
-            >
-              <span
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out"
-                :class="
-                  createForm.allow_messages_dispatch
-                    ? 'translate-x-6'
-                    : 'translate-x-1'
-                "
-              />
-            </button>
+            <Switch
+
+              :checked="createForm.allow_messages_dispatch"
+
+              @update:checked="(val: boolean) => createForm.allow_messages_dispatch = val"
+
+            />
           </div>
           <p class="text-xs text-muted-foreground mt-1">
             {{ t("admin.groups.openaiMessages.allowDispatchHint") }}
@@ -1118,39 +1045,36 @@
                     <label class="input-label">{{
                       t("admin.groups.openaiMessages.opusModel")
                     }}</label>
-                    <input
+                    <Input
                       v-model="createForm.opus_mapped_model"
                       type="text"
                       :placeholder="
                         t('admin.groups.openaiMessages.opusModelPlaceholder')
                       "
-                      class="input"
                     />
                   </div>
                   <div>
                     <label class="input-label">{{
                       t("admin.groups.openaiMessages.sonnetModel")
                     }}</label>
-                    <input
+                    <Input
                       v-model="createForm.sonnet_mapped_model"
                       type="text"
                       :placeholder="
                         t('admin.groups.openaiMessages.sonnetModelPlaceholder')
                       "
-                      class="input"
                     />
                   </div>
                   <div>
                     <label class="input-label">{{
                       t("admin.groups.openaiMessages.haikuModel")
                     }}</label>
-                    <input
+                    <Input
                       v-model="createForm.haiku_mapped_model"
                       type="text"
                       :placeholder="
                         t('admin.groups.openaiMessages.haikuModelPlaceholder')
                       "
-                      class="input"
                     />
                   </div>
                 </div>
@@ -1215,7 +1139,7 @@
                           <label class="input-label">{{
                             t("admin.groups.openaiMessages.claudeModel")
                           }}</label>
-                          <input
+                          <Input
                             v-model="row.claude_model"
                             type="text"
                             :placeholder="
@@ -1223,7 +1147,7 @@
                                 'admin.groups.openaiMessages.claudeModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-dark-900"
+                            class="bg-card focus:bg-card dark:focus:bg-dark-900"
                           />
                         </div>
                         <div
@@ -1239,7 +1163,7 @@
                           <label class="input-label">{{
                             t("admin.groups.openaiMessages.targetModel")
                           }}</label>
-                          <input
+                          <Input
                             v-model="row.target_model"
                             type="text"
                             :placeholder="
@@ -1247,7 +1171,7 @@
                                 'admin.groups.openaiMessages.targetModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-dark-900"
+                            class="bg-card focus:bg-card dark:focus:bg-dark-900"
                           />
                         </div>
                       </div>
@@ -1305,27 +1229,13 @@
                 }}
               </p>
             </div>
-            <button
-              type="button"
-              @click="
-                createForm.require_oauth_only = !createForm.require_oauth_only
-              "
-              class="relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-              :class="
-                createForm.require_oauth_only
-                  ? 'bg-primary-500'
-                  : 'bg-muted '
-              "
-            >
-              <span
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out"
-                :class="
-                  createForm.require_oauth_only
-                    ? 'translate-x-6'
-                    : 'translate-x-1'
-                "
-              />
-            </button>
+            <Switch
+
+              :checked="createForm.require_oauth_only"
+
+              @update:checked="(val: boolean) => createForm.require_oauth_only = val"
+
+            />
           </div>
 
           <!-- require_privacy_set toggle -->
@@ -1342,27 +1252,13 @@
                 }}
               </p>
             </div>
-            <button
-              type="button"
-              @click="
-                createForm.require_privacy_set = !createForm.require_privacy_set
-              "
-              class="relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-              :class="
-                createForm.require_privacy_set
-                  ? 'bg-primary-500'
-                  : 'bg-muted '
-              "
-            >
-              <span
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out"
-                :class="
-                  createForm.require_privacy_set
-                    ? 'translate-x-6'
-                    : 'translate-x-1'
-                "
-              />
-            </button>
+            <Switch
+
+              :checked="createForm.require_privacy_set"
+
+              @update:checked="(val: boolean) => createForm.require_privacy_set = val"
+
+            />
           </div>
         </div>
 
@@ -1419,28 +1315,13 @@
           </div>
           <!-- 启用开关 -->
           <div class="flex items-center gap-3 mb-3">
-            <button
-              type="button"
-              @click="
-                createForm.model_routing_enabled =
-                  !createForm.model_routing_enabled
-              "
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                createForm.model_routing_enabled
-                  ? 'bg-primary-500'
-                  : 'bg-muted ',
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform',
-                  createForm.model_routing_enabled
-                    ? 'translate-x-6'
-                    : 'translate-x-1',
-                ]"
-              />
-            </button>
+            <Switch
+
+              :checked="createForm.model_routing_enabled"
+
+              @update:checked="(val: boolean) => createForm.model_routing_enabled = val"
+
+            />
             <span class="text-sm text-muted-foreground">
               {{
                 createForm.model_routing_enabled
@@ -1471,10 +1352,10 @@
                     <label class="input-label text-xs">{{
                       t("admin.groups.modelRouting.modelPattern")
                     }}</label>
-                    <input
+                    <Input
                       v-model="rule.pattern"
                       type="text"
-                      class="input text-sm"
+                      class="text-sm"
                       :placeholder="
                         t('admin.groups.modelRouting.modelPatternPlaceholder')
                       "
@@ -1506,12 +1387,12 @@
                     </div>
                     <!-- 账号搜索输入框 -->
                     <div class="relative account-search-container">
-                      <input
+                      <Input
                         v-model="
                           accountSearchKeyword[getCreateRuleSearchKey(rule)]
                         "
                         type="text"
-                        class="input text-sm"
+                        class="text-sm"
                         :placeholder="
                           t(
                             'admin.groups.modelRouting.searchAccountPlaceholder',
@@ -1584,18 +1465,16 @@
 
       <template #footer>
         <div class="flex justify-end gap-3 pt-4">
-          <button
+          <Button variant="secondary"
             @click="closeCreateModal"
             type="button"
-            class="btn btn-secondary"
           >
             {{ t("common.cancel") }}
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form="create-group-form"
             :disabled="submitting"
-            class="btn btn-primary"
             data-tour="group-form-submit"
           >
             <svg
@@ -1619,7 +1498,7 @@
               ></path>
             </svg>
             {{ submitting ? t("admin.groups.creating") : t("common.create") }}
-          </button>
+          </Button>
         </div>
       </template>
     </BaseDialog>
@@ -1639,11 +1518,10 @@
       >
         <div>
           <label class="input-label">{{ t("admin.groups.form.name") }}</label>
-          <input
+          <Input
             v-model="editForm.name"
             type="text"
             required
-            class="input"
             data-tour="edit-group-form-name"
           />
         </div>
@@ -1651,11 +1529,10 @@
           <label class="input-label">{{
             t("admin.groups.form.description")
           }}</label>
-          <textarea
+          <Textarea
             v-model="editForm.description"
             rows="3"
-            class="input"
-          ></textarea>
+           />
         </div>
         <div>
           <label class="input-label">{{
@@ -1764,24 +1641,22 @@
           <label class="input-label">{{
             t("admin.groups.form.rateMultiplier")
           }}</label>
-          <input
+          <Input
             v-model.number="editForm.rate_multiplier"
             type="number"
             step="0.001"
             min="0.001"
             required
-            class="input"
             data-tour="group-form-multiplier"
           />
         </div>
         <div>
           <label class="input-label">{{ t("admin.groups.form.rpmLimit") }}</label>
-          <input
+          <Input
             v-model.number="editForm.rpm_limit"
             type="number"
             min="0"
             step="1"
-            class="input"
             :placeholder="t('admin.groups.form.rpmLimitPlaceholder')"
           />
           <p class="input-hint">{{ t("admin.groups.form.rpmLimitHint") }}</p>
@@ -1831,23 +1706,13 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <button
-              type="button"
-              @click="editForm.is_exclusive = !editForm.is_exclusive"
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                editForm.is_exclusive
-                  ? 'bg-primary-500'
-                  : 'bg-muted ',
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform',
-                  editForm.is_exclusive ? 'translate-x-6' : 'translate-x-1',
-                ]"
-              />
-            </button>
+            <Switch
+
+              :checked="editForm.is_exclusive"
+
+              @update:checked="(val: boolean) => editForm.is_exclusive = val"
+
+            />
             <span class="text-sm text-muted-foreground">
               {{
                 editForm.is_exclusive
@@ -1887,12 +1752,11 @@
               <label class="input-label">{{
                 t("admin.groups.subscription.dailyLimit")
               }}</label>
-              <input
+              <Input
                 v-model.number="editForm.daily_limit_usd"
                 type="number"
                 step="0.01"
                 min="0"
-                class="input"
                 :placeholder="t('admin.groups.subscription.noLimit')"
               />
             </div>
@@ -1900,12 +1764,11 @@
               <label class="input-label">{{
                 t("admin.groups.subscription.weeklyLimit")
               }}</label>
-              <input
+              <Input
                 v-model.number="editForm.weekly_limit_usd"
                 type="number"
                 step="0.01"
                 min="0"
-                class="input"
                 :placeholder="t('admin.groups.subscription.noLimit')"
               />
             </div>
@@ -1913,12 +1776,11 @@
               <label class="input-label">{{
                 t("admin.groups.subscription.monthlyLimit")
               }}</label>
-              <input
+              <Input
                 v-model.number="editForm.monthly_limit_usd"
                 type="number"
                 step="0.01"
                 min="0"
-                class="input"
                 :placeholder="t('admin.groups.subscription.noLimit')"
               />
             </div>
@@ -1935,23 +1797,13 @@
                 {{ t("admin.groups.modelsList.hint") }}
               </p>
             </div>
-            <button
-              type="button"
-              @click="editModelsListState.enabled = !editModelsListState.enabled"
-              :class="[
-                'relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors',
-                editModelsListState.enabled
-                  ? 'bg-primary-500'
-                  : 'bg-muted ',
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform',
-                  editModelsListState.enabled ? 'translate-x-6' : 'translate-x-1',
-                ]"
-              />
-            </button>
+            <Switch
+
+              :checked="editModelsListState.enabled"
+
+              @update:checked="(val: boolean) => editModelsListState.enabled = val"
+
+            />
           </div>
           <div
             v-if="editModelsListState.enabled"
@@ -2070,46 +1922,42 @@
             <label class="input-label">{{
               t("admin.groups.imagePricing.imageMultiplier")
             }}</label>
-            <input
+            <Input
               v-model.number="editForm.image_rate_multiplier"
               type="number"
               step="0.0001"
               min="0"
-              class="input"
               placeholder="1"
             />
           </div>
           <div class="grid grid-cols-3 gap-3">
             <div>
               <label class="input-label">1K ($)</label>
-              <input
+              <Input
                 v-model.number="editForm.image_price_1k"
                 type="number"
                 step="0.001"
                 min="0"
-                class="input"
                 placeholder="0.134"
               />
             </div>
             <div>
               <label class="input-label">2K ($)</label>
-              <input
+              <Input
                 v-model.number="editForm.image_price_2k"
                 type="number"
                 step="0.001"
                 min="0"
-                class="input"
                 placeholder="0.201"
               />
             </div>
             <div>
               <label class="input-label">4K ($)</label>
-              <input
+              <Input
                 v-model.number="editForm.image_price_4k"
                 type="number"
                 step="0.001"
                 min="0"
-                class="input"
                 placeholder="0.268"
               />
             </div>
@@ -2236,23 +2084,13 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <button
-              type="button"
-              @click="editForm.mcp_xml_inject = !editForm.mcp_xml_inject"
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                editForm.mcp_xml_inject
-                  ? 'bg-primary-500'
-                  : 'bg-muted ',
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform',
-                  editForm.mcp_xml_inject ? 'translate-x-6' : 'translate-x-1',
-                ]"
-              />
-            </button>
+            <Switch
+
+              :checked="editForm.mcp_xml_inject"
+
+              @update:checked="(val: boolean) => editForm.mcp_xml_inject = val"
+
+            />
             <span class="text-sm text-muted-foreground">
               {{
                 editForm.mcp_xml_inject
@@ -2294,23 +2132,13 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <button
-              type="button"
-              @click="editForm.claude_code_only = !editForm.claude_code_only"
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                editForm.claude_code_only
-                  ? 'bg-primary-500'
-                  : 'bg-muted ',
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform',
-                  editForm.claude_code_only ? 'translate-x-6' : 'translate-x-1',
-                ]"
-              />
-            </button>
+            <Switch
+
+              :checked="editForm.claude_code_only"
+
+              @update:checked="(val: boolean) => editForm.claude_code_only = val"
+
+            />
             <span class="text-sm text-muted-foreground">
               {{
                 editForm.claude_code_only
@@ -2349,28 +2177,13 @@
             <label class="text-sm text-foreground/75">{{
               t("admin.groups.openaiMessages.allowDispatch")
             }}</label>
-            <button
-              type="button"
-              @click="
-                editForm.allow_messages_dispatch =
-                  !editForm.allow_messages_dispatch
-              "
-              class="relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-              :class="
-                editForm.allow_messages_dispatch
-                  ? 'bg-primary-500'
-                  : 'bg-muted '
-              "
-            >
-              <span
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out"
-                :class="
-                  editForm.allow_messages_dispatch
-                    ? 'translate-x-6'
-                    : 'translate-x-1'
-                "
-              />
-            </button>
+            <Switch
+
+              :checked="editForm.allow_messages_dispatch"
+
+              @update:checked="(val: boolean) => editForm.allow_messages_dispatch = val"
+
+            />
           </div>
           <p class="text-xs text-muted-foreground mt-1">
             {{ t("admin.groups.openaiMessages.allowDispatchHint") }}
@@ -2402,39 +2215,36 @@
                     <label class="input-label">{{
                       t("admin.groups.openaiMessages.opusModel")
                     }}</label>
-                    <input
+                    <Input
                       v-model="editForm.opus_mapped_model"
                       type="text"
                       :placeholder="
                         t('admin.groups.openaiMessages.opusModelPlaceholder')
                       "
-                      class="input"
                     />
                   </div>
                   <div>
                     <label class="input-label">{{
                       t("admin.groups.openaiMessages.sonnetModel")
                     }}</label>
-                    <input
+                    <Input
                       v-model="editForm.sonnet_mapped_model"
                       type="text"
                       :placeholder="
                         t('admin.groups.openaiMessages.sonnetModelPlaceholder')
                       "
-                      class="input"
                     />
                   </div>
                   <div>
                     <label class="input-label">{{
                       t("admin.groups.openaiMessages.haikuModel")
                     }}</label>
-                    <input
+                    <Input
                       v-model="editForm.haiku_mapped_model"
                       type="text"
                       :placeholder="
                         t('admin.groups.openaiMessages.haikuModelPlaceholder')
                       "
-                      class="input"
                     />
                   </div>
                 </div>
@@ -2499,7 +2309,7 @@
                           <label class="input-label">{{
                             t("admin.groups.openaiMessages.claudeModel")
                           }}</label>
-                          <input
+                          <Input
                             v-model="row.claude_model"
                             type="text"
                             :placeholder="
@@ -2507,7 +2317,7 @@
                                 'admin.groups.openaiMessages.claudeModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-dark-900"
+                            class="bg-card focus:bg-card dark:focus:bg-dark-900"
                           />
                         </div>
                         <div
@@ -2523,7 +2333,7 @@
                           <label class="input-label">{{
                             t("admin.groups.openaiMessages.targetModel")
                           }}</label>
-                          <input
+                          <Input
                             v-model="row.target_model"
                             type="text"
                             :placeholder="
@@ -2531,7 +2341,7 @@
                                 'admin.groups.openaiMessages.targetModelPlaceholder',
                               )
                             "
-                            class="input bg-card focus:bg-card  dark:focus:bg-dark-900"
+                            class="bg-card focus:bg-card dark:focus:bg-dark-900"
                           />
                         </div>
                       </div>
@@ -2589,27 +2399,13 @@
                 }}
               </p>
             </div>
-            <button
-              type="button"
-              @click="
-                editForm.require_oauth_only = !editForm.require_oauth_only
-              "
-              class="relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-              :class="
-                editForm.require_oauth_only
-                  ? 'bg-primary-500'
-                  : 'bg-muted '
-              "
-            >
-              <span
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out"
-                :class="
-                  editForm.require_oauth_only
-                    ? 'translate-x-6'
-                    : 'translate-x-1'
-                "
-              />
-            </button>
+            <Switch
+
+              :checked="editForm.require_oauth_only"
+
+              @update:checked="(val: boolean) => editForm.require_oauth_only = val"
+
+            />
           </div>
 
           <!-- require_privacy_set toggle -->
@@ -2626,27 +2422,13 @@
                 }}
               </p>
             </div>
-            <button
-              type="button"
-              @click="
-                editForm.require_privacy_set = !editForm.require_privacy_set
-              "
-              class="relative inline-flex h-6 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-              :class="
-                editForm.require_privacy_set
-                  ? 'bg-primary-500'
-                  : 'bg-muted '
-              "
-            >
-              <span
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out"
-                :class="
-                  editForm.require_privacy_set
-                    ? 'translate-x-6'
-                    : 'translate-x-1'
-                "
-              />
-            </button>
+            <Switch
+
+              :checked="editForm.require_privacy_set"
+
+              @update:checked="(val: boolean) => editForm.require_privacy_set = val"
+
+            />
           </div>
         </div>
 
@@ -2703,27 +2485,13 @@
           </div>
           <!-- 启用开关 -->
           <div class="flex items-center gap-3 mb-3">
-            <button
-              type="button"
-              @click="
-                editForm.model_routing_enabled = !editForm.model_routing_enabled
-              "
-              :class="[
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                editForm.model_routing_enabled
-                  ? 'bg-primary-500'
-                  : 'bg-muted ',
-              ]"
-            >
-              <span
-                :class="[
-                  'inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform',
-                  editForm.model_routing_enabled
-                    ? 'translate-x-6'
-                    : 'translate-x-1',
-                ]"
-              />
-            </button>
+            <Switch
+
+              :checked="editForm.model_routing_enabled"
+
+              @update:checked="(val: boolean) => editForm.model_routing_enabled = val"
+
+            />
             <span class="text-sm text-muted-foreground">
               {{
                 editForm.model_routing_enabled
@@ -2754,10 +2522,10 @@
                     <label class="input-label text-xs">{{
                       t("admin.groups.modelRouting.modelPattern")
                     }}</label>
-                    <input
+                    <Input
                       v-model="rule.pattern"
                       type="text"
-                      class="input text-sm"
+                      class="text-sm"
                       :placeholder="
                         t('admin.groups.modelRouting.modelPatternPlaceholder')
                       "
@@ -2789,12 +2557,12 @@
                     </div>
                     <!-- 账号搜索输入框 -->
                     <div class="relative account-search-container">
-                      <input
+                      <Input
                         v-model="
                           accountSearchKeyword[getEditRuleSearchKey(rule)]
                         "
                         type="text"
-                        class="input text-sm"
+                        class="text-sm"
                         :placeholder="
                           t(
                             'admin.groups.modelRouting.searchAccountPlaceholder',
@@ -2867,18 +2635,16 @@
 
       <template #footer>
         <div class="flex justify-end gap-3 pt-4">
-          <button
+          <Button variant="secondary"
             @click="closeEditModal"
             type="button"
-            class="btn btn-secondary"
           >
             {{ t("common.cancel") }}
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form="edit-group-form"
             :disabled="submitting"
-            class="btn btn-primary"
             data-tour="group-form-submit"
           >
             <svg
@@ -2902,7 +2668,7 @@
               ></path>
             </svg>
             {{ submitting ? t("admin.groups.updating") : t("common.update") }}
-          </button>
+          </Button>
         </div>
       </template>
     </BaseDialog>
@@ -2971,17 +2737,15 @@
 
       <template #footer>
         <div class="flex justify-end gap-3 pt-4">
-          <button
+          <Button variant="secondary"
             @click="closeSortModal"
             type="button"
-            class="btn btn-secondary"
           >
             {{ t("common.cancel") }}
-          </button>
-          <button
+          </Button>
+          <Button
             @click="saveSortOrder"
             :disabled="sortSubmitting"
-            class="btn btn-primary"
           >
             <svg
               v-if="sortSubmitting"
@@ -3004,7 +2768,7 @@
               ></path>
             </svg>
             {{ sortSubmitting ? t("common.saving") : t("common.save") }}
-          </button>
+          </Button>
         </div>
       </template>
     </BaseDialog>
@@ -3045,6 +2809,10 @@ import EmptyState from "@/components/common/EmptyState.vue";
 import Select from "@/components/common/Select.vue";
 import PlatformIcon from "@/components/common/PlatformIcon.vue";
 import Icon from "@/components/icons/Icon.vue";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import GroupRateMultipliersModal from "@/components/admin/group/GroupRateMultipliersModal.vue";
 import GroupRPMOverridesModal from "@/components/admin/group/GroupRPMOverridesModal.vue";
 import GroupCapacityBadge from "@/components/common/GroupCapacityBadge.vue";

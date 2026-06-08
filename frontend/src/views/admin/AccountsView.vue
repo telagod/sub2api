@@ -18,143 +18,121 @@
           >
             <template #after>
               <!-- Auto Refresh Dropdown -->
-              <div class="relative" ref="autoRefreshDropdownRef">
-                <button
-                  @click="
-                    showAutoRefreshDropdown = !showAutoRefreshDropdown;
-                    showAccountToolsDropdown = false
-                  "
-                  class="btn btn-secondary px-2 md:px-3"
-                  :title="t('admin.accounts.autoRefresh')"
-                >
-                  <Icon name="refresh" size="sm" :class="[autoRefreshEnabled ? 'animate-spin' : '']" />
-                  <span class="hidden md:inline">
-                    {{
-                      autoRefreshEnabled
-                        ? t('admin.accounts.autoRefreshCountdown', { seconds: autoRefreshCountdown })
-                        : t('admin.accounts.autoRefresh')
-                    }}
-                  </span>
-                </button>
-                <div
-                  v-if="showAutoRefreshDropdown"
-                  class="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-md border border-border bg-card shadow-metal"
-                >
-                  <div class="p-2">
-                    <button
-                      @click="setAutoRefreshEnabled(!autoRefreshEnabled)"
-                      class="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-foreground/85 hover:bg-accent"
-                    >
-                      <span>{{ t('admin.accounts.enableAutoRefresh') }}</span>
-                      <Icon v-if="autoRefreshEnabled" name="check" size="sm" class="text-primary-200" />
-                    </button>
-                    <div class="my-1 border-t border-border"></div>
-                    <button
-                      v-for="sec in autoRefreshIntervals"
-                      :key="sec"
-                      @click="setAutoRefreshInterval(sec)"
-                      class="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-foreground/85 hover:bg-accent"
-                    >
-                      <span>{{ autoRefreshIntervalLabel(sec) }}</span>
-                      <Icon v-if="autoRefreshIntervalSeconds === sec" name="check" size="sm" class="text-primary-200" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <DropdownMenu v-model:open="showAutoRefreshDropdown" @update:open="(v: boolean) => { if (v) showAccountToolsDropdown = false }">
+                <DropdownMenuTrigger as-child>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    class="px-2 md:px-3"
+                    :title="t('admin.accounts.autoRefresh')"
+                  >
+                    <Icon name="refresh" size="sm" :class="[autoRefreshEnabled ? 'animate-spin' : '']" />
+                    <span class="hidden md:inline">
+                      {{
+                        autoRefreshEnabled
+                          ? t('admin.accounts.autoRefreshCountdown', { seconds: autoRefreshCountdown })
+                          : t('admin.accounts.autoRefresh')
+                      }}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" class="w-56">
+                  <DropdownMenuCheckboxItem
+                    :checked="autoRefreshEnabled"
+                    @update:checked="setAutoRefreshEnabled(!autoRefreshEnabled)"
+                  >
+                    {{ t('admin.accounts.enableAutoRefresh') }}
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuCheckboxItem
+                    v-for="sec in autoRefreshIntervals"
+                    :key="sec"
+                    :checked="autoRefreshIntervalSeconds === sec"
+                    @select="(e: Event) => { e.preventDefault(); setAutoRefreshInterval(sec) }"
+                  >
+                    {{ autoRefreshIntervalLabel(sec) }}
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <!-- More Tools Dropdown -->
-              <div class="relative" ref="accountToolsDropdownRef">
-                <button
-                  @click="
-                    showAccountToolsDropdown = !showAccountToolsDropdown;
-                    showAutoRefreshDropdown = false
-                  "
-                  class="btn btn-secondary px-2 md:px-3"
-                  :title="t('admin.accounts.moreActions')"
-                >
-                  <Icon name="more" size="sm" class="md:mr-1.5" />
-                  <span class="hidden md:inline">{{ t('admin.accounts.moreActions') }}</span>
-                  <Icon name="chevronDown" size="xs" class="ml-1 hidden md:inline" />
-                </button>
-                <div
-                  v-if="showAccountToolsDropdown"
-                  class="absolute right-0 z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] origin-top-right overflow-hidden rounded-lg border border-border bg-card shadow-metal"
-                >
-                  <div class="max-h-[70vh] overflow-y-auto p-2">
-                    <div class="px-2 py-2">
-                      <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {{ t('admin.accounts.dataActions') }}
-                      </div>
-                    </div>
-                    <button class="account-tools-menu-item" @click="openSyncFromCrs">
-                      <span class="account-tools-menu-icon bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
-                        <Icon name="sync" size="sm" />
-                      </span>
-                      <span class="flex-1 text-left">{{ t('admin.accounts.syncFromCrs') }}</span>
-                    </button>
-                    <button class="account-tools-menu-item" @click="openImportData">
-                      <span class="account-tools-menu-icon bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
-                        <Icon name="upload" size="sm" />
-                      </span>
-                      <span class="flex-1 text-left">{{ t('admin.accounts.dataImport') }}</span>
-                    </button>
-                    <button class="account-tools-menu-item" @click="openExportDataDialogFromMenu">
-                      <span class="account-tools-menu-icon bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
-                        <Icon name="download" size="sm" />
-                      </span>
-                      <span class="flex-1 text-left">
-                        {{ selIds.length ? t('admin.accounts.dataExportSelected') : t('admin.accounts.dataExport') }}
-                      </span>
-                      <span
-                        v-if="selIds.length"
-                        class="rounded-full bg-primary-300/10 px-2 py-0.5 text-xs font-medium text-primary-200"
-                      >
-                        {{ t('admin.accounts.selectedCount', { count: selIds.length }) }}
-                      </span>
-                    </button>
+              <DropdownMenu v-model:open="showAccountToolsDropdown" @update:open="(v: boolean) => { if (v) showAutoRefreshDropdown = false }">
+                <DropdownMenuTrigger as-child>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    class="px-2 md:px-3"
+                    :title="t('admin.accounts.moreActions')"
+                  >
+                    <Icon name="more" size="sm" class="md:mr-1.5" />
+                    <span class="hidden md:inline">{{ t('admin.accounts.moreActions') }}</span>
+                    <Icon name="chevronDown" size="xs" class="ml-1 hidden md:inline" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" class="w-[min(20rem,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto">
+                  <DropdownMenuLabel class="text-xs uppercase tracking-wide text-muted-foreground">
+                    {{ t('admin.accounts.dataActions') }}
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem @select="openSyncFromCrs" class="gap-3">
+                    <span class="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
+                      <Icon name="sync" size="sm" />
+                    </span>
+                    <span class="flex-1 text-left">{{ t('admin.accounts.syncFromCrs') }}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem @select="openImportData" class="gap-3">
+                    <span class="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
+                      <Icon name="upload" size="sm" />
+                    </span>
+                    <span class="flex-1 text-left">{{ t('admin.accounts.dataImport') }}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem @select="openExportDataDialogFromMenu" class="gap-3">
+                    <span class="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
+                      <Icon name="download" size="sm" />
+                    </span>
+                    <span class="flex-1 text-left">
+                      {{ selIds.length ? t('admin.accounts.dataExportSelected') : t('admin.accounts.dataExport') }}
+                    </span>
+                    <Badge
+                      v-if="selIds.length"
+                      variant="secondary"
+                      class="rounded-full bg-primary-300/10 text-primary-200"
+                    >
+                      {{ t('admin.accounts.selectedCount', { count: selIds.length }) }}
+                    </Badge>
+                  </DropdownMenuItem>
 
-                    <div class="my-2 border-t border-border"></div>
-                    <div class="px-2 py-2">
-                      <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {{ t('admin.accounts.toolActions') }}
-                      </div>
-                    </div>
-                    <button class="account-tools-menu-item" @click="openErrorPassthrough">
-                      <span class="account-tools-menu-icon bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
-                        <Icon name="shield" size="sm" />
-                      </span>
-                      <span class="flex-1 text-left">{{ t('admin.errorPassthrough.title') }}</span>
-                    </button>
-                    <button class="account-tools-menu-item" @click="openTLSFingerprintProfiles">
-                      <span class="account-tools-menu-icon bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
-                        <Icon name="lock" size="sm" />
-                      </span>
-                      <span class="flex-1 text-left">{{ t('admin.tlsFingerprintProfiles.title') }}</span>
-                    </button>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel class="text-xs uppercase tracking-wide text-muted-foreground">
+                    {{ t('admin.accounts.toolActions') }}
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem @select="openErrorPassthrough" class="gap-3">
+                    <span class="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
+                      <Icon name="shield" size="sm" />
+                    </span>
+                    <span class="flex-1 text-left">{{ t('admin.errorPassthrough.title') }}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem @select="openTLSFingerprintProfiles" class="gap-3">
+                    <span class="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
+                      <Icon name="lock" size="sm" />
+                    </span>
+                    <span class="flex-1 text-left">{{ t('admin.tlsFingerprintProfiles.title') }}</span>
+                  </DropdownMenuItem>
 
-                    <div class="my-2 border-t border-border"></div>
-                    <div class="px-2 py-2">
-                      <div class="flex items-center justify-between gap-3">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {{ t('admin.accounts.viewColumns') }}
-                        </span>
-                        <Icon name="grid" size="sm" class="text-muted-foreground" />
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-1 gap-1">
-                      <button
-                        v-for="col in toggleableColumns"
-                        :key="col.key"
-                        @click="toggleColumn(col.key)"
-                        class="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-foreground/85 transition-colors hover:bg-accent"
-                      >
-                        <span class="truncate">{{ col.label }}</span>
-                        <Icon v-if="isColumnVisible(col.key)" name="check" size="sm" class="text-primary-200" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel class="flex items-center justify-between gap-3 text-xs uppercase tracking-wide text-muted-foreground">
+                    <span>{{ t('admin.accounts.viewColumns') }}</span>
+                    <Icon name="grid" size="sm" class="text-muted-foreground" />
+                  </DropdownMenuLabel>
+                  <DropdownMenuCheckboxItem
+                    v-for="col in toggleableColumns"
+                    :key="col.key"
+                    :checked="isColumnVisible(col.key)"
+                    @select="(e: Event) => { e.preventDefault(); toggleColumn(col.key) }"
+                  >
+                    <span class="truncate">{{ col.label }}</span>
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </template>
           </AccountTableActions>
         </div>
@@ -163,12 +141,14 @@
           class="mt-2 flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-400"
         >
           <span>{{ t('admin.accounts.listPendingSyncHint') }}</span>
-          <button
-            class="btn btn-secondary px-2 py-1 text-xs"
+          <Button
+            variant="secondary"
+            size="sm"
+            class="px-2 py-1 text-xs"
             @click="syncPendingListChanges"
           >
             {{ t('admin.accounts.listPendingSyncAction') }}
-          </button>
+          </Button>
         </div>
       </template>
       <template #table>
@@ -199,16 +179,15 @@
           :overscan="5"
         >
           <template #header-select>
-            <input
-              type="checkbox"
-              class="h-4 w-4 cursor-pointer rounded border-border text-primary-600 focus:ring-ring"
+            <Checkbox
               :checked="allVisibleSelected"
+              class="cursor-pointer"
               @click.stop
-              @change="toggleSelectAllVisible($event)"
+              @update:checked="(val: boolean) => toggleSelectAllVisible(val)"
             />
           </template>
           <template #cell-select="{ row }">
-            <input type="checkbox" :checked="isSelected(row.id)" @change="toggleSel(row.id)" class="rounded border-border text-primary-600 focus:ring-ring" />
+            <Checkbox :checked="isSelected(row.id)" @update:checked="() => toggleSel(row.id)" />
           </template>
           <template #cell-name="{ row, value }">
             <div class="flex flex-col">
@@ -259,9 +238,12 @@
             </div>
           </template>
           <template #cell-schedulable="{ row }">
-            <button @click="handleToggleSchedulable(row)" :disabled="togglingSchedulable === row.id" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-dark-800" :class="[row.schedulable ? 'bg-primary-400 hover:bg-primary-300' : 'bg-muted hover:bg-accent']" :title="row.schedulable ? t('admin.accounts.schedulableEnabled') : t('admin.accounts.schedulableDisabled')">
-              <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="[row.schedulable ? 'translate-x-4' : 'translate-x-0']" />
-            </button>
+            <Switch
+              :checked="row.schedulable"
+              :disabled="togglingSchedulable === row.id"
+              :title="row.schedulable ? t('admin.accounts.schedulableEnabled') : t('admin.accounts.schedulableDisabled')"
+              @update:checked="() => handleToggleSchedulable(row)"
+            />
           </template>
           <template #cell-today_stats="{ row }">
             <AccountTodayStatsCell
@@ -288,15 +270,6 @@
             />
           </template>
           <template #cell-proxy="{ row }">
-<<<<<<< HEAD
-            <div v-if="row.proxy" class="flex items-center gap-2">
-              <span class="text-sm text-foreground/85">{{ row.proxy.name }}</span>
-              <span v-if="row.proxy.country_code" class="text-xs text-muted-foreground">
-                ({{ row.proxy.country_code }})
-              </span>
-            </div>
-            <span v-else class="text-sm text-muted-foreground">-</span>
-=======
             <div class="flex flex-col gap-1">
               <div v-if="row.proxy" class="flex items-center gap-2">
                 <span class="text-sm text-foreground/85">{{ row.proxy.name }}</span>
@@ -307,16 +280,15 @@
               <span v-else class="text-sm text-muted-foreground">-</span>
               <div v-if="row.proxy && row.proxy.expires_at" class="flex items-center gap-2 text-xs">
                 <span class="text-foreground/75">{{ formatDateTime(row.proxy.expires_at) }}</span>
-                <span :class="proxyExpiryBadge(row.proxy)">{{ proxyExpiryText(row.proxy) }}</span>
+                <Badge variant="outline" :class="proxyExpiryBadge(row.proxy)">{{ proxyExpiryText(row.proxy) }}</Badge>
               </div>
               <div v-if="row.proxy_fallback_origin_id" class="flex items-center gap-1">
-                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30" :title="t('admin.accounts.fallbackActiveTip', { origin: row.proxy_fallback_origin_name })">
+                <Badge variant="outline" class="bg-amber-500/10 text-amber-400 border-amber-500/30" :title="t('admin.accounts.fallbackActiveTip', { origin: row.proxy_fallback_origin_name })">
                   {{ t('admin.accounts.fallbackActive') }}
-                </span>
-                <button class="text-xs px-1.5 py-0.5 rounded border border-border text-foreground/75 hover:bg-accent" @click="onRevertFallback(row)">{{ t('admin.accounts.revertProxy') }}</button>
+                </Badge>
+                <Button variant="outline" size="sm" class="text-xs px-1.5 py-0.5 h-auto text-foreground/75" @click="onRevertFallback(row)">{{ t('admin.accounts.revertProxy') }}</Button>
               </div>
             </div>
->>>>>>> upstream/main
           </template>
           <template #cell-rate_multiplier="{ row }">
             <span class="text-sm font-mono text-foreground/85">
@@ -336,35 +308,37 @@
             <div class="flex flex-col items-start gap-1">
               <span class="text-sm text-muted-foreground">{{ formatExpiresAt(value) }}</span>
               <div v-if="isExpired(value) || (row.auto_pause_on_expired && value)" class="flex items-center gap-1">
-                <span
+                <Badge
                   v-if="isExpired(value)"
-                  class="inline-flex items-center rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400"
+                  variant="outline"
+                  class="border-amber-500/30 bg-amber-500/10 text-amber-400"
                 >
                   {{ t('admin.accounts.expired') }}
-                </span>
-                <span
+                </Badge>
+                <Badge
                   v-if="row.auto_pause_on_expired && value"
-                  class="inline-flex items-center rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400"
+                  variant="outline"
+                  class="border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                 >
                   {{ t('admin.accounts.autoPauseOnExpired') }}
-                </span>
+                </Badge>
               </div>
             </div>
           </template>
           <template #cell-actions="{ row }">
             <div class="flex items-center gap-1">
-              <button @click="handleEdit(row)" class="flex flex-col items-center gap-0.5 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-primary-200">
+              <Button variant="ghost" size="sm" class="flex flex-col items-center gap-0.5 h-auto p-1.5 text-muted-foreground hover:text-primary-200" @click="handleEdit(row)">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
                 <span class="text-xs">{{ t('common.edit') }}</span>
-              </button>
-              <button @click="handleDelete(row)" class="flex flex-col items-center gap-0.5 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400">
+              </Button>
+              <Button variant="ghost" size="sm" class="flex flex-col items-center gap-0.5 h-auto p-1.5 text-muted-foreground hover:bg-red-500/10 hover:text-red-400" @click="handleDelete(row)">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                 <span class="text-xs">{{ t('common.delete') }}</span>
-              </button>
-              <button @click="openMenu(row, $event)" class="flex flex-col items-center gap-0.5 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+              </Button>
+              <Button variant="ghost" size="sm" class="flex flex-col items-center gap-0.5 h-auto p-1.5 text-muted-foreground hover:text-foreground" @click="openMenu(row, $event)">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
                 <span class="text-xs">{{ t('common.more') }}</span>
-              </button>
+              </Button>
             </div>
           </template>
         </DataTable>
@@ -396,7 +370,7 @@
     <ConfirmDialog :show="showDeleteDialog" :title="t('admin.accounts.deleteAccount')" :message="t('admin.accounts.deleteConfirm', { name: deletingAcc?.name })" :confirm-text="t('common.delete')" :cancel-text="t('common.cancel')" :danger="true" @confirm="confirmDelete" @cancel="showDeleteDialog = false" />
     <ConfirmDialog :show="showExportDataDialog" :title="t('admin.accounts.dataExport')" :message="t('admin.accounts.dataExportConfirmMessage')" :confirm-text="t('admin.accounts.dataExportConfirm')" :cancel-text="t('common.cancel')" @confirm="handleExportData" @cancel="showExportDataDialog = false">
       <label class="flex items-center gap-2 text-sm text-foreground/85">
-        <input type="checkbox" class="h-4 w-4 rounded border-border text-primary-600 focus:ring-ring" v-model="includeProxyOnExport" />
+        <Checkbox :checked="includeProxyOnExport" @update:checked="(val: boolean) => includeProxyOnExport = val" />
         <span>{{ t('admin.accounts.dataExportIncludeProxies') }}</span>
       </label>
     </ConfirmDialog>
@@ -439,6 +413,32 @@ import AccountGroupsCell from '@/components/account/AccountGroupsCell.vue'
 import AccountCapacityCell from '@/components/account/AccountCapacityCell.vue'
 import PlatformTypeBadge from '@/components/common/PlatformTypeBadge.vue'
 import Icon from '@/components/icons/Icon.vue'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu'
 import ErrorPassthroughRulesModal from '@/components/admin/ErrorPassthroughRulesModal.vue'
 import TLSFingerprintProfilesModal from '@/components/admin/TLSFingerprintProfilesModal.vue'
 import { buildOpenAIUsageRefreshKey } from '@/utils/accountUsageRefresh'
@@ -1233,9 +1233,8 @@ const openMenu = (a: Account, e: MouseEvent) => {
 
   menu.show = true
 }
-const toggleSelectAllVisible = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  toggleVisible(target.checked)
+const toggleSelectAllVisible = (checked: boolean) => {
+  toggleVisible(checked)
 }
 const handleBulkDelete = async () => { if(!confirm(t('common.confirm'))) return; try { await Promise.all(selIds.value.map(id => adminAPI.accounts.delete(id))); clearSelection(); reload() } catch (error) { console.error('Failed to bulk delete accounts:', error) } }
 const handleBulkResetStatus = async () => {
@@ -1721,12 +1720,3 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-.account-tools-menu-item {
-  @apply flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-foreground/85 transition-colors hover:bg-accent;
-}
-
-.account-tools-menu-icon {
-  @apply inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md;
-}
-</style>

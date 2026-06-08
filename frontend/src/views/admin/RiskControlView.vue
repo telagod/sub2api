@@ -12,14 +12,14 @@
             <p class="mt-1 text-sm text-muted-foreground">{{ t('admin.riskControl.description') }}</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <button type="button" class="btn btn-secondary inline-flex items-center gap-2" :disabled="statusLoading" @click="loadStatus(false)">
+            <Button variant="secondary" type="button" class="inline-flex items-center gap-2" :disabled="statusLoading" @click="loadStatus(false)">
               <Icon name="refresh" size="sm" :class="statusLoading ? 'animate-spin' : ''" />
               {{ t('admin.riskControl.refreshStatus') }}
-            </button>
-            <button type="button" class="btn btn-primary inline-flex items-center gap-2" @click="openSettings">
+            </Button>
+            <Button type="button" class="inline-flex items-center gap-2" @click="openSettings">
               <Icon name="cog" size="sm" />
               {{ t('admin.riskControl.openSettings') }}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -237,10 +237,10 @@
                 <h2 class="text-lg font-semibold text-foreground dark:text-white">{{ t('admin.riskControl.records') }}</h2>
                 <p class="mt-1 text-sm text-muted-foreground">{{ t('admin.riskControl.recordsHint') }}</p>
               </div>
-              <button type="button" class="btn btn-secondary inline-flex items-center gap-2" :disabled="logsLoading" @click="loadLogs">
+              <Button variant="secondary" type="button" class="inline-flex items-center gap-2" :disabled="logsLoading" @click="loadLogs">
                 <Icon name="refresh" size="sm" :class="logsLoading ? 'animate-spin' : ''" />
                 {{ t('admin.riskControl.refresh') }}
-              </button>
+              </Button>
             </div>
 
             <div class="flex flex-col gap-2 rounded-lg border border-border  sm:flex-row sm:items-center sm:justify-between">
@@ -267,9 +267,9 @@
               <Select v-model="filters.result" :options="resultOptions" @change="reloadLogsFromFirstPage" />
               <Select v-model="filters.group_id" :options="groupFilterOptions" @change="reloadLogsFromFirstPage" />
               <Select v-model="filters.endpoint" :options="endpointOptions" @change="reloadLogsFromFirstPage" />
-              <input v-model.trim="filters.search" type="search" class="input" :placeholder="t('admin.riskControl.filters.search')" @keyup.enter="reloadLogsFromFirstPage" />
-              <input v-model="filters.from" type="datetime-local" class="input" :title="t('admin.riskControl.filters.from')" @change="reloadLogsFromFirstPage" />
-              <input v-model="filters.to" type="datetime-local" class="input" :title="t('admin.riskControl.filters.to')" @change="reloadLogsFromFirstPage" />
+              <Input v-model.trim="filters.search" type="search"  :placeholder="t('admin.riskControl.filters.search')" @keyup.enter="reloadLogsFromFirstPage" />
+              <Input v-model="filters.from" type="datetime-local"  :title="t('admin.riskControl.filters.from')" @change="reloadLogsFromFirstPage" />
+              <Input v-model="filters.to" type="datetime-local"  :title="t('admin.riskControl.filters.to')" @change="reloadLogsFromFirstPage" />
             </div>
           </div>
 
@@ -400,24 +400,24 @@
               </div>
               <div>
                 <label class="input-label">{{ t('admin.riskControl.baseUrl') }}</label>
-                <input v-model.trim="configForm.base_url" type="url" class="input" placeholder="https://api.openai.com" />
+                <Input v-model.trim="configForm.base_url" type="url"  placeholder="https://api.openai.com" />
               </div>
               <div>
                 <label class="input-label">{{ t('admin.riskControl.model') }}</label>
-                <input v-model.trim="configForm.model" type="text" class="input" placeholder="omni-moderation-latest" />
+                <Input v-model.trim="configForm.model" type="text"  placeholder="omni-moderation-latest" />
               </div>
               <div>
                 <label class="input-label">{{ t('admin.riskControl.timeoutMs') }}</label>
-                <input v-model.number="configForm.timeout_ms" type="number" min="500" max="30000" class="input" />
+                <Input v-model.number="configForm.timeout_ms" type="number" min="500" max="30000"  />
               </div>
               <div>
                 <label class="input-label">{{ t('admin.riskControl.retryCount') }}</label>
-                <input v-model.number="configForm.retry_count" type="number" min="0" max="5" class="input" />
+                <Input v-model.number="configForm.retry_count" type="number" min="0" max="5"  />
               </div>
               <div>
                 <label class="input-label">{{ t('admin.riskControl.sampleRate') }}</label>
                 <div class="relative">
-                  <input v-model.number="configForm.sample_rate" type="number" min="0" max="100" step="1" class="input pr-8" />
+                  <Input v-model.number="configForm.sample_rate" type="number" min="0" max="100" step="1" class="pr-8" />
                   <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
                 </div>
               </div>
@@ -437,33 +437,33 @@
                   </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                  <button
+                  <Button variant="secondary"
                     type="button"
-                    class="btn btn-secondary inline-flex items-center gap-2"
+                    class="inline-flex items-center gap-2"
                     :disabled="apiKeyTesting || inputApiKeyCount === 0 || configForm.clear_api_key"
                     @click="testApiKeys(true)"
                   >
                     <Icon name="beaker" size="sm" :class="apiKeyTesting ? 'animate-pulse' : ''" />
                     {{ apiKeyTesting ? t('admin.riskControl.testingApiKeys') : t('admin.riskControl.testInputApiKeys') }}
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="secondary"
                     type="button"
-                    class="btn btn-secondary inline-flex items-center gap-2"
+                    class="inline-flex items-center gap-2"
                     :disabled="apiKeyTesting || effectiveStoredApiKeyCount === 0 || pendingDeletedApiKeyCount > 0 || configForm.clear_api_key || configForm.api_keys_mode === 'replace'"
                     @click="testApiKeys(false)"
                   >
                     <Icon name="shield" size="sm" />
                     {{ storedApiKeyTestButtonText }}
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="secondary"
                     v-if="configForm.api_key_configured"
                     type="button"
-                    class="btn btn-secondary inline-flex items-center gap-2"
+                    class="inline-flex items-center gap-2"
                     @click="toggleClearApiKey"
                   >
                     <Icon :name="configForm.clear_api_key ? 'x' : 'trash'" size="sm" />
                     {{ configForm.clear_api_key ? t('admin.riskControl.keepApiKey') : t('admin.riskControl.clearApiKey') }}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -495,13 +495,13 @@
                       </button>
                     </div>
                   </div>
-                  <textarea
+                  <Textarea
                     v-model="configForm.api_keys_text"
-                    class="input min-h-44 resize-y font-mono text-sm"
+                    class="min-h-44 resize-y font-mono text-sm"
                     :placeholder="apiKeysPlaceholder"
                     autocomplete="new-password"
                     :disabled="configForm.clear_api_key"
-                  ></textarea>
+                   />
                   <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span class="inline-flex rounded-md bg-muted px-2 py-1 ">
                       {{ t('admin.riskControl.inputApiKeyCount', { count: inputApiKeyCount }) }}
@@ -536,11 +536,11 @@
                         {{ t('admin.riskControl.clearAuditTest') }}
                       </button>
                     </div>
-                    <textarea
+                    <Textarea
                       v-model="moderationTestPrompt"
-                      class="input min-h-24 resize-y text-sm"
+                      class="min-h-24 resize-y text-sm"
                       :placeholder="t('admin.riskControl.auditTestPromptPlaceholder')"
-                    ></textarea>
+                     />
                     <div
                       class="mt-3 rounded-lg border border-dashed border-border bg-card"
                       @dragover.prevent
@@ -721,7 +721,7 @@
             <div v-if="!configForm.all_groups" class="space-y-4">
               <div class="relative">
                 <Icon name="search" size="sm" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input v-model.trim="groupSearch" type="search" class="input pl-9" :placeholder="t('admin.riskControl.searchGroups')" />
+                <Input v-model.trim="groupSearch" type="search" class="pl-9" :placeholder="t('admin.riskControl.searchGroups')" />
               </div>
               <div class="grid max-h-[420px] grid-cols-1 gap-3 overflow-y-auto pr-1 md:grid-cols-2 xl:grid-cols-3">
                 <button
@@ -797,11 +797,11 @@
           <div v-else-if="activeSettingsTab === 'runtime'" class="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <div>
               <label class="input-label">{{ t('admin.riskControl.workerCount') }}</label>
-              <input v-model.number="configForm.worker_count" type="number" min="1" max="32" class="input" />
+              <Input v-model.number="configForm.worker_count" type="number" min="1" max="32"  />
             </div>
             <div>
               <label class="input-label">{{ t('admin.riskControl.queueSize') }}</label>
-              <input v-model.number="configForm.queue_size" type="number" min="100" max="100000" class="input" />
+              <Input v-model.number="configForm.queue_size" type="number" min="100" max="100000"  />
             </div>
             <div class="flex items-center justify-between rounded-lg border border-border lg:col-span-2">
               <div>
@@ -826,32 +826,32 @@
                     </p>
                     <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.riskControl.flaggedHashHint') }}</p>
                   </div>
-                  <button
+                  <Button variant="secondary"
                     type="button"
-                    class="btn btn-secondary inline-flex items-center justify-center gap-2 text-red-400 hover:text-red-400"
+                    class="inline-flex items-center justify-center gap-2 text-red-400 hover:text-red-400"
                     :disabled="hashActionLoading || (status?.flagged_hash_count ?? 0) === 0"
                     @click="clearFlaggedHashes"
                   >
                     <Icon name="trash" size="sm" :class="hashActionLoading ? 'animate-pulse' : ''" />
                     {{ t('admin.riskControl.clearFlaggedHashes') }}
-                  </button>
+                  </Button>
                 </div>
                 <div class="mt-3 flex flex-col gap-2 sm:flex-row">
-                  <input
+                  <Input
                     v-model.trim="flaggedHashInput"
                     type="text"
-                    class="input font-mono text-sm"
+                    class="font-mono text-sm"
                     :placeholder="t('admin.riskControl.flaggedHashPlaceholder')"
                   />
-                  <button
+                  <Button variant="secondary"
                     type="button"
-                    class="btn btn-secondary inline-flex items-center justify-center gap-2"
+                    class="inline-flex items-center justify-center gap-2"
                     :disabled="hashActionLoading || !isFlaggedHashInputValid"
                     @click="deleteFlaggedHash"
                   >
                     <Icon name="trash" size="sm" />
                     {{ t('admin.riskControl.deleteFlaggedHash') }}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -861,11 +861,11 @@
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
               <div>
                 <label class="input-label">{{ t('admin.riskControl.blockStatus') }}</label>
-                <input v-model.number="configForm.block_status" type="number" min="400" max="599" class="input" />
+                <Input v-model.number="configForm.block_status" type="number" min="400" max="599"  />
               </div>
               <div>
                 <label class="input-label">{{ t('admin.riskControl.blockMessage') }}</label>
-                <input v-model.trim="configForm.block_message" type="text" class="input" />
+                <Input v-model.trim="configForm.block_message" type="text"  />
               </div>
               <div class="flex items-center justify-between rounded-lg border border-border">
                 <div>
@@ -883,11 +883,11 @@
               </div>
               <div>
                 <label class="input-label">{{ t('admin.riskControl.banThreshold') }}</label>
-                <input v-model.number="configForm.ban_threshold" type="number" min="1" max="1000" class="input" />
+                <Input v-model.number="configForm.ban_threshold" type="number" min="1" max="1000"  />
               </div>
               <div>
                 <label class="input-label">{{ t('admin.riskControl.violationWindowHours') }}</label>
-                <input v-model.number="configForm.violation_window_hours" type="number" min="1" max="8760" class="input" />
+                <Input v-model.number="configForm.violation_window_hours" type="number" min="1" max="8760"  />
               </div>
             </div>
           </div>
@@ -898,14 +898,14 @@
                 <h3 class="text-base font-semibold text-foreground dark:text-white">{{ t('admin.riskControl.riskThresholds') }}</h3>
                 <p class="mt-1 text-sm text-muted-foreground">{{ t('admin.riskControl.riskThresholdsHint') }}</p>
               </div>
-              <button
+              <Button variant="secondary"
                 type="button"
-                class="btn btn-secondary inline-flex items-center justify-center gap-2"
+                class="inline-flex items-center justify-center gap-2"
                 @click="resetRiskThresholds"
               >
                 <Icon name="refresh" size="sm" />
                 {{ t('admin.riskControl.riskThresholdReset') }}
-              </button>
+              </Button>
             </div>
 
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -932,7 +932,7 @@
                     {{ t('admin.riskControl.riskThresholdPercent') }}
                   </label>
                   <div class="relative">
-                    <input
+                    <Input
                       :id="`risk-threshold-${row.category}`"
                       v-model.number="configForm.thresholds[row.category]"
                       :data-test="`risk-threshold-${row.category}`"
@@ -940,7 +940,7 @@
                       min="0"
                       max="100"
                       step="0.1"
-                      class="input pr-8 font-mono"
+                      class="pr-8 font-mono"
                     />
                     <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
                   </div>
@@ -1001,12 +1001,12 @@
                   {{ t('admin.riskControl.blockedKeywordCount', { count: blockedKeywordCount }) }}
                 </span>
               </div>
-              <textarea
+              <Textarea
                 v-model="configForm.blocked_keywords_text"
-                class="input min-h-52 resize-y font-mono text-sm"
+                class="min-h-52 resize-y font-mono text-sm"
                 :placeholder="t('admin.riskControl.blockedKeywordsPlaceholder')"
                 :disabled="configForm.keyword_blocking_mode === 'api_only'"
-              ></textarea>
+               />
               <p class="mt-2 text-xs text-muted-foreground">
                 {{ t('admin.riskControl.blockedKeywordsLimit', { max: blockedKeywordMax }) }}
               </p>
@@ -1016,11 +1016,11 @@
           <div v-else class="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <div>
               <label class="input-label">{{ t('admin.riskControl.hitRetentionDays') }}</label>
-              <input v-model.number="configForm.hit_retention_days" type="number" min="1" max="3650" class="input" />
+              <Input v-model.number="configForm.hit_retention_days" type="number" min="1" max="3650"  />
             </div>
             <div>
               <label class="input-label">{{ t('admin.riskControl.nonHitRetentionDays') }}</label>
-              <input v-model.number="configForm.non_hit_retention_days" type="number" min="1" max="3" class="input" />
+              <Input v-model.number="configForm.non_hit_retention_days" type="number" min="1" max="3"  />
             </div>
             <div class="rounded-lg border border-border dark:text-muted-foreground lg:col-span-2">
               <div class="flex flex-wrap items-center gap-3">
@@ -1033,12 +1033,12 @@
 
         <template #footer>
           <div class="flex justify-end gap-2">
-            <button type="button" class="btn btn-secondary" @click="settingsOpen = false">{{ t('common.cancel') }}</button>
-            <button type="button" class="btn btn-primary inline-flex items-center gap-2" :disabled="saving" @click="saveConfig">
+            <Button variant="secondary" type="button"  @click="settingsOpen = false">{{ t('common.cancel') }}</Button>
+            <Button type="button" class="inline-flex items-center gap-2" :disabled="saving" @click="saveConfig">
               <Icon v-if="saving" name="refresh" size="sm" class="animate-spin" />
               <Icon v-else name="check" size="sm" />
               {{ saving ? t('common.saving') : t('admin.riskControl.saveConfig') }}
-            </button>
+            </Button>
           </div>
         </template>
       </BaseDialog>
@@ -1091,7 +1091,7 @@
 
         <template #footer>
           <div class="flex justify-end">
-            <button type="button" class="btn btn-secondary" @click="closeInputDetail">{{ t('common.close') }}</button>
+            <Button variant="secondary" type="button"  @click="closeInputDetail">{{ t('common.close') }}</Button>
           </div>
         </template>
       </BaseDialog>
@@ -1105,6 +1105,9 @@ import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import Icon from '@/components/icons/Icon.vue'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import Select from '@/components/common/Select.vue'
 import Toggle from '@/components/common/Toggle.vue'
 import Pagination from '@/components/common/Pagination.vue'

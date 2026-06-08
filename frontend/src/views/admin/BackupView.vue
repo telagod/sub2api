@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-6">
       <!-- S3 Storage Config -->
-      <div class="card p-6">
+      <Card><CardContent class="p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="text-base font-semibold text-foreground">
@@ -17,27 +17,27 @@
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
             <label class="mb-1 block text-xs font-medium text-foreground/75">{{ t('admin.backup.s3.endpoint') }}</label>
-            <input v-model="s3Form.endpoint" class="input w-full" placeholder="https://<account_id>.r2.cloudflarestorage.com" />
+            <Input v-model="s3Form.endpoint" class="w-full" placeholder="https://<account_id>.r2.cloudflarestorage.com" />
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-foreground/75">{{ t('admin.backup.s3.region') }}</label>
-            <input v-model="s3Form.region" class="input w-full" placeholder="auto" />
+            <Input v-model="s3Form.region" class="w-full" placeholder="auto" />
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-foreground/75">{{ t('admin.backup.s3.bucket') }}</label>
-            <input v-model="s3Form.bucket" class="input w-full" />
+            <Input v-model="s3Form.bucket" class="w-full" />
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-foreground/75">{{ t('admin.backup.s3.prefix') }}</label>
-            <input v-model="s3Form.prefix" class="input w-full" placeholder="backups/" />
+            <Input v-model="s3Form.prefix" class="w-full" placeholder="backups/" />
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-foreground/75">{{ t('admin.backup.s3.accessKeyId') }}</label>
-            <input v-model="s3Form.access_key_id" class="input w-full" />
+            <Input v-model="s3Form.access_key_id" class="w-full" />
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-foreground/75">{{ t('admin.backup.s3.secretAccessKey') }}</label>
-            <input v-model="s3Form.secret_access_key" type="password" class="input w-full" :placeholder="s3SecretConfigured ? t('admin.backup.s3.secretConfigured') : ''" />
+            <Input v-model="s3Form.secret_access_key" type="password" class="w-full" :placeholder="s3SecretConfigured ? t('admin.backup.s3.secretConfigured') : ''" />
           </div>
           <label class="inline-flex items-center gap-2 text-sm text-foreground/85 md:col-span-2">
             <input v-model="s3Form.force_path_style" type="checkbox" />
@@ -45,17 +45,17 @@
           </label>
         </div>
         <div class="mt-4 flex flex-wrap gap-2">
-          <button type="button" class="btn btn-secondary btn-sm" :disabled="testingS3" @click="testS3">
+          <Button variant="secondary" size="sm" :disabled="testingS3" @click="testS3">
             {{ testingS3 ? t('common.loading') : t('admin.backup.s3.testConnection') }}
-          </button>
-          <button type="button" class="btn btn-primary btn-sm" :disabled="savingS3" @click="saveS3Config">
+          </Button>
+          <Button size="sm" :disabled="savingS3" @click="saveS3Config">
             {{ savingS3 ? t('common.loading') : t('common.save') }}
-          </button>
+          </Button>
         </div>
-      </div>
+      </CardContent></Card>
 
       <!-- Schedule Config -->
-      <div class="card p-6">
+      <Card><CardContent class="p-6">
         <div class="mb-4">
           <h3 class="text-base font-semibold text-foreground dark:text-white">
             {{ t('admin.backup.schedule.title') }}
@@ -71,29 +71,29 @@
           </label>
           <div>
             <label class="mb-1 block text-xs font-medium text-foreground/75">{{ t('admin.backup.schedule.cronExpr') }}</label>
-            <input v-model="scheduleForm.cron_expr" class="input w-full" placeholder="0 2 * * *" />
+            <Input v-model="scheduleForm.cron_expr" class="w-full" placeholder="0 2 * * *" />
             <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.backup.schedule.cronHint') }}</p>
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-foreground/75">{{ t('admin.backup.schedule.retainDays') }}</label>
-            <input v-model.number="scheduleForm.retain_days" type="number" min="0" class="input w-full" />
+            <Input v-model.number="scheduleForm.retain_days" type="number" min="0" class="w-full" />
             <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.backup.schedule.retainDaysHint') }}</p>
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-foreground/75">{{ t('admin.backup.schedule.retainCount') }}</label>
-            <input v-model.number="scheduleForm.retain_count" type="number" min="0" class="input w-full" />
+            <Input v-model.number="scheduleForm.retain_count" type="number" min="0" class="w-full" />
             <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.backup.schedule.retainCountHint') }}</p>
           </div>
         </div>
         <div class="mt-4">
-          <button type="button" class="btn btn-primary btn-sm" :disabled="savingSchedule" @click="saveSchedule">
+          <Button size="sm" :disabled="savingSchedule" @click="saveSchedule">
             {{ savingSchedule ? t('common.loading') : t('common.save') }}
-          </button>
+          </Button>
         </div>
-      </div>
+      </CardContent></Card>
 
       <!-- Backup Operations -->
-      <div class="card p-6">
+      <Card><CardContent class="p-6">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="text-base font-semibold text-foreground dark:text-white">
@@ -106,14 +106,14 @@
           <div class="flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-1">
               <label class="text-xs text-foreground/75">{{ t('admin.backup.operations.expireDays') }}</label>
-              <input v-model.number="manualExpireDays" type="number" min="0" class="input w-20 text-xs" />
+              <Input v-model.number="manualExpireDays" type="number" min="0" class="w-20 text-xs" />
             </div>
-            <button type="button" class="btn btn-primary btn-sm" :disabled="creatingBackup" @click="createBackup">
+            <Button size="sm" :disabled="creatingBackup" @click="createBackup">
               {{ creatingBackup ? t('admin.backup.operations.backing') : t('admin.backup.operations.createBackup') }}
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm" :disabled="loadingBackups" @click="loadBackups">
+            </Button>
+            <Button variant="secondary" size="sm" :disabled="loadingBackups" @click="loadBackups">
               {{ loadingBackups ? t('common.loading') : t('common.refresh') }}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -155,30 +155,30 @@
                 <td class="py-3 pr-4 text-xs">{{ formatDate(record.started_at) }}</td>
                 <td class="py-3 text-xs">
                   <div class="flex flex-wrap gap-1">
-                    <button
+                    <Button
                       v-if="record.status === 'completed'"
-                      type="button"
-                      class="btn btn-secondary btn-xs"
+                      variant="secondary"
+                      size="sm"
                       @click="downloadBackup(record.id)"
                     >
                       {{ t('admin.backup.actions.download') }}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       v-if="record.status === 'completed'"
-                      type="button"
-                      class="btn btn-secondary btn-xs"
+                      variant="secondary"
+                      size="sm"
                       :disabled="restoringId === record.id"
                       @click="restoreBackup(record.id)"
                     >
                       {{ restoringId === record.id ? t('common.loading') : t('admin.backup.actions.restore') }}
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-danger btn-xs"
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
                       @click="removeBackup(record.id)"
                     >
                       {{ t('common.delete') }}
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -190,7 +190,7 @@
             </tbody>
           </table>
         </div>
-      </div>
+      </CardContent></Card>
     </div>
 
     <!-- Cloudflare R2 Setup Guide Modal -->
@@ -270,7 +270,7 @@
             </div>
 
             <div class="mt-4 text-right">
-              <button type="button" class="btn btn-primary btn-sm" @click="showR2Guide = false">{{ t('common.close') }}</button>
+              <Button size="sm" @click="showR2Guide = false">{{ t('common.close') }}</Button>
             </div>
           </div>
         </div>
@@ -284,6 +284,12 @@ import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api'
 import { useAppStore } from '@/stores'
 import type { BackupS3Config, BackupScheduleConfig, BackupRecord } from '@/api/admin/backup'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -354,7 +360,7 @@ function startPolling(backupId: string) {
         await loadBackups()
       }
     } catch {
-      // 轮询失败时不中断
+      // ignore polling errors
     }
   }, 2000)
 }
@@ -390,7 +396,7 @@ function startRestorePolling(backupId: string) {
         await loadBackups()
       }
     } catch {
-      // 轮询失败时不中断
+      // ignore polling errors
     }
   }, 2000)
 }
@@ -407,7 +413,6 @@ function handleVisibilityChange() {
     stopPolling()
     stopRestorePolling()
   } else {
-    // 标签页恢复时刷新列表，检查是否仍有活跃操作
     loadBackups().then(() => {
       const running = backups.value.find(r => r.status === 'running')
       if (running) {
@@ -524,7 +529,6 @@ async function createBackup() {
   creatingBackup.value = true
   try {
     const record = await adminAPI.backup.createBackup({ expire_days: manualExpireDays.value })
-    // 插入到列表顶部
     backups.value.unshift(record)
     startPolling(record.id)
   } catch (error: any) {
@@ -607,7 +611,6 @@ onMounted(async () => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
   await Promise.all([loadS3Config(), loadSchedule(), loadBackups()])
 
-  // 如果有正在 running 的备份，恢复轮询
   const runningBackup = backups.value.find(r => r.status === 'running')
   if (runningBackup) {
     creatingBackup.value = true
