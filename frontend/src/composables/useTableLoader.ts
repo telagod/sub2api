@@ -1,4 +1,4 @@
-import { ref, reactive, onUnmounted, toRaw } from 'vue'
+import { shallowRef, ref, reactive, onUnmounted, toRaw } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import type { BasePaginationResponse, FetchOptions } from '@/types'
 import { getPersistedPageSize, setPersistedPageSize } from './usePersistedPageSize'
@@ -24,7 +24,9 @@ interface TableLoaderOptions<T, P> {
 export function useTableLoader<T, P extends Record<string, any>>(options: TableLoaderOptions<T, P>) {
   const { fetchFn, initialParams, pageSize, debounceMs = 300 } = options
 
-  const items = ref<T[]>([])
+  // shallowRef: 只追踪数组引用变化,不递归代理内部对象。
+  // 大表(200行 × 30+字段/行)用 ref 会创建数千个 reactive proxy → 严重卡顿。
+  const items = shallowRef<T[]>([])
   const loading = ref(false)
   const params = reactive<P>({ ...(initialParams || {}) } as P)
   const pagination = reactive<PaginationState>({
