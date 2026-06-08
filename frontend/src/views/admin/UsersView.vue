@@ -3,241 +3,169 @@
     <TablePageLayout>
       <!-- Single Row: Search, Filters, and Actions -->
       <template #filters>
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- Left: Search + Active Filters -->
-          <div class="flex flex-1 flex-wrap items-center gap-3">
-            <!-- Search Box -->
-            <div class="relative w-full md:w-64">
-              <Icon
-                name="search"
-                size="md"
-                class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                v-model="searchQuery"
-                type="text"
-                :placeholder="t('admin.users.searchUsers')"
-                class="input pl-10"
-                @input="handleSearch"
-              />
-            </div>
+        <CollapsibleFilters
+          :active-count="userActiveFilterCount"
+          storage-key="users"
+          @clear="clearUserFilters"
+        >
+          <template #search>
+            <SearchInput
+              v-model="searchQuery"
+              :placeholder="t('admin.users.searchUsers')"
+              class="w-full sm:w-64"
+              @search="handleSearchFromInput"
+            />
+          </template>
 
-            <!-- Role Filter (visible when enabled) -->
-            <div v-if="visibleFilters.has('role')" class="w-full sm:w-32">
-              <Select
-                v-model="filters.role"
-                :options="[
-                  { value: '', label: t('admin.users.allRoles') },
-                  { value: 'admin', label: t('admin.users.admin') },
-                  { value: 'user', label: t('admin.users.user') }
-                ]"
-                @change="applyFilter"
-              />
-            </div>
+          <template #filters>
+            <!-- Role Filter -->
+            <Select
+              v-model="filters.role"
+              class="w-32"
+              :options="[
+                { value: '', label: t('admin.users.allRoles') },
+                { value: 'admin', label: t('admin.users.admin') },
+                { value: 'user', label: t('admin.users.user') }
+              ]"
+              @change="applyFilter"
+            />
 
-            <!-- Status Filter (visible when enabled) -->
-            <div v-if="visibleFilters.has('status')" class="w-full sm:w-32">
-              <Select
-                v-model="filters.status"
-                :options="[
-                  { value: '', label: t('admin.users.allStatus') },
-                  { value: 'active', label: t('common.active') },
-                  { value: 'disabled', label: t('admin.users.disabled') }
-                ]"
-                @change="applyFilter"
-              />
-            </div>
+            <!-- Status Filter -->
+            <Select
+              v-model="filters.status"
+              class="w-32"
+              :options="[
+                { value: '', label: t('admin.users.allStatus') },
+                { value: 'active', label: t('common.active') },
+                { value: 'disabled', label: t('admin.users.disabled') }
+              ]"
+              @change="applyFilter"
+            />
 
-            <!-- Group Filter (visible when enabled) -->
-            <div v-if="visibleFilters.has('group')" class="w-full sm:w-44">
-              <Select
-                v-model="filters.group"
-                :options="groupFilterOptions"
-                searchable
-                creatable
-                :creatable-prefix="t('admin.users.fuzzySearch')"
-                :search-placeholder="t('admin.users.searchGroups')"
-                @change="applyFilter"
-              />
-            </div>
+            <!-- Group Filter -->
+            <Select
+              v-model="filters.group"
+              class="w-44"
+              :options="groupFilterOptions"
+              searchable
+              creatable
+              :creatable-prefix="t('admin.users.fuzzySearch')"
+              :search-placeholder="t('admin.users.searchGroups')"
+              @change="applyFilter"
+            />
 
             <!-- Dynamic Attribute Filters -->
-            <template v-for="(value, attrId) in activeAttributeFilters" :key="attrId">
-              <div
-                v-if="visibleFilters.has(`attr_${attrId}`)"
-                class="relative w-full sm:w-36"
-              >
+            <template v-for="attr in filterableAttributes" :key="attr.id">
+              <div class="w-36">
                 <!-- Text/Email/URL/Textarea/Date type: styled input -->
                 <input
-                  v-if="['text', 'textarea', 'email', 'url', 'date'].includes(getAttributeDefinition(Number(attrId))?.type || 'text')"
-                  :value="value"
-                  @input="(e) => updateAttributeFilter(Number(attrId), (e.target as HTMLInputElement).value)"
+                  v-if="['text', 'textarea', 'email', 'url', 'date'].includes(attr.type || 'text')"
+                  :value="activeAttributeFilters[attr.id] ?? ''"
+                  @input="(e) => updateAttributeFilter(attr.id, (e.target as HTMLInputElement).value)"
                   @keyup.enter="applyFilter"
-                  :placeholder="getAttributeDefinitionName(Number(attrId))"
+                  :placeholder="attr.name"
                   class="input w-full"
                 />
                 <!-- Number type: number input -->
                 <input
-                  v-else-if="getAttributeDefinition(Number(attrId))?.type === 'number'"
-                  :value="value"
+                  v-else-if="attr.type === 'number'"
+                  :value="activeAttributeFilters[attr.id] ?? ''"
                   type="number"
-                  @input="(e) => updateAttributeFilter(Number(attrId), (e.target as HTMLInputElement).value)"
+                  @input="(e) => updateAttributeFilter(attr.id, (e.target as HTMLInputElement).value)"
                   @keyup.enter="applyFilter"
-                  :placeholder="getAttributeDefinitionName(Number(attrId))"
+                  :placeholder="attr.name"
                   class="input w-full"
                 />
                 <!-- Select/Multi-select type -->
-                <template v-else-if="['select', 'multi_select'].includes(getAttributeDefinition(Number(attrId))?.type || '')">
-                  <div class="w-full">
-                    <Select
-                      :model-value="value"
-                      :options="[
-                        { value: '', label: getAttributeDefinitionName(Number(attrId)) },
-                        ...(getAttributeDefinition(Number(attrId))?.options || [])
-                      ]"
-                      @update:model-value="(val) => { updateAttributeFilter(Number(attrId), String(val ?? '')); applyFilter() }"
-                    />
-                  </div>
-                </template>
+                <Select
+                  v-else-if="['select', 'multi_select'].includes(attr.type || '')"
+                  :model-value="activeAttributeFilters[attr.id] ?? ''"
+                  :options="[
+                    { value: '', label: attr.name },
+                    ...(attr.options || [])
+                  ]"
+                  @update:model-value="(val) => { updateAttributeFilter(attr.id, String(val ?? '')); applyFilter() }"
+                />
                 <!-- Fallback -->
                 <input
                   v-else
-                  :value="value"
-                  @input="(e) => updateAttributeFilter(Number(attrId), (e.target as HTMLInputElement).value)"
+                  :value="activeAttributeFilters[attr.id] ?? ''"
+                  @input="(e) => updateAttributeFilter(attr.id, (e.target as HTMLInputElement).value)"
                   @keyup.enter="applyFilter"
-                  :placeholder="getAttributeDefinitionName(Number(attrId))"
+                  :placeholder="attr.name"
                   class="input w-full"
                 />
               </div>
             </template>
-          </div>
+          </template>
 
-          <!-- Right: Actions and Settings -->
-          <div class="flex flex-wrap items-center justify-end gap-2">
-            <!-- Mobile: Secondary buttons (icon only) -->
-            <div class="flex items-center gap-2 md:contents">
-              <!-- Refresh Button -->
+          <template #actions>
+            <!-- Refresh Button -->
+            <button
+              @click="loadUsers"
+              :disabled="loading"
+              class="btn btn-secondary px-2 md:px-3"
+              :title="t('common.refresh')"
+            >
+              <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
+            </button>
+            <!-- Column Settings Dropdown -->
+            <div class="relative" ref="columnDropdownRef">
               <button
-                @click="loadUsers"
-                :disabled="loading"
+                @click="showColumnDropdown = !showColumnDropdown"
                 class="btn btn-secondary px-2 md:px-3"
-                :title="t('common.refresh')"
+                :title="t('admin.users.columnSettings')"
               >
-                <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
+                <svg class="h-4 w-4 md:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+                <span class="hidden md:inline">{{ t('admin.users.columnSettings') }}</span>
               </button>
-              <!-- Filter Settings Dropdown -->
-              <div class="relative" ref="filterDropdownRef">
-                <button
-                  @click="showFilterDropdown = !showFilterDropdown"
-                  class="btn btn-secondary px-2 md:px-3"
-                  :title="t('admin.users.filterSettings')"
-                >
-                  <Icon name="filter" size="sm" class="md:mr-1.5" />
-                  <span class="hidden md:inline">{{ t('admin.users.filterSettings') }}</span>
-                </button>
-                <!-- Dropdown menu -->
-                <div
-                  v-if="showFilterDropdown"
-                  class="absolute right-0 top-full z-50 mt-1 w-48 rounded-md border border-border bg-card py-1 "
-                >
-                  <!-- Built-in filters -->
-                  <button
-                    v-for="filter in builtInFilters"
-                    :key="filter.key"
-                    @click="toggleBuiltInFilter(filter.key)"
-                    class="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-foreground/85 hover:bg-accent"
-                  >
-                    <span>{{ filter.name }}</span>
-                    <Icon
-                      v-if="visibleFilters.has(filter.key)"
-                      name="check"
-                      size="sm"
-                      class="text-primary-200"
-                      :stroke-width="2"
-                    />
-                  </button>
-                  <!-- Divider if custom attributes exist -->
-                  <div
-                    v-if="filterableAttributes.length > 0"
-                    class="my-1 border-t border-border"
-                  ></div>
-                  <!-- Custom attribute filters -->
-                  <button
-                    v-for="attr in filterableAttributes"
-                    :key="attr.id"
-                    @click="toggleAttributeFilter(attr)"
-                    class="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-foreground/85 hover:bg-accent"
-                  >
-                    <span>{{ attr.name }}</span>
-                    <Icon
-                      v-if="visibleFilters.has(`attr_${attr.id}`)"
-                      name="check"
-                      size="sm"
-                      class="text-primary-200"
-                      :stroke-width="2"
-                    />
-                  </button>
-                </div>
-              </div>
-              <!-- Column Settings Dropdown -->
-              <div class="relative" ref="columnDropdownRef">
-                <button
-                  @click="showColumnDropdown = !showColumnDropdown"
-                  class="btn btn-secondary px-2 md:px-3"
-                  :title="t('admin.users.columnSettings')"
-                >
-                  <svg class="h-4 w-4 md:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125z" />
-                  </svg>
-                  <span class="hidden md:inline">{{ t('admin.users.columnSettings') }}</span>
-                </button>
-                <!-- Dropdown menu -->
-                <div
-                  v-if="showColumnDropdown"
-                  class="absolute right-0 top-full z-50 mt-1 max-h-80 w-48 overflow-y-auto rounded-md border border-border bg-card py-1 "
-                >
-                  <button
-                    v-for="col in toggleableColumns"
-                    :key="col.key"
-                    :disabled="isForcedVisibleColumn(col.key)"
-                    @click="toggleColumn(col.key)"
-                    :class="[
-                      'flex w-full items-center justify-between px-4 py-2 text-left text-sm',
-                      isForcedVisibleColumn(col.key)
-                        ? 'cursor-not-allowed text-muted-foreground'
-                        : 'text-foreground/85 hover:bg-accent'
-                    ]"
-                    :title="isForcedVisibleColumn(col.key) ? t('admin.users.columnAlwaysVisible') : ''"
-                  >
-                    <span>{{ col.label }}</span>
-                    <Icon
-                      v-if="isColumnVisible(col.key)"
-                      name="check"
-                      size="sm"
-                      :class="isForcedVisibleColumn(col.key) ? 'text-muted-foreground' : 'text-primary-200'"
-                      :stroke-width="2"
-                    />
-                  </button>
-                </div>
-              </div>
-              <!-- Attributes Config Button -->
-              <button
-                @click="showAttributesModal = true"
-                class="btn btn-secondary px-2 md:px-3"
-                :title="t('admin.users.attributes.configButton')"
+              <!-- Dropdown menu -->
+              <div
+                v-if="showColumnDropdown"
+                class="absolute right-0 top-full z-50 mt-1 max-h-80 w-48 overflow-y-auto rounded-md border border-border bg-card py-1 "
               >
-                <Icon name="cog" size="sm" class="md:mr-1.5" />
-                <span class="hidden md:inline">{{ t('admin.users.attributes.configButton') }}</span>
-              </button>
+                <button
+                  v-for="col in toggleableColumns"
+                  :key="col.key"
+                  :disabled="isForcedVisibleColumn(col.key)"
+                  @click="toggleColumn(col.key)"
+                  :class="[
+                    'flex w-full items-center justify-between px-4 py-2 text-left text-sm',
+                    isForcedVisibleColumn(col.key)
+                      ? 'cursor-not-allowed text-muted-foreground'
+                      : 'text-foreground/85 hover:bg-accent'
+                  ]"
+                  :title="isForcedVisibleColumn(col.key) ? t('admin.users.columnAlwaysVisible') : ''"
+                >
+                  <span>{{ col.label }}</span>
+                  <Icon
+                    v-if="isColumnVisible(col.key)"
+                    name="check"
+                    size="sm"
+                    :class="isForcedVisibleColumn(col.key) ? 'text-muted-foreground' : 'text-primary-200'"
+                    :stroke-width="2"
+                  />
+                </button>
+              </div>
             </div>
-
-            <!-- Create User Button (full width on mobile, auto width on desktop) -->
-            <button @click="showCreateModal = true" class="btn btn-primary flex-1 md:flex-initial">
+            <!-- Attributes Config Button -->
+            <button
+              @click="showAttributesModal = true"
+              class="btn btn-secondary px-2 md:px-3"
+              :title="t('admin.users.attributes.configButton')"
+            >
+              <Icon name="cog" size="sm" class="md:mr-1.5" />
+              <span class="hidden md:inline">{{ t('admin.users.attributes.configButton') }}</span>
+            </button>
+            <!-- Create User Button -->
+            <button @click="showCreateModal = true" class="btn btn-primary">
               <Icon name="plus" size="md" class="mr-2" />
               {{ t('admin.users.createUser') }}
             </button>
-          </div>
-        </div>
+          </template>
+        </CollapsibleFilters>
       </template>
 
       <!-- Users Table -->
@@ -759,6 +687,8 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
 import Select from '@/components/common/Select.vue'
+import CollapsibleFilters from '@/components/common/CollapsibleFilters.vue'
+import SearchInput from '@/components/common/SearchInput.vue'
 import { defineAsyncComponent } from 'vue'
 const UserAttributesConfigModal = defineAsyncComponent(() => import('@/components/user/UserAttributesConfigModal.vue'))
 import UserConcurrencyCell from '@/components/user/UserConcurrencyCell.vue'
@@ -969,7 +899,6 @@ const PLATFORM_USAGE_COLUMNS = USAGE_COLUMN_KEYS.filter((k) => k !== 'usage')
 const hasVisibleUsageColumn = computed(
   () => !hiddenColumns.has('usage') || PLATFORM_USAGE_COLUMNS.some((k) => !hiddenColumns.has(k))
 )
-const hasVisibleGroupsColumn = computed(() => !hiddenColumns.has('groups'))
 const hasVisiblePlatformQuotaColumn = computed(() => !hiddenColumns.has('balance_platform_quota'))
 const hasVisibleAttributeColumns = computed(() =>
   attributeDefinitions.value.some((def) => def.enabled && !hiddenColumns.has(`attr_${def.id}`))
@@ -1063,44 +992,23 @@ const filters = reactive({
 })
 const activeAttributeFilters = reactive<Record<number, string>>({})
 
-// Visible filters tracking (which filters are shown in the UI)
-// Keys: 'role', 'status', 'attr_${id}'
-const visibleFilters = reactive<Set<string>>(new Set())
-
 // Dropdown states
-const showFilterDropdown = ref(false)
 const showColumnDropdown = ref(false)
 
 // Dropdown refs for click outside detection
-const filterDropdownRef = ref<HTMLElement | null>(null)
 const columnDropdownRef = ref<HTMLElement | null>(null)
 
 // localStorage keys
 const FILTER_VALUES_KEY = 'user-filter-values'
-const VISIBLE_FILTERS_KEY = 'user-visible-filters'
 
 // All filterable attribute definitions (enabled attributes)
 const filterableAttributes = computed(() =>
   attributeDefinitions.value.filter(def => def.enabled)
 )
 
-// Built-in filter definitions
-const builtInFilters = computed(() => [
-  { key: 'role', name: t('admin.users.columns.role'), type: 'select' as const },
-  { key: 'status', name: t('admin.users.columns.status'), type: 'select' as const },
-  { key: 'group', name: t('admin.users.columns.groups'), type: 'select' as const }
-])
-
 // Load saved filters from localStorage
 const loadSavedFilters = () => {
   try {
-    // Load visible filters
-    const savedVisible = localStorage.getItem(VISIBLE_FILTERS_KEY)
-    if (savedVisible) {
-      const parsed = JSON.parse(savedVisible) as string[]
-      parsed.forEach(key => visibleFilters.add(key))
-    }
-    // Load filter values
     const savedValues = localStorage.getItem(FILTER_VALUES_KEY)
     if (savedValues) {
       const parsed = JSON.parse(savedValues)
@@ -1119,9 +1027,6 @@ const loadSavedFilters = () => {
 // Save filters to localStorage
 const saveFiltersToStorage = () => {
   try {
-    // Save visible filters
-    localStorage.setItem(VISIBLE_FILTERS_KEY, JSON.stringify([...visibleFilters]))
-    // Save filter values
     const values = {
       role: filters.role,
       status: filters.status,
@@ -1134,10 +1039,6 @@ const saveFiltersToStorage = () => {
   }
 }
 
-// Get attribute definition by ID
-const getAttributeDefinition = (attrId: number): UserAttributeDefinition | undefined => {
-  return attributeDefinitions.value.find(d => d.id === attrId)
-}
 const usageStats = ref<Record<string, BatchUserUsageStats>>({})
 const platformQuotaStats = ref<Record<number, PlatformQuotaItem[]>>({})
 
@@ -1416,10 +1317,6 @@ const handleClickOutside = (event: MouseEvent) => {
   if (!target.closest('.action-menu-trigger') && !target.closest('.action-menu-content')) {
     closeActionMenu()
   }
-  // Close filter dropdown when clicking outside
-  if (filterDropdownRef.value && !filterDropdownRef.value.contains(target)) {
-    showFilterDropdown.value = false
-  }
   // Close column dropdown when clicking outside
   if (columnDropdownRef.value && !columnDropdownRef.value.contains(target)) {
     showColumnDropdown.value = false
@@ -1546,13 +1443,10 @@ const loadUsers = async () => {
   }
 }
 
-let searchTimeout: ReturnType<typeof setTimeout>
-const handleSearch = () => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    pagination.page = 1
-    loadUsers()
-  }, 300)
+// SearchInput handles debouncing internally; this is called with the final value
+const handleSearchFromInput = () => {
+  pagination.page = 1
+  loadUsers()
 }
 
 const handlePageChange = (page: number) => {
@@ -1575,45 +1469,33 @@ const handleSort = (key: string, order: 'asc' | 'desc') => {
   loadUsers()
 }
 
-// Filter helpers
-const getAttributeDefinitionName = (attrId: number): string => {
-  const def = attributeDefinitions.value.find(d => d.id === attrId)
-  return def?.name || String(attrId)
-}
-
-// Toggle a built-in filter (role/status)
-const toggleBuiltInFilter = (key: string) => {
-  if (visibleFilters.has(key)) {
-    visibleFilters.delete(key)
-    if (key === 'role') filters.role = ''
-    if (key === 'status') filters.status = ''
-    if (key === 'group') filters.group = ''
-  } else {
-    visibleFilters.add(key)
-    if (key === 'group') loadAllGroups()
-  }
-  saveFiltersToStorage()
-  pagination.page = 1
-  loadUsers()
-}
-
-// Toggle a custom attribute filter
-const toggleAttributeFilter = (attr: UserAttributeDefinition) => {
-  const key = `attr_${attr.id}`
-  if (visibleFilters.has(key)) {
-    visibleFilters.delete(key)
-    delete activeAttributeFilters[attr.id]
-  } else {
-    visibleFilters.add(key)
-    activeAttributeFilters[attr.id] = ''
-  }
-  saveFiltersToStorage()
-  pagination.page = 1
-  loadUsers()
-}
-
 const updateAttributeFilter = (attrId: number, value: string) => {
   activeAttributeFilters[attrId] = value
+}
+
+// Count active filters (non-empty values) for the CollapsibleFilters badge
+const userActiveFilterCount = computed(() => {
+  let count = 0
+  if (filters.role) count++
+  if (filters.status) count++
+  if (filters.group) count++
+  for (const value of Object.values(activeAttributeFilters)) {
+    if (value) count++
+  }
+  return count
+})
+
+// Clear all filter values (called by CollapsibleFilters @clear)
+const clearUserFilters = () => {
+  filters.role = ''
+  filters.status = ''
+  filters.group = ''
+  for (const key of Object.keys(activeAttributeFilters)) {
+    activeAttributeFilters[Number(key)] = ''
+  }
+  saveFiltersToStorage()
+  pagination.page = 1
+  loadUsers()
 }
 
 // Apply filter and save to localStorage
@@ -1749,9 +1631,8 @@ onMounted(async () => {
   loadSavedFilters()
   loadSavedColumns()
   loadUsers()
-  if (hasVisibleGroupsColumn.value || visibleFilters.has('group')) {
-    loadAllGroups()
-  }
+  // Group filter is always visible in the collapsible section; also load if groups column is visible
+  loadAllGroups()
   document.addEventListener('click', handleClickOutside)
   window.addEventListener('scroll', handleScroll, true)
 })
@@ -1759,7 +1640,6 @@ onMounted(async () => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   window.removeEventListener('scroll', handleScroll, true)
-  clearTimeout(searchTimeout)
   abortController?.abort()
 })
 </script>

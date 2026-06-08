@@ -2,15 +2,28 @@
   <AppLayout>
     <TablePageLayout>
       <template #filters>
-        <div class="flex flex-wrap-reverse items-start justify-between gap-3">
-          <AccountTableFilters
-            v-model:searchQuery="params.search"
-            :filters="params"
-            :groups="groups"
-            @update:filters="(newFilters) => Object.assign(params, newFilters)"
-            @change="debouncedReload"
-            @update:searchQuery="debouncedReload"
-          />
+        <CollapsibleFilters
+          :active-count="accountActiveFilterCount"
+          storage-key="accounts"
+          @clear="clearAccountFilters"
+        >
+          <template #search>
+            <SearchInput
+              :model-value="params.search"
+              :placeholder="t('admin.accounts.searchAccounts')"
+              class="w-full sm:w-64"
+              @update:model-value="(v: string) => { params.search = v }"
+              @search="debouncedReload"
+            />
+          </template>
+          <template #filters>
+            <Select :model-value="params.platform" class="w-36" :options="filterPlatformOpts" @update:model-value="(v: any) => { params.platform = v; debouncedReload() }" />
+            <Select :model-value="params.type" class="w-36" :options="filterTypeOpts" @update:model-value="(v: any) => { params.type = v; debouncedReload() }" />
+            <Select :model-value="params.status" class="w-36" :options="filterStatusOpts" @update:model-value="(v: any) => { params.status = v; debouncedReload() }" />
+            <Select :model-value="params.privacy_mode" class="w-36" :options="filterPrivacyOpts" @update:model-value="(v: any) => { params.privacy_mode = v; debouncedReload() }" />
+            <Select :model-value="params.group" class="w-36" :options="filterGroupOpts" @update:model-value="(v: any) => { params.group = v; debouncedReload() }" />
+          </template>
+          <template #actions>
           <AccountTableActions
             :loading="loading"
             @refresh="handleManualRefresh"
@@ -157,7 +170,8 @@
               </div>
             </template>
           </AccountTableActions>
-        </div>
+          </template>
+        </CollapsibleFilters>
         <div
           v-if="hasPendingListSync"
           class="mt-2 flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-400"
@@ -429,7 +443,9 @@ const BulkEditAccountModal = defineAsyncComponent(() => import('@/components/acc
 const SyncFromCrsModal = defineAsyncComponent(() => import('@/components/account/SyncFromCrsModal.vue'))
 const TempUnschedStatusModal = defineAsyncComponent(() => import('@/components/account/TempUnschedStatusModal.vue'))
 import AccountTableActions from '@/components/admin/account/AccountTableActions.vue'
-import AccountTableFilters from '@/components/admin/account/AccountTableFilters.vue'
+import CollapsibleFilters from '@/components/common/CollapsibleFilters.vue'
+import SearchInput from '@/components/common/SearchInput.vue'
+import Select from '@/components/common/Select.vue'
 import AccountBulkActionsBar from '@/components/admin/account/AccountBulkActionsBar.vue'
 import AccountActionMenu from '@/components/admin/account/AccountActionMenu.vue'
 const ImportDataModal = defineAsyncComponent(() => import('@/components/admin/account/ImportDataModal.vue'))
@@ -772,6 +788,31 @@ const {
     sort_order: sortState.sort_order
   }
 })
+
+const filterPlatformOpts = computed(() => [{ value: '', label: t('admin.accounts.allPlatforms') }, { value: 'anthropic', label: 'Anthropic' }, { value: 'openai', label: 'OpenAI' }, { value: 'gemini', label: 'Gemini' }, { value: 'antigravity', label: 'Antigravity' }])
+const filterTypeOpts = computed(() => [{ value: '', label: t('admin.accounts.allTypes') }, { value: 'oauth', label: t('admin.accounts.oauthType') }, { value: 'setup-token', label: t('admin.accounts.setupToken') }, { value: 'apikey', label: t('admin.accounts.apiKey') }, { value: 'bedrock', label: 'AWS Bedrock' }])
+const filterStatusOpts = computed(() => [{ value: '', label: t('admin.accounts.allStatus') }, { value: 'active', label: t('admin.accounts.status.active') }, { value: 'inactive', label: t('admin.accounts.status.inactive') }, { value: 'error', label: t('admin.accounts.status.error') }, { value: 'rate_limited', label: t('admin.accounts.status.rateLimited') }, { value: 'temp_unschedulable', label: t('admin.accounts.status.tempUnschedulable') }, { value: 'unschedulable', label: t('admin.accounts.status.unschedulable') }])
+const filterPrivacyOpts = computed(() => [{ value: '', label: t('admin.accounts.allPrivacyModes') }, { value: '__unset__', label: t('admin.accounts.privacyUnset') }, { value: 'training_off', label: 'Privacy' }, { value: 'training_set_cf_blocked', label: 'CF' }, { value: 'training_set_failed', label: 'Fail' }])
+const filterGroupOpts = computed(() => [{ value: '', label: t('admin.accounts.allGroups') }, { value: 'ungrouped', label: t('admin.accounts.ungroupedGroup') }, ...(groups.value || []).map(g => ({ value: String(g.id), label: g.name }))])
+
+const accountActiveFilterCount = computed(() => {
+  let count = 0
+  if (params.platform) count++
+  if (params.type) count++
+  if (params.status) count++
+  if (params.privacy_mode) count++
+  if (params.group) count++
+  return count
+})
+
+const clearAccountFilters = () => {
+  params.platform = ''
+  params.type = ''
+  params.status = ''
+  params.privacy_mode = ''
+  params.group = ''
+  debouncedReload()
+}
 
 const {
   selectedIds: selIds,

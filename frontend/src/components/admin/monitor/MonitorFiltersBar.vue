@@ -1,22 +1,18 @@
 <template>
-  <div class="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
-    <!-- Left: Search + Filters -->
-    <div class="flex flex-1 flex-wrap items-center gap-3">
-      <div class="relative w-full sm:w-64">
-        <Icon
-          name="search"
-          size="md"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-        />
-        <input
-          v-model="search"
-          type="text"
-          :placeholder="t('admin.channelMonitor.searchPlaceholder')"
-          class="input pl-10"
-          @input="$emit('search-input')"
-        />
-      </div>
-
+  <CollapsibleFilters
+    :active-count="activeFilterCount"
+    storage-key="channel-monitor"
+    @clear="clearFilters"
+  >
+    <template #search>
+      <SearchInput
+        v-model="search"
+        :placeholder="t('admin.channelMonitor.searchPlaceholder')"
+        class="w-full sm:w-64"
+        @search="$emit('search-input')"
+      />
+    </template>
+    <template #filters>
       <Select
         v-model="provider"
         :options="providerFilterOptions"
@@ -24,7 +20,6 @@
         class="w-44"
         @change="$emit('reload')"
       />
-
       <Select
         v-model="enabled"
         :options="enabledFilterOptions"
@@ -32,10 +27,8 @@
         class="w-40"
         @change="$emit('reload')"
       />
-    </div>
-
-    <!-- Right: Actions -->
-    <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-3 lg:w-auto">
+    </template>
+    <template #actions>
       <button
         @click="$emit('reload')"
         :disabled="loading"
@@ -56,8 +49,8 @@
         <Icon name="plus" size="md" class="mr-2" />
         {{ t('admin.channelMonitor.createButton') }}
       </button>
-    </div>
-  </div>
+    </template>
+  </CollapsibleFilters>
 </template>
 
 <script setup lang="ts">
@@ -65,6 +58,8 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Provider } from '@/api/admin/channelMonitor'
 import Select from '@/components/common/Select.vue'
+import CollapsibleFilters from '@/components/common/CollapsibleFilters.vue'
+import SearchInput from '@/components/common/SearchInput.vue'
 import Icon from '@/components/icons/Icon.vue'
 import {
   PROVIDER_OPENAI,
@@ -88,6 +83,18 @@ const provider = defineModel<Provider | ''>('provider', { required: true })
 const enabled = defineModel<'' | 'true' | 'false'>('enabled', { required: true })
 
 const { t } = useI18n()
+
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (provider.value) count++
+  if (enabled.value) count++
+  return count
+})
+
+const clearFilters = () => {
+  provider.value = ''
+  enabled.value = ''
+}
 
 const providerFilterOptions = computed(() => [
   { value: '', label: t('admin.channelMonitor.allProviders') },

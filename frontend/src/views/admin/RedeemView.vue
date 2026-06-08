@@ -2,32 +2,34 @@
   <AppLayout>
     <TablePageLayout>
       <template #filters>
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- Left: Search + Filters -->
-          <div class="flex-1 sm:max-w-64">
-            <input
+        <CollapsibleFilters
+          :active-count="redeemActiveFilterCount"
+          storage-key="redeem"
+          @clear="clearRedeemFilters"
+        >
+          <template #search>
+            <SearchInput
               v-model="searchQuery"
-              type="text"
               :placeholder="t('admin.redeem.searchCodes')"
-              class="input"
-              @input="handleSearch"
+              class="w-full sm:w-64"
+              @search="handleSearchInput"
             />
-          </div>
-          <Select
-            v-model="filters.type"
-            :options="filterTypeOptions"
-            class="w-36"
-            @change="loadCodes"
-          />
-          <Select
-            v-model="filters.status"
-            :options="filterStatusOptions"
-            class="w-36"
-            @change="loadCodes"
-          />
-
-          <!-- Right: Action buttons -->
-          <div class="flex flex-1 flex-wrap items-center justify-end gap-2">
+          </template>
+          <template #filters>
+            <Select
+              v-model="filters.type"
+              :options="filterTypeOptions"
+              class="w-36"
+              @change="loadCodes"
+            />
+            <Select
+              v-model="filters.status"
+              :options="filterStatusOptions"
+              class="w-36"
+              @change="loadCodes"
+            />
+          </template>
+          <template #actions>
             <button
               @click="loadCodes"
               :disabled="loading"
@@ -51,8 +53,8 @@
             <button @click="showGenerateDialog = true" class="btn btn-primary">
               {{ t('admin.redeem.generateCodes') }}
             </button>
-          </div>
-        </div>
+          </template>
+        </CollapsibleFilters>
       </template>
 
       <template #table>
@@ -632,6 +634,8 @@ import DataTable from '@/components/common/DataTable.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import Select from '@/components/common/Select.vue'
+import CollapsibleFilters from '@/components/common/CollapsibleFilters.vue'
+import SearchInput from '@/components/common/SearchInput.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
 import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -764,6 +768,19 @@ const batchExpiryModeOptions = computed(() => [
   { value: 'clear', label: t('admin.redeem.neverExpires') },
   { value: 'custom', label: t('admin.redeem.customExpiry') }
 ])
+
+const redeemActiveFilterCount = computed(() => {
+  let count = 0
+  if (filters.type) count++
+  if (filters.status) count++
+  return count
+})
+
+const clearRedeemFilters = () => {
+  filters.type = ''
+  filters.status = ''
+  loadCodes()
+}
 
 const codes = ref<RedeemCode[]>([])
 const loading = ref(false)
@@ -899,13 +916,9 @@ const loadCodes = async () => {
   }
 }
 
-let searchTimeout: ReturnType<typeof setTimeout>
-const handleSearch = () => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    pagination.page = 1
-    loadCodes()
-  }, 300)
+const handleSearchInput = () => {
+  pagination.page = 1
+  loadCodes()
 }
 
 const handlePageChange = (page: number) => {
@@ -1185,7 +1198,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  clearTimeout(searchTimeout)
   abortController?.abort()
 })
 </script>

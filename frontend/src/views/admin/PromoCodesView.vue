@@ -2,26 +2,28 @@
   <AppLayout>
     <TablePageLayout>
       <template #filters>
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- Left: Search + Filters -->
-          <div class="flex-1 sm:max-w-64">
-            <input
+        <CollapsibleFilters
+          :active-count="promoActiveFilterCount"
+          storage-key="promo-codes"
+          @clear="clearPromoFilters"
+        >
+          <template #search>
+            <SearchInput
               v-model="searchQuery"
-              type="text"
               :placeholder="t('admin.promo.searchCodes')"
-              class="input"
-              @input="handleSearch"
+              class="w-full sm:w-64"
+              @search="handleSearchInput"
             />
-          </div>
-          <Select
-            v-model="filters.status"
-            :options="filterStatusOptions"
-            class="w-36"
-            @change="loadCodes"
-          />
-
-          <!-- Right: Action buttons -->
-          <div class="flex flex-1 flex-wrap items-center justify-end gap-2">
+          </template>
+          <template #filters>
+            <Select
+              v-model="filters.status"
+              :options="filterStatusOptions"
+              class="w-36"
+              @change="loadCodes"
+            />
+          </template>
+          <template #actions>
             <button
               @click="loadCodes"
               :disabled="loading"
@@ -34,8 +36,8 @@
               <Icon name="plus" size="md" class="mr-1" />
               {{ t('admin.promo.createCode') }}
             </button>
-          </div>
-        </div>
+          </template>
+        </CollapsibleFilters>
       </template>
 
       <template #table>
@@ -402,6 +404,8 @@ import Pagination from '@/components/common/Pagination.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import Select from '@/components/common/Select.vue'
+import CollapsibleFilters from '@/components/common/CollapsibleFilters.vue'
+import SearchInput from '@/components/common/SearchInput.vue'
 import Icon from '@/components/icons/Icon.vue'
 
 const { t } = useI18n()
@@ -419,6 +423,17 @@ const copiedCode = ref<string | null>(null)
 const filters = reactive({
   status: ''
 })
+
+const promoActiveFilterCount = computed(() => {
+  let count = 0
+  if (filters.status) count++
+  return count
+})
+
+const clearPromoFilters = () => {
+  filters.status = ''
+  loadCodes()
+}
 
 const pagination = reactive({
   page: 1,
@@ -554,13 +569,9 @@ const loadCodes = async () => {
   }
 }
 
-let searchTimeout: ReturnType<typeof setTimeout>
-const handleSearch = () => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    pagination.page = 1
-    loadCodes()
-  }, 300)
+const handleSearchInput = () => {
+  pagination.page = 1
+  loadCodes()
 }
 
 const handlePageChange = (page: number) => {
@@ -739,7 +750,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  clearTimeout(searchTimeout)
   abortController?.abort()
 })
 </script>

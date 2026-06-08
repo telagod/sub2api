@@ -264,6 +264,8 @@ export default {
     reset: '重置',
     search: '搜索',
     filter: '筛选',
+    filters: '筛选',
+    clearFilters: '清除筛选',
     export: '导出',
     import: '导入',
     actions: '操作',

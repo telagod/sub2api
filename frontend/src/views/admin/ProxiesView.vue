@@ -2,42 +2,36 @@
   <AppLayout>
     <TablePageLayout>
       <template #filters>
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- Left: Search + Filters -->
-          <div class="relative w-full sm:w-64">
-            <Icon
-              name="search"
-              size="md"
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
+        <CollapsibleFilters
+          :active-count="proxyActiveFilterCount"
+          storage-key="proxies"
+          @clear="clearProxyFilters"
+        >
+          <template #search>
+            <SearchInput
               v-model="searchQuery"
-              type="text"
               :placeholder="t('admin.proxies.searchProxies')"
-              class="input pl-10"
-              @input="handleSearch"
+              class="w-full sm:w-64"
+              @search="handleSearchInput"
             />
-          </div>
-
-          <div class="w-full sm:w-40">
+          </template>
+          <template #filters>
             <Select
               v-model="filters.protocol"
               :options="protocolOptions"
               :placeholder="t('admin.proxies.allProtocols')"
+              class="w-40"
               @change="loadProxies"
             />
-          </div>
-          <div class="w-full sm:w-36">
             <Select
               v-model="filters.status"
               :options="statusOptions"
               :placeholder="t('admin.proxies.allStatus')"
+              class="w-36"
               @change="loadProxies"
             />
-          </div>
-
-          <!-- Right: All action buttons -->
-          <div class="flex flex-1 flex-wrap items-center justify-end gap-2">
+          </template>
+          <template #actions>
             <button
               @click="loadProxies"
               :disabled="loading"
@@ -83,8 +77,8 @@
               <Icon name="plus" size="md" class="mr-2" />
               {{ t('admin.proxies.createProxy') }}
             </button>
-          </div>
-        </div>
+          </template>
+        </CollapsibleFilters>
       </template>
 
       <template #table>
@@ -979,6 +973,8 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ImportDataModal from '@/components/admin/proxy/ImportDataModal.vue'
 import Select from '@/components/common/Select.vue'
+import CollapsibleFilters from '@/components/common/CollapsibleFilters.vue'
+import SearchInput from '@/components/common/SearchInput.vue'
 import Icon from '@/components/icons/Icon.vue'
 import PlatformTypeBadge from '@/components/common/PlatformTypeBadge.vue'
 import { useClipboard } from '@/composables/useClipboard'
@@ -1035,6 +1031,19 @@ const editStatusOptions = computed(() => [
   { value: 'active', label: t('admin.accounts.status.active') },
   { value: 'inactive', label: t('admin.accounts.status.inactive') }
 ])
+
+const proxyActiveFilterCount = computed(() => {
+  let count = 0
+  if (filters.protocol) count++
+  if (filters.status) count++
+  return count
+})
+
+const clearProxyFilters = () => {
+  filters.protocol = ''
+  filters.status = ''
+  loadProxies()
+}
 
 const proxies = ref<Proxy[]>([])
 const visiblePasswordIds = reactive(new Set<number>())
@@ -1220,13 +1229,9 @@ const loadProxies = async () => {
   }
 }
 
-let searchTimeout: ReturnType<typeof setTimeout>
-const handleSearch = () => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    pagination.page = 1
-    loadProxies()
-  }, 300)
+const handleSearchInput = () => {
+  pagination.page = 1
+  loadProxies()
 }
 
 const handlePageChange = (page: number) => {
@@ -2059,7 +2064,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  clearTimeout(searchTimeout)
   abortController?.abort()
   document.removeEventListener('click', closeCopyMenu)
 })

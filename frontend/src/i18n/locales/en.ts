@@ -264,6 +264,8 @@ export default {
     reset: 'Reset',
     search: 'Search',
     filter: 'Filter',
+    filters: 'Filters',
+    clearFilters: 'Clear filters',
     export: 'Export',
     import: 'Import',
     actions: 'Actions',
