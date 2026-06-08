@@ -109,15 +109,12 @@ func (r *apiKeyRepository) GetByID(ctx context.Context, id int64) (*service.APIK
 	return apiKeyEntityToService(m), nil
 }
 
-// GetKeyAndOwnerID 根据 API Key ID 获取其 key 与所有者（用户）ID。
-// 相比 GetByID，此方法性能更优，因为：
-//   - 使用 Select() 只查询必要字段，减少数据传输量
-//   - 不加载完整的 API Key 实体及其关联数据（User、Group 等）
-//   - 适用于删除等只需 key 与用户 ID 的场景
+// GetKeyAndOwnerID 返回 api_key 的 key_hash(sha256,用于缓存失效)与所有者 ID。
+// 迁移过渡:若 key_hash 为 NULL(存量未回填),现场 sha256(key) 补齐。
 func (r *apiKeyRepository) GetKeyAndOwnerID(ctx context.Context, id int64) (string, int64, error) {
 	m, err := r.activeQuery().
 		Where(apikey.IDEQ(id)).
-		Select(apikey.FieldKey, apikey.FieldUserID).
+		Select(apikey.FieldKey, apikey.FieldKeyHash, apikey.FieldUserID).
 		Only(ctx)
 	if err != nil {
 		if dbent.IsNotFound(err) {
@@ -125,7 +122,10 @@ func (r *apiKeyRepository) GetKeyAndOwnerID(ctx context.Context, id int64) (stri
 		}
 		return "", 0, err
 	}
-	return m.Key, m.UserID, nil
+	if m.KeyHash != nil && *m.KeyHash != "" {
+		return *m.KeyHash, m.UserID, nil
+	}
+	return apikeyhash.Hash(m.Key), m.UserID, nil
 }
 
 func (r *apiKeyRepository) GetByKey(ctx context.Context, key string) (*service.APIKey, error) {
@@ -573,26 +573,38 @@ func (r *apiKeyRepository) CountByGroupID(ctx context.Context, groupID int64) (i
 	return int64(count), err
 }
 
+// ListKeysByUserID 返回用户下所有活跃 api_key 的 key_hash(sha256)列表。
+// 迁移过渡:新行有 key_hash、存量未回填行 key_hash 为 NULL——对 NULL 行现场 hash(key) 补齐。
+// 调用方须用 hash 直接作为缓存键(跳过二次 hash),详见 InvalidateAuthCacheByHash。
 func (r *apiKeyRepository) ListKeysByUserID(ctx context.Context, userID int64) ([]string, error) {
-	keys, err := r.activeQuery().
-		Where(apikey.UserIDEQ(userID)).
-		Select(apikey.FieldKey).
-		Strings(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return keys, nil
+	return r.listKeyHashesByOwner(ctx, apikey.UserIDEQ(userID))
 }
 
 func (r *apiKeyRepository) ListKeysByGroupID(ctx context.Context, groupID int64) ([]string, error) {
-	keys, err := r.activeQuery().
-		Where(apikey.GroupIDEQ(groupID)).
-		Select(apikey.FieldKey).
-		Strings(ctx)
+	return r.listKeyHashesByOwner(ctx, apikey.GroupIDEQ(groupID))
+}
+
+func (r *apiKeyRepository) listKeyHashesByOwner(ctx context.Context, ownerPred predicate.APIKey) ([]string, error) {
+	type keyRow struct {
+		Key     string  `json:"key"`
+		KeyHash *string `json:"key_hash"`
+	}
+	rows, err := r.activeQuery().
+		Where(ownerPred).
+		Select(apikey.FieldKey, apikey.FieldKeyHash).
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return keys, nil
+	hashes := make([]string, 0, len(rows))
+	for _, m := range rows {
+		if m.KeyHash != nil && *m.KeyHash != "" {
+			hashes = append(hashes, *m.KeyHash)
+		} else {
+			hashes = append(hashes, apikeyhash.Hash(m.Key))
+		}
+	}
+	return hashes, nil
 }
 
 // IncrementQuotaUsed 使用 Ent 原子递增 quota_used 字段并返回新值
