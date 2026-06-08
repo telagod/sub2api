@@ -13,11 +13,11 @@
                 size="md"
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
               />
-              <input
+              <Input
                 v-model="searchQuery"
                 type="text"
                 :placeholder="t('admin.users.searchUsers')"
-                class="input pl-10"
+                class="pl-10"
                 @input="handleSearch"
               />
             </div>
@@ -68,23 +68,23 @@
                 class="relative w-full sm:w-36"
               >
                 <!-- Text/Email/URL/Textarea/Date type: styled input -->
-                <input
+                <Input
                   v-if="['text', 'textarea', 'email', 'url', 'date'].includes(getAttributeDefinition(Number(attrId))?.type || 'text')"
-                  :value="value"
-                  @input="(e) => updateAttributeFilter(Number(attrId), (e.target as HTMLInputElement).value)"
+                  :model-value="value"
+                  @update:model-value="(val) => updateAttributeFilter(Number(attrId), String(val))"
                   @keyup.enter="applyFilter"
                   :placeholder="getAttributeDefinitionName(Number(attrId))"
-                  class="input w-full"
+                  class="w-full"
                 />
                 <!-- Number type: number input -->
-                <input
+                <Input
                   v-else-if="getAttributeDefinition(Number(attrId))?.type === 'number'"
-                  :value="value"
+                  :model-value="value"
                   type="number"
-                  @input="(e) => updateAttributeFilter(Number(attrId), (e.target as HTMLInputElement).value)"
+                  @update:model-value="(val) => updateAttributeFilter(Number(attrId), String(val))"
                   @keyup.enter="applyFilter"
                   :placeholder="getAttributeDefinitionName(Number(attrId))"
-                  class="input w-full"
+                  class="w-full"
                 />
                 <!-- Select/Multi-select type -->
                 <template v-else-if="['select', 'multi_select'].includes(getAttributeDefinition(Number(attrId))?.type || '')">
@@ -100,13 +100,13 @@
                   </div>
                 </template>
                 <!-- Fallback -->
-                <input
+                <Input
                   v-else
-                  :value="value"
-                  @input="(e) => updateAttributeFilter(Number(attrId), (e.target as HTMLInputElement).value)"
+                  :model-value="value"
+                  @update:model-value="(val) => updateAttributeFilter(Number(attrId), String(val))"
                   @keyup.enter="applyFilter"
                   :placeholder="getAttributeDefinitionName(Number(attrId))"
-                  class="input w-full"
+                  class="w-full"
                 />
               </div>
             </template>
@@ -117,24 +117,28 @@
             <!-- Mobile: Secondary buttons (icon only) -->
             <div class="flex items-center gap-2 md:contents">
               <!-- Refresh Button -->
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 @click="loadUsers"
                 :disabled="loading"
-                class="btn btn-secondary px-2 md:px-3"
+                class="px-2 md:px-3"
                 :title="t('common.refresh')"
               >
                 <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
-              </button>
+              </Button>
               <!-- Filter Settings Dropdown -->
               <div class="relative" ref="filterDropdownRef">
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   @click="showFilterDropdown = !showFilterDropdown"
-                  class="btn btn-secondary px-2 md:px-3"
+                  class="px-2 md:px-3"
                   :title="t('admin.users.filterSettings')"
                 >
                   <Icon name="filter" size="sm" class="md:mr-1.5" />
                   <span class="hidden md:inline">{{ t('admin.users.filterSettings') }}</span>
-                </button>
+                </Button>
                 <!-- Dropdown menu -->
                 <div
                   v-if="showFilterDropdown"
@@ -157,10 +161,10 @@
                     />
                   </button>
                   <!-- Divider if custom attributes exist -->
-                  <div
+                  <Separator
                     v-if="filterableAttributes.length > 0"
-                    class="my-1 border-t border-border"
-                  ></div>
+                    class="my-1"
+                  />
                   <!-- Custom attribute filters -->
                   <button
                     v-for="attr in filterableAttributes"
@@ -181,16 +185,18 @@
               </div>
               <!-- Column Settings Dropdown -->
               <div class="relative" ref="columnDropdownRef">
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   @click="showColumnDropdown = !showColumnDropdown"
-                  class="btn btn-secondary px-2 md:px-3"
+                  class="px-2 md:px-3"
                   :title="t('admin.users.columnSettings')"
                 >
                   <svg class="h-4 w-4 md:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125z" />
                   </svg>
                   <span class="hidden md:inline">{{ t('admin.users.columnSettings') }}</span>
-                </button>
+                </Button>
                 <!-- Dropdown menu -->
                 <div
                   v-if="showColumnDropdown"
@@ -221,21 +227,23 @@
                 </div>
               </div>
               <!-- Attributes Config Button -->
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 @click="showAttributesModal = true"
-                class="btn btn-secondary px-2 md:px-3"
+                class="px-2 md:px-3"
                 :title="t('admin.users.attributes.configButton')"
               >
                 <Icon name="cog" size="sm" class="md:mr-1.5" />
                 <span class="hidden md:inline">{{ t('admin.users.attributes.configButton') }}</span>
-              </button>
+              </Button>
             </div>
 
             <!-- Create User Button (full width on mobile, auto width on desktop) -->
-            <button @click="showCreateModal = true" class="btn btn-primary flex-1 md:flex-initial">
+            <Button @click="showCreateModal = true" class="flex-1 md:flex-initial">
               <Icon name="plus" size="md" class="mr-2" />
               {{ t('admin.users.createUser') }}
-            </button>
+            </Button>
           </div>
         </div>
       </template>
@@ -300,9 +308,9 @@
           </template>
 
           <template #cell-role="{ value }">
-            <span :class="['badge', value === 'admin' ? 'badge-purple' : 'badge-gray']">
+            <Badge :variant="value === 'admin' ? 'default' : 'secondary'">
               {{ t('admin.users.roles.' + value) }}
-            </span>
+            </Badge>
           </template>
 
           <template #cell-groups="{ row }">
@@ -574,39 +582,39 @@
           <template #cell-actions="{ row }">
             <div class="flex items-center gap-1">
               <!-- Edit Button -->
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 @click="handleEdit(row)"
-                class="flex flex-col items-center gap-0.5 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-primary-200"
+                class="flex flex-col items-center gap-0.5 h-auto p-1.5"
               >
                 <Icon name="edit" size="sm" />
                 <span class="text-xs">{{ t('common.edit') }}</span>
-              </button>
+              </Button>
 
               <!-- Toggle Status Button (not for admin) -->
-              <button
+              <Button
                 v-if="row.role !== 'admin'"
+                variant="ghost"
+                size="sm"
                 @click="handleToggleStatus(row)"
-                :class="[
-                  'flex flex-col items-center gap-0.5 rounded-md p-1.5 text-muted-foreground transition-colors',
-                  row.status === 'active'
-                    ? 'hover:bg-amber-500/10 hover:text-amber-400'
-                    : 'hover:bg-emerald-500/10 hover:text-emerald-400'
-                ]"
+                :class="`flex flex-col items-center gap-0.5 h-auto p-1.5 ${row.status === 'active' ? 'hover:bg-amber-500/10 hover:text-amber-400' : 'hover:bg-emerald-500/10 hover:text-emerald-400'}`"
               >
                 <Icon v-if="row.status === 'active'" name="ban" size="sm" />
                 <Icon v-else name="checkCircle" size="sm" />
                 <span class="text-xs">{{ row.status === 'active' ? t('admin.users.disable') : t('admin.users.enable') }}</span>
-              </button>
+              </Button>
 
               <!-- More Actions Menu Trigger -->
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 @click="openActionMenu(row, $event)"
-                class="action-menu-trigger flex flex-col items-center gap-0.5 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                :class="{ 'bg-accent text-foreground': activeMenuId === row.id }"
+                :class="`action-menu-trigger flex flex-col items-center gap-0.5 h-auto p-1.5 ${activeMenuId === row.id ? 'bg-accent text-foreground' : ''}`"
               >
                 <Icon name="more" size="sm" />
                 <span class="text-xs">{{ t('common.more') }}</span>
-              </button>
+              </Button>
             </div>
           </template>
 
@@ -662,7 +670,7 @@
                 {{ t('admin.users.groups') }}
               </button>
 
-              <div class="my-1 border-t border-border"></div>
+              <Separator class="my-1" />
 
               <!-- Deposit -->
               <button
@@ -702,7 +710,7 @@
                 {{ t('admin.users.balanceHistory') }}
               </button>
 
-              <div class="my-1 border-t border-border"></div>
+              <Separator class="my-1" />
 
               <!-- Delete (not for admin) -->
               <button
@@ -744,6 +752,10 @@ import { useAppStore } from '@/stores/app'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { formatDateTime } from '@/utils/format'
 import Icon from '@/components/icons/Icon.vue'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
 
 const { t } = useI18n()
 import { adminAPI } from '@/api/admin'
