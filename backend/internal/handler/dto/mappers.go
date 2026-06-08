@@ -200,6 +200,12 @@ var listExtraKeys = map[string]bool{
 	"email_address": true, "email": true, "privacy_mode": true,
 	"model_rate_limits": true, "allow_overages": true,
 	"quota_daily_reset_at": true, "quota_weekly_reset_at": true,
+	// Codex (OpenAI) passive usage — avoid per-cell API probe
+	"codex_5h_used_percent": true, "codex_5h_reset_at": true, "codex_5h_reset_after_seconds": true,
+	"codex_7d_used_percent": true, "codex_7d_reset_at": true, "codex_7d_reset_after_seconds": true,
+	"codex_usage_updated_at": true,
+	// Anthropic passive usage
+	"passive_usage_sampled_at": true, "passive_usage_7d_utilization": true, "passive_usage_7d_reset": true,
 }
 
 func filterExtraForList(extra map[string]any) map[string]any {

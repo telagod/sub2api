@@ -578,7 +578,34 @@ const hasOpenAIUsageFallback = computed(() => {
 
 const openAIUsageRefreshKey = computed(() => buildOpenAIUsageRefreshKey(props.account))
 
+const hasCodexExtraUsage = computed(() => {
+  if (props.account.platform !== 'openai' || props.account.type !== 'oauth') return false
+  const extra = props.account.extra as Record<string, unknown> | undefined
+  return extra?.codex_5h_used_percent != null || extra?.codex_7d_used_percent != null
+})
+
+const buildUsageFromExtra = (): boolean => {
+  if (!hasCodexExtraUsage.value) return false
+  const extra = props.account.extra as Record<string, unknown>
+  const info: any = { source: 'extra', updated_at: extra.codex_usage_updated_at }
+  const build5h = () => {
+    const pct = Number(extra.codex_5h_used_percent ?? 0)
+    const resetAt = extra.codex_5h_reset_at as string | undefined
+    return { utilization: pct, resets_at: resetAt || null }
+  }
+  const build7d = () => {
+    const pct = Number(extra.codex_7d_used_percent ?? 0)
+    const resetAt = extra.codex_7d_reset_at as string | undefined
+    return { utilization: pct, resets_at: resetAt || null }
+  }
+  info.five_hour = build5h()
+  info.seven_day = build7d()
+  usageInfo.value = info
+  return true
+}
+
 const shouldAutoLoadUsageOnMount = computed(() => {
+  if (hasCodexExtraUsage.value) return false
   return shouldFetchUsage.value
 })
 
@@ -1133,6 +1160,7 @@ const formatKeyUserCost = computed(() => {
 })
 
 onMounted(() => {
+  if (buildUsageFromExtra()) return
   if (!shouldAutoLoadUsageOnMount.value) return
   const source = isAnthropicOAuthOrSetupToken.value ? 'passive' : undefined
   requestAutoLoad(source)
