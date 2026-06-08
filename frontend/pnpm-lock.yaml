@@ -1,5 +1,8 @@
 lockfileVersion: '9.0'
 
+overrides:
+  js-cookie: 3.0.7
+
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
