@@ -182,7 +182,7 @@
           </button>
         </template>
         <div class="ml-auto flex items-center gap-3">
-          <Button variant="outline" type="button"  class="btn-sm px-4 py-1.5" @click="handleClose">
+          <Button variant="outline" type="button" size="sm" class="px-4 py-1.5" @click="handleClose">
             {{ t('common.close') }}
           </Button>
           <Button

@@ -379,7 +379,7 @@
                 :placeholder="t('admin.accounts.enterErrorCode')"
                 @keyup.enter="addCustomErrorCode"
               />
-              <button type="button" @click="addCustomErrorCode" class="btn btn-secondary px-3">
+              <Button type="button" @click="addCustomErrorCode" variant="secondary" class="px-3">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     stroke-linecap="round"
@@ -388,7 +388,7 @@
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-              </button>
+              </Button>
             </div>
 
             <!-- Selected codes summary -->
@@ -912,9 +912,9 @@
                 <Icon name="trash" size="sm" />
               </button>
             </div>
-            <button type="button" @click="modelMappings.push({ from: '', to: '' })" class="btn btn-secondary text-sm">
+            <Button type="button" @click="modelMappings.push({ from: '', to: '' })" variant="secondary" size="sm">
               + {{ t('admin.accounts.addMapping') }}
-            </button>
+            </Button>
             <!-- Bedrock Preset Mappings -->
             <div class="flex flex-wrap gap-2">
               <button
@@ -1739,9 +1739,9 @@
               </button>
             </div>
           </div>
-          <button type="button" @click="addOpenAICompactModelMapping" class="btn btn-secondary text-sm">
+          <Button type="button" @click="addOpenAICompactModelMapping" variant="secondary" size="sm">
             + {{ t('admin.accounts.addMapping') }}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -2304,14 +2304,13 @@
 
     <template #footer>
       <div v-if="account" class="flex justify-end gap-3">
-        <button @click="handleClose" type="button" class="btn btn-secondary">
+        <Button @click="handleClose" type="button" variant="secondary">
           {{ t('common.cancel') }}
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
           form="edit-account-form"
           :disabled="submitting"
-          class="btn btn-primary"
           data-tour="account-form-submit"
         >
           <svg
@@ -2335,7 +2334,7 @@
             ></path>
           </svg>
           {{ submitting ? t('admin.accounts.updating') : t('common.update') }}
-        </button>
+        </Button>
       </div>
     </template>
   </BaseDialog>
@@ -2354,6 +2353,7 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ref, reactive, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

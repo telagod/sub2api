@@ -476,11 +476,11 @@
         <div>
           <label class="input-label">{{ t('admin.proxies.expiresAt') }}</label>
           <div class="mb-2 flex flex-wrap gap-2">
-            <Button variant="outline"
+            <Button
               v-for="d in EXPIRY_PRESETS"
               :key="d"
               type="button"
-               class="btn-sm" :class="createForm.expires_at === addDaysToBase('', d) ? 'btn-primary' : 'btn-secondary'"
+              size="sm" :variant="createForm.expires_at === addDaysToBase('', d) ? 'default' : 'secondary'"
               @click="createExpiresDays = d">
               {{ t('admin.proxies.nDays', { days: d }) }}
             </Button>
@@ -700,11 +700,11 @@
         <div>
           <label class="input-label">{{ t('admin.proxies.expiresAt') }}</label>
           <div class="mb-2 flex flex-wrap gap-2">
-            <Button variant="outline"
+            <Button
               v-for="d in EXPIRY_PRESETS"
               :key="d"
               type="button"
-               class="btn-sm" :class="editForm.expires_at === addDaysToBase(editBaseDate, d) ? 'btn-primary' : 'btn-secondary'"
+              size="sm" :variant="editForm.expires_at === addDaysToBase(editBaseDate, d) ? 'default' : 'secondary'"
               @click="editExpiresDays = d">
               {{ t('admin.proxies.nDays', { days: d }) }}
             </Button>

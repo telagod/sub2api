@@ -409,14 +409,14 @@
 
         <!-- Navigation Buttons -->
         <div class="mt-8 flex justify-between">
-          <button
+          <Button
             v-if="currentStep > 0 && !installSuccess"
             @click="currentStep--"
-            class="btn btn-secondary"
+            variant="secondary"
           >
             <Icon name="chevronLeft" size="sm" class="mr-2" :stroke-width="2" />
             {{ t('common.back') }}
-          </button>
+          </Button>
           <div v-else></div>
 
           <Button

@@ -110,7 +110,7 @@
             <div>
               <router-link
                 :to="isAuthenticated ? dashboardPath : '/login'"
-                class="btn btn-primary px-8 py-3 text-base shadow-metal"
+                class="inline-flex items-center justify-center gap-2 rounded-md bg-metal-silver font-semibold text-dark-950 border border-white/25 [box-shadow:inset_0_1px_0_rgba(255,255,255,.55),0_1px_2px_rgba(0,0,0,.55)] hover:bg-metal-silver-hover px-8 py-3 text-base shadow-metal transition-all duration-150"
               >
                 {{ isAuthenticated ? t('home.goToDashboard') : t('home.getStarted') }}
                 <Icon name="arrowRight" size="md" class="ml-2" :stroke-width="2" />

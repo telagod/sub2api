@@ -2866,14 +2866,13 @@
 
     <template #footer>
       <div v-if="step === 1" class="flex justify-end gap-3">
-        <button @click="handleClose" type="button" class="btn btn-secondary">
+        <Button @click="handleClose" type="button" variant="secondary">
           {{ t('common.cancel') }}
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
           form="create-account-form"
           :disabled="submitting"
-          class="btn btn-primary"
           data-tour="account-form-submit"
         >
           <svg
@@ -2903,17 +2902,16 @@
                 ? t('admin.accounts.creating')
                 : t('common.create')
           }}
-        </button>
+        </Button>
       </div>
       <div v-else class="flex justify-between gap-3">
-        <button type="button" class="btn btn-secondary" @click="goBackToBasicInfo">
+        <Button type="button" variant="secondary" @click="goBackToBasicInfo">
           {{ t('common.back') }}
-        </button>
-        <button
+        </Button>
+        <Button
           v-if="isManualInputMethod"
           type="button"
           :disabled="!canExchangeCode"
-          class="btn btn-primary"
           @click="handleExchangeCode"
         >
           <svg
@@ -2941,7 +2939,7 @@
               ? t('admin.accounts.oauth.verifying')
               : t('admin.accounts.oauth.completeAuth')
           }}
-        </button>
+        </Button>
       </div>
     </template>
   </BaseDialog>
@@ -3156,9 +3154,9 @@
 
     <template #footer>
       <div class="flex justify-end">
-        <button @click="showGeminiHelpDialog = false" type="button" class="btn btn-primary">
+        <Button @click="showGeminiHelpDialog = false" type="button">
           {{ t('common.close') }}
-        </button>
+        </Button>
       </div>
     </template>
   </BaseDialog>
@@ -3177,6 +3175,7 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ref, reactive, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

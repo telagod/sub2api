@@ -19,7 +19,7 @@
           <h4 class="text-sm font-semibold text-foreground/85">
             {{ t('admin.usage.cleanup.recentTasks') }}
           </h4>
-          <Button type="button"  variant="ghost" class="btn-sm" @click="loadTasks">
+          <Button type="button" variant="ghost" size="sm" @click="loadTasks">
             {{ t('common.refresh') }}
           </Button>
         </div>
@@ -46,7 +46,7 @@
                   <Button
                     v-if="canCancel(task)"
                     type="button"
-                     variant="ghost" class="btn-xs text-rose-400 hover:text-rose-300" @click="openCancelConfirm(task)">
+                     variant="ghost" size="sm" class="text-rose-400 hover:text-rose-300" @click="openCancelConfirm(task)">
                     {{ t('admin.usage.cleanup.cancel') }}
                   </Button>
                 </div>

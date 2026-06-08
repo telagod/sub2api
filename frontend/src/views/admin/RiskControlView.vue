@@ -562,7 +562,7 @@
                             <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.riskControl.auditTestImagesHint') }}</p>
                           </div>
                         </div>
-                        <label class="btn btn-secondary inline-flex cursor-pointer items-center gap-2">
+                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-md bg-metal-raised text-foreground border border-border shadow-metal-edge hover:brightness-110 px-4 py-2.5 text-sm font-medium transition-all duration-150">
                           <Icon name="plus" size="sm" />
                           {{ t('admin.riskControl.addAuditTestImage') }}
                           <input type="file" accept="image/*" multiple class="sr-only" @change="handleModerationImageUpload" />

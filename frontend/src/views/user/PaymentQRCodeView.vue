@@ -21,7 +21,7 @@
         <p class="mt-2 text-sm text-muted-foreground">{{ t('payment.qr.waitingPayment') }}</p>
       </div>
       <a v-if="payUrl && !qrUrl && !expired" :href="payUrl" target="_blank" rel="noopener noreferrer"
-        class="btn btn-primary w-full py-3">
+        class="inline-flex items-center justify-center gap-2 rounded-md bg-metal-silver font-semibold text-dark-950 border border-white/25 [box-shadow:inset_0_1px_0_rgba(255,255,255,.55),0_1px_2px_rgba(0,0,0,.55)] hover:bg-metal-silver-hover w-full py-3 text-sm transition-all duration-150">
         {{ t('payment.qr.openPayWindow') }}
       </a>
       <!-- Cancel button -->
