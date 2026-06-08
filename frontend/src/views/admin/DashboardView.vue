@@ -289,15 +289,12 @@ const granularityOptions = computed(() => [
   { value: 'hour', label: t('admin.dashboard.hour') }
 ])
 
-// Dark mode detection
-const isDarkMode = computed(() => {
-  return document.documentElement.classList.contains('dark')
-})
+// dark-only: chart colors hardcoded for dark theme
 
 // Chart colors
 const chartColors = computed(() => ({
-  text: isDarkMode.value ? '#9aa1a9' : '#6b7176',
-  grid: isDarkMode.value ? 'rgba(255,255,255,0.06)' : '#e5e7eb'
+  text: "#737373",
+  grid: "rgba(255,255,255,0.06)"
 }))
 
 // Line chart options (for user trend chart)
