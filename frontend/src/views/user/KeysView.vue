@@ -241,7 +241,7 @@
                 <Icon name="upload" size="sm" />
                 <span class="text-xs">{{ t('keys.importToCcSwitch') }}</span>
               </Button>
-              <Button variant="ghost" size="sm" @click="toggleKeyStatus(row)" :class="['flex flex-col items-center gap-0.5 h-auto px-1.5 py-1.5', row.status === 'active' ? 'text-muted-foreground hover:bg-yellow-50 hover:text-amber-400 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400' : 'text-muted-foreground hover:bg-green-50 hover:text-emerald-400 dark:hover:bg-green-900/20 dark:hover:text-green-400']">
+              <Button variant="ghost" size="sm" @click="toggleKeyStatus(row)" :class="'flex flex-col items-center gap-0.5 h-auto px-1.5 py-1.5 ' + (row.status === 'active' ? 'text-muted-foreground hover:bg-yellow-50 hover:text-amber-400 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400' : 'text-muted-foreground hover:bg-green-50 hover:text-emerald-400 dark:hover:bg-green-900/20 dark:hover:text-green-400')">
                 <Icon v-if="row.status === 'active'" name="ban" size="sm" />
                 <Icon v-else name="checkCircle" size="sm" />
                 <span class="text-xs">{{ row.status === 'active' ? t('keys.disable') : t('keys.enable') }}</span>
