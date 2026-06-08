@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	dbent "github.com/Wei-Shaw/sub2api/ent"
-	"github.com/Wei-Shaw/sub2api/ent/paymentauditlog"
-	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
-	"github.com/Wei-Shaw/sub2api/internal/payment"
-	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
+	dbent "github.com/telagod/subme/ent"
+	"github.com/telagod/subme/ent/paymentauditlog"
+	"github.com/telagod/subme/ent/paymentorder"
+	"github.com/telagod/subme/internal/payment"
+	infraerrors "github.com/telagod/subme/internal/pkg/errors"
 )
 
 // ErrOrderNotFound is returned by HandlePaymentNotification when the webhook

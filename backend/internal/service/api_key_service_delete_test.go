@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Wei-Shaw/sub2api/internal/pkg/apikeyhash"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
+	"github.com/telagod/subme/internal/pkg/apikeyhash"
+	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/stretchr/testify/require"
 )
 

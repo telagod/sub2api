@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
-	dbent "github.com/Wei-Shaw/sub2api/ent"
-	dbuser "github.com/Wei-Shaw/sub2api/ent/user"
-	"github.com/Wei-Shaw/sub2api/internal/config"
-	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/oauth"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
-	"github.com/Wei-Shaw/sub2api/internal/service"
+	dbent "github.com/telagod/subme/ent"
+	dbuser "github.com/telagod/subme/ent/user"
+	"github.com/telagod/subme/internal/config"
+	infraerrors "github.com/telagod/subme/internal/pkg/errors"
+	"github.com/telagod/subme/internal/pkg/oauth"
+	"github.com/telagod/subme/internal/pkg/response"
+	"github.com/telagod/subme/internal/service"
 
 	"github.com/gin-gonic/gin"
 )

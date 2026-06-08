@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Wei-Shaw/sub2api/internal/pkg/ctxkey"
+	"github.com/telagod/subme/internal/pkg/ctxkey"
 )
 
 const (

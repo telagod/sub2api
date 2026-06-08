@@ -12,10 +12,10 @@ import (
 	"sync"
 	"time"
 
-	dbent "github.com/Wei-Shaw/sub2api/ent"
-	"github.com/Wei-Shaw/sub2api/ent/paymentproviderinstance"
-	"github.com/Wei-Shaw/sub2api/internal/payment"
-	"github.com/Wei-Shaw/sub2api/internal/payment/provider"
+	dbent "github.com/telagod/subme/ent"
+	"github.com/telagod/subme/ent/paymentproviderinstance"
+	"github.com/telagod/subme/internal/payment"
+	"github.com/telagod/subme/internal/payment/provider"
 )
 
 // --- Order Status Constants ---

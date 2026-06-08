@@ -8,9 +8,9 @@ import (
 	"errors"
 	"testing"
 
-	dbent "github.com/Wei-Shaw/sub2api/ent"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
-	"github.com/Wei-Shaw/sub2api/internal/service"
+	dbent "github.com/telagod/subme/ent"
+	"github.com/telagod/subme/internal/pkg/pagination"
+	"github.com/telagod/subme/internal/service"
 	"github.com/stretchr/testify/suite"
 )
 

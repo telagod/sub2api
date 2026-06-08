@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
+	infraerrors "github.com/telagod/subme/internal/pkg/errors"
+	"github.com/telagod/subme/internal/pkg/pagination"
 )
 
 var (

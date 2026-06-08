@@ -11,14 +11,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Wei-Shaw/sub2api/ent/account"
-	"github.com/Wei-Shaw/sub2api/ent/apikey"
-	"github.com/Wei-Shaw/sub2api/ent/group"
-	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
-	"github.com/Wei-Shaw/sub2api/ent/usagelog"
-	"github.com/Wei-Shaw/sub2api/ent/user"
-	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
-	"github.com/Wei-Shaw/sub2api/internal/domain"
+	"github.com/telagod/subme/ent/account"
+	"github.com/telagod/subme/ent/apikey"
+	"github.com/telagod/subme/ent/group"
+	"github.com/telagod/subme/ent/redeemcode"
+	"github.com/telagod/subme/ent/usagelog"
+	"github.com/telagod/subme/ent/user"
+	"github.com/telagod/subme/ent/usersubscription"
+	"github.com/telagod/subme/internal/domain"
 )
 
 // GroupCreate is the builder for creating a Group entity.

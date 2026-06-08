@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
-	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
-	"github.com/Wei-Shaw/sub2api/internal/service"
+	"github.com/telagod/subme/internal/handler/dto"
+	"github.com/telagod/subme/internal/pkg/response"
+	middleware2 "github.com/telagod/subme/internal/server/middleware"
+	"github.com/telagod/subme/internal/service"
 
 	"github.com/gin-gonic/gin"
 )

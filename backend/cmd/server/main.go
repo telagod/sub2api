@@ -15,13 +15,13 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/Wei-Shaw/sub2api/ent/runtime"
-	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/handler"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
-	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
-	"github.com/Wei-Shaw/sub2api/internal/setup"
-	"github.com/Wei-Shaw/sub2api/internal/web"
+	_ "github.com/telagod/subme/ent/runtime"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/handler"
+	"github.com/telagod/subme/internal/pkg/logger"
+	"github.com/telagod/subme/internal/server/middleware"
+	"github.com/telagod/subme/internal/setup"
+	"github.com/telagod/subme/internal/web"
 
 	"github.com/gin-gonic/gin"
 )

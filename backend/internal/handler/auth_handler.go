@@ -6,13 +6,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
-	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/ip"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
-	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
-	"github.com/Wei-Shaw/sub2api/internal/service"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/handler/dto"
+	infraerrors "github.com/telagod/subme/internal/pkg/errors"
+	"github.com/telagod/subme/internal/pkg/ip"
+	"github.com/telagod/subme/internal/pkg/response"
+	middleware2 "github.com/telagod/subme/internal/server/middleware"
+	"github.com/telagod/subme/internal/service"
 
 	"github.com/gin-gonic/gin"
 )

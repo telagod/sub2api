@@ -3,9 +3,9 @@ package admin
 import (
 	"strconv"
 
-	dbent "github.com/Wei-Shaw/sub2api/ent"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
-	"github.com/Wei-Shaw/sub2api/internal/service"
+	dbent "github.com/telagod/subme/ent"
+	"github.com/telagod/subme/internal/pkg/response"
+	"github.com/telagod/subme/internal/service"
 
 	"github.com/gin-gonic/gin"
 )

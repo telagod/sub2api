@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/service"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/service"
 )
 
 // credentialEncPrefixV1 标记一个 credentials 值已被字段级加密。

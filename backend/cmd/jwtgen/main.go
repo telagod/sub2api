@@ -7,10 +7,10 @@ import (
 	"log"
 	"time"
 
-	_ "github.com/Wei-Shaw/sub2api/ent/runtime"
-	"github.com/Wei-Shaw/sub2api/internal/config"
-	"github.com/Wei-Shaw/sub2api/internal/repository"
-	"github.com/Wei-Shaw/sub2api/internal/service"
+	_ "github.com/telagod/subme/ent/runtime"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/repository"
+	"github.com/telagod/subme/internal/service"
 )
 
 func main() {
