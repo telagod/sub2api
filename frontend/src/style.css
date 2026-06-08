@@ -54,6 +54,16 @@
     --ring: 220 13% 68%; /* 银 focus 环 */
   }
 
+  /* Light 模式: metal 渐变是暗色(gunmetal),在浅色主题下用 muted/card 替代 */
+  :root .bg-metal-raised {
+    background-image: none;
+    background-color: hsl(var(--muted));
+  }
+  :root .bg-metal-surface {
+    background-image: none;
+    background-color: hsl(var(--card));
+  }
+
   * {
     @apply border-border;
   }
