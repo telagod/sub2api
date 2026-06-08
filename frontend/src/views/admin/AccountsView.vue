@@ -17,161 +17,72 @@
             />
           </template>
           <template #filters>
-            <Select :model-value="params.platform" class="w-36" :options="filterPlatformOpts" @update:model-value="(v: any) => { params.platform = v; debouncedReload() }" />
-            <Select :model-value="params.type" class="w-36" :options="filterTypeOpts" @update:model-value="(v: any) => { params.type = v; debouncedReload() }" />
-            <Select :model-value="params.status" class="w-36" :options="filterStatusOpts" @update:model-value="(v: any) => { params.status = v; debouncedReload() }" />
-            <Select :model-value="params.privacy_mode" class="w-36" :options="filterPrivacyOpts" @update:model-value="(v: any) => { params.privacy_mode = v; debouncedReload() }" />
-            <Select :model-value="params.group" class="w-36" :options="filterGroupOpts" @update:model-value="(v: any) => { params.group = v; debouncedReload() }" />
-            <Select :model-value="params.schedulable" class="w-36" :options="filterSchedulableOpts" @update:model-value="(v: any) => { params.schedulable = v; debouncedReload() }" />
-            <Select :model-value="params.has_proxy" class="w-36" :options="filterHasProxyOpts" @update:model-value="(v: any) => { params.has_proxy = v; debouncedReload() }" />
+            <Select :model-value="params.platform" class="w-32" :options="filterPlatformOpts" @update:model-value="(v: any) => { params.platform = v; debouncedReload() }" />
+            <Select :model-value="params.type" class="w-32" :options="filterTypeOpts" @update:model-value="(v: any) => { params.type = v; debouncedReload() }" />
+            <Select :model-value="params.status" class="w-32" :options="filterStatusOpts" @update:model-value="(v: any) => { params.status = v; debouncedReload() }" />
+            <Select :model-value="params.privacy_mode" class="w-32" :options="filterPrivacyOpts" @update:model-value="(v: any) => { params.privacy_mode = v; debouncedReload() }" />
+            <Select :model-value="params.group" class="w-32" :options="filterGroupOpts" @update:model-value="(v: any) => { params.group = v; debouncedReload() }" />
+            <Select :model-value="params.schedulable" class="w-32" :options="filterSchedulableOpts" @update:model-value="(v: any) => { params.schedulable = v; debouncedReload() }" />
+            <Select :model-value="params.has_proxy" class="w-32" :options="filterHasProxyOpts" @update:model-value="(v: any) => { params.has_proxy = v; debouncedReload() }" />
           </template>
           <template #actions>
-          <AccountTableActions
-            :loading="loading"
-            @refresh="handleManualRefresh"
-            @create="showCreate = true"
-          >
-            <template #after>
-              <!-- Auto Refresh Dropdown -->
-              <div class="relative" ref="autoRefreshDropdownRef">
+            <!-- Refresh split button: click = refresh, dropdown = auto-refresh settings -->
+            <div class="relative" ref="autoRefreshDropdownRef">
+              <div class="flex">
                 <button
-                  @click="
-                    showAutoRefreshDropdown = !showAutoRefreshDropdown;
-                    showAccountToolsDropdown = false
-                  "
-                  class="btn btn-secondary px-2 md:px-3"
-                  :title="t('admin.accounts.autoRefresh')"
+                  @click="handleManualRefresh"
+                  :disabled="loading"
+                  class="btn btn-secondary rounded-r-none border-r-0 px-2"
+                  :class="autoRefreshEnabled && 'border-primary-400/50'"
                 >
-                  <Icon name="refresh" size="sm" :class="[autoRefreshEnabled ? 'animate-spin' : '']" />
-                  <span class="hidden md:inline">
-                    {{
-                      autoRefreshEnabled
-                        ? t('admin.accounts.autoRefreshCountdown', { seconds: autoRefreshCountdown })
-                        : t('admin.accounts.autoRefresh')
-                    }}
-                  </span>
+                  <Icon name="refresh" size="sm" :class="[loading || autoRefreshEnabled ? 'animate-spin' : '']" />
                 </button>
-                <div
-                  v-if="showAutoRefreshDropdown"
-                  class="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-md border border-border bg-card "
-                >
-                  <div class="p-2">
-                    <button
-                      @click="setAutoRefreshEnabled(!autoRefreshEnabled)"
-                      class="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-foreground/85 hover:bg-accent"
-                    >
-                      <span>{{ t('admin.accounts.enableAutoRefresh') }}</span>
-                      <Icon v-if="autoRefreshEnabled" name="check" size="sm" class="text-primary-200" />
-                    </button>
-                    <div class="my-1 border-t border-border"></div>
-                    <button
-                      v-for="sec in autoRefreshIntervals"
-                      :key="sec"
-                      @click="setAutoRefreshInterval(sec)"
-                      class="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-foreground/85 hover:bg-accent"
-                    >
-                      <span>{{ autoRefreshIntervalLabel(sec) }}</span>
-                      <Icon v-if="autoRefreshIntervalSeconds === sec" name="check" size="sm" class="text-primary-200" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- More Tools Dropdown -->
-              <div class="relative" ref="accountToolsDropdownRef">
                 <button
-                  @click="
-                    showAccountToolsDropdown = !showAccountToolsDropdown;
-                    showAutoRefreshDropdown = false
-                  "
-                  class="btn btn-secondary px-2 md:px-3"
-                  :title="t('admin.accounts.moreActions')"
+                  @click="showAutoRefreshDropdown = !showAutoRefreshDropdown; showAccountToolsDropdown = false"
+                  class="btn btn-secondary rounded-l-none border-l-border/30 px-1.5"
+                  :class="autoRefreshEnabled && 'border-primary-400/50'"
                 >
-                  <Icon name="more" size="sm" class="md:mr-1.5" />
-                  <span class="hidden md:inline">{{ t('admin.accounts.moreActions') }}</span>
-                  <Icon name="chevronDown" size="xs" class="ml-1 hidden md:inline" />
+                  <Icon name="chevronDown" size="xs" />
                 </button>
-                <div
-                  v-if="showAccountToolsDropdown"
-                  class="absolute right-0 z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] origin-top-right overflow-hidden rounded-lg border border-border bg-card "
-                >
-                  <div class="max-h-[70vh] overflow-y-auto p-2">
-                    <div class="px-2 py-2">
-                      <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {{ t('admin.accounts.dataActions') }}
-                      </div>
-                    </div>
-                    <button class="account-tools-menu-item" @click="openSyncFromCrs">
-                      <span class="account-tools-menu-icon bg-secondary border border-border text-primary-200 ">
-                        <Icon name="sync" size="sm" />
-                      </span>
-                      <span class="flex-1 text-left">{{ t('admin.accounts.syncFromCrs') }}</span>
-                    </button>
-                    <button class="account-tools-menu-item" @click="openImportData">
-                      <span class="account-tools-menu-icon bg-secondary border border-border text-primary-200 ">
-                        <Icon name="upload" size="sm" />
-                      </span>
-                      <span class="flex-1 text-left">{{ t('admin.accounts.dataImport') }}</span>
-                    </button>
-                    <button class="account-tools-menu-item" @click="openExportDataDialogFromMenu">
-                      <span class="account-tools-menu-icon bg-secondary border border-border text-primary-200 ">
-                        <Icon name="download" size="sm" />
-                      </span>
-                      <span class="flex-1 text-left">
-                        {{ selIds.length ? t('admin.accounts.dataExportSelected') : t('admin.accounts.dataExport') }}
-                      </span>
-                      <span
-                        v-if="selIds.length"
-                        class="rounded-full bg-primary-300/10 px-2 py-0.5 text-xs font-medium text-primary-200"
-                      >
-                        {{ t('admin.accounts.selectedCount', { count: selIds.length }) }}
-                      </span>
-                    </button>
-
-                    <div class="my-2 border-t border-border"></div>
-                    <div class="px-2 py-2">
-                      <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {{ t('admin.accounts.toolActions') }}
-                      </div>
-                    </div>
-                    <button class="account-tools-menu-item" @click="openErrorPassthrough">
-                      <span class="account-tools-menu-icon bg-secondary border border-border text-primary-200 ">
-                        <Icon name="shield" size="sm" />
-                      </span>
-                      <span class="flex-1 text-left">{{ t('admin.errorPassthrough.title') }}</span>
-                    </button>
-                    <button class="account-tools-menu-item" @click="openTLSFingerprintProfiles">
-                      <span class="account-tools-menu-icon bg-secondary border border-border text-primary-200 ">
-                        <Icon name="lock" size="sm" />
-                      </span>
-                      <span class="flex-1 text-left">{{ t('admin.tlsFingerprintProfiles.title') }}</span>
-                    </button>
-
-                    <div class="my-2 border-t border-border"></div>
-                    <div class="px-2 py-2">
-                      <div class="flex items-center justify-between gap-3">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {{ t('admin.accounts.viewColumns') }}
-                        </span>
-                        <Icon name="grid" size="sm" class="text-muted-foreground" />
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-1 gap-1">
-                      <button
-                        v-for="col in toggleableColumns"
-                        :key="col.key"
-                        @click="toggleColumn(col.key)"
-                        class="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm text-foreground/85 transition-colors hover:bg-accent"
-                      >
-                        <span class="truncate">{{ col.label }}</span>
-                        <Icon v-if="isColumnVisible(col.key)" name="check" size="sm" class="text-primary-200" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
-            </template>
-          </AccountTableActions>
+              <div v-if="showAutoRefreshDropdown" class="absolute right-0 z-50 mt-1 w-48 rounded-md border border-border bg-card py-1">
+                <button @click="setAutoRefreshEnabled(!autoRefreshEnabled)" class="flex w-full items-center justify-between px-3 py-1.5 text-sm text-foreground/85 hover:bg-accent">
+                  <span>{{ t('admin.accounts.enableAutoRefresh') }}</span>
+                  <Icon v-if="autoRefreshEnabled" name="check" size="sm" class="text-primary-200" />
+                </button>
+                <div class="my-0.5 border-t border-border"></div>
+                <button v-for="sec in autoRefreshIntervals" :key="sec" @click="setAutoRefreshInterval(sec)" class="flex w-full items-center justify-between px-3 py-1.5 text-sm text-foreground/85 hover:bg-accent">
+                  <span>{{ autoRefreshIntervalLabel(sec) }}</span>
+                  <Icon v-if="autoRefreshIntervalSeconds === sec" name="check" size="sm" class="text-primary-200" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Kebab menu: data ops + tools (no column settings) -->
+            <div class="relative" ref="accountToolsDropdownRef">
+              <button @click="showAccountToolsDropdown = !showAccountToolsDropdown; showAutoRefreshDropdown = false" class="btn btn-secondary px-2">
+                <Icon name="more" size="sm" />
+              </button>
+              <div v-if="showAccountToolsDropdown" class="absolute right-0 z-50 mt-1 w-52 rounded-md border border-border bg-card py-1">
+                <button class="dropdown-item" @click="openSyncFromCrs"><Icon name="sync" size="sm" class="text-muted-foreground" /><span>{{ t('admin.accounts.syncFromCrs') }}</span></button>
+                <button class="dropdown-item" @click="openImportData"><Icon name="upload" size="sm" class="text-muted-foreground" /><span>{{ t('admin.accounts.dataImport') }}</span></button>
+                <button class="dropdown-item" @click="openExportDataDialogFromMenu"><Icon name="download" size="sm" class="text-muted-foreground" /><span>{{ selIds.length ? t('admin.accounts.dataExportSelected') : t('admin.accounts.dataExport') }}</span></button>
+                <div class="my-0.5 border-t border-border"></div>
+                <button class="dropdown-item" @click="openErrorPassthrough"><Icon name="shield" size="sm" class="text-muted-foreground" /><span>{{ t('admin.errorPassthrough.title') }}</span></button>
+                <button class="dropdown-item" @click="openTLSFingerprintProfiles"><Icon name="lock" size="sm" class="text-muted-foreground" /><span>{{ t('admin.tlsFingerprintProfiles.title') }}</span></button>
+                <div class="my-0.5 border-t border-border"></div>
+                <div class="px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{{ t('admin.accounts.viewColumns') }}</div>
+                <button v-for="col in toggleableColumns" :key="col.key" @click="toggleColumn(col.key)" class="flex w-full items-center justify-between px-3 py-1.5 text-sm text-foreground/85 hover:bg-accent">
+                  <span class="truncate">{{ col.label }}</span>
+                  <Icon v-if="isColumnVisible(col.key)" name="check" size="xs" class="text-primary-200" />
+                </button>
+              </div>
+            </div>
+
+            <button @click="showCreate = true" class="btn btn-primary">
+              <Icon name="plus" size="sm" class="mr-1" />
+              <span class="hidden sm:inline">{{ t('admin.accounts.createAccount') }}</span>
+            </button>
           </template>
         </CollapsibleFilters>
         <div
@@ -430,7 +341,6 @@ const EditAccountModal = defineAsyncComponent(() => import('@/components/account
 const BulkEditAccountModal = defineAsyncComponent(() => import('@/components/account/BulkEditAccountModal.vue'))
 const SyncFromCrsModal = defineAsyncComponent(() => import('@/components/account/SyncFromCrsModal.vue'))
 const TempUnschedStatusModal = defineAsyncComponent(() => import('@/components/account/TempUnschedStatusModal.vue'))
-import AccountTableActions from '@/components/admin/account/AccountTableActions.vue'
 import CollapsibleFilters from '@/components/common/CollapsibleFilters.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import Select from '@/components/common/Select.vue'
