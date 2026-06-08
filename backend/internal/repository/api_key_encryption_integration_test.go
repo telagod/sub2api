@@ -73,3 +73,41 @@ func TestAPIKey_DegradeWhenCipherNil(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "sk-degrade-plain", got.Key, "degrade 时读回退 key 明文列")
 }
+
+// TestAPIKey_AuthLookup_FallbackToPlaintextKey 验证 auth 切换的过渡兼容:
+// 回填未完的存量行(key_hash NULL)仍能通过 OR 查询的明文 key 分支命中,
+// 保证迁移期间现有用户的 key 不中断认证(零断裂)。
+func TestAPIKey_AuthLookup_FallbackToPlaintextKey(t *testing.T) {
+	ctx := context.Background()
+	tx := testEntTx(t)
+	client := tx.Client()
+	repo := newAPIKeyRepositoryWithSQL(client, tx, newCredEncCipher(t))
+
+	user := createEntUser(t, ctx, client, "apikey-fallback@example.com")
+
+	// 模拟回填未完的存量行:裸 ent 写明文 key,不写 key_hash(NULL)/key_encrypted(NULL)。
+	legacy, err := client.APIKey.Create().
+		SetUserID(user.ID).
+		SetKey("sk-legacy-no-hash").
+		SetName("legacy").
+		SetStatus(service.StatusActive).
+		Save(ctx)
+	require.NoError(t, err)
+	require.Nil(t, legacy.KeyHash, "存量行 key_hash 应为 NULL")
+
+	// auth lookup 经 OR 的明文 key 分支命中。
+	gotAuth, err := repo.GetByKeyForAuth(ctx, "sk-legacy-no-hash")
+	require.NoError(t, err)
+	require.NotNil(t, gotAuth)
+	require.Equal(t, user.ID, gotAuth.UserID, "应命中正确的存量 key 行")
+
+	// GetByKey 命中,读出口因 key_encrypted NULL 回退 key 明文列。
+	gotByKey, err := repo.GetByKey(ctx, "sk-legacy-no-hash")
+	require.NoError(t, err)
+	require.Equal(t, "sk-legacy-no-hash", gotByKey.Key)
+
+	// ExistsByKey 命中。
+	exists, err := repo.ExistsByKey(ctx, "sk-legacy-no-hash")
+	require.NoError(t, err)
+	require.True(t, exists)
+}

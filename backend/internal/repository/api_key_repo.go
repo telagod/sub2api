@@ -11,6 +11,7 @@ import (
 	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/schema/mixins"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -41,6 +42,16 @@ func newAPIKeyRepositoryWithSQL(client *dbent.Client, sqlq sqlExecutor, cipher *
 func (r *apiKeyRepository) activeQuery() *dbent.APIKeyQuery {
 	// 默认过滤已软删除记录，避免删除后仍被查询到。
 	return r.client.APIKey.Query().Where(apikey.DeletedAtIsNil())
+}
+
+// apiKeyLookupPredicate 构造 api_key 认证查询条件:优先 key_hash(新建/已回填行),
+// 过渡期 OR 回退明文 key 列(回填未完的存量行),一次查询兼容两态、避开 fallback 二次查的方向坑。
+// 回填完成 + drop key 明文列后可简化为纯 key_hash 等值查询。
+func apiKeyLookupPredicate(key string) predicate.APIKey {
+	return apikey.Or(
+		apikey.KeyHashEQ(apikeyhash.Hash(key)),
+		apikey.KeyEQ(key),
+	)
 }
 
 func (r *apiKeyRepository) Create(ctx context.Context, key *service.APIKey) error {
@@ -119,7 +130,7 @@ func (r *apiKeyRepository) GetKeyAndOwnerID(ctx context.Context, id int64) (stri
 
 func (r *apiKeyRepository) GetByKey(ctx context.Context, key string) (*service.APIKey, error) {
 	m, err := r.activeQuery().
-		Where(apikey.KeyEQ(key)).
+		Where(apiKeyLookupPredicate(key)).
 		WithUser().
 		WithGroup().
 		Only(ctx)
@@ -134,7 +145,7 @@ func (r *apiKeyRepository) GetByKey(ctx context.Context, key string) (*service.A
 
 func (r *apiKeyRepository) GetByKeyForAuth(ctx context.Context, key string) (*service.APIKey, error) {
 	m, err := r.activeQuery().
-		Where(apikey.KeyEQ(key)).
+		Where(apiKeyLookupPredicate(key)).
 		Select(
 			apikey.FieldID,
 			apikey.FieldUserID,
@@ -455,7 +466,7 @@ func (r *apiKeyRepository) CountByUserID(ctx context.Context, userID int64) (int
 }
 
 func (r *apiKeyRepository) ExistsByKey(ctx context.Context, key string) (bool, error) {
-	count, err := r.activeQuery().Where(apikey.KeyEQ(key)).Count(ctx)
+	count, err := r.activeQuery().Where(apiKeyLookupPredicate(key)).Count(ctx)
 	return count > 0, err
 }
 
