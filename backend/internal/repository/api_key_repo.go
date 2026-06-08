@@ -585,10 +585,6 @@ func (r *apiKeyRepository) ListKeysByGroupID(ctx context.Context, groupID int64)
 }
 
 func (r *apiKeyRepository) listKeyHashesByOwner(ctx context.Context, ownerPred predicate.APIKey) ([]string, error) {
-	type keyRow struct {
-		Key     string  `json:"key"`
-		KeyHash *string `json:"key_hash"`
-	}
 	rows, err := r.activeQuery().
 		Where(ownerPred).
 		Select(apikey.FieldKey, apikey.FieldKeyHash).
