@@ -438,55 +438,52 @@
   }
 
   /* ============ 侧边栏 — gunmetal ============ */
+  /* ============ 侧栏 — Vercel 极简 ============ */
   .sidebar {
     @apply fixed inset-y-0 left-0 z-40;
-    @apply w-64 bg-card;
+    @apply w-64 bg-background;
     @apply border-r border-border;
     @apply flex flex-col;
-    @apply transition-transform duration-300;
+    @apply transition-transform duration-200;
     transition-property: width, transform;
   }
   .sidebar-header {
-    @apply h-16 px-6;
+    @apply h-14 px-5;
     @apply flex items-center gap-3;
     @apply border-b border-border;
-    transition: padding 0.2s ease, gap 0.2s ease;
+    transition: padding 0.15s ease, gap 0.15s ease;
   }
   .sidebar-nav {
-    @apply flex-1 overflow-y-auto px-3 py-4;
+    @apply flex-1 overflow-y-auto px-2 py-3;
   }
   .sidebar-link {
-    @apply flex items-center gap-3 rounded-md py-2.5;
-    @apply overflow-hidden text-sm font-medium;
+    @apply flex items-center gap-2.5 rounded-md px-3 py-1.5;
+    @apply overflow-hidden text-[13px] font-medium;
     @apply text-muted-foreground;
-    @apply transition-all duration-150;
+    @apply transition-colors duration-75;
     @apply hover:bg-accent hover:text-foreground;
-    padding-left: 1.0625rem;
-    padding-right: 0.875rem;
   }
   .sidebar-link-active {
     @apply bg-accent text-foreground;
-    border-left: 2px solid hsl(var(--primary));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
   .sidebar-section {
-    @apply mb-6;
+    @apply mb-4;
   }
   .sidebar-section-title {
-    @apply mb-2 px-3;
-    @apply text-xs font-semibold uppercase tracking-wider;
-    @apply text-muted-foreground/70;
+    @apply mb-1 px-3;
+    @apply text-[11px] font-medium uppercase tracking-wider;
+    @apply text-muted-foreground/50;
   }
 
   /* ============ 页面头部 ============ */
   .page-header {
-    @apply mb-6;
+    @apply mb-5;
   }
   .page-title {
-    @apply text-2xl font-bold text-foreground;
+    @apply text-lg font-semibold text-foreground;
   }
   .page-description {
-    @apply mt-1 text-sm text-muted-foreground;
+    @apply mt-0.5 text-[13px] text-muted-foreground;
   }
 
   /* ============ 空状态 ============ */
