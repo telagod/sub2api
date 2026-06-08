@@ -78,7 +78,7 @@
       'is-scrollable': isScrollable
     }"
   >
-    <table class="w-full min-w-max divide-y divide-gray-200 dark:divide-dark-700">
+    <table class="w-full min-w-max divide-y divide-border">
       <thead class="table-header bg-metal-raised">
         <tr>
           <th
@@ -798,11 +798,7 @@ defineExpose({
   position: sticky;
   top: 0;
   z-index: 200;
-  background-color: rgb(249 250 251);
-}
-
-.dark .table-wrapper .table-header {
-  background-color: rgb(31 41 55);
+  background-color: hsl(var(--card));
 }
 
 /* 表体保持在表头下方 */
@@ -815,12 +811,8 @@ defineExpose({
 .sticky-header-cell {
   position: sticky;
   top: 0;
-  z-index: 210; /* 必须高于所有表体内容 */
-  background-color: rgb(249 250 251);
-}
-
-.dark .sticky-header-cell {
-  background-color: rgb(31 41 55);
+  z-index: 210;
+  background-color: hsl(var(--card));
 }
 
 /* Sticky 列基础样式 */

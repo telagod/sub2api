@@ -535,6 +535,11 @@ func compareVersions(current, latest string) int {
 
 func parseVersion(v string) [3]int {
 	v = strings.TrimPrefix(v, "v")
+	// 截断 prerelease/build 后缀(如 "135-subme.2" → "135"),仅比较 major.minor.patch 数值部分。
+	// 这使 fork 版本(0.1.135-subme.2)与上游同 patch(0.1.135)视为相等,不误报更新。
+	if idx := strings.IndexByte(v, '-'); idx >= 0 {
+		v = v[:idx]
+	}
 	parts := strings.Split(v, ".")
 	result := [3]int{0, 0, 0}
 	for i := 0; i < len(parts) && i < 3; i++ {
