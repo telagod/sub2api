@@ -4271,8 +4271,8 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <!-- Web Search Test Dialog -->
           <div
@@ -4382,7 +4382,7 @@
             </div>
           </CardContent>
         </Card>
-        </CardContent>
+        </div>
         <!-- /Tab: Gateway — Claude Code, Scheduling -->
 
         <!-- Tab: General -->
@@ -6626,7 +6626,7 @@
         @confirm="handleAffiliateConfirm"
         @cancel="cancelAffiliateConfirm"
       />
-    </Card>
+    </div>
   </AppLayout>
 </template>
 
