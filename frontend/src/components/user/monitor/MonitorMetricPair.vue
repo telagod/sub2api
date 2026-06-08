@@ -1,7 +1,7 @@
 <template>
   <div class="mt-5 grid grid-cols-2 gap-2">
     <div
-      class="rounded-md p-3 bg-metal-surface border border-border"
+      class="rounded-md p-3 bg-card border border-border"
     >
       <div
         class="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
@@ -14,7 +14,7 @@
       </div>
     </div>
     <div
-      class="rounded-md p-3 bg-metal-surface border border-border"
+      class="rounded-md p-3 bg-card border border-border"
     >
       <div
         class="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"

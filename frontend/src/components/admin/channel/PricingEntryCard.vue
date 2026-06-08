@@ -40,7 +40,7 @@
 
         <!-- Billing mode badge -->
         <span
-          class="flex-shrink-0 rounded-full border border-border bg-metal-raised px-2 py-0.5 text-xs font-medium text-primary-200"
+          class="flex-shrink-0 rounded-full border border-border bg-secondary px-2 py-0.5 text-xs font-medium text-primary-200"
         >
           {{ billingModeLabel }}
         </span>

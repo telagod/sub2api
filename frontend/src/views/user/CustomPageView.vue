@@ -14,7 +14,7 @@
         >
           <div class="max-w-md">
             <div
-              class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+              class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-secondary "
             >
               <Icon name="link" size="lg" class="text-primary-200" />
             </div>
@@ -80,7 +80,7 @@
         <div v-else-if="!isValidUrl" class="flex h-full items-center justify-center p-10 text-center">
           <div class="max-w-md">
             <div
-              class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+              class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-secondary "
             >
               <Icon name="link" size="lg" class="text-primary-200" />
             </div>
@@ -379,7 +379,7 @@ onUnmounted(() => {
 }
 
 .toc-sidebar {
-  @apply flex flex-col h-full border-r border-border bg-metal-surface;
+  @apply flex flex-col h-full border-r border-border bg-card;
   width: min(240px, 30%);
   min-width: 160px;
   max-width: 280px;
@@ -433,19 +433,19 @@ onUnmounted(() => {
   @apply absolute left-2 top-2 z-10 flex items-center px-2 py-1.5 rounded-md text-sm;
   @apply bg-card border border-border;
   @apply text-muted-foreground hover:bg-accent;
-  @apply shadow-metal-edge transition-colors cursor-pointer;
+  @apply  transition-colors cursor-pointer;
 }
 
 .custom-embed-shell {
   @apply relative;
   @apply h-full w-full overflow-hidden rounded-lg;
-  @apply bg-metal-surface;
+  @apply bg-card;
   @apply p-0;
 }
 
 .custom-open-fab {
   @apply absolute right-3 top-3 z-10;
-  @apply shadow-metal-edge bg-card;
+  @apply  bg-card;
 }
 
 .custom-embed-frame {
@@ -477,10 +477,10 @@ onUnmounted(() => {
 .markdown-page-content blockquote { @apply border-l-4 border-border pl-4 italic text-muted-foreground my-4; }
 .markdown-page-content img { @apply max-w-full h-auto rounded-md my-4; }
 .markdown-page-content table { @apply w-full border-collapse my-4; }
-.markdown-page-content th { @apply border border-border px-3 py-2 bg-metal-surface font-semibold text-left; }
+.markdown-page-content th { @apply border border-border px-3 py-2 bg-card font-semibold text-left; }
 .markdown-page-content td { @apply border border-border px-3 py-2; }
 .markdown-page-content code { @apply bg-accent px-1.5 py-0.5 rounded text-sm font-mono; }
-.markdown-page-content pre { @apply bg-metal-surface text-foreground p-4 rounded-md overflow-x-auto my-4 relative; }
+.markdown-page-content pre { @apply bg-card text-foreground p-4 rounded-md overflow-x-auto my-4 relative; }
 .markdown-page-content pre code { @apply bg-transparent p-0 text-inherit; }
 .markdown-page-content hr { @apply my-6 border-border; }
 

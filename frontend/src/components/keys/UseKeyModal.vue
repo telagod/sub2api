@@ -84,16 +84,16 @@
               <Icon name="exclamationCircle" size="sm" class="flex-shrink-0" />
               {{ file.hint }}
             </p>
-            <div class="bg-metal-surface rounded-md overflow-hidden border border-border">
+            <div class="bg-card rounded-md overflow-hidden border border-border">
               <!-- Code Header -->
-              <div class="flex items-center justify-between px-4 py-2 bg-metal-raised border-b border-border">
+              <div class="flex items-center justify-between px-4 py-2 bg-secondary border-b border-border">
                 <span class="text-xs text-muted-foreground font-mono">{{ file.path }}</span>
                 <button
                   @click="copyContent(file.content, index)"
                   class="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors"
                   :class="copiedIndex === index
                     ? 'bg-emerald-500/10 text-emerald-400'
-                    : 'bg-metal-raised hover:bg-accent text-foreground/85 hover:text-foreground'"
+                    : 'bg-secondary hover:bg-accent text-foreground/85 hover:text-foreground'"
                 >
                   <svg v-if="copiedIndex === index" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -111,7 +111,7 @@
         </div>
 
         <!-- Usage Note -->
-        <div v-if="showPlatformNote" class="flex items-start gap-3 p-3 rounded-md bg-metal-raised border border-border shadow-metal-edge">
+        <div v-if="showPlatformNote" class="flex items-start gap-3 p-3 rounded-md bg-secondary border border-border ">
           <Icon name="infoCircle" size="md" class="text-primary-200 flex-shrink-0 mt-0.5" />
           <p class="text-sm text-foreground/85">
             {{ platformNote }}

@@ -4,7 +4,7 @@
       <h2 class="text-xl font-semibold text-foreground">
         {{ qrUrl ? scanTitle : t('payment.qr.payInNewWindow') }}
       </h2>
-      <div v-if="qrUrl" class="rounded-lg bg-card p-6 shadow-metal">
+      <div v-if="qrUrl" class="rounded-lg bg-card p-6 ">
         <canvas ref="qrCanvas" class="mx-auto"></canvas>
       </div>
       <!-- Scan prompt for QR code -->

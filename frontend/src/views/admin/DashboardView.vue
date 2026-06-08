@@ -603,7 +603,7 @@ onMounted(() => {
 
 <style scoped>
 .kpi-icon {
-  @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-metal-raised;
+  @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-secondary;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 .kpi-label {

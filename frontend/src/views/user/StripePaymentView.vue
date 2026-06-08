@@ -15,7 +15,7 @@
       <template v-else>
         <!-- 金额头部 -->
         <div v-if="order" class="card overflow-hidden">
-          <div class="border-b border-border bg-metal-raised px-6 py-6 text-center">
+          <div class="border-b border-border bg-secondary px-6 py-6 text-center">
             <p class="text-sm font-medium text-muted-foreground">{{ t('payment.actualPay') }}</p>
             <p class="mt-1 text-3xl font-bold text-foreground">{{ formatGatewayAmount(order.pay_amount) }}</p>
           </div>

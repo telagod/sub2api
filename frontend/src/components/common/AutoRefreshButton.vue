@@ -2,7 +2,7 @@
   <div class="relative" ref="dropdownRef">
     <button
       @click="showDropdown = !showDropdown"
-      class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground/85 shadow-metal-sm transition-colors hover:bg-accent"
+      class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground/85  transition-colors hover:bg-accent"
       :title="t('common.autoRefresh.title')"
     >
       <svg
@@ -22,7 +22,7 @@
 
     <div
       v-if="showDropdown"
-      class="absolute right-0 z-20 mt-1 w-44 rounded-md border border-border bg-card shadow-metal"
+      class="absolute right-0 z-20 mt-1 w-44 rounded-md border border-border bg-card "
     >
       <div class="p-1.5">
         <button

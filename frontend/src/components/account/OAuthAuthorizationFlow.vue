@@ -3,7 +3,7 @@
     class="rounded-md border border-border bg-card p-4"
   >
       <div class="flex items-start gap-4">
-      <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge">
+      <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-border bg-secondary ">
         <Icon name="link" size="md" class="text-primary-200" />
       </div>
       <div class="flex-1">
@@ -98,7 +98,7 @@
         <!-- Refresh Token Input (OpenAI / Antigravity / Mobile RT) -->
         <div v-if="inputMethod === 'refresh_token' || inputMethod === 'mobile_refresh_token'" class="space-y-4">
           <div
-            class="rounded-md border border-border bg-metal-surface p-4"
+            class="rounded-md border border-border bg-card p-4"
           >
             <p class="mb-3 text-sm text-muted-foreground">
               {{ t(getOAuthKey('refreshTokenDesc')) }}
@@ -113,7 +113,7 @@
                 Refresh Token
                 <span
                   v-if="parsedRefreshTokenCount > 1"
-                  class="rounded-full border border-border bg-metal-raised px-2 py-0.5 text-xs text-primary-200"
+                  class="rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-primary-200"
                 >
                   {{ t('admin.accounts.oauth.keysCount', { count: parsedRefreshTokenCount }) }}
                 </span>
@@ -182,7 +182,7 @@
         <!-- Codex JSON / AT 批量输入 -->
         <div v-if="inputMethod === 'codex_session'" class="space-y-4">
           <div
-            class="rounded-md border border-border bg-metal-surface p-4"
+            class="rounded-md border border-border bg-card p-4"
           >
             <p class="mb-3 text-sm text-muted-foreground">
               {{ t('admin.accounts.oauth.openai.codexSessionDesc') }}
@@ -196,7 +196,7 @@
                 {{ t('admin.accounts.oauth.openai.codexSessionInputLabel') }}
                 <span
                   v-if="parsedCodexSessionCount > 1"
-                  class="rounded-full border border-border bg-metal-raised px-2 py-0.5 text-xs text-primary-200"
+                  class="rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-primary-200"
                 >
                   {{ t('admin.accounts.oauth.keysCount', { count: parsedCodexSessionCount }) }}
                 </span>
@@ -261,7 +261,7 @@
         <!-- Cookie Auto-Auth Form -->
         <div v-if="inputMethod === 'cookie'" class="space-y-4">
           <div
-            class="rounded-md border border-border bg-metal-surface p-4"
+            class="rounded-md border border-border bg-card p-4"
           >
             <p class="mb-3 text-sm text-muted-foreground">
               {{ t('admin.accounts.oauth.cookieAutoAuthDesc') }}
@@ -276,7 +276,7 @@
                 {{ t('admin.accounts.oauth.sessionKey') }}
                 <span
                   v-if="parsedKeyCount > 1 && allowMultiple"
-                  class="rounded-full border border-border bg-metal-raised px-2 py-0.5 text-xs text-primary-200"
+                  class="rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-primary-200"
                 >
                   {{ t('admin.accounts.oauth.keysCount', { count: parsedKeyCount }) }}
                 </span>
@@ -398,7 +398,7 @@
 
           <!-- Step 1: Generate Auth URL -->
           <div
-            class="rounded-md border border-border bg-metal-surface p-4"
+            class="rounded-md border border-border bg-card p-4"
           >
             <div class="flex items-start gap-3">
               <div
@@ -517,7 +517,7 @@
 
           <!-- Step 2: Open URL and authorize -->
           <div
-            class="rounded-md border border-border bg-metal-surface p-4"
+            class="rounded-md border border-border bg-card p-4"
           >
             <div class="flex items-start gap-3">
               <div
@@ -558,7 +558,7 @@
 
           <!-- Step 3: Enter authorization code -->
           <div
-            class="rounded-md border border-border bg-metal-surface p-4"
+            class="rounded-md border border-border bg-card p-4"
           >
             <div class="flex items-start gap-3">
               <div

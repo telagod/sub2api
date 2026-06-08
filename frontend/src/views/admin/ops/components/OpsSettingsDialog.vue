@@ -247,7 +247,7 @@ async function saveAllSettings() {
       </div>
 
       <!-- 数据采集频率 -->
-      <div class="rounded-lg border border-border bg-metal-surface p-4">
+      <div class="rounded-lg border border-border bg-card p-4">
         <h4 class="mb-3 text-sm font-semibold text-foreground">{{ t('admin.ops.settings.dataCollection') }}</h4>
         <div>
           <label class="input-label">{{ t('admin.ops.settings.evaluationInterval') }}</label>
@@ -263,7 +263,7 @@ async function saveAllSettings() {
       </div>
 
       <!-- 预警配置 -->
-      <div class="rounded-lg border border-border bg-metal-surface p-4">
+      <div class="rounded-lg border border-border bg-card p-4">
         <h4 class="mb-3 text-sm font-semibold text-foreground">{{ t('admin.ops.settings.alertConfig') }}</h4>
 
         <div class="space-y-4">
@@ -311,7 +311,7 @@ async function saveAllSettings() {
       </div>
 
       <!-- 评估报告配置 -->
-      <div class="rounded-lg border border-border bg-metal-surface p-4">
+      <div class="rounded-lg border border-border bg-card p-4">
         <h4 class="mb-3 text-sm font-semibold text-foreground">{{ t('admin.ops.settings.reportConfig') }}</h4>
 
         <div class="space-y-4">
@@ -371,7 +371,7 @@ async function saveAllSettings() {
       </div>
 
       <!-- 指标阈值配置 -->
-      <div class="rounded-lg border border-border bg-metal-surface p-4">
+      <div class="rounded-lg border border-border bg-card p-4">
         <h4 class="mb-3 text-sm font-semibold text-foreground">{{ t('admin.ops.settings.metricThresholds') }}</h4>
         <p class="mb-4 text-xs text-muted-foreground">{{ t('admin.ops.settings.metricThresholdsHint') }}</p>
 

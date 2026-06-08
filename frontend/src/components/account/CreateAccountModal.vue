@@ -12,7 +12,7 @@
           <div
             :class="[
               'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold',
-              step >= 1 ? 'bg-metal-silver text-foreground' : 'bg-metal-raised text-muted-foreground'
+              step >= 1 ? 'bg-foreground text-foreground' : 'bg-secondary text-muted-foreground'
             ]"
           >
             1
@@ -26,7 +26,7 @@
           <div
             :class="[
               'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold',
-              step >= 2 ? 'bg-metal-silver text-foreground' : 'bg-metal-raised text-muted-foreground'
+              step >= 2 ? 'bg-foreground text-foreground' : 'bg-secondary text-muted-foreground'
             ]"
           >
             2
@@ -77,7 +77,7 @@
             :class="[
               'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all',
               form.platform === 'anthropic'
-                ? 'bg-card text-foreground shadow-metal-edge'
+                ? 'bg-card text-foreground '
                 : 'text-muted-foreground hover:text-foreground'
             ]"
           >
@@ -90,7 +90,7 @@
             :class="[
               'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all',
               form.platform === 'openai'
-                ? 'bg-card text-foreground shadow-metal-edge'
+                ? 'bg-card text-foreground '
                 : 'text-muted-foreground hover:text-foreground'
             ]"
           >
@@ -115,7 +115,7 @@
             :class="[
               'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all',
               form.platform === 'gemini'
-                ? 'bg-card text-foreground shadow-metal-edge'
+                ? 'bg-card text-foreground '
                 : 'text-muted-foreground hover:text-foreground'
             ]"
           >
@@ -140,7 +140,7 @@
             :class="[
               'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all',
               form.platform === 'antigravity'
-                ? 'bg-card text-foreground shadow-metal-edge'
+                ? 'bg-card text-foreground '
                 : 'text-muted-foreground hover:text-foreground'
             ]"
           >
@@ -160,7 +160,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               accountCategory === 'oauth-based'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -168,8 +168,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 accountCategory === 'oauth-based'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <Icon name="sparkles" size="sm" />
@@ -190,7 +190,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               accountCategory === 'apikey'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -198,8 +198,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 accountCategory === 'apikey'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <Icon name="key" size="sm" />
@@ -220,7 +220,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               accountCategory === 'bedrock'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -228,8 +228,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 accountCategory === 'bedrock'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <Icon name="cloud" size="sm" />
@@ -250,7 +250,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               accountCategory === 'service_account'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -258,8 +258,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 accountCategory === 'service_account'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <Icon name="cloud" size="sm" />
@@ -274,7 +274,7 @@
 
         <div
           v-if="accountCategory === 'service_account'"
-          class="mt-3 rounded-md border border-border bg-metal-surface px-3 py-2 text-xs text-muted-foreground"
+          class="mt-3 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground"
         >
           <p>{{ t('admin.accounts.vertexAnthropicHint') }}</p>
         </div>
@@ -290,7 +290,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               accountCategory === 'oauth-based'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -298,8 +298,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 accountCategory === 'oauth-based'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <Icon name="key" size="sm" />
@@ -316,7 +316,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               accountCategory === 'apikey'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -324,8 +324,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 accountCategory === 'apikey'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <Icon name="key" size="sm" />
@@ -361,7 +361,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               accountCategory === 'oauth-based'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -369,8 +369,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 accountCategory === 'oauth-based'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <Icon name="key" size="sm" />
@@ -391,7 +391,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               accountCategory === 'apikey'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -399,8 +399,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 accountCategory === 'apikey'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <svg
@@ -433,7 +433,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               accountCategory === 'service_account'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -441,8 +441,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 accountCategory === 'service_account'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <Icon name="cloud" size="sm" />
@@ -460,7 +460,7 @@
 
         <div
           v-if="accountCategory === 'apikey'"
-          class="mt-3 rounded-md border border-border bg-metal-surface px-3 py-2 text-xs text-muted-foreground"
+          class="mt-3 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground"
         >
           <p>{{ t('admin.accounts.gemini.accountType.apiKeyNote') }}</p>
           <div class="mt-2 flex flex-wrap gap-2">
@@ -477,7 +477,7 @@
 
         <div
           v-if="accountCategory === 'service_account'"
-          class="mt-3 rounded-md border border-border bg-metal-surface px-3 py-2 text-xs text-muted-foreground"
+          class="mt-3 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground"
         >
           <p>{{ t('admin.accounts.vertexGeminiHint') }}</p>
         </div>
@@ -493,7 +493,7 @@
               :class="[
                 'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
                 geminiOAuthType === 'google_one'
-                  ? 'border-primary-300 bg-metal-raised'
+                  ? 'border-primary-300 bg-secondary'
                   : 'border-border hover:border-primary-300/60'
               ]"
             >
@@ -501,8 +501,8 @@
                 :class="[
                   'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                   geminiOAuthType === 'google_one'
-                    ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                    : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                    ? 'bg-foreground text-foreground '
+                    : 'bg-secondary text-primary-200 '
                 ]"
               >
                 <Icon name="user" size="sm" />
@@ -516,7 +516,7 @@
                 </span>
                 <div class="mt-2 flex flex-wrap gap-1">
                   <span
-                    class="rounded bg-metal-raised border border-border px-2 py-0.5 text-[10px] font-semibold text-foreground/85"
+                    class="rounded bg-secondary border border-border px-2 py-0.5 text-[10px] font-semibold text-foreground/85"
                   >
                     推荐个人用户
                   </span>
@@ -536,7 +536,7 @@
               :class="[
                 'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
                 geminiOAuthType === 'code_assist'
-                  ? 'border-primary-300 bg-metal-raised'
+                  ? 'border-primary-300 bg-secondary'
                   : 'border-border hover:border-primary-300/60'
               ]"
             >
@@ -544,8 +544,8 @@
                 :class="[
                   'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                   geminiOAuthType === 'code_assist'
-                    ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                    : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                    ? 'bg-foreground text-foreground '
+                    : 'bg-secondary text-primary-200 '
                 ]"
               >
                 <Icon name="cloud" size="sm" />
@@ -570,7 +570,7 @@
                 </div>
                 <div class="mt-2 flex flex-wrap gap-1">
                   <span
-                    class="rounded bg-metal-raised border border-border px-2 py-0.5 text-[10px] font-semibold text-foreground/85"
+                    class="rounded bg-secondary border border-border px-2 py-0.5 text-[10px] font-semibold text-foreground/85"
                   >
                     企业用户
                   </span>
@@ -614,7 +614,7 @@
                 'flex w-full items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
                 !geminiAIStudioOAuthEnabled ? 'cursor-not-allowed opacity-60' : '',
                 geminiOAuthType === 'ai_studio'
-                  ? 'border-primary-300 bg-metal-raised'
+                  ? 'border-primary-300 bg-secondary'
                   : 'border-border hover:border-primary-300/60'
               ]"
             >
@@ -622,8 +622,8 @@
                 :class="[
                   'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                   geminiOAuthType === 'ai_studio'
-                    ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                    : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                    ? 'bg-foreground text-foreground '
+                    : 'bg-secondary text-primary-200 '
                 ]"
               >
                 <svg
@@ -673,7 +673,7 @@
 
             <div
               v-if="!geminiAIStudioOAuthEnabled"
-              class="pointer-events-none absolute right-0 top-full z-50 mt-2 w-80 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-400 opacity-0 shadow-metal transition-opacity group-hover:opacity-100"
+              class="pointer-events-none absolute right-0 top-full z-50 mt-2 w-80 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-400 opacity-0  transition-opacity group-hover:opacity-100"
             >
               {{ t('admin.accounts.oauth.gemini.aiStudioNotConfiguredTip') }}
             </div>
@@ -726,7 +726,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               antigravityAccountType === 'oauth'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -734,8 +734,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 antigravityAccountType === 'oauth'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <Icon name="key" size="sm" />
@@ -752,7 +752,7 @@
             :class="[
               'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
               antigravityAccountType === 'upstream'
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border hover:border-primary-300/60'
             ]"
           >
@@ -760,8 +760,8 @@
               :class="[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border',
                 antigravityAccountType === 'upstream'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
-                  : 'bg-metal-raised text-primary-200 shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
+                  : 'bg-secondary text-primary-200 '
               ]"
             >
               <Icon name="cloud" size="sm" />
@@ -815,7 +815,7 @@
             :class="[
               'rounded-lg border-2 border-dashed px-4 py-5 transition-colors',
               vertexServiceAccountDragActive
-                ? 'border-primary-300 bg-metal-raised'
+                ? 'border-primary-300 bg-secondary'
                 : 'border-border bg-muted hover:border-primary-300/60'
             ]"
             @dragenter.prevent="vertexServiceAccountDragActive = true"
@@ -897,7 +897,7 @@
 
         <!-- Mapping Mode Only (no toggle for Antigravity) -->
         <div>
-          <div class="mb-3 rounded-md bg-metal-surface p-3 border border-border">
+          <div class="mb-3 rounded-md bg-card p-3 border border-border">
             <p class="text-xs text-muted-foreground">
               {{ t('admin.accounts.mapRequestModels') }}
             </p>
@@ -1076,7 +1076,7 @@
                 :class="[
                   'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                   modelRestrictionMode === 'whitelist'
-                    ? 'bg-metal-silver text-foreground shadow-metal-edge'
+                    ? 'bg-foreground text-foreground '
                     : 'bg-muted text-muted-foreground hover:text-foreground'
                 ]"
               >
@@ -1101,7 +1101,7 @@
                 :class="[
                   'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                   modelRestrictionMode === 'mapping'
-                    ? 'bg-metal-silver text-foreground shadow-metal-edge'
+                    ? 'bg-foreground text-foreground '
                     : 'bg-muted text-muted-foreground hover:text-foreground'
                 ]"
               >
@@ -1135,7 +1135,7 @@
 
             <!-- Mapping Mode -->
             <div v-else>
-              <div class="mb-3 rounded-md bg-metal-surface p-3 border border-border">
+              <div class="mb-3 rounded-md bg-card p-3 border border-border">
                 <p class="text-xs text-muted-foreground">
                   <svg
                     class="mr-1 inline h-4 w-4"
@@ -1265,7 +1265,7 @@
               />
             </button>
           </div>
-          <div v-if="poolModeEnabled" class="rounded-md bg-metal-surface p-3 border border-border">
+          <div v-if="poolModeEnabled" class="rounded-md bg-card p-3 border border-border">
             <p class="text-xs text-muted-foreground">
               <Icon name="exclamationCircle" size="sm" class="mr-1 inline" :stroke-width="2" />
               {{ t('admin.accounts.poolModeInfo') }}
@@ -1540,7 +1540,7 @@
               :class="[
                 'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'whitelist'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
                   : 'bg-muted text-muted-foreground hover:text-foreground'
               ]"
             >
@@ -1552,7 +1552,7 @@
               :class="[
                 'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'mapping'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
                   : 'bg-muted text-muted-foreground hover:text-foreground'
               ]"
             >
@@ -1622,7 +1622,7 @@
               />
             </button>
           </div>
-          <div v-if="poolModeEnabled" class="rounded-md bg-metal-surface p-3 border border-border">
+          <div v-if="poolModeEnabled" class="rounded-md bg-card p-3 border border-border">
             <p class="text-xs text-muted-foreground">
               <Icon name="exclamationCircle" size="sm" class="mr-1 inline" :stroke-width="2" />
               {{ t('admin.accounts.poolModeInfo') }}
@@ -1791,7 +1791,7 @@
               :class="[
                 'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'whitelist'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
                   : 'bg-muted text-muted-foreground hover:text-foreground'
               ]"
             >
@@ -1803,7 +1803,7 @@
               :class="[
                 'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'mapping'
-                  ? 'bg-metal-silver text-foreground shadow-metal-edge'
+                  ? 'bg-foreground text-foreground '
                   : 'bg-muted text-muted-foreground hover:text-foreground'
               ]"
             >
@@ -1824,7 +1824,7 @@
 
           <!-- Mapping Mode -->
           <div v-else>
-            <div class="mb-3 rounded-md bg-metal-surface p-3 border border-border">
+            <div class="mb-3 rounded-md bg-card p-3 border border-border">
               <p class="text-xs text-muted-foreground">
                 {{ t('admin.accounts.mapRequestModels') }}
               </p>
@@ -1929,7 +1929,7 @@
         </div>
 
         <div v-if="tempUnschedEnabled" class="space-y-3">
-          <div class="rounded-md bg-metal-surface p-3 border border-border">
+          <div class="rounded-md bg-card p-3 border border-border">
               <p class="text-xs text-muted-foreground">
                 <Icon name="exclamationTriangle" size="sm" class="mr-1 inline" :stroke-width="2" />
                 {{ t('admin.accounts.tempUnschedulable.notice') }}
@@ -2261,7 +2261,7 @@
                   :class="[
                     'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-all',
                     rpmStrategy === 'tiered'
-                      ? 'bg-metal-silver text-foreground shadow-metal-edge'
+                      ? 'bg-foreground text-foreground '
                       : 'bg-muted text-muted-foreground hover:text-foreground'
                   ]"
                 >
@@ -2276,7 +2276,7 @@
                   :class="[
                     'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-all',
                     rpmStrategy === 'sticky_exempt'
-                      ? 'bg-metal-silver text-foreground shadow-metal-edge'
+                      ? 'bg-foreground text-foreground '
                       : 'bg-muted text-muted-foreground hover:text-foreground'
                   ]"
                 >
@@ -2415,7 +2415,7 @@
             <label class="input-label text-xs">{{ t('admin.accounts.quotaControl.cacheTTLOverride.target') }}</label>
             <select
               v-model="cacheTTLOverrideTarget"
-              class="mt-1 block w-full rounded-md border border-border bg-card px-3 py-2 text-sm shadow-metal-edge focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring text-foreground"
+              class="mt-1 block w-full rounded-md border border-border bg-card px-3 py-2 text-sm  focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring text-foreground"
             >
               <option value="5m">5m</option>
               <option value="1h">1h</option>
@@ -2794,13 +2794,13 @@
           </label>
           <div class="group relative">
             <span
-              class="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-metal-raised border border-border text-xs text-muted-foreground hover:text-foreground"
+              class="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-secondary border border-border text-xs text-muted-foreground hover:text-foreground"
             >
               ?
             </span>
             <!-- Tooltip（向下显示避免被弹窗裁剪） -->
             <div
-              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded-md bg-metal-raised border border-border px-3 py-2 text-xs text-foreground opacity-0 transition-opacity group-hover:opacity-100 shadow-metal"
+              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded-md bg-secondary border border-border px-3 py-2 text-xs text-foreground opacity-0 transition-opacity group-hover:opacity-100 "
             >
               {{ t('admin.accounts.mixedSchedulingTooltip') }}
               <div
@@ -2822,12 +2822,12 @@
           </label>
           <div class="group relative">
             <span
-              class="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-metal-raised border border-border text-xs text-muted-foreground hover:text-foreground"
+              class="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-secondary border border-border text-xs text-muted-foreground hover:text-foreground"
             >
               ?
             </span>
             <div
-              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded-md bg-metal-raised border border-border px-3 py-2 text-xs text-foreground opacity-0 transition-opacity group-hover:opacity-100 shadow-metal"
+              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded-md bg-secondary border border-border px-3 py-2 text-xs text-foreground opacity-0 transition-opacity group-hover:opacity-100 "
             >
               {{ t('admin.accounts.allowOveragesTooltip') }}
               <div

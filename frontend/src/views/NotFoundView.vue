@@ -11,7 +11,7 @@
           >
           <div class="absolute inset-0 flex items-center justify-center">
             <div
-              class="flex h-24 w-24 items-center justify-center rounded-lg border border-border bg-metal-raised shadow-metal-edge"
+              class="flex h-24 w-24 items-center justify-center rounded-lg border border-border bg-secondary "
             >
               <svg
                 class="h-12 w-12 text-primary-200"

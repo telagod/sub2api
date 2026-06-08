@@ -2,7 +2,7 @@
   <BaseDialog :show="show" :title="t('admin.users.userApiKeys')" width="wide" @close="handleClose">
     <div v-if="user" class="space-y-4">
       <div class="flex items-center gap-3 rounded-lg bg-muted p-4">
-        <div class="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-metal-raised shadow-metal-edge">
+        <div class="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-secondary ">
           <span class="text-lg font-medium text-primary-200">{{ user.email.charAt(0).toUpperCase() }}</span>
         </div>
         <div><p class="font-medium text-foreground">{{ user.email }}</p><p class="text-sm text-muted-foreground">{{ user.username }}</p></div>
@@ -50,7 +50,7 @@
     <div
       v-if="groupSelectorKeyId !== null && dropdownPosition"
       ref="dropdownRef"
-      class="animate-in fade-in slide-in-from-top-2 fixed z-[100000020] w-64 overflow-hidden rounded-md border border-border bg-card shadow-metal duration-200"
+      class="animate-in fade-in slide-in-from-top-2 fixed z-[100000020] w-64 overflow-hidden rounded-md border border-border bg-card  duration-200"
       :style="{ top: dropdownPosition.top + 'px', left: dropdownPosition.left + 'px' }"
     >
       <div class="max-h-64 overflow-y-auto p-1.5">

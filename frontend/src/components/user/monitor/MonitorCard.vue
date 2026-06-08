@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    class="group text-left p-5 rounded-lg min-h-[280px] w-full bg-card border border-border shadow-metal hover:-translate-y-1 hover:shadow-metal-edge hover:border-border transition-all duration-300 ease-out flex flex-col"
+    class="group text-left p-5 rounded-lg min-h-[280px] w-full bg-card border border-border  hover:-translate-y-1 hover: hover:border-border transition-all duration-300 ease-out flex flex-col"
     @click="emit('click')"
   >
     <!-- Header: icon + name/model + status chip -->
@@ -28,7 +28,7 @@
           </span>
           <span
             v-if="item.group_name"
-            class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-metal-raised border border-border text-muted-foreground flex-shrink-0"
+            class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-secondary border border-border text-muted-foreground flex-shrink-0"
           >
             {{ item.group_name }}
           </span>

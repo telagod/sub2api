@@ -23,7 +23,7 @@
       </div>
 
       <div v-else-if="profiles.length === 0" class="py-8 text-center">
-        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-metal-raised border border-border shadow-metal-edge">
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary border border-border ">
           <Icon name="shield" size="lg" class="text-primary-200" />
         </div>
         <h4 class="mb-1 text-sm font-medium text-foreground">

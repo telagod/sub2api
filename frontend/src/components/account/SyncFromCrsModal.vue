@@ -87,7 +87,7 @@
             class="flex items-center gap-2 py-0.5"
           >
             <span
-              class="inline-block rounded bg-metal-raised border border-border px-1.5 py-0.5 text-[10px] font-medium text-primary-200"
+              class="inline-block rounded bg-secondary border border-border px-1.5 py-0.5 text-[10px] font-medium text-primary-200"
             >{{ acc.platform }} / {{ acc.type }}</span>
             <span class="truncate">{{ acc.name }}</span>
           </div>

@@ -17,7 +17,7 @@
 
     <div
       v-if="hasBreakdown"
-      class="pointer-events-none absolute left-full top-0 z-50 ml-2 min-w-[220px] whitespace-nowrap rounded-md border border-border bg-card px-3 py-2 text-xs text-foreground opacity-0 shadow-metal transition-opacity duration-100 group-hover/usage:opacity-100"
+      class="pointer-events-none absolute left-full top-0 z-50 ml-2 min-w-[220px] whitespace-nowrap rounded-md border border-border bg-card px-3 py-2 text-xs text-foreground opacity-0  transition-opacity duration-100 group-hover/usage:opacity-100"
     >
       <div class="mb-1.5 flex items-center justify-between gap-3 border-b border-border pb-1 text-[11px] text-muted-foreground">
         <span>{{ t('admin.users.platformBreakdown') }}</span>

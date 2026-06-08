@@ -20,7 +20,7 @@
         class="card p-6"
       >
         <div class="flex items-center gap-4">
-          <div class="rounded-md border border-border bg-metal-raised p-3 text-primary-200 shadow-metal-edge">
+          <div class="rounded-md border border-border bg-secondary p-3 text-primary-200 ">
             <Icon name="chat" size="lg" />
           </div>
           <div>

@@ -3,7 +3,7 @@
     <!-- Today Revenue -->
     <div class="card p-4">
       <div class="flex items-center gap-3">
-        <div class="rounded-md border border-border bg-metal-raised p-2 shadow-metal-edge">
+        <div class="rounded-md border border-border bg-secondary p-2 ">
           <Icon name="dollar" size="md" class="text-primary-200" :stroke-width="2" />
         </div>
         <div>
@@ -19,7 +19,7 @@
     <!-- Total Revenue -->
     <div class="card p-4">
       <div class="flex items-center gap-3">
-        <div class="rounded-md border border-border bg-metal-raised p-2 shadow-metal-edge">
+        <div class="rounded-md border border-border bg-secondary p-2 ">
           <Icon name="creditCard" size="md" class="text-primary-200" :stroke-width="2" />
         </div>
         <div>
@@ -35,7 +35,7 @@
     <!-- Today Orders -->
     <div class="card p-4">
       <div class="flex items-center gap-3">
-        <div class="rounded-md border border-border bg-metal-raised p-2 shadow-metal-edge">
+        <div class="rounded-md border border-border bg-secondary p-2 ">
           <Icon name="chart" size="md" class="text-primary-200" :stroke-width="2" />
         </div>
         <div>
@@ -48,7 +48,7 @@
     <!-- Average Amount -->
     <div class="card p-4">
       <div class="flex items-center gap-3">
-        <div class="rounded-md border border-border bg-metal-raised p-2 shadow-metal-edge">
+        <div class="rounded-md border border-border bg-secondary p-2 ">
           <Icon name="chart" size="md" class="text-primary-200" :stroke-width="2" />
         </div>
         <div>

@@ -2,7 +2,7 @@
   <BaseDialog :show="show" :title="t('admin.groups.rpmOverridesTitle')" width="wide" @close="handleClose">
     <div v-if="group" class="space-y-4">
       <!-- 分组信息 -->
-      <div class="flex flex-wrap items-center gap-3 rounded-lg bg-metal-raised border border-border px-4 py-2.5 text-sm">
+      <div class="flex flex-wrap items-center gap-3 rounded-lg bg-secondary border border-border px-4 py-2.5 text-sm">
         <span class="inline-flex items-center gap-1.5" :class="platformColorClass">
           <PlatformIcon :platform="group.platform" size="sm" />
           {{ t('admin.groups.platforms.' + group.platform) }}
@@ -33,7 +33,7 @@
             />
             <div
               v-if="showDropdown && searchResults.length > 0"
-              class="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-md border border-border bg-popover shadow-metal-lg"
+              class="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-md border border-border bg-popover shadow-lg"
             >
               <button
                 v-for="user in searchResults"
@@ -105,7 +105,7 @@
             <div class="max-h-[420px] overflow-y-auto">
               <table class="w-full text-sm">
                 <thead class="sticky top-0 z-[1]">
-                  <tr class="border-b border-border bg-metal-raised">
+                  <tr class="border-b border-border bg-secondary">
                     <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">{{ t('admin.groups.columns.userEmail') }}</th>
                     <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">ID</th>
                     <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">{{ t('admin.groups.columns.userName') }}</th>
@@ -131,7 +131,7 @@
                           'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
                           entry.user_status === 'active'
                             ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-inset ring-emerald-500/30'
-                            : 'bg-metal-raised text-muted-foreground ring-1 ring-inset ring-border'
+                            : 'bg-secondary text-muted-foreground ring-1 ring-inset ring-border'
                         ]"
                       >
                         {{ entry.user_status }}
@@ -144,7 +144,7 @@
                         min="0"
                         autocomplete="off"
                         :value="entry.rpm_override"
-                        class="hide-spinner w-20 rounded border border-border bg-metal-raised px-2 py-1 text-center text-sm font-medium text-foreground transition-colors focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+                        class="hide-spinner w-20 rounded border border-border bg-secondary px-2 py-1 text-center text-sm font-medium text-foreground transition-colors focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                         @change="updateLocalRpm(entry.user_id, ($event.target as HTMLInputElement).value)"
                       />
                     </td>

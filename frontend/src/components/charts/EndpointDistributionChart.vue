@@ -13,7 +13,7 @@
             type="button"
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="source === 'inbound'
-              ? 'bg-card text-foreground shadow-metal-edge'
+              ? 'bg-card text-foreground '
               : 'text-muted-foreground hover:text-foreground'"
             @click="emit('update:source', 'inbound')"
           >
@@ -23,7 +23,7 @@
             type="button"
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="source === 'upstream'
-              ? 'bg-card text-foreground shadow-metal-edge'
+              ? 'bg-card text-foreground '
               : 'text-muted-foreground hover:text-foreground'"
             @click="emit('update:source', 'upstream')"
           >
@@ -33,7 +33,7 @@
             type="button"
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="source === 'path'
-              ? 'bg-card text-foreground shadow-metal-edge'
+              ? 'bg-card text-foreground '
               : 'text-muted-foreground hover:text-foreground'"
             @click="emit('update:source', 'path')"
           >
@@ -49,7 +49,7 @@
             type="button"
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="metric === 'tokens'
-              ? 'bg-card text-foreground shadow-metal-edge'
+              ? 'bg-card text-foreground '
               : 'text-muted-foreground hover:text-foreground'"
             @click="emit('update:metric', 'tokens')"
           >
@@ -59,7 +59,7 @@
             type="button"
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="metric === 'actual_cost'
-              ? 'bg-card text-foreground shadow-metal-edge'
+              ? 'bg-card text-foreground '
               : 'text-muted-foreground hover:text-foreground'"
             @click="emit('update:metric', 'actual_cost')"
           >

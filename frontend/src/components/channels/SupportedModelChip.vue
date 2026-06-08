@@ -6,7 +6,7 @@
         'inline-flex cursor-help items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors',
         effectivePlatform
           ? platformBadgeClass(effectivePlatform)
-          : 'border-border bg-metal-raised text-foreground/85',
+          : 'border-border bg-secondary text-foreground/85',
       ]"
       @mouseenter="onEnter"
       @mouseleave="onLeave"
@@ -21,7 +21,7 @@
       />
       <span
         v-if="showPlatform && model.platform"
-        class="rounded bg-metal-raised border border-border px-1 text-[10px] uppercase text-muted-foreground"
+        class="rounded bg-secondary border border-border px-1 text-[10px] uppercase text-muted-foreground"
       >
         {{ model.platform }}
       </span>
@@ -36,7 +36,7 @@
         v-show="show"
         ref="popoverEl"
         role="tooltip"
-        class="pointer-events-none fixed z-[99999] w-80 max-w-[min(22rem,calc(100vw-1rem))] rounded-lg border bg-popover text-xs shadow-metal-lg"
+        class="pointer-events-none fixed z-[99999] w-80 max-w-[min(22rem,calc(100vw-1rem))] rounded-lg border bg-popover text-xs shadow-lg"
         :class="[popoverBorderClass]"
         :style="popoverStyle"
       >
@@ -48,7 +48,7 @@
           <span class="truncate font-semibold">{{ model.name }}</span>
           <span
             v-if="model.platform"
-            class="flex-shrink-0 rounded bg-metal-raised border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide"
+            class="flex-shrink-0 rounded bg-secondary border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide"
           >
             {{ model.platform }}
           </span>

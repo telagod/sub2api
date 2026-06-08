@@ -10,7 +10,7 @@
           <span
             v-for="model in modelValue"
             :key="model"
-            class="inline-flex items-center justify-between gap-1 rounded bg-metal-raised px-2 py-1 text-xs text-foreground/85"
+            class="inline-flex items-center justify-between gap-1 rounded bg-secondary px-2 py-1 text-xs text-foreground/85"
           >
             <span class="flex items-center gap-1 truncate">
               <ModelIcon :model="model" size="14px" />
@@ -35,7 +35,7 @@
       <!-- Dropdown List -->
       <div
         v-if="showDropdown"
-        class="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-border bg-card shadow-metal"
+        class="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-border bg-card "
       >
         <div class="sticky top-0 border-b border-border bg-card p-2">
           <input
@@ -58,7 +58,7 @@
               :class="[
                 'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
                 modelValue.includes(model.value)
-                  ? 'border-primary-400 bg-metal-silver text-primary-950'
+                  ? 'border-primary-400 bg-foreground text-primary-950'
                   : 'border-border'
               ]"
             >
@@ -119,7 +119,7 @@
         <button
           type="button"
           @click="addCustom"
-          class="rounded-md bg-metal-silver px-4 py-2 text-sm font-medium text-primary-950 shadow-metal-edge hover:bg-metal-raised hover:text-foreground"
+          class="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-primary-950  hover:bg-secondary hover:text-foreground"
         >
           {{ t('admin.accounts.addModel') }}
         </button>

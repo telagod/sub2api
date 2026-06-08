@@ -11,7 +11,7 @@
               type="button"
               class="px-3 py-1.5 text-xs font-medium transition-colors first:rounded-l-md last:rounded-r-md"
               :class="days === d
-                ? 'bg-metal-silver text-foreground'
+                ? 'bg-foreground text-foreground'
                 : 'text-muted-foreground hover:bg-accent hover:text-foreground'"
               @click="days = d"
             >

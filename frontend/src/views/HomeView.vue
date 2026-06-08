@@ -29,7 +29,7 @@
       <nav class="mx-auto flex max-w-6xl items-center justify-between">
         <!-- Logo -->
         <div class="flex items-center">
-          <div class="h-10 w-10 overflow-hidden rounded-md shadow-metal">
+          <div class="h-10 w-10 overflow-hidden rounded-md ">
             <img :src="siteLogo || '/logo.svg'" alt="Logo" class="h-full w-full object-contain" />
           </div>
         </div>
@@ -57,10 +57,10 @@
           <router-link
             v-if="isAuthenticated"
             :to="dashboardPath"
-            class="inline-flex items-center gap-1.5 rounded-full border border-border bg-metal-raised py-1 pl-1 pr-2.5 shadow-metal-edge transition-colors hover:bg-accent"
+            class="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary py-1 pl-1 pr-2.5  transition-colors hover:bg-accent"
           >
             <span
-              class="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-metal-silver text-[10px] font-semibold text-foreground"
+              class="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-foreground text-[10px] font-semibold text-foreground"
             >
               {{ userInitial }}
             </span>
@@ -82,7 +82,7 @@
           <router-link
             v-else
             to="/login"
-            class="inline-flex items-center rounded-full border border-border bg-metal-raised px-3 py-1 text-xs font-medium text-foreground shadow-metal-edge transition-colors hover:bg-accent"
+            class="inline-flex items-center rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-foreground  transition-colors hover:bg-accent"
           >
             {{ t('home.login') }}
           </router-link>
@@ -110,7 +110,7 @@
             <div>
               <router-link
                 :to="isAuthenticated ? dashboardPath : '/login'"
-                class="btn btn-primary px-8 py-3 text-base shadow-metal"
+                class="btn btn-primary px-8 py-3 text-base "
               >
                 {{ isAuthenticated ? t('home.goToDashboard') : t('home.getStarted') }}
                 <Icon name="arrowRight" size="md" class="ml-2" :stroke-width="2" />
@@ -159,7 +159,7 @@
         <!-- Feature Tags - Centered -->
         <div class="mb-12 flex flex-wrap items-center justify-center gap-4 md:gap-6">
           <div
-            class="inline-flex items-center gap-2.5 rounded-full border border-border bg-card px-5 py-2.5 shadow-metal-edge"
+            class="inline-flex items-center gap-2.5 rounded-full border border-border bg-card px-5 py-2.5 "
           >
             <Icon name="swap" size="sm" class="text-primary-200" />
             <span class="text-sm font-medium text-foreground/85">{{
@@ -167,7 +167,7 @@
             }}</span>
           </div>
           <div
-            class="inline-flex items-center gap-2.5 rounded-full border border-border bg-card px-5 py-2.5 shadow-metal-edge"
+            class="inline-flex items-center gap-2.5 rounded-full border border-border bg-card px-5 py-2.5 "
           >
             <Icon name="shield" size="sm" class="text-primary-200" />
             <span class="text-sm font-medium text-foreground/85">{{
@@ -175,7 +175,7 @@
             }}</span>
           </div>
           <div
-            class="inline-flex items-center gap-2.5 rounded-full border border-border bg-card px-5 py-2.5 shadow-metal-edge"
+            class="inline-flex items-center gap-2.5 rounded-full border border-border bg-card px-5 py-2.5 "
           >
             <Icon name="chart" size="sm" class="text-primary-200" />
             <span class="text-sm font-medium text-foreground/85">{{
@@ -188,10 +188,10 @@
         <div class="mb-12 grid gap-6 md:grid-cols-3">
           <!-- Feature 1: Unified Gateway -->
           <div
-            class="group rounded-lg border border-border bg-card p-6 shadow-metal transition-all duration-300 hover:shadow-metal-edge"
+            class="group rounded-lg border border-border bg-card p-6  transition-all duration-300 hover:"
           >
             <div
-              class="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge transition-transform group-hover:scale-110"
+              class="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-secondary  transition-transform group-hover:scale-110"
             >
               <Icon name="server" size="lg" class="text-primary-200" />
             </div>
@@ -205,10 +205,10 @@
 
           <!-- Feature 2: Account Pool -->
           <div
-            class="group rounded-lg border border-border bg-card p-6 shadow-metal transition-all duration-300 hover:shadow-metal-edge"
+            class="group rounded-lg border border-border bg-card p-6  transition-all duration-300 hover:"
           >
             <div
-              class="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge transition-transform group-hover:scale-110"
+              class="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-secondary  transition-transform group-hover:scale-110"
             >
               <svg
                 class="h-6 w-6 text-primary-200"
@@ -234,10 +234,10 @@
 
           <!-- Feature 3: Billing & Quota -->
           <div
-            class="group rounded-lg border border-border bg-card p-6 shadow-metal transition-all duration-300 hover:shadow-metal-edge"
+            class="group rounded-lg border border-border bg-card p-6  transition-all duration-300 hover:"
           >
             <div
-              class="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge transition-transform group-hover:scale-110"
+              class="mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-secondary  transition-transform group-hover:scale-110"
             >
               <svg
                 class="h-6 w-6 text-primary-200"
@@ -275,10 +275,10 @@
         <div class="mb-16 flex flex-wrap items-center justify-center gap-4">
           <!-- Claude - Supported -->
           <div
-            class="flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 shadow-metal-edge"
+            class="flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 "
           >
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+              class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-secondary "
             >
               <span class="text-xs font-bold text-primary-200">C</span>
             </div>
@@ -290,10 +290,10 @@
           </div>
           <!-- GPT - Supported -->
           <div
-            class="flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 shadow-metal-edge"
+            class="flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 "
           >
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+              class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-secondary "
             >
               <span class="text-xs font-bold text-primary-200">G</span>
             </div>
@@ -305,10 +305,10 @@
           </div>
           <!-- Gemini - Supported -->
           <div
-            class="flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 shadow-metal-edge"
+            class="flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 "
           >
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+              class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-secondary "
             >
               <span class="text-xs font-bold text-primary-200">G</span>
             </div>
@@ -320,10 +320,10 @@
           </div>
           <!-- Antigravity - Supported -->
           <div
-            class="flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 shadow-metal-edge"
+            class="flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 "
           >
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+              class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-secondary "
             >
               <span class="text-xs font-bold text-primary-200">A</span>
             </div>
@@ -335,10 +335,10 @@
           </div>
           <!-- More - Coming Soon -->
           <div
-            class="flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 opacity-60 shadow-metal-edge"
+            class="flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 opacity-60 "
           >
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+              class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-secondary "
             >
               <span class="text-xs font-bold text-primary-200">+</span>
             </div>

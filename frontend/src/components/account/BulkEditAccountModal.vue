@@ -7,7 +7,7 @@
   >
     <form id="bulk-edit-account-form" class="space-y-5" @submit.prevent="() => handleSubmit()">
       <!-- Info -->
-      <div class="rounded-md border border-border bg-metal-surface p-4">
+      <div class="rounded-md border border-border bg-card p-4">
         <p class="text-sm text-foreground/85">
           <svg class="mr-1.5 inline h-5 w-5 text-primary-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -68,13 +68,13 @@
             type="button"
             :class="[
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-              openaiPassthroughEnabled ? 'bg-primary-600' : 'bg-metal-raised'
+              openaiPassthroughEnabled ? 'bg-primary-600' : 'bg-secondary'
             ]"
             @click="openaiPassthroughEnabled = !openaiPassthroughEnabled"
           >
             <span
               :class="[
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-metal-silver shadow-metal-edge ring-0 transition duration-200 ease-in-out',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-foreground  ring-0 transition duration-200 ease-in-out',
                 openaiPassthroughEnabled ? 'translate-x-5' : 'translate-x-0'
               ]"
             />
@@ -157,7 +157,7 @@
                 :class="[
                   'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                   modelRestrictionMode === 'whitelist'
-                    ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                    ? 'bg-secondary text-primary-200 border border-border '
                     : 'bg-muted text-muted-foreground hover:bg-accent'
                 ]"
                 @click="modelRestrictionMode = 'whitelist'"
@@ -182,7 +182,7 @@
                 :class="[
                   'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                   modelRestrictionMode === 'mapping'
-                    ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                    ? 'bg-secondary text-primary-200 border border-border '
                     : 'bg-muted text-muted-foreground hover:bg-accent'
                 ]"
                 @click="modelRestrictionMode = 'mapping'"
@@ -206,7 +206,7 @@
 
             <!-- Whitelist Mode -->
             <div v-if="modelRestrictionMode === 'whitelist'">
-              <div class="mb-3 rounded-md border border-border bg-metal-surface p-3">
+              <div class="mb-3 rounded-md border border-border bg-card p-3">
                 <p class="text-xs text-foreground/85">
                   <svg
                     class="mr-1 inline h-4 w-4 text-primary-200"
@@ -240,7 +240,7 @@
 
             <!-- Mapping Mode -->
             <div v-else>
-              <div class="mb-3 rounded-md border border-border bg-metal-surface p-3">
+              <div class="mb-3 rounded-md border border-border bg-card p-3">
                 <p class="text-xs text-foreground/85">
                   <svg
                     class="mr-1 inline h-4 w-4 text-primary-200"
@@ -472,13 +472,13 @@
             type="button"
             :class="[
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-              interceptWarmupRequests ? 'bg-primary-600' : 'bg-metal-raised'
+              interceptWarmupRequests ? 'bg-primary-600' : 'bg-secondary'
             ]"
             @click="interceptWarmupRequests = !interceptWarmupRequests"
           >
             <span
               :class="[
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-metal-silver shadow-metal-edge ring-0 transition duration-200 ease-in-out',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-foreground  ring-0 transition duration-200 ease-in-out',
                 interceptWarmupRequests ? 'translate-x-5' : 'translate-x-0'
               ]"
             />
@@ -728,13 +728,13 @@
             type="button"
             :class="[
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-              codexCLIOnlyEnabled ? 'bg-primary-600' : 'bg-metal-raised'
+              codexCLIOnlyEnabled ? 'bg-primary-600' : 'bg-secondary'
             ]"
             @click="codexCLIOnlyEnabled = !codexCLIOnlyEnabled"
           >
             <span
               :class="[
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-metal-silver shadow-metal-edge ring-0 transition duration-200 ease-in-out',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-foreground  ring-0 transition duration-200 ease-in-out',
                 codexCLIOnlyEnabled ? 'translate-x-5' : 'translate-x-0'
               ]"
             />
@@ -772,13 +772,13 @@
             type="button"
             :class="[
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-              codexCLIOnlyAllowClaudeCodeEnabled ? 'bg-primary-600' : 'bg-metal-raised'
+              codexCLIOnlyAllowClaudeCodeEnabled ? 'bg-primary-600' : 'bg-secondary'
             ]"
             @click="codexCLIOnlyAllowClaudeCodeEnabled = !codexCLIOnlyAllowClaudeCodeEnabled"
           >
             <span
               :class="[
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-metal-silver shadow-metal-edge ring-0 transition duration-200 ease-in-out',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-foreground  ring-0 transition duration-200 ease-in-out',
                 codexCLIOnlyAllowClaudeCodeEnabled ? 'translate-x-5' : 'translate-x-0'
               ]"
             />
@@ -959,12 +959,12 @@
               @click="rpmLimitEnabled = !rpmLimitEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                rpmLimitEnabled ? 'bg-primary-600' : 'bg-metal-raised'
+                rpmLimitEnabled ? 'bg-primary-600' : 'bg-secondary'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-metal-silver shadow-metal-edge ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-foreground  ring-0 transition duration-200 ease-in-out',
                   rpmLimitEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
@@ -995,7 +995,7 @@
                   :class="[
                     'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all',
                     bulkRpmStrategy === 'tiered'
-                      ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                      ? 'bg-secondary text-primary-200 border border-border '
                       : 'bg-muted text-muted-foreground hover:bg-accent'
                   ]"
                 >
@@ -1007,7 +1007,7 @@
                   :class="[
                     'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all',
                     bulkRpmStrategy === 'sticky_exempt'
-                      ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                      ? 'bg-secondary text-primary-200 border border-border '
                       : 'bg-muted text-muted-foreground hover:bg-accent'
                   ]"
                 >
@@ -1044,7 +1044,7 @@
               :class="[
                 'px-3 py-1.5 text-sm rounded-md border transition-colors',
                 userMsgQueueMode === opt.value
-                  ? 'bg-metal-silver text-primary-foreground border-border shadow-metal-edge'
+                  ? 'bg-foreground text-primary-foreground border-border '
                   : 'bg-card text-foreground/85 border-border hover:bg-accent'
               ]">
               {{ opt.label }}

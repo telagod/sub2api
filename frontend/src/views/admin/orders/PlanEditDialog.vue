@@ -56,7 +56,7 @@
           type="button"
           :class="[
             'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-            planForm.for_sale ? 'bg-metal-silver' : 'bg-muted'
+            planForm.for_sale ? 'bg-foreground' : 'bg-muted'
           ]"
           @click="planForm.for_sale = !planForm.for_sale"
         >

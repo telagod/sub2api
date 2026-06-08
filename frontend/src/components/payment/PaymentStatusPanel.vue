@@ -39,7 +39,7 @@
     <template v-else-if="outcome === 'cancelled'">
       <div class="card p-6">
         <div class="flex flex-col items-center space-y-4 py-4">
-          <div class="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-metal-raised shadow-metal-edge">
+          <div class="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary ">
             <svg class="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>

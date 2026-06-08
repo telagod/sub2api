@@ -37,7 +37,7 @@
 
   <div
     v-else-if="!accepted && documents.length > 0"
-    class="rounded-md border border-border bg-metal-surface p-3 text-sm text-foreground"
+    class="rounded-md border border-border bg-card p-3 text-sm text-foreground"
   >
     <div class="flex items-start gap-3">
       <Icon name="shield" size="sm" class="mt-0.5 flex-shrink-0 text-primary-200" />
@@ -49,7 +49,7 @@
       </div>
       <button
         type="button"
-        class="flex-shrink-0 rounded-md bg-metal-silver px-3 py-1.5 text-xs font-medium text-foreground shadow-metal-edge transition hover:bg-metal-raised"
+        class="flex-shrink-0 rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-foreground  transition hover:bg-secondary"
         @click="emit('open')"
       >
         查看条款
@@ -63,10 +63,10 @@
         v-if="dialogVisible"
         class="fixed inset-0 z-[140] flex items-center justify-center overflow-y-auto bg-gray-950/70 p-4"
       >
-        <div class="w-full max-w-[600px] overflow-hidden rounded-lg border border-border bg-card shadow-metal">
+        <div class="w-full max-w-[600px] overflow-hidden rounded-lg border border-border bg-card ">
           <div class="border-b border-border bg-card px-6 py-6">
             <div class="flex items-start gap-4">
-              <span class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md border border-border bg-metal-raised text-primary-200 shadow-metal-edge">
+              <span class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md border border-border bg-secondary text-primary-200 ">
                 <Icon name="shield" size="md" />
               </span>
               <div class="min-w-0 flex-1">
@@ -76,7 +76,7 @@
                   </h2>
                   <span
                     v-if="updatedAt"
-                    class="rounded-full border border-border bg-metal-raised px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                    class="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground"
                   >
                     {{ updatedAt }}
                   </span>
@@ -99,9 +99,9 @@
                 :to="documentRoute(doc)"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="group flex min-h-[72px] w-full items-center gap-3 rounded-md border border-border bg-muted px-4 py-3 text-left transition hover:-translate-y-0.5 hover:border-border hover:bg-accent hover:shadow-metal-edge"
+                class="group flex min-h-[72px] w-full items-center gap-3 rounded-md border border-border bg-muted px-4 py-3 text-left transition hover:-translate-y-0.5 hover:border-border hover:bg-accent hover:"
               >
-                <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-border bg-metal-raised text-primary-200 shadow-metal-edge transition">
+                <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-border bg-secondary text-primary-200  transition">
                   <Icon :name="documentIcon(index, doc.title)" size="sm" />
                 </span>
                 <span class="min-w-0 flex-1">
@@ -125,7 +125,7 @@
               </button>
               <button
                 type="button"
-                class="rounded-md bg-metal-silver px-4 py-3 text-sm font-semibold text-foreground shadow-metal-edge transition hover:bg-metal-raised"
+                class="rounded-md bg-foreground px-4 py-3 text-sm font-semibold text-foreground  transition hover:bg-secondary"
                 @click="emit('accept')"
               >
                 同意并继续

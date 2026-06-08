@@ -45,7 +45,7 @@
       </svg>
       <!-- Tooltip - 向下显示 -->
       <div
-        class="invisible absolute left-0 top-full z-[100] mt-1.5 min-w-[200px] max-w-[300px] rounded-md border border-border bg-metal-raised px-3 py-2 text-xs text-foreground opacity-0 shadow-metal transition-all duration-200 group-hover/error:visible group-hover/error:opacity-100"
+        class="invisible absolute left-0 top-full z-[100] mt-1.5 min-w-[200px] max-w-[300px] rounded-md border border-border bg-secondary px-3 py-2 text-xs text-foreground opacity-0  transition-all duration-200 group-hover/error:visible group-hover/error:opacity-100"
       >
         <div class="whitespace-pre-wrap break-words leading-relaxed text-foreground/85">
           {{ account.error_message }}
@@ -67,7 +67,7 @@
       </span>
       <!-- Tooltip -->
       <div
-        class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded-md border border-border bg-metal-raised px-3 py-2 text-center text-xs leading-relaxed text-foreground opacity-0 shadow-metal transition-opacity group-hover:opacity-100"
+        class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded-md border border-border bg-secondary px-3 py-2 text-center text-xs leading-relaxed text-foreground opacity-0  transition-opacity group-hover:opacity-100"
       >
         {{ t('admin.accounts.status.rateLimitedUntil', { time: formatDateTime(account.rate_limit_reset_at) }) }}
         <div
@@ -109,7 +109,7 @@
         <!-- 普通模型限流 -->
         <span
           v-else
-          class="inline-flex items-center gap-1 rounded border border-border bg-metal-raised px-1.5 py-0.5 text-xs font-medium text-primary-200"
+          class="inline-flex items-center gap-1 rounded border border-border bg-secondary px-1.5 py-0.5 text-xs font-medium text-primary-200"
         >
           <Icon name="exclamationTriangle" size="xs" :stroke-width="2" />
           {{ formatScopeName(item.model) }}
@@ -117,7 +117,7 @@
         </span>
         <!-- Tooltip -->
         <div
-          class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded-md border border-border bg-metal-raised px-3 py-2 text-center text-xs leading-relaxed text-foreground opacity-0 shadow-metal transition-opacity group-hover:opacity-100"
+          class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded-md border border-border bg-secondary px-3 py-2 text-center text-xs leading-relaxed text-foreground opacity-0  transition-opacity group-hover:opacity-100"
         >
           {{
             item.kind === 'credits_exhausted'
@@ -143,7 +143,7 @@
       </span>
       <!-- Tooltip -->
       <div
-        class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded-md border border-border bg-metal-raised px-3 py-2 text-center text-xs leading-relaxed text-foreground opacity-0 shadow-metal transition-opacity group-hover:opacity-100"
+        class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded-md border border-border bg-secondary px-3 py-2 text-center text-xs leading-relaxed text-foreground opacity-0  transition-opacity group-hover:opacity-100"
       >
         {{ t('admin.accounts.status.overloadedUntil', { time: formatTime(account.overload_until) }) }}
         <div

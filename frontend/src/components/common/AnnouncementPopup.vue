@@ -6,15 +6,15 @@
         class="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-black/70 p-4 pt-[8vh]"
       >
         <div
-          class="w-full max-w-[680px] overflow-hidden rounded-xl border border-border bg-card shadow-metal ring-1 ring-white/5"
+          class="w-full max-w-[680px] overflow-hidden rounded-xl border border-border bg-card  ring-1 ring-white/5"
           @click.stop
         >
           <!-- Header with warm gradient -->
-          <div class="relative overflow-hidden border-b border-border bg-metal-surface px-8 py-6">
+          <div class="relative overflow-hidden border-b border-border bg-card px-8 py-6">
             <div class="relative z-10">
               <!-- Icon and badge -->
               <div class="mb-3 flex items-center gap-2">
-                <div class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-metal-raised text-primary-200 shadow-metal-edge">
+                <div class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary text-primary-200 ">
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
@@ -46,7 +46,7 @@
           <!-- Body -->
           <div class="max-h-[50vh] overflow-y-auto bg-card px-8 py-8">
             <div class="relative">
-              <div class="absolute left-0 top-0 bottom-0 w-1 rounded-full bg-metal-silver"></div>
+              <div class="absolute left-0 top-0 bottom-0 w-1 rounded-full bg-foreground"></div>
               <div class="pl-6">
                 <div
                   class="markdown-body prose prose-sm max-w-none dark:prose-invert"
@@ -61,7 +61,7 @@
             <div class="flex items-center justify-end">
               <button
                 @click="handleDismiss"
-                class="rounded-md border border-border bg-metal-silver px-6 py-2.5 text-sm font-medium text-foreground shadow-metal-edge transition-all hover:shadow-metal hover:scale-105"
+                class="rounded-md border border-border bg-foreground px-6 py-2.5 text-sm font-medium text-foreground  transition-all hover: hover:scale-105"
               >
                 <span class="flex items-center gap-2">
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

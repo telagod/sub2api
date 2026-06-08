@@ -9,11 +9,11 @@
       <!-- Account Info Card -->
       <div
         v-if="account"
-        class="flex items-center justify-between rounded-lg border border-border bg-metal-raised p-3"
+        class="flex items-center justify-between rounded-lg border border-border bg-secondary p-3"
       >
         <div class="flex items-center gap-3">
           <div
-            class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+            class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary "
           >
             <Icon name="play" size="md" class="text-primary-200" :stroke-width="2" />
           </div>
@@ -124,7 +124,7 @@
         <button
           v-if="outputLines.length > 0"
           @click="copyOutput"
-          class="absolute right-2 top-2 rounded-md border border-border bg-metal-raised p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-accent hover:text-foreground group-hover:opacity-100"
+          class="absolute right-2 top-2 rounded-md border border-border bg-secondary p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-accent hover:text-foreground group-hover:opacity-100"
           :title="t('admin.accounts.copyOutput')"
         >
           <Icon name="link" size="sm" :stroke-width="2" />
@@ -139,7 +139,7 @@
           <div
             v-for="(image, index) in generatedImages"
             :key="`${image.url}-${index}`"
-            class="group/img relative cursor-pointer overflow-hidden rounded-lg border border-border bg-card shadow-metal-edge transition hover:border-primary-300 hover:shadow-metal"
+            class="group/img relative cursor-pointer overflow-hidden rounded-lg border border-border bg-card  transition hover:border-primary-300 hover:"
             @click="previewImageUrl = image.url"
           >
             <img :src="image.url" :alt="`test-image-${index + 1}`" class="max-h-[360px] w-full object-contain" />
@@ -199,7 +199,7 @@
       <div class="flex justify-end gap-3">
         <button
           @click="handleClose"
-          class="rounded-md border border-border bg-metal-raised px-4 py-2 text-sm font-medium text-foreground/85 transition-colors hover:bg-accent"
+          class="rounded-md border border-border bg-secondary px-4 py-2 text-sm font-medium text-foreground/85 transition-colors hover:bg-accent"
         >
           {{ t('common.close') }}
         </button>
@@ -209,12 +209,12 @@
           :class="[
             'flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all',
             status === 'connecting' || !selectedModelId
-              ? 'cursor-not-allowed border border-border bg-metal-raised text-muted-foreground'
+              ? 'cursor-not-allowed border border-border bg-secondary text-muted-foreground'
               : status === 'success'
                 ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
                 : status === 'error'
                   ? 'border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
-                  : 'bg-metal-silver text-foreground shadow-metal hover:shadow-metal-edge'
+                  : 'bg-foreground text-foreground  hover:'
           ]"
         >
           <Icon

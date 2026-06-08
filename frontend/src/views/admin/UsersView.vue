@@ -138,7 +138,7 @@
                 <!-- Dropdown menu -->
                 <div
                   v-if="showFilterDropdown"
-                  class="absolute right-0 top-full z-50 mt-1 w-48 rounded-md border border-border bg-card py-1 shadow-metal"
+                  class="absolute right-0 top-full z-50 mt-1 w-48 rounded-md border border-border bg-card py-1 "
                 >
                   <!-- Built-in filters -->
                   <button
@@ -194,7 +194,7 @@
                 <!-- Dropdown menu -->
                 <div
                   v-if="showColumnDropdown"
-                  class="absolute right-0 top-full z-50 mt-1 max-h-80 w-48 overflow-y-auto rounded-md border border-border bg-card py-1 shadow-metal"
+                  class="absolute right-0 top-full z-50 mt-1 max-h-80 w-48 overflow-y-auto rounded-md border border-border bg-card py-1 "
                 >
                   <button
                     v-for="col in toggleableColumns"
@@ -256,7 +256,7 @@
           <template #cell-email="{ value }">
             <div class="flex items-center gap-2">
               <div
-                class="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-metal-raised shadow-metal-edge"
+                class="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary "
               >
                 <span class="text-sm font-medium text-primary-200">
                   {{ value.charAt(0).toUpperCase() }}
@@ -319,7 +319,7 @@
                 <!-- Hover tooltip（操作菜单未打开时显示） -->
                 <div
                   v-if="expandedGroupUserId !== row.id"
-                  class="pointer-events-none absolute left-0 top-full z-50 mt-1.5 rounded bg-metal-raised border border-border px-2.5 py-1.5 text-xs text-foreground opacity-0 shadow-metal transition-opacity duration-75 group-hover/ex:opacity-100"
+                  class="pointer-events-none absolute left-0 top-full z-50 mt-1.5 rounded bg-secondary border border-border px-2.5 py-1.5 text-xs text-foreground opacity-0  transition-opacity duration-75 group-hover/ex:opacity-100"
                 >
                   <div class="absolute left-4 bottom-full border-4 border-transparent border-b-border"></div>
                   <div class="flex flex-col gap-0.5 whitespace-nowrap">
@@ -329,7 +329,7 @@
                 <!-- 点击展开分组操作菜单 -->
                 <div
                   v-if="expandedGroupUserId === row.id"
-                  class="absolute left-0 top-full z-50 mt-1.5 min-w-[160px] overflow-hidden rounded-md border border-border bg-card py-1 text-xs shadow-metal"
+                  class="absolute left-0 top-full z-50 mt-1.5 min-w-[160px] overflow-hidden rounded-md border border-border bg-card py-1 text-xs "
                 >
                   <div class="border-b border-border px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                     {{ t('admin.users.clickToReplace') }}
@@ -354,7 +354,7 @@
                 <span class="font-medium text-foreground/85">{{ getUserGroups(row).publicGroups.length }}</span>
                 <span class="text-muted-foreground">{{ t('admin.users.publicLabel') }}</span>
                 <!-- Tooltip: 向下弹出 -->
-                <div class="pointer-events-none absolute left-0 top-full z-50 mt-1.5 rounded bg-metal-raised border border-border px-2.5 py-1.5 text-xs text-foreground opacity-0 shadow-metal transition-opacity duration-75 group-hover/pub:opacity-100">
+                <div class="pointer-events-none absolute left-0 top-full z-50 mt-1.5 rounded bg-secondary border border-border px-2.5 py-1.5 text-xs text-foreground opacity-0  transition-opacity duration-75 group-hover/pub:opacity-100">
                   <div class="absolute left-4 bottom-full border-4 border-transparent border-b-border"></div>
                   <div class="flex flex-col gap-0.5 whitespace-nowrap">
                     <span v-for="g in getUserGroups(row).publicGroups" :key="g.id">{{ g.name }}</span>
@@ -405,7 +405,7 @@
                   ${{ value.toFixed(2) }}
                 </button>
                 <!-- Instant tooltip -->
-                <div class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-metal-raised border border-border px-2 py-1 text-xs text-foreground opacity-0 shadow-metal transition-opacity duration-75 group-hover:opacity-100">
+                <div class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded bg-secondary border border-border px-2 py-1 text-xs text-foreground opacity-0  transition-opacity duration-75 group-hover:opacity-100">
                   {{ t('admin.users.balanceHistoryTip') }}
                   <div class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-border"></div>
                 </div>
@@ -475,7 +475,7 @@
                 <!-- 弹出菜单：今日 / 近30天，点击进行三态循环切换。 -->
                 <div
                   v-if="openUsageSortMenu === usageKey"
-                  class="absolute right-0 top-full z-50 mt-1 min-w-[120px] rounded-md border border-border bg-card py-1 shadow-metal"
+                  class="absolute right-0 top-full z-50 mt-1 min-w-[120px] rounded-md border border-border bg-card py-1 "
                 >
                   <button
                     v-for="metric in (['today', 'total'] as const)"
@@ -638,7 +638,7 @@
     <Teleport to="body">
       <div
         v-if="activeMenuId !== null && menuPosition"
-        class="action-menu-content fixed z-[9999] w-48 overflow-hidden rounded-lg border border-border bg-card shadow-metal"
+        class="action-menu-content fixed z-[9999] w-48 overflow-hidden rounded-lg border border-border bg-card "
         :style="{ top: menuPosition.top + 'px', left: menuPosition.left + 'px' }"
       >
         <div class="py-1">

@@ -159,7 +159,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="text-xs font-black text-foreground">
                 #{{ idx + 1 }}
-                <span v-if="ev.type" class="ml-2 rounded-md bg-metal-raised px-2 py-0.5 font-mono text-[10px] font-bold text-foreground/85 border border-border">{{ ev.type }}</span>
+                <span v-if="ev.type" class="ml-2 rounded-md bg-secondary px-2 py-0.5 font-mono text-[10px] font-bold text-foreground/85 border border-border">{{ ev.type }}</span>
               </div>
               <div class="flex items-center gap-2">
                 <div class="font-mono text-xs text-muted-foreground">

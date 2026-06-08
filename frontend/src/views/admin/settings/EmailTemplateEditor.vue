@@ -94,14 +94,14 @@
 
         <div
           v-if="selectedEventMeta"
-          class="rounded-md border border-border bg-metal-surface p-4"
+          class="rounded-md border border-border bg-card p-4"
         >
           <div class="flex flex-wrap items-center gap-2">
             <div class="text-sm font-semibold text-foreground">
               {{ selectedEventMeta.label }}
             </div>
             <span
-              class="rounded-full border border-border bg-metal-raised px-2.5 py-1 text-xs font-medium text-foreground/85 shadow-metal-edge"
+              class="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-foreground/85 "
             >
               {{ selectedEventMeta.categoryLabel }}
             </span>
@@ -178,7 +178,7 @@
                   v-for="placeholder in placeholderList"
                   :key="placeholder"
                   type="button"
-                  class="rounded-full border border-border bg-metal-raised px-3 py-1 font-mono text-xs text-foreground/85 transition-colors hover:border-primary-300 hover:text-primary-200"
+                  class="rounded-full border border-border bg-secondary px-3 py-1 font-mono text-xs text-foreground/85 transition-colors hover:border-primary-300 hover:text-primary-200"
                   @click="copyPlaceholder(placeholder)"
                 >
                   {{ placeholder }}

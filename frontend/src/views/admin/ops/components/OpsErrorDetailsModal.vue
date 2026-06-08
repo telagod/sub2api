@@ -232,7 +232,7 @@ watch(
           </div>
 
           <div class="flex items-center justify-end">
-            <button type="button" class="rounded-md bg-metal-raised px-3 py-1.5 text-xs font-semibold text-foreground/85 border border-border transition-colors hover:bg-accent" @click="resetFilters">
+            <button type="button" class="rounded-md bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground/85 border border-border transition-colors hover:bg-accent" @click="resetFilters">
               {{ t('common.reset') }}
             </button>
           </div>

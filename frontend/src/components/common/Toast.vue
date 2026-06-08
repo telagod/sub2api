@@ -17,7 +17,7 @@
           v-for="toast in toasts"
           :key="toast.id"
           :class="[
-            'pointer-events-auto min-w-[320px] max-w-md overflow-hidden rounded-md shadow-metal',
+            'pointer-events-auto min-w-[320px] max-w-md overflow-hidden rounded-md ',
             'bg-card',
             'border-l-4',
             getBorderColor(toast.type)

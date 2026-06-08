@@ -11,7 +11,7 @@
       <!-- Empty State -->
       <div v-else-if="subscriptions.length === 0" class="card p-12 text-center">
         <div
-          class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+          class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-md border border-border bg-secondary "
         >
           <Icon name="creditCard" size="xl" class="text-primary-200" />
         </div>
@@ -220,7 +220,7 @@
                 !subscription.group?.weekly_limit_usd &&
                 !subscription.group?.monthly_limit_usd
               "
-              class="flex items-center justify-center rounded-md border border-border bg-metal-raised py-6 shadow-metal-edge"
+              class="flex items-center justify-center rounded-md border border-border bg-secondary py-6 "
             >
               <div class="flex items-center gap-3">
                 <span class="text-4xl text-primary-200">∞</span>

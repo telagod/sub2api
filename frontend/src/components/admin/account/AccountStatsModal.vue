@@ -9,11 +9,11 @@
       <!-- Account Info Header -->
       <div
         v-if="account"
-        class="flex items-center justify-between rounded-md border border-border bg-metal-surface p-3"
+        class="flex items-center justify-between rounded-md border border-border bg-card p-3"
       >
         <div class="flex items-center gap-3">
           <div
-            class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+            class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary "
           >
             <Icon name="chartBar" size="md" class="text-primary-200" />
           </div>
@@ -52,7 +52,7 @@
               <span class="text-xs font-medium text-muted-foreground">{{
                 t('admin.accounts.stats.totalCost')
               }}</span>
-              <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
+              <div class="rounded-md border border-border bg-secondary p-1.5 ">
                 <Icon name="dollar" size="sm" class="text-primary-200" />
               </div>
             </div>
@@ -78,7 +78,7 @@
               <span class="text-xs font-medium text-muted-foreground">{{
                 t('admin.accounts.stats.totalRequests')
               }}</span>
-              <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
+              <div class="rounded-md border border-border bg-secondary p-1.5 ">
                 <Icon name="bolt" size="sm" class="text-primary-200" />
               </div>
             </div>
@@ -98,7 +98,7 @@
               <span class="text-xs font-medium text-muted-foreground">{{
                 t('admin.accounts.stats.avgDailyCost')
               }}</span>
-              <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
+              <div class="rounded-md border border-border bg-secondary p-1.5 ">
                 <Icon
                   name="calculator"
                   size="sm"
@@ -129,7 +129,7 @@
               <span class="text-xs font-medium text-muted-foreground">{{
                 t('admin.accounts.stats.avgDailyRequests')
               }}</span>
-              <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
+              <div class="rounded-md border border-border bg-secondary p-1.5 ">
                 <svg
                   class="h-4 w-4 text-primary-200"
                   fill="none"
@@ -159,7 +159,7 @@
           <!-- Today Overview -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
+              <div class="rounded-md border border-border bg-secondary p-1.5 ">
                 <Icon name="clock" size="sm" class="text-primary-200" />
               </div>
               <span class="text-sm font-semibold text-foreground">{{
@@ -201,7 +201,7 @@
           <!-- Highest Cost Day -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
+              <div class="rounded-md border border-border bg-secondary p-1.5 ">
                 <Icon name="fire" size="sm" class="text-primary-200" />
               </div>
               <span class="text-sm font-semibold text-foreground">{{
@@ -243,7 +243,7 @@
           <!-- Highest Request Day -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
+              <div class="rounded-md border border-border bg-secondary p-1.5 ">
                 <Icon
                   name="trendingUp"
                   size="sm"
@@ -292,7 +292,7 @@
           <!-- Accumulated Tokens -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
+              <div class="rounded-md border border-border bg-secondary p-1.5 ">
                 <Icon name="cube" size="sm" class="text-primary-200" />
               </div>
               <span class="text-sm font-semibold text-foreground">{{
@@ -322,7 +322,7 @@
           <!-- Performance -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
+              <div class="rounded-md border border-border bg-secondary p-1.5 ">
                 <Icon name="bolt" size="sm" class="text-primary-200" />
               </div>
               <span class="text-sm font-semibold text-foreground">{{
@@ -352,7 +352,7 @@
           <!-- Recent Activity -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-md border border-border bg-metal-raised p-1.5 shadow-metal-edge">
+              <div class="rounded-md border border-border bg-secondary p-1.5 ">
                 <Icon
                   name="clipboard"
                   size="sm"

@@ -73,14 +73,14 @@ onBeforeUnmount(() => {
       <span class="font-medium text-foreground/85">{{ item.name }}</span>
       <span
         v-if="item.isDefault"
-        class="rounded border border-border bg-metal-raised px-1 py-px text-[10px] font-medium leading-tight text-primary-200"
+        class="rounded border border-border bg-secondary px-1 py-px text-[10px] font-medium leading-tight text-primary-200"
       >{{ t('keys.endpoints.default') }}</span>
 
       <span class="text-muted-foreground/50">|</span>
 
       <div class="group/endpoint relative flex items-center gap-1.5">
         <div
-          class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-max max-w-[24rem] -translate-x-1/2 translate-y-1 rounded-lg border border-border bg-metal-surface px-3 py-2.5 text-left opacity-0 shadow-metal transition-all duration-150 group-hover/endpoint:translate-y-0 group-hover/endpoint:opacity-100 group-focus-within/endpoint:translate-y-0 group-focus-within/endpoint:opacity-100"
+          class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-max max-w-[24rem] -translate-x-1/2 translate-y-1 rounded-lg border border-border bg-card px-3 py-2.5 text-left opacity-0  transition-all duration-150 group-hover/endpoint:translate-y-0 group-hover/endpoint:opacity-100 group-focus-within/endpoint:translate-y-0 group-focus-within/endpoint:opacity-100"
         >
           <p
             v-if="item.description"
@@ -95,7 +95,7 @@ onBeforeUnmount(() => {
             <span class="h-1.5 w-1.5 rounded-full bg-primary-200"></span>
             {{ tooltipHint(item.endpoint) }}
           </p>
-          <div class="absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-metal-surface"></div>
+          <div class="absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-card"></div>
         </div>
 
         <code

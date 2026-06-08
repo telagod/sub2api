@@ -3,7 +3,7 @@
     <div class="flex min-h-full items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/50 transition-opacity" @click="$emit('close')"></div>
 
-      <div class="relative w-full max-w-md transform rounded-lg bg-card p-6 shadow-metal transition-all border border-border">
+      <div class="relative w-full max-w-md transform rounded-lg bg-card p-6  transition-all border border-border">
         <!-- Header -->
         <div class="mb-6 text-center">
           <h3 class="text-xl font-semibold text-foreground">

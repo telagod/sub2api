@@ -153,7 +153,7 @@ const options = computed(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-metal">
+  <div class="flex h-full flex-col rounded-xl border border-border bg-card p-6 ">
     <div class="mb-4 flex shrink-0 items-center justify-between">
       <h3 class="flex items-center gap-2 text-sm font-bold text-foreground">
         <svg class="h-4 w-4 text-primary-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -170,7 +170,7 @@ const options = computed(() => {
       <div class="flex items-center gap-2">
         <button
           type="button"
-          class="inline-flex items-center rounded-md border border-border bg-metal-raised px-2 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent disabled:opacity-50"
+          class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent disabled:opacity-50"
           :disabled="!hasRequestErrors"
           @click="emit('openRequestErrors')"
         >
@@ -178,7 +178,7 @@ const options = computed(() => {
         </button>
         <button
           type="button"
-          class="inline-flex items-center rounded-md border border-border bg-metal-raised px-2 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent disabled:opacity-50"
+          class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent disabled:opacity-50"
           :disabled="!hasUpstreamErrors"
           @click="emit('openUpstreamErrors')"
         >

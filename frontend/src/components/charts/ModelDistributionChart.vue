@@ -15,7 +15,7 @@
             type="button"
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="source === 'requested'
-              ? 'bg-metal-raised text-foreground shadow-metal-edge'
+              ? 'bg-secondary text-foreground '
               : 'text-muted-foreground hover:text-foreground'"
             @click="emit('update:source', 'requested')"
           >
@@ -25,7 +25,7 @@
             type="button"
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="source === 'upstream'
-              ? 'bg-metal-raised text-foreground shadow-metal-edge'
+              ? 'bg-secondary text-foreground '
               : 'text-muted-foreground hover:text-foreground'"
             @click="emit('update:source', 'upstream')"
           >
@@ -35,7 +35,7 @@
             type="button"
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="source === 'mapping'
-              ? 'bg-metal-raised text-foreground shadow-metal-edge'
+              ? 'bg-secondary text-foreground '
               : 'text-muted-foreground hover:text-foreground'"
             @click="emit('update:source', 'mapping')"
           >
@@ -50,7 +50,7 @@
             type="button"
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="metric === 'tokens'
-              ? 'bg-metal-raised text-foreground shadow-metal-edge'
+              ? 'bg-secondary text-foreground '
               : 'text-muted-foreground hover:text-foreground'"
             @click="emit('update:metric', 'tokens')"
           >
@@ -60,7 +60,7 @@
             type="button"
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="metric === 'actual_cost'
-              ? 'bg-metal-raised text-foreground shadow-metal-edge'
+              ? 'bg-secondary text-foreground '
               : 'text-muted-foreground hover:text-foreground'"
             @click="emit('update:metric', 'actual_cost')"
           >
@@ -73,7 +73,7 @@
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="
               activeView === 'model_distribution'
-                ? 'bg-metal-raised text-foreground shadow-metal-edge'
+                ? 'bg-secondary text-foreground '
                 : 'text-muted-foreground hover:text-foreground'
             "
             @click="activeView = 'model_distribution'"
@@ -85,7 +85,7 @@
             class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
             :class="
               activeView === 'spending_ranking'
-                ? 'bg-metal-raised text-foreground shadow-metal-edge'
+                ? 'bg-secondary text-foreground '
                 : 'text-muted-foreground hover:text-foreground'
             "
             @click="activeView = 'spending_ranking'"

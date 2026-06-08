@@ -15,7 +15,7 @@
       <div v-if="isSubmitted" class="space-y-6">
         <div class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-6">
           <div class="flex flex-col items-center gap-4 text-center">
-            <div class="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-metal-raised shadow-metal-edge">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-secondary ">
               <Icon name="checkCircle" size="lg" class="text-emerald-400" />
             </div>
             <div>

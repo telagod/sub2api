@@ -91,7 +91,7 @@
                 :class="[
                   'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                   modelRestrictionMode === 'whitelist'
-                    ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                    ? 'bg-secondary text-primary-200 border border-border '
                     : 'bg-muted text-muted-foreground hover:bg-accent'
                 ]"
               >
@@ -116,7 +116,7 @@
                 :class="[
                   'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                   modelRestrictionMode === 'mapping'
-                    ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                    ? 'bg-secondary text-primary-200 border border-border '
                     : 'bg-muted text-muted-foreground hover:bg-accent'
                 ]"
               >
@@ -150,7 +150,7 @@
 
             <!-- Mapping Mode -->
             <div v-else>
-              <div class="mb-3 rounded-md bg-metal-surface p-3 border border-border">
+              <div class="mb-3 rounded-md bg-card p-3 border border-border">
                 <p class="text-xs text-foreground/85">
                   <svg
                     class="mr-1 inline h-4 w-4"
@@ -444,7 +444,7 @@
               :class="[
                 'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'whitelist'
-                  ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                  ? 'bg-secondary text-primary-200 border border-border '
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               ]"
             >
@@ -456,7 +456,7 @@
               :class="[
                 'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'mapping'
-                  ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                  ? 'bg-secondary text-primary-200 border border-border '
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               ]"
             >
@@ -477,7 +477,7 @@
 
           <!-- Mapping Mode -->
           <div v-else>
-            <div class="mb-3 rounded-md bg-metal-surface p-3 border border-border">
+            <div class="mb-3 rounded-md bg-card p-3 border border-border">
               <p class="text-xs text-foreground/85">
                 {{ t('admin.accounts.mapRequestModels') }}
               </p>
@@ -630,7 +630,7 @@
               :class="[
                 'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'whitelist'
-                  ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                  ? 'bg-secondary text-primary-200 border border-border '
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               ]"
             >
@@ -655,7 +655,7 @@
               :class="[
                 'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'mapping'
-                  ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                  ? 'bg-secondary text-primary-200 border border-border '
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               ]"
             >
@@ -689,7 +689,7 @@
 
           <!-- Mapping Mode -->
           <div v-else>
-            <div class="mb-3 rounded-md bg-metal-surface p-3 border border-border">
+            <div class="mb-3 rounded-md bg-card p-3 border border-border">
               <p class="text-xs text-foreground/85">
                 <svg
                   class="mr-1 inline h-4 w-4"
@@ -878,7 +878,7 @@
               :class="[
                 'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'whitelist'
-                  ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                  ? 'bg-secondary text-primary-200 border border-border '
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               ]"
             >
@@ -890,7 +890,7 @@
               :class="[
                 'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'mapping'
-                  ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                  ? 'bg-secondary text-primary-200 border border-border '
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               ]"
             >
@@ -1007,7 +1007,7 @@
 
         <!-- Mapping Mode Only (no toggle for Antigravity) -->
         <div>
-          <div class="mb-3 rounded-md bg-metal-surface p-3 border border-border">
+          <div class="mb-3 rounded-md bg-card p-3 border border-border">
             <p class="text-xs text-foreground/85">{{ t('admin.accounts.mapRequestModels') }}</p>
           </div>
 
@@ -1359,9 +1359,9 @@
         v-if="account?.platform === 'openai' && (account?.type === 'oauth' || account?.type === 'apikey')"
         class="border-t border-border pt-4"
       >
-        <div class="overflow-hidden rounded-lg border border-border bg-card shadow-metal">
+        <div class="overflow-hidden rounded-lg border border-border bg-card ">
           <div class="flex items-start gap-3 px-4 py-3">
-            <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-metal-raised text-primary-200 shadow-metal-edge ring-1 ring-border">
+            <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-secondary text-primary-200  ring-1 ring-border">
               <Icon name="sparkles" size="sm" />
             </div>
             <div class="min-w-0 flex-1">
@@ -1379,7 +1379,7 @@
               </p>
             </div>
           </div>
-          <div class="border-t border-border bg-metal-surface p-2">
+          <div class="border-t border-border bg-card p-2">
             <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <button
                 v-for="option in codexImageGenerationBridgeOptions"
@@ -1390,7 +1390,7 @@
                 :class="[
                   'group flex min-h-[68px] items-start gap-2 rounded-md border px-3 py-2 text-left transition-all',
                   codexImageGenerationBridgeMode === option.value
-                    ? 'border-border bg-metal-raised text-foreground shadow-metal-edge ring-1 ring-border'
+                    ? 'border-border bg-secondary text-foreground  ring-1 ring-border'
                     : 'border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-accent'
                 ]"
               >
@@ -1458,7 +1458,7 @@
         </div>
         <div
           v-if="openAITextGenerationCapabilityEnabled"
-          class="rounded-md bg-metal-surface px-3 py-2 text-xs text-foreground/85 border border-border"
+          class="rounded-md bg-card px-3 py-2 text-xs text-foreground/85 border border-border"
         >
           <span class="font-medium">{{ t(openAIResponsesStatusKey) }}</span>
         </div>
@@ -1715,7 +1715,7 @@
             <Select v-model="openAICompactMode" :options="openAICompactModeOptions" />
           </div>
         </div>
-        <div class="rounded-md bg-metal-surface px-3 py-2 text-xs text-foreground/85 border border-border">
+        <div class="rounded-md bg-card px-3 py-2 text-xs text-foreground/85 border border-border">
           <span class="font-medium">{{ t(openAICompactStatusKey) }}</span>
           <span
             v-if="account?.extra?.openai_compact_checked_at"
@@ -2043,7 +2043,7 @@
                   :class="[
                     'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all',
                     rpmStrategy === 'tiered'
-                      ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                      ? 'bg-secondary text-primary-200 border border-border '
                       : 'bg-muted text-muted-foreground hover:bg-accent'
                   ]"
                 >
@@ -2058,7 +2058,7 @@
                   :class="[
                     'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all',
                     rpmStrategy === 'sticky_exempt'
-                      ? 'bg-metal-raised text-primary-200 border border-border shadow-metal-edge'
+                      ? 'bg-secondary text-primary-200 border border-border '
                       : 'bg-muted text-muted-foreground hover:bg-accent'
                   ]"
                 >
@@ -2197,7 +2197,7 @@
             <label class="input-label text-xs">{{ t('admin.accounts.quotaControl.cacheTTLOverride.target') }}</label>
             <select
               v-model="cacheTTLOverrideTarget"
-              class="mt-1 block w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-metal-edge focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+              class="mt-1 block w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground  focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
             >
               <option value="5m">5m</option>
               <option value="1h">1h</option>
@@ -2271,7 +2271,7 @@
             </span>
             <!-- Tooltip（向下显示避免被弹窗裁剪） -->
             <div
-              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded-md bg-metal-raised px-3 py-2 text-xs text-foreground opacity-0 shadow-metal transition-opacity group-hover:opacity-100 border border-border"
+              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded-md bg-secondary px-3 py-2 text-xs text-foreground opacity-0  transition-opacity group-hover:opacity-100 border border-border"
             >
               {{ t('admin.accounts.mixedSchedulingTooltip') }}
               <div
@@ -2298,7 +2298,7 @@
               ?
             </span>
             <div
-              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded-md bg-metal-raised px-3 py-2 text-xs text-foreground opacity-0 shadow-metal transition-opacity group-hover:opacity-100 border border-border"
+              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded-md bg-secondary px-3 py-2 text-xs text-foreground opacity-0  transition-opacity group-hover:opacity-100 border border-border"
             >
               {{ t('admin.accounts.allowOveragesTooltip') }}
               <div

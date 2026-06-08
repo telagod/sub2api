@@ -4323,7 +4323,7 @@
             @click.self="wsTestDialogOpen = false"
           >
             <div
-              class="mx-4 w-full max-w-lg rounded-md bg-card p-6 shadow-metal dark:bg-card"
+              class="mx-4 w-full max-w-lg rounded-md bg-card p-6  dark:bg-card"
             >
               <h3
                 class="mb-4 text-lg font-semibold text-foreground"
@@ -5093,7 +5093,7 @@
                   <div
                     v-for="(doc, index) in form.login_agreement_documents"
                     :key="doc.id || index"
-                    class="rounded-lg border border-border bg-card p-4 dark:border-border dark:bg-metal-surface"
+                    class="rounded-lg border border-border bg-card p-4 dark:border-border dark:bg-card"
                   >
                     <div class="mb-3 flex items-center justify-between gap-3">
                       <div class="flex min-w-0 items-center gap-3">
@@ -5537,7 +5537,7 @@
           class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           @click.self="closeAffiliateModal"
         >
-          <div class="w-full max-w-md rounded-lg bg-card p-6 shadow-metal dark:bg-card">
+          <div class="w-full max-w-md rounded-lg bg-card p-6  dark:bg-card">
             <h3 class="mb-4 text-lg font-semibold">
               {{ affiliateModal.mode === 'add' ? t('admin.settings.features.affiliate.modal.addTitle') : t('admin.settings.features.affiliate.modal.editTitle') }}
             </h3>
@@ -5662,7 +5662,7 @@
           class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           @click.self="affiliateBatchModal.open = false"
         >
-          <div class="w-full max-w-md rounded-lg bg-card p-6 shadow-metal dark:bg-card">
+          <div class="w-full max-w-md rounded-lg bg-card p-6  dark:bg-card">
             <h3 class="mb-4 text-lg font-semibold">
               {{ t('admin.settings.features.affiliate.batchModal.title', { count: affiliateState.selected.length }) }}
             </h3>
@@ -9720,7 +9720,7 @@ watch(
 }
 
 .settings-tab-active {
-  @apply border-border bg-metal-raised text-foreground;
+  @apply border-border bg-secondary text-foreground;
   box-shadow:
     0 1px 2px rgb(0 0 0 / 0.4),
     0 1px 0 rgb(255 255 255 / 0.08) inset;
@@ -9751,7 +9751,7 @@ watch(
 }
 
 .settings-tab-active .settings-tab-icon {
-  @apply bg-metal-raised text-primary-200;
+  @apply bg-secondary text-primary-200;
 }
 
 .settings-tab-label {

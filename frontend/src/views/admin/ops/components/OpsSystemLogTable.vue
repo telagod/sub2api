@@ -357,15 +357,15 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="rounded-lg border border-border bg-card p-4 shadow-metal">
+  <section class="rounded-lg border border-border bg-card p-4 ">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h3 class="text-sm font-bold text-foreground">系统日志</h3>
         <p class="mt-1 text-xs text-muted-foreground">默认按最新时间倒序，支持筛选搜索与按条件清理。</p>
       </div>
       <div class="flex flex-wrap items-center gap-2 text-xs">
-        <span class="rounded-md bg-metal-raised border border-border px-2 py-1 text-foreground/85">队列 {{ health.queue_depth }}/{{ health.queue_capacity }}</span>
-        <span class="rounded-md bg-metal-raised border border-border px-2 py-1 text-foreground/85">写入 {{ health.written_count }}</span>
+        <span class="rounded-md bg-secondary border border-border px-2 py-1 text-foreground/85">队列 {{ health.queue_depth }}/{{ health.queue_capacity }}</span>
+        <span class="rounded-md bg-secondary border border-border px-2 py-1 text-foreground/85">写入 {{ health.written_count }}</span>
         <span class="rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-1 text-amber-400">丢弃 {{ health.dropped_count }}</span>
         <span class="rounded-md bg-red-500/10 border border-red-500/30 px-2 py-1 text-red-400">失败 {{ health.write_failed_count }}</span>
       </div>

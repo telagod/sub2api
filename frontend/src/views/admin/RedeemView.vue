@@ -277,7 +277,7 @@
       <div v-if="showGenerateDialog" class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="fixed inset-0 bg-black/50" @click="showGenerateDialog = false"></div>
         <div
-          class="relative z-10 w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-metal"
+          class="relative z-10 w-full max-w-md rounded-lg border border-border bg-card p-6 "
         >
           <h2 class="mb-4 text-lg font-semibold text-foreground">
             {{ t('admin.redeem.generateCodesTitle') }}
@@ -367,7 +367,7 @@
                   :class="[
                     'rounded-md border px-3 py-2 text-sm transition-colors',
                     generateForm.expiry_option === option.value
-                      ? 'border-primary-400/50 bg-metal-raised text-primary-200 shadow-metal-edge'
+                      ? 'border-primary-400/50 bg-secondary text-primary-200 '
                       : 'border-border text-foreground/85 hover:bg-accent'
                   ]"
                 >
@@ -417,7 +417,7 @@
       >
         <div class="fixed inset-0 bg-black/50" @click="closeBatchUpdateDialog"></div>
         <div
-          class="relative z-10 w-full max-w-lg rounded-lg border border-border bg-card p-6 shadow-metal"
+          class="relative z-10 w-full max-w-lg rounded-lg border border-border bg-card p-6 "
         >
           <h2 class="mb-1 text-lg font-semibold text-foreground">
             {{ t('admin.redeem.batchUpdateTitle') }}
@@ -524,7 +524,7 @@
     <Teleport to="body">
       <div v-if="showResultDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/50" @click="closeResultDialog"></div>
-        <div class="relative z-10 w-full max-w-lg rounded-lg border border-border bg-card shadow-metal">
+        <div class="relative z-10 w-full max-w-lg rounded-lg border border-border bg-card ">
           <!-- Header -->
           <div
             class="flex items-center justify-between border-b border-border px-5 py-4"

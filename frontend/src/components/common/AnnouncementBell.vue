@@ -27,15 +27,15 @@
           @click="closeModal"
         >
           <div
-            class="w-full max-w-[620px] overflow-hidden rounded-xl border border-border bg-card shadow-metal"
+            class="w-full max-w-[620px] overflow-hidden rounded-xl border border-border bg-card "
             @click.stop
           >
             <!-- Header -->
-            <div class="relative overflow-hidden border-b border-border bg-metal-surface px-6 py-5">
+            <div class="relative overflow-hidden border-b border-border bg-card px-6 py-5">
               <div class="relative z-10 flex items-start justify-between">
                 <div>
                   <div class="flex items-center gap-2">
-                    <div class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-metal-raised text-primary-200 shadow-metal-edge">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-secondary text-primary-200 ">
                       <Icon name="bell" size="sm" />
                     </div>
                     <h2 class="text-lg font-semibold text-foreground">
@@ -52,13 +52,13 @@
                     v-if="unreadCount > 0"
                     @click="markAllAsRead"
                     :disabled="loading"
-                    class="rounded-md bg-metal-silver px-4 py-2 text-xs font-medium text-foreground shadow-metal-edge transition-all hover:brightness-110 disabled:opacity-50"
+                    class="rounded-md bg-foreground px-4 py-2 text-xs font-medium text-foreground  transition-all hover:brightness-110 disabled:opacity-50"
                   >
                     {{ t('announcements.markAllRead') }}
                   </button>
                   <button
                     @click="closeModal"
-                    class="flex h-9 w-9 items-center justify-center rounded-md bg-metal-raised text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
+                    class="flex h-9 w-9 items-center justify-center rounded-md bg-secondary text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
                     :aria-label="t('common.close')"
                   >
                     <Icon name="x" size="sm" />
@@ -82,7 +82,7 @@
                   v-for="item in announcements"
                   :key="item.id"
                   class="group relative flex items-center gap-4 border-b border-border px-6 py-4 transition-all hover:bg-accent"
-                  :class="{ 'bg-metal-surface': !item.read_at }"
+                  :class="{ 'bg-card': !item.read_at }"
                   style="min-height: 72px"
                   @click="openDetail(item)"
                 >
@@ -90,7 +90,7 @@
                   <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center">
                     <div
                       v-if="!item.read_at"
-                      class="relative flex h-10 w-10 items-center justify-center rounded-md border border-border bg-metal-raised text-primary-200 shadow-metal-edge"
+                      class="relative flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary text-primary-200 "
                     >
                       <!-- Pulse ring -->
                       <span class="absolute inline-flex h-full w-full animate-ping rounded-md bg-primary-200/20 opacity-75"></span>
@@ -101,7 +101,7 @@
                     </div>
                     <div
                       v-else
-                      class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-metal-raised text-muted-foreground"
+                      class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary text-muted-foreground"
                     >
                       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -121,7 +121,7 @@
                         </time>
                         <span
                           v-if="!item.read_at"
-                          class="inline-flex items-center gap-1 rounded-md bg-metal-raised border border-border px-1.5 py-0.5 text-xs font-medium text-primary-200"
+                          class="inline-flex items-center gap-1 rounded-md bg-secondary border border-border px-1.5 py-0.5 text-xs font-medium text-primary-200"
                         >
                           <span class="relative flex h-1.5 w-1.5">
                             <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-200/40 opacity-75"></span>
@@ -157,7 +157,7 @@
               <!-- Empty State -->
               <div v-else class="flex flex-col items-center justify-center py-16">
                 <div class="relative mb-4">
-                  <div class="flex h-20 w-20 items-center justify-center rounded-full border border-border bg-metal-raised shadow-metal-edge">
+                  <div class="flex h-20 w-20 items-center justify-center rounded-full border border-border bg-secondary ">
                     <Icon name="inbox" size="xl" class="text-muted-foreground" />
                   </div>
                   <div class="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
@@ -184,27 +184,27 @@
           @click="closeDetail"
         >
           <div
-            class="w-full max-w-[780px] overflow-hidden rounded-xl border border-border bg-card shadow-metal"
+            class="w-full max-w-[780px] overflow-hidden rounded-xl border border-border bg-card "
             @click.stop
           >
             <!-- Header -->
-            <div class="relative overflow-hidden border-b border-border bg-metal-surface px-8 py-6">
+            <div class="relative overflow-hidden border-b border-border bg-card px-8 py-6">
               <div class="relative z-10 flex items-start justify-between gap-4">
                 <div class="flex-1 min-w-0">
                   <!-- Icon and Category -->
                   <div class="mb-3 flex items-center gap-2">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-metal-raised text-primary-200 shadow-metal-edge">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary text-primary-200 ">
                       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span class="rounded-md bg-metal-raised border border-border px-2.5 py-1 text-xs font-medium text-primary-200">
+                      <span class="rounded-md bg-secondary border border-border px-2.5 py-1 text-xs font-medium text-primary-200">
                         {{ t('announcements.title') }}
                       </span>
                       <span
                         v-if="!selectedAnnouncement.read_at"
-                        class="inline-flex items-center gap-1.5 rounded-md bg-metal-raised border border-border px-2.5 py-1 text-xs font-medium text-primary-200 shadow-metal-edge"
+                        class="inline-flex items-center gap-1.5 rounded-md bg-secondary border border-border px-2.5 py-1 text-xs font-medium text-primary-200 "
                       >
                         <span class="relative flex h-2 w-2">
                           <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-200/40 opacity-75"></span>
@@ -241,7 +241,7 @@
                 <!-- Close button -->
                 <button
                   @click="closeDetail"
-                  class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-metal-raised text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
+                  class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-secondary text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
                   :aria-label="t('common.close')"
                 >
                   <Icon name="x" size="md" />
@@ -266,7 +266,7 @@
             </div>
 
             <!-- Footer with Actions -->
-            <div class="border-t border-border bg-metal-surface px-8 py-5">
+            <div class="border-t border-border bg-card px-8 py-5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2 text-xs text-muted-foreground">
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -277,14 +277,14 @@
                 <div class="flex items-center gap-3">
                   <button
                     @click="closeDetail"
-                    class="rounded-md border border-border bg-metal-raised px-5 py-2.5 text-sm font-medium text-foreground/85 shadow-metal-edge transition-all hover:bg-accent"
+                    class="rounded-md border border-border bg-secondary px-5 py-2.5 text-sm font-medium text-foreground/85  transition-all hover:bg-accent"
                   >
                     {{ t('common.close') }}
                   </button>
                   <button
                     v-if="!selectedAnnouncement.read_at"
                     @click="markAsReadAndClose(selectedAnnouncement.id)"
-                    class="rounded-md bg-metal-silver px-5 py-2.5 text-sm font-medium text-foreground shadow-metal-edge transition-all hover:brightness-110 hover:scale-105"
+                    class="rounded-md bg-foreground px-5 py-2.5 text-sm font-medium text-foreground  transition-all hover:brightness-110 hover:scale-105"
                   >
                     <span class="flex items-center gap-2">
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -518,7 +518,7 @@ watch(
 }
 
 .markdown-body blockquote {
-  @apply relative my-5 border-l-4 border-primary-200 bg-metal-surface py-3 pl-5 pr-4 italic text-foreground/85;
+  @apply relative my-5 border-l-4 border-primary-200 bg-card py-3 pl-5 pr-4 italic text-foreground/85;
 }
 
 .markdown-body blockquote::before {
@@ -561,7 +561,7 @@ watch(
 }
 
 .markdown-body th {
-  @apply bg-metal-surface font-semibold text-foreground;
+  @apply bg-card font-semibold text-foreground;
 }
 
 .markdown-body tbody tr {
@@ -569,7 +569,7 @@ watch(
 }
 
 .markdown-body img {
-  @apply my-5 max-w-full rounded-md border border-border shadow-metal;
+  @apply my-5 max-w-full rounded-md border border-border ;
 }
 
 .markdown-body strong {

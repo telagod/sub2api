@@ -499,7 +499,6 @@ onUnmounted(() => {
   @apply bg-card;
   @apply rounded-md;
   @apply border border-border;
-  @apply shadow-metal;
   @apply overflow-hidden;
   pointer-events: auto !important;
 }

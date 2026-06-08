@@ -37,7 +37,7 @@
               <!-- User Dropdown -->
               <div
                 v-if="showFilterUserDropdown && (filterUserResults.length > 0 || filterUserKeyword)"
-                class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-card shadow-metal"
+                class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-card "
               >
                 <div
                   v-if="filterUserLoading"
@@ -116,7 +116,7 @@
               <!-- Dropdown menu -->
               <div
                 v-if="showColumnDropdown"
-                class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md border border-border bg-card shadow-metal"
+                class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md border border-border bg-card "
               >
                 <div class="p-2">
                   <!-- User column mode selection -->
@@ -181,7 +181,7 @@
           <template #cell-user="{ row }">
             <div class="flex items-center gap-2">
               <div
-                class="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-metal-raised shadow-metal-edge"
+                class="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary "
               >
                 <span class="text-sm font-medium text-primary-200">
                   {{ userColumnMode === 'email'
@@ -465,7 +465,7 @@
             <!-- User Dropdown -->
             <div
               v-if="showUserDropdown && (userSearchResults.length > 0 || userSearchKeyword)"
-              class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-card shadow-metal"
+              class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-card "
             >
               <div
                 v-if="userSearchLoading"
@@ -660,7 +660,7 @@
       <transition name="modal">
         <div v-if="showGuideModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @mousedown.self="showGuideModal = false">
           <div class="fixed inset-0 bg-black/50" @click="showGuideModal = false"></div>
-          <div class="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-card p-6 shadow-metal">
+          <div class="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-card p-6 ">
             <button type="button" class="absolute right-4 top-4 text-muted-foreground hover:text-foreground" @click="showGuideModal = false">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -671,7 +671,7 @@
             <!-- Step 1 -->
             <div class="mb-5">
               <h3 class="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                <span class="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-metal-raised text-xs font-bold text-primary-200 shadow-metal-edge">1</span>
+                <span class="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-secondary text-xs font-bold text-primary-200 ">1</span>
                 {{ t('admin.subscriptions.guide.step1.title') }}
               </h3>
               <ol class="ml-8 list-decimal space-y-1 text-sm text-foreground/85">
@@ -694,7 +694,7 @@
             <!-- Step 2 -->
             <div class="mb-5">
               <h3 class="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                <span class="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-metal-raised text-xs font-bold text-primary-200 shadow-metal-edge">2</span>
+                <span class="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-secondary text-xs font-bold text-primary-200 ">2</span>
                 {{ t('admin.subscriptions.guide.step2.title') }}
               </h3>
               <ol class="ml-8 list-decimal space-y-1 text-sm text-foreground/85">
@@ -707,7 +707,7 @@
             <!-- Step 3 -->
             <div class="mb-5">
               <h3 class="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                <span class="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-metal-raised text-xs font-bold text-primary-200 shadow-metal-edge">3</span>
+                <span class="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-secondary text-xs font-bold text-primary-200 ">3</span>
                 {{ t('admin.subscriptions.guide.step3.title') }}
               </h3>
               <div class="ml-8 overflow-hidden rounded-md border border-border">

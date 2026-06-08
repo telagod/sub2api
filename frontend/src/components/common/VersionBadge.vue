@@ -31,7 +31,7 @@
         <div
           v-if="dropdownOpen"
           ref="dropdownRef"
-          class="absolute left-0 z-50 mt-2 w-64 overflow-hidden rounded-md border border-border bg-card shadow-metal"
+          class="absolute left-0 z-50 mt-2 w-64 overflow-hidden rounded-md border border-border bg-card "
         >
           <!-- Header with refresh button -->
           <div
@@ -265,7 +265,7 @@
                 </a>
                 <!-- Source build hint -->
                 <div
-                  class="flex items-center gap-2 rounded-md border border-border bg-metal-raised p-2"
+                  class="flex items-center gap-2 rounded-md border border-border bg-secondary p-2"
                 >
                   <svg
                     class="h-3.5 w-3.5 flex-shrink-0 text-primary-200"
@@ -316,7 +316,7 @@
                 <button
                   @click="handleUpdate"
                   :disabled="updating"
-                  class="flex w-full items-center justify-center gap-2 rounded-md bg-metal-silver px-4 py-2 text-sm font-medium text-foreground transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                  class="flex w-full items-center justify-center gap-2 rounded-md bg-foreground px-4 py-2 text-sm font-medium text-foreground transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <svg v-if="updating" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle

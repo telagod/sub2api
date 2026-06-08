@@ -121,7 +121,7 @@ onBeforeUnmount(() => {
         v-show="show"
         role="tooltip"
         :class="[
-          'fixed z-[99999] -translate-x-1/2 -translate-y-full rounded-md bg-metal-raised p-3 text-xs leading-relaxed text-foreground shadow-metal ring-1 ring-border',
+          'fixed z-[99999] -translate-x-1/2 -translate-y-full rounded-md bg-secondary p-3 text-xs leading-relaxed text-foreground  ring-1 ring-border',
           props.widthClass,
         ]"
         :style="{ top: `calc(${tooltipStyle.top} - 8px)`, left: tooltipStyle.left }"
@@ -138,7 +138,7 @@ onBeforeUnmount(() => {
           </svg>
         </button>
         <slot>{{ content }}</slot>
-        <div class="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-metal-raised"></div>
+        <div class="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-secondary"></div>
       </div>
     </Teleport>
   </div>

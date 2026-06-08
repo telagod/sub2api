@@ -195,7 +195,7 @@
             />
           </svg>
           <span
-            class="pointer-events-none absolute left-0 top-full z-50 mt-1 w-80 whitespace-normal break-words rounded border border-border bg-card px-3 py-2 text-xs leading-relaxed text-foreground opacity-0 shadow-metal transition-opacity group-hover:opacity-100"
+            class="pointer-events-none absolute left-0 top-full z-50 mt-1 w-80 whitespace-normal break-words rounded border border-border bg-card px-3 py-2 text-xs leading-relaxed text-foreground opacity-0  transition-opacity group-hover:opacity-100"
           >
             {{ t('admin.accounts.ineligibleWarning') }}
           </span>
@@ -337,7 +337,7 @@
             />
           </svg>
           <span
-            class="pointer-events-none absolute left-0 top-full z-50 mt-1 w-80 whitespace-normal break-words rounded border border-border bg-card px-3 py-2 text-xs leading-relaxed text-foreground opacity-0 shadow-metal transition-opacity group-hover:opacity-100"
+            class="pointer-events-none absolute left-0 top-full z-50 mt-1 w-80 whitespace-normal break-words rounded border border-border bg-card px-3 py-2 text-xs leading-relaxed text-foreground opacity-0  transition-opacity group-hover:opacity-100"
           >
             <div class="font-semibold mb-1">{{ t('admin.accounts.gemini.quotaPolicy.title') }}</div>
             <div class="mb-2 text-muted-foreground">{{ t('admin.accounts.gemini.quotaPolicy.note') }}</div>
@@ -361,18 +361,18 @@
           class="mb-0.5 flex items-center"
         >
           <div class="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-            <span class="rounded border border-border bg-metal-raised px-1.5 py-0.5">
+            <span class="rounded border border-border bg-secondary px-1.5 py-0.5">
               {{ formatKeyRequests }} req
             </span>
-            <span class="rounded border border-border bg-metal-raised px-1.5 py-0.5">
+            <span class="rounded border border-border bg-secondary px-1.5 py-0.5">
               {{ formatKeyTokens }}
             </span>
-            <span class="rounded border border-border bg-metal-raised px-1.5 py-0.5" :title="t('usage.accountBilled')">
+            <span class="rounded border border-border bg-secondary px-1.5 py-0.5" :title="t('usage.accountBilled')">
               A ${{ formatKeyCost }}
             </span>
             <span
               v-if="todayStats.user_cost != null"
-              class="rounded border border-border bg-metal-raised px-1.5 py-0.5"
+              class="rounded border border-border bg-secondary px-1.5 py-0.5"
               :title="t('usage.userBilled')"
             >
               U ${{ formatKeyUserCost }}
@@ -437,18 +437,18 @@
         class="mb-0.5 flex items-center"
       >
         <div class="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-          <span class="rounded border border-border bg-metal-raised px-1.5 py-0.5">
+          <span class="rounded border border-border bg-secondary px-1.5 py-0.5">
             {{ formatKeyRequests }} req
           </span>
-          <span class="rounded border border-border bg-metal-raised px-1.5 py-0.5">
+          <span class="rounded border border-border bg-secondary px-1.5 py-0.5">
             {{ formatKeyTokens }}
           </span>
-          <span class="rounded border border-border bg-metal-raised px-1.5 py-0.5" :title="t('usage.accountBilled')">
+          <span class="rounded border border-border bg-secondary px-1.5 py-0.5" :title="t('usage.accountBilled')">
             A ${{ formatKeyCost }}
           </span>
           <span
             v-if="todayStats.user_cost != null"
-            class="rounded border border-border bg-metal-raised px-1.5 py-0.5"
+            class="rounded border border-border bg-secondary px-1.5 py-0.5"
             :title="t('usage.userBilled')"
           >
             U ${{ formatKeyUserCost }}

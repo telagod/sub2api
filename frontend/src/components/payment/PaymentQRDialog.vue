@@ -4,7 +4,7 @@
     <div v-if="!success" class="flex flex-col items-center space-y-4">
       <!-- QR Code mode -->
       <template v-if="qrUrl">
-        <div class="rounded-lg bg-white p-4 shadow-metal-edge">
+        <div class="rounded-lg bg-white p-4 ">
           <canvas ref="qrCanvas" class="mx-auto"></canvas>
         </div>
         <p v-if="scanHint" class="text-center text-sm text-muted-foreground">
@@ -37,7 +37,7 @@
         <Icon name="check" size="lg" class="text-emerald-400" />
       </div>
       <p class="text-lg font-bold text-foreground">{{ t('payment.result.success') }}</p>
-      <div v-if="paidOrder" class="w-full rounded-md bg-metal-surface p-4">
+      <div v-if="paidOrder" class="w-full rounded-md bg-card p-4">
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
             <span class="text-muted-foreground">{{ t('payment.orders.orderId') }}</span>

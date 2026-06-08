@@ -60,7 +60,7 @@ onUnmounted(() => {
 
 /* 表格滚动容器 - 增强版表体滚动方案 */
 .table-scroll-container {
-  @apply flex flex-col overflow-hidden h-full bg-card rounded-lg border border-border shadow-metal;
+  @apply flex flex-col overflow-hidden h-full bg-card rounded-lg border border-border ;
 }
 
 .table-scroll-container :deep(.table-wrapper) {
@@ -76,7 +76,7 @@ onUnmounted(() => {
 }
 
 .table-scroll-container :deep(thead) {
-  @apply bg-metal-surface;
+  @apply bg-card;
 }
 
 .table-scroll-container :deep(tbody) {

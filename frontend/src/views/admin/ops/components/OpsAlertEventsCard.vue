@@ -355,7 +355,7 @@ const empty = computed(() => events.value.length === 0 && !loading.value)
 </script>
 
 <template>
-  <div class="rounded-lg bg-card p-6 shadow-metal border border-border">
+  <div class="rounded-lg bg-card p-6  border border-border">
     <div class="mb-4 flex items-start justify-between gap-4">
       <div>
         <h3 class="text-sm font-bold text-foreground">{{ t('admin.ops.alertEvents.title') }}</h3>
@@ -368,7 +368,7 @@ const empty = computed(() => events.value.length === 0 && !loading.value)
         <Select :model-value="status" :options="statusOptions" class="w-[110px]" @change="status = String($event || '')" />
         <Select :model-value="emailSent" :options="emailSentOptions" class="w-[110px]" @change="emailSent = String($event || '')" />
         <button
-          class="flex items-center gap-1.5 rounded-md bg-metal-raised border border-border px-3 py-1.5 text-xs font-bold text-foreground/85 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+          class="flex items-center gap-1.5 rounded-md bg-secondary border border-border px-3 py-1.5 text-xs font-bold text-foreground/85 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="loading"
           @click="loadFirstPage"
         >

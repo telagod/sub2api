@@ -1,7 +1,7 @@
 <template>
   <div class="flex min-h-screen items-center justify-center bg-background p-4">
     <div
-      class="w-full max-w-md space-y-4 rounded-lg border border-border bg-card p-6 shadow-metal"
+      class="w-full max-w-md space-y-4 rounded-lg border border-border bg-card p-6 "
     >
       <!-- Amount + Order ID -->
       <div v-if="amount" class="text-center">

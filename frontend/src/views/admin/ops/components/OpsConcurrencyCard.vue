@@ -341,7 +341,7 @@ watch(
 </script>
 
 <template>
-  <div class="flex h-full flex-col rounded-lg bg-card p-6 shadow-metal border border-border">
+  <div class="flex h-full flex-col rounded-lg bg-card p-6  border border-border">
     <!-- 头部 -->
     <div class="mb-4 flex shrink-0 items-center justify-between gap-3">
       <h3 class="flex items-center gap-2 text-sm font-bold text-foreground">
@@ -355,8 +355,8 @@ watch(
         <button
           class="flex items-center justify-center rounded-md px-2 py-1 transition-colors"
           :class="showByUser
-            ? 'bg-metal-silver text-primary-200 border border-border'
-            : 'bg-metal-raised border border-border text-muted-foreground hover:bg-accent hover:text-foreground/85'"
+            ? 'bg-foreground text-primary-200 border border-border'
+            : 'bg-secondary border border-border text-muted-foreground hover:bg-accent hover:text-foreground/85'"
           :title="showByUser ? t('admin.ops.concurrency.switchToPlatform') : t('admin.ops.concurrency.switchToUser')"
           @click="showByUser = !showByUser"
         >
@@ -366,7 +366,7 @@ watch(
         </button>
         <!-- 刷新按钮 -->
         <button
-          class="flex items-center gap-1 rounded-md bg-metal-raised border border-border px-2 py-1 text-[11px] font-semibold text-foreground/85 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+          class="flex items-center gap-1 rounded-md bg-secondary border border-border px-2 py-1 text-[11px] font-semibold text-foreground/85 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="loading"
           :title="t('common.refresh')"
           @click="loadData"
@@ -428,13 +428,13 @@ watch(
           </div>
 
           <!-- 进度条 -->
-          <div class="h-1.5 w-full overflow-hidden rounded-full bg-metal-surface border border-border">
+          <div class="h-1.5 w-full overflow-hidden rounded-full bg-card border border-border">
             <div class="h-full rounded-full transition-all duration-300" :class="getLoadBarClass(row.load_percentage)" :style="getLoadBarStyle(row.load_percentage)"></div>
           </div>
 
           <!-- 等待队列 -->
           <div v-if="row.waiting_in_queue > 0" class="mt-1.5 flex justify-end">
-            <span class="rounded-full bg-metal-raised border border-border px-1.5 py-0.5 text-[10px] font-semibold text-primary-200">
+            <span class="rounded-full bg-secondary border border-border px-1.5 py-0.5 text-[10px] font-semibold text-primary-200">
               {{ t('admin.ops.concurrency.queued', { count: row.waiting_in_queue }) }}
             </span>
           </div>
@@ -461,7 +461,7 @@ watch(
           </div>
 
           <!-- 进度条 -->
-          <div class="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-metal-surface border border-border">
+          <div class="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-card border border-border">
             <div
               class="h-full rounded-full transition-all duration-300"
               :class="getLoadBarClass(row.concurrency_percentage)"
@@ -507,7 +507,7 @@ watch(
             <!-- 等待队列 -->
             <span
               v-if="row.waiting_in_queue > 0"
-              class="rounded-full bg-metal-raised border border-border px-1.5 py-0.5 font-semibold text-primary-200"
+              class="rounded-full bg-secondary border border-border px-1.5 py-0.5 font-semibold text-primary-200"
             >
               {{ t('admin.ops.concurrency.queued', { count: row.waiting_in_queue }) }}
             </span>
@@ -575,7 +575,7 @@ watch(
               </span>
               <span
                 v-else
-                class="inline-flex items-center gap-1 rounded bg-metal-raised border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                class="inline-flex items-center gap-1 rounded bg-secondary border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
               >
                 {{ t('admin.ops.accountAvailability.unavailable') }}
               </span>
@@ -583,13 +583,13 @@ watch(
           </div>
 
           <!-- 进度条 -->
-          <div class="h-1.5 w-full overflow-hidden rounded-full bg-metal-surface border border-border">
+          <div class="h-1.5 w-full overflow-hidden rounded-full bg-card border border-border">
             <div class="h-full rounded-full transition-all duration-300" :class="getLoadBarClass(row.load_percentage)" :style="getLoadBarStyle(row.load_percentage)"></div>
           </div>
 
           <!-- 等待队列 -->
           <div v-if="row.waiting_in_queue > 0" class="mt-1.5 flex justify-end">
-            <span class="rounded-full bg-metal-raised border border-border px-1.5 py-0.5 text-[10px] font-semibold text-primary-200">
+            <span class="rounded-full bg-secondary border border-border px-1.5 py-0.5 text-[10px] font-semibold text-primary-200">
               {{ t('admin.ops.concurrency.queued', { count: row.waiting_in_queue }) }}
             </span>
           </div>

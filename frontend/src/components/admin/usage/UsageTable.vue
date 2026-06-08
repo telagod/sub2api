@@ -77,7 +77,7 @@
         </template>
 
         <template #cell-group="{ row }">
-          <span v-if="row.group" class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium bg-metal-raised border border-border text-primary-200">
+          <span v-if="row.group" class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium bg-secondary border border-border text-primary-200">
             {{ row.group.name }}
           </span>
           <span v-else class="text-sm text-muted-foreground">-</span>
@@ -159,7 +159,7 @@
                 @mouseenter="showTooltip($event, row)"
                 @mouseleave="hideTooltip"
               >
-                <div class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-metal-raised border border-border transition-colors group-hover:bg-accent">
+                <div class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-secondary border border-border transition-colors group-hover:bg-accent">
                   <Icon name="infoCircle" size="xs" class="text-muted-foreground group-hover:text-primary-200" />
                 </div>
               </div>
@@ -207,7 +207,7 @@
         top: tokenTooltipPosition.y + 'px'
       }"
     >
-      <div class="whitespace-nowrap rounded-lg border border-border bg-popover px-3 py-2.5 text-xs text-popover-foreground shadow-metal-lg">
+      <div class="whitespace-nowrap rounded-lg border border-border bg-popover px-3 py-2.5 text-xs text-popover-foreground shadow-lg">
         <div class="space-y-1.5">
           <div>
             <div class="text-xs font-semibold text-foreground mb-1">{{ t('usage.tokenDetails') }}</div>
@@ -283,7 +283,7 @@
         top: tooltipPosition.y + 'px'
       }"
     >
-      <div class="whitespace-nowrap rounded-lg border border-border bg-popover px-3 py-2.5 text-xs text-popover-foreground shadow-metal-lg">
+      <div class="whitespace-nowrap rounded-lg border border-border bg-popover px-3 py-2.5 text-xs text-popover-foreground shadow-lg">
         <div class="space-y-1.5">
           <!-- Cost Breakdown -->
           <div class="mb-2 border-b border-border pb-1.5">

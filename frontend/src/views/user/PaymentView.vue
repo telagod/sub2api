@@ -9,7 +9,7 @@
         <div v-if="tabs.length > 1 && paymentPhase === 'select' && !selectedPlan" class="flex space-x-1 rounded-md bg-muted p-1">
           <button v-for="tab in tabs" :key="tab.key"
             class="flex-1 rounded-md px-4 py-2.5 text-sm font-medium transition-all"
-            :class="activeTab === tab.key ? 'bg-metal-raised text-foreground shadow-metal-edge' : 'text-muted-foreground hover:text-foreground'"
+            :class="activeTab === tab.key ? 'bg-secondary text-foreground ' : 'text-muted-foreground hover:text-foreground'"
             @click="activeTab = tab.key">{{ tab.label }}</button>
         </div>
         <!-- Payment in progress (shared by recharge and subscription) -->
@@ -220,7 +220,7 @@
     <Teleport to="body">
       <Transition name="modal">
         <div v-if="showRenewalModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" @click.self="closeRenewalModal">
-          <div class="relative w-full max-w-lg rounded-lg border border-border bg-card p-6 shadow-metal">
+          <div class="relative w-full max-w-lg rounded-lg border border-border bg-card p-6 ">
             <!-- Close button -->
             <button class="absolute right-4 top-4 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" @click="closeRenewalModal">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -237,7 +237,7 @@
     <Teleport to="body">
       <Transition name="modal">
         <div v-if="previewImage" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" @click="previewImage = ''">
-          <img :src="previewImage" alt="" class="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-metal" />
+          <img :src="previewImage" alt="" class="max-h-[85vh] max-w-[90vw] rounded-lg object-contain " />
         </div>
       </Transition>
     </Teleport>

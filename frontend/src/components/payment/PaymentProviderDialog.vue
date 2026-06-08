@@ -45,7 +45,7 @@
               :class="[
                 'rounded-md border px-2.5 py-1 text-xs font-medium transition-all',
                 form.payment_mode === mode.value
-                  ? 'border-border bg-metal-silver text-foreground shadow-metal-edge'
+                  ? 'border-border bg-foreground text-foreground '
                   : 'border-border bg-card text-foreground/85 hover:border-border hover:bg-accent',
               ]"
             >{{ mode.label }}</button>
@@ -62,7 +62,7 @@
               :class="[
                 'rounded-md border px-2.5 py-1 text-xs font-medium transition-all',
                 isTypeSelected(pt.value)
-                  ? 'border-border bg-metal-silver text-foreground shadow-metal-edge'
+                  ? 'border-border bg-foreground text-foreground '
                   : 'border-border bg-card text-foreground/85 hover:border-border hover:bg-accent',
               ]"
             >{{ pt.label }}</button>
@@ -187,11 +187,11 @@
         </div>
 
         <!-- 服务商 Webhook 提示 -->
-        <div v-if="providerWebhookUrl" class="mt-3 rounded-md border border-border bg-metal-surface p-3">
+        <div v-if="providerWebhookUrl" class="mt-3 rounded-md border border-border bg-card p-3">
           <p class="text-xs text-foreground/85">
             {{ t(providerWebhookHint) }}
           </p>
-          <code class="mt-1 block break-all rounded bg-metal-raised px-2 py-1 text-xs text-primary-200">
+          <code class="mt-1 block break-all rounded bg-secondary px-2 py-1 text-xs text-primary-200">
             {{ providerWebhookUrl }}
           </code>
           <p v-if="form.provider_key === 'stripe'" class="mt-2 text-xs leading-relaxed text-foreground/85">

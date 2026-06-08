@@ -23,7 +23,7 @@
       <!-- Add Plan Form -->
       <div
         v-if="showAddForm"
-        class="rounded-md border border-border bg-metal-surface p-4"
+        class="rounded-md border border-border bg-card p-4"
       >
         <div class="mb-3 text-sm font-medium text-foreground/85">
           {{ t('admin.scheduledTests.addPlan') }}
@@ -118,7 +118,7 @@
           <button
             @click="handleCreate"
             :disabled="!newPlan.model_id || !newPlan.cron_expression || creating"
-            class="flex items-center gap-1.5 rounded-md bg-metal-silver px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-metal-raised disabled:cursor-not-allowed disabled:opacity-50"
+            class="flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Icon v-if="creating" name="refresh" size="sm" class="animate-spin" :stroke-width="2" />
             {{ t('common.save') }}
@@ -232,7 +232,7 @@
           <!-- Edit Form -->
           <div
             v-if="editingPlanId === plan.id"
-            class="border-t border-border bg-metal-surface px-4 py-3"
+            class="border-t border-border bg-card px-4 py-3"
             @click.stop
           >
             <div class="mb-2 text-xs font-medium text-muted-foreground">
@@ -328,7 +328,7 @@
               <button
                 @click="handleEdit"
                 :disabled="!editForm.model_id || !editForm.cron_expression || updating"
-                class="flex items-center gap-1.5 rounded-md bg-metal-silver px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-metal-raised disabled:cursor-not-allowed disabled:opacity-50"
+                class="flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Icon v-if="updating" name="refresh" size="sm" class="animate-spin" :stroke-width="2" />
                 {{ t('common.save') }}

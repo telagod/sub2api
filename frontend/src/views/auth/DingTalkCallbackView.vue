@@ -24,7 +24,7 @@
         >
           <div
             v-if="adoptionRequired && (suggestedDisplayName || suggestedAvatarUrl)"
-            class="rounded-lg border border-border bg-metal-surface p-4"
+            class="rounded-lg border border-border bg-card p-4"
           >
             <div class="space-y-3">
               <div class="space-y-1">
@@ -106,7 +106,7 @@
           </template>
 
           <template v-else-if="needsChooser">
-            <div class="rounded-lg border border-border bg-metal-surface p-4">
+            <div class="rounded-lg border border-border bg-card p-4">
               <div class="space-y-4">
                 <div class="space-y-1">
                   <p class="text-sm font-medium text-foreground">

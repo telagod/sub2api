@@ -12,7 +12,7 @@
           type="button"
           class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
           :class="metric === 'tokens'
-            ? 'bg-metal-raised text-foreground shadow-metal-edge'
+            ? 'bg-secondary text-foreground '
             : 'text-muted-foreground hover:text-foreground'"
           @click="emit('update:metric', 'tokens')"
         >
@@ -22,7 +22,7 @@
           type="button"
           class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
           :class="metric === 'actual_cost'
-            ? 'bg-metal-raised text-foreground shadow-metal-edge'
+            ? 'bg-secondary text-foreground '
             : 'text-muted-foreground hover:text-foreground'"
           @click="emit('update:metric', 'actual_cost')"
         >

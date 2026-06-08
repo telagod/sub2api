@@ -354,7 +354,6 @@ onUnmounted(() => {
   @apply bg-card;
   @apply rounded-lg;
   @apply border border-border;
-  @apply shadow-metal;
   @apply overflow-hidden;
   @apply min-w-[320px];
 }
@@ -418,7 +417,7 @@ onUnmounted(() => {
 
 .date-picker-apply {
   @apply rounded-md px-4 py-1.5 text-sm font-medium;
-  @apply bg-metal-silver text-foreground shadow-metal-edge;
+  @apply bg-foreground text-foreground ;
   @apply hover:brightness-110;
   @apply transition-all duration-150;
 }

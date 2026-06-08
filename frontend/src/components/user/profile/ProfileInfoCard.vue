@@ -2,12 +2,12 @@
   <div class="space-y-6">
     <section
       data-testid="profile-overview-hero"
-      class="card overflow-hidden border border-border bg-metal-raised"
+      class="card overflow-hidden border border-border bg-secondary"
     >
       <div class="px-6 py-6 md:px-8">
         <div class="flex flex-col gap-6 lg:flex-row lg:items-start">
           <div
-            class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-metal-silver text-2xl font-bold text-foreground shadow-metal-edge"
+            class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-foreground text-2xl font-bold text-foreground "
           >
             <img
               v-if="avatarUrl"
@@ -49,7 +49,7 @@
                   <span
                     v-for="hint in sourceHints"
                     :key="hint.key"
-                    class="inline-flex items-center gap-1 rounded-full bg-metal-surface px-3 py-1 ring-1 ring-border"
+                    class="inline-flex items-center gap-1 rounded-full bg-card px-3 py-1 ring-1 ring-border"
                   >
                     <Icon name="link" size="sm" />
                     {{ hint.text }}
@@ -61,7 +61,7 @@
             <div class="grid gap-3 sm:grid-cols-3">
               <div
                 data-testid="profile-overview-metric-balance"
-                class="rounded-lg bg-metal-surface px-4 py-3 shadow-metal-edge ring-1 ring-border"
+                class="rounded-lg bg-card px-4 py-3  ring-1 ring-border"
               >
                 <p class="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
                   {{ t('profile.accountBalance') }}
@@ -72,7 +72,7 @@
               </div>
               <div
                 data-testid="profile-overview-metric-concurrency"
-                class="rounded-lg bg-metal-surface px-4 py-3 shadow-metal-edge ring-1 ring-border"
+                class="rounded-lg bg-card px-4 py-3  ring-1 ring-border"
               >
                 <p class="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
                   {{ t('profile.concurrencyLimit') }}
@@ -83,7 +83,7 @@
               </div>
               <div
                 data-testid="profile-overview-metric-member-since"
-                class="rounded-lg bg-metal-surface px-4 py-3 shadow-metal-edge ring-1 ring-border"
+                class="rounded-lg bg-card px-4 py-3  ring-1 ring-border"
               >
                 <p class="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
                   {{ t('profile.memberSince') }}

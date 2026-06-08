@@ -38,7 +38,7 @@
                 </button>
                 <div
                   v-if="showAutoRefreshDropdown"
-                  class="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-md border border-border bg-card shadow-metal"
+                  class="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-md border border-border bg-card "
                 >
                   <div class="p-2">
                     <button
@@ -78,7 +78,7 @@
                 </button>
                 <div
                   v-if="showAccountToolsDropdown"
-                  class="absolute right-0 z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] origin-top-right overflow-hidden rounded-lg border border-border bg-card shadow-metal"
+                  class="absolute right-0 z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] origin-top-right overflow-hidden rounded-lg border border-border bg-card "
                 >
                   <div class="max-h-[70vh] overflow-y-auto p-2">
                     <div class="px-2 py-2">
@@ -87,19 +87,19 @@
                       </div>
                     </div>
                     <button class="account-tools-menu-item" @click="openSyncFromCrs">
-                      <span class="account-tools-menu-icon bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
+                      <span class="account-tools-menu-icon bg-secondary border border-border text-primary-200 ">
                         <Icon name="sync" size="sm" />
                       </span>
                       <span class="flex-1 text-left">{{ t('admin.accounts.syncFromCrs') }}</span>
                     </button>
                     <button class="account-tools-menu-item" @click="openImportData">
-                      <span class="account-tools-menu-icon bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
+                      <span class="account-tools-menu-icon bg-secondary border border-border text-primary-200 ">
                         <Icon name="upload" size="sm" />
                       </span>
                       <span class="flex-1 text-left">{{ t('admin.accounts.dataImport') }}</span>
                     </button>
                     <button class="account-tools-menu-item" @click="openExportDataDialogFromMenu">
-                      <span class="account-tools-menu-icon bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
+                      <span class="account-tools-menu-icon bg-secondary border border-border text-primary-200 ">
                         <Icon name="download" size="sm" />
                       </span>
                       <span class="flex-1 text-left">
@@ -120,13 +120,13 @@
                       </div>
                     </div>
                     <button class="account-tools-menu-item" @click="openErrorPassthrough">
-                      <span class="account-tools-menu-icon bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
+                      <span class="account-tools-menu-icon bg-secondary border border-border text-primary-200 ">
                         <Icon name="shield" size="sm" />
                       </span>
                       <span class="flex-1 text-left">{{ t('admin.errorPassthrough.title') }}</span>
                     </button>
                     <button class="account-tools-menu-item" @click="openTLSFingerprintProfiles">
-                      <span class="account-tools-menu-icon bg-metal-raised border border-border text-primary-200 shadow-metal-edge">
+                      <span class="account-tools-menu-icon bg-secondary border border-border text-primary-200 ">
                         <Icon name="lock" size="sm" />
                       </span>
                       <span class="flex-1 text-left">{{ t('admin.tlsFingerprintProfiles.title') }}</span>

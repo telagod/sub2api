@@ -9,7 +9,7 @@
       <!-- Refund Request Info -->
       <div
         v-if="order?.refund_requested_at || order?.refund_request_reason"
-        class="rounded-md border border-border bg-metal-surface p-3"
+        class="rounded-md border border-border bg-card p-3"
       >
         <div class="flex items-center gap-2 text-sm font-medium text-foreground">
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -85,7 +85,7 @@
         <!-- No deduction info -->
         <div
           v-if="!form.deduct_balance"
-          class="mt-2 rounded-md border border-border bg-metal-surface p-3 text-sm text-foreground/85"
+          class="mt-2 rounded-md border border-border bg-card p-3 text-sm text-foreground/85"
         >
           {{ t('payment.admin.noDeduction') }}
         </div>

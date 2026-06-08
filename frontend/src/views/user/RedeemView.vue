@@ -3,9 +3,9 @@
     <div class="mx-auto max-w-2xl space-y-6">
       <!-- Current Balance Card -->
       <div class="card overflow-hidden">
-        <div class="bg-metal-silver px-6 py-8 text-center">
+        <div class="bg-foreground px-6 py-8 text-center">
           <div
-            class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-metal-raised shadow-metal-edge"
+            class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-secondary "
           >
             <Icon name="creditCard" size="xl" class="text-primary-200" />
           </div>
@@ -169,7 +169,7 @@
         <div class="p-6">
           <div class="flex items-start gap-4">
             <div
-              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge"
+              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-border bg-secondary "
             >
               <Icon name="infoCircle" size="md" class="text-primary-200" />
             </div>
@@ -186,7 +186,7 @@
                   {{ t('redeem.codeRule3') }}
                   <span
                     v-if="contactInfo"
-                    class="ml-1.5 inline-flex items-center rounded-md border border-border bg-metal-raised px-2 py-0.5 text-xs font-medium text-primary-200"
+                    class="ml-1.5 inline-flex items-center rounded-md border border-border bg-secondary px-2 py-0.5 text-xs font-medium text-primary-200"
                   >
                     {{ contactInfo }}
                   </span>
@@ -230,12 +230,12 @@
             <div
               v-for="item in history"
               :key="item.id"
-              class="flex items-center justify-between rounded-md bg-metal-surface p-4"
+              class="flex items-center justify-between rounded-md bg-card p-4"
             >
               <div class="flex items-center gap-4">
                 <div
                   :class="[
-                    'flex h-10 w-10 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge',
+                    'flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary ',
                     isBalanceType(item.type)
                       ? item.value >= 0
                         ? ''
@@ -327,7 +327,7 @@
           <!-- Empty State -->
           <div v-else class="empty-state py-8">
             <div
-              class="mb-4 flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-metal-raised shadow-metal-edge"
+              class="mb-4 flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-secondary "
             >
               <Icon name="clock" size="xl" class="text-primary-200" />
             </div>

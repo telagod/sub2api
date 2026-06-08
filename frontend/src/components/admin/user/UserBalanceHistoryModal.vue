@@ -5,7 +5,7 @@
       <div class="rounded-md bg-muted p-4">
         <!-- Row 1: avatar + email/username/created_at (left) + current balance (right) -->
         <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-metal-raised border border-border shadow-metal-edge">
+          <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-secondary border border-border ">
             <span class="text-lg font-medium text-primary-200">
               {{ user.email.charAt(0).toUpperCase() }}
             </span>
@@ -18,7 +18,7 @@
               </span>
               <span
                 v-if="user.username"
-                class="flex-shrink-0 rounded bg-metal-raised border border-border px-1.5 py-0.5 text-xs text-primary-200"
+                class="flex-shrink-0 rounded bg-secondary border border-border px-1.5 py-0.5 text-xs text-primary-200"
               >
                 {{ user.username }}
               </span>

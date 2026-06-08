@@ -13,7 +13,7 @@
           :aria-selected="window === opt.value"
           class="px-3 py-1 rounded transition-colors"
           :class="window === opt.value
-            ? 'bg-metal-raised shadow-metal-edge text-foreground font-semibold'
+            ? 'bg-secondary  text-foreground font-semibold'
             : 'text-muted-foreground hover:text-foreground'"
           @click="emit('update:window', opt.value)"
         >

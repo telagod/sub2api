@@ -23,7 +23,7 @@
       </div>
 
       <div v-else-if="rules.length === 0" class="py-8 text-center">
-        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge">
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-secondary ">
           <Icon name="shield" size="lg" class="text-primary-200" />
         </div>
         <h4 class="mb-1 text-sm font-medium text-foreground">
@@ -64,7 +64,7 @@
           <tbody class="divide-y divide-border bg-card">
             <tr v-for="rule in rules" :key="rule.id" class="hover:bg-accent">
               <td class="whitespace-nowrap px-3 py-2">
-                <span class="inline-flex h-5 w-5 items-center justify-center rounded bg-metal-raised border border-border text-xs font-medium text-foreground/85">
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded bg-secondary border border-border text-xs font-medium text-foreground/85">
                   {{ rule.priority }}
                 </span>
               </td>

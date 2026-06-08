@@ -2,7 +2,7 @@
   <div
     :class="[
       'group relative flex flex-col overflow-hidden rounded-lg border transition-all',
-      'hover:shadow-metal hover:-translate-y-0.5',
+      'hover: hover:-translate-y-0.5',
       borderClass,
       'bg-card',
     ]"
@@ -63,7 +63,7 @@
           <span class="text-muted-foreground">{{ t('payment.planCard.models') }}</span>
           <div class="flex flex-wrap justify-end gap-1">
             <span v-for="scope in modelScopeLabels" :key="scope"
-              class="rounded bg-metal-raised border border-border px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
+              class="rounded bg-secondary border border-border px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
               {{ scope }}
             </span>
           </div>

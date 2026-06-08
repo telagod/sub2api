@@ -17,7 +17,7 @@
         v-if="hiddenCount > 0"
         ref="moreButtonRef"
         @click.stop="showPopover = !showPopover"
-        class="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs font-medium bg-metal-raised border border-border text-foreground/85 hover:bg-accent transition-colors cursor-pointer whitespace-nowrap"
+        class="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs font-medium bg-secondary border border-border text-foreground/85 hover:bg-accent transition-colors cursor-pointer whitespace-nowrap"
       >
         <span>+{{ hiddenCount }}</span>
       </button>
@@ -36,7 +36,7 @@
         <div
           v-if="showPopover"
           ref="popoverRef"
-          class="fixed z-50 min-w-48 max-w-96 rounded-lg border border-border bg-metal-surface p-3 shadow-metal-lg"
+          class="fixed z-50 min-w-48 max-w-96 rounded-lg border border-border bg-card p-3 shadow-lg"
           :style="popoverStyle"
         >
           <div class="mb-2 flex items-center justify-between">

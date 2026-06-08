@@ -79,7 +79,7 @@
     }"
   >
     <table class="w-full min-w-max divide-y divide-border">
-      <thead class="table-header bg-metal-raised">
+      <thead class="table-header bg-card">
         <tr>
           <th
             v-for="(column, index) in columns"

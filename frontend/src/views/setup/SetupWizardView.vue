@@ -6,7 +6,7 @@
       <!-- Logo & Title -->
       <div class="mb-8 text-center">
         <div
-          class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-metal-raised shadow-metal-edge"
+          class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-secondary "
         >
           <Icon name="cog" size="xl" class="text-primary-200" />
         </div>
@@ -23,10 +23,10 @@
                 :class="[
                   'flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all',
                   currentStep > index
-                    ? 'bg-metal-silver text-foreground'
+                    ? 'bg-foreground text-foreground'
                     : currentStep === index
-                      ? 'bg-metal-silver text-foreground ring-4 ring-border'
-                      : 'border border-border bg-metal-raised text-muted-foreground'
+                      ? 'bg-foreground text-foreground ring-4 ring-border'
+                      : 'border border-border bg-secondary text-muted-foreground'
                 ]"
               >
                 <Icon
@@ -51,14 +51,14 @@
             <div
               v-if="index < steps.length - 1"
               class="mx-3 h-0.5 w-12"
-              :class="currentStep > index ? 'bg-metal-silver' : 'bg-border'"
+              :class="currentStep > index ? 'bg-foreground' : 'bg-border'"
             ></div>
           </template>
         </div>
       </div>
 
       <!-- Step Content -->
-      <div class="rounded-lg border border-border bg-card p-8 shadow-metal">
+      <div class="rounded-lg border border-border bg-card p-8 ">
         <!-- Step 1: Database -->
         <div v-if="currentStep === 0" class="space-y-6">
           <div class="mb-6 text-center">

@@ -29,7 +29,7 @@
         </div>
       </div>
 
-      <div v-if="form.provider === PROVIDER_OPENAI" class="rounded-md border border-border bg-metal-surface p-3">
+      <div v-if="form.provider === PROVIDER_OPENAI" class="rounded-md border border-border bg-card p-3">
         <label class="input-label">{{ t('admin.channelMonitor.form.apiMode') }}</label>
         <div class="grid gap-3 sm:grid-cols-2">
           <button
@@ -115,7 +115,7 @@
       </div>
 
       <!-- 高级设置区：请求模板 + 自定义 headers/body -->
-      <details class="rounded-md border border-border bg-metal-surface p-3">
+      <details class="rounded-md border border-border bg-card p-3">
         <summary class="cursor-pointer text-sm font-medium text-foreground/85">
           {{ t('admin.channelMonitor.advanced.section') }}
         </summary>

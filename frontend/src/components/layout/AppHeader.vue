@@ -74,7 +74,7 @@
             class="flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-accent"
             aria-label="User Menu"
           >
-            <div class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md border border-border bg-metal-raised text-sm font-medium text-foreground shadow-metal-edge">
+            <div class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md border border-border bg-secondary text-sm font-medium text-foreground ">
               <img
                 v-if="avatarUrl"
                 :src="avatarUrl"

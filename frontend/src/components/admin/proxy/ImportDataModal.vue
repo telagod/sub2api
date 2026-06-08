@@ -56,7 +56,7 @@
             {{ t('admin.proxies.dataImportErrors') }}
           </div>
           <div
-            class="mt-2 max-h-48 overflow-auto rounded-md bg-metal-surface p-3 font-mono text-xs"
+            class="mt-2 max-h-48 overflow-auto rounded-md bg-card p-3 font-mono text-xs"
           >
             <div v-for="(item, idx) in errorItems" :key="idx" class="whitespace-pre-wrap">
               {{ item.kind }} {{ item.name || item.proxy_key || '-' }} — {{ item.message }}

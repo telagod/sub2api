@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-4 flex items-center justify-between rounded-md border border-border bg-metal-surface p-3">
+  <div class="mb-4 flex items-center justify-between rounded-md border border-border bg-card p-3">
     <div class="flex flex-wrap items-center gap-2">
       <span v-if="selectedIds.length > 0" class="text-sm font-medium text-foreground">
         {{ t('admin.accounts.bulkActions.selected', { count: selectedIds.length }) }}

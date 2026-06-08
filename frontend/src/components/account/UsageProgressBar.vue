@@ -6,18 +6,18 @@
       class="mb-0.5 flex items-center"
     >
       <div class="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-        <span class="rounded bg-metal-raised px-1.5 py-0.5">
+        <span class="rounded bg-secondary px-1.5 py-0.5">
           {{ formatRequests }} req
         </span>
-        <span class="rounded bg-metal-raised px-1.5 py-0.5">
+        <span class="rounded bg-secondary px-1.5 py-0.5">
           {{ formatTokens }}
         </span>
-        <span class="rounded bg-metal-raised px-1.5 py-0.5" :title="t('usage.accountBilled')">
+        <span class="rounded bg-secondary px-1.5 py-0.5" :title="t('usage.accountBilled')">
           A ${{ formatAccountCost }}
         </span>
         <span
           v-if="windowStats?.user_cost != null"
-          class="rounded bg-metal-raised px-1.5 py-0.5"
+          class="rounded bg-secondary px-1.5 py-0.5"
           :title="t('usage.userBilled')"
         >
           U ${{ formatUserCost }}

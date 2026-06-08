@@ -237,14 +237,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="rounded-lg bg-card p-6 shadow-metal-edge border border-border">
+  <div class="rounded-lg bg-card p-6  border border-border">
     <div class="mb-4 flex items-start justify-between gap-4">
       <div>
         <h3 class="text-sm font-bold text-foreground">{{ t('admin.ops.runtime.title') }}</h3>
         <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.ops.runtime.description') }}</p>
       </div>
       <button
-        class="flex items-center gap-1.5 rounded-md bg-metal-raised border border-border px-3 py-1.5 text-xs font-bold text-foreground/85 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+        class="flex items-center gap-1.5 rounded-md bg-secondary border border-border px-3 py-1.5 text-xs font-bold text-foreground/85 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
         :disabled="loading"
         @click="loadSettings"
       >

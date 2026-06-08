@@ -12,9 +12,9 @@
         <EmptyState :title="t('dashboard.noUsageRecords')" :description="t('dashboard.startUsingApi')" />
       </div>
       <div v-else class="space-y-3">
-        <div v-for="log in data" :key="log.id" class="flex items-center justify-between rounded-md bg-metal-surface p-4 transition-colors hover:bg-accent">
+        <div v-for="log in data" :key="log.id" class="flex items-center justify-between rounded-md bg-card p-4 transition-colors hover:bg-accent">
           <div class="flex items-center gap-4">
-            <div class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge">
+            <div class="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary ">
               <Icon name="beaker" size="md" class="text-primary-200" />
             </div>
             <div>

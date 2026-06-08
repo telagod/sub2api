@@ -65,7 +65,7 @@
               <span>{{ row.key_name || '-' }}</span>
               <span
                 v-if="row.key_deleted"
-                class="ml-1 inline-flex items-center rounded px-1 py-px text-[10px] font-medium leading-tight bg-metal-raised border border-border text-muted-foreground"
+                class="ml-1 inline-flex items-center rounded px-1 py-px text-[10px] font-medium leading-tight bg-secondary border border-border text-muted-foreground"
               >{{ t('usage.errors.keyDeleted') }}</span>
             </td>
             <td class="px-4 py-2">{{ row.inbound_endpoint || '-' }}</td>

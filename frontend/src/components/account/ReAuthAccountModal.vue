@@ -13,7 +13,7 @@
         <div class="flex items-center gap-3">
           <div
             :class="[
-              'flex h-10 w-10 items-center justify-center rounded-md border border-border bg-metal-raised shadow-metal-edge',
+              'flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary ',
               isOpenAILike
                 ? ''
                 : isGemini
@@ -81,7 +81,7 @@
         <div class="flex items-center gap-3">
           <div
             :class="[
-              'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-metal-raised text-primary-200 shadow-metal-edge',
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-secondary text-primary-200 ',
               geminiOAuthType === 'google_one'
                 ? ''
                 : geminiOAuthType === 'code_assist'

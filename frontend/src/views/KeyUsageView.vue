@@ -4,7 +4,7 @@
     <header class="relative z-20 px-6 py-4">
       <nav class="mx-auto flex max-w-6xl items-center justify-between">
         <router-link to="/home" class="flex items-center gap-3">
-          <div class="h-10 w-10 overflow-hidden rounded-md shadow-metal">
+          <div class="h-10 w-10 overflow-hidden rounded-md ">
             <img :src="siteLogo || '/logo.svg'" alt="Logo" class="h-full w-full object-contain" />
           </div>
           <span class="text-lg font-semibold tracking-tight text-foreground">{{ siteName }}</span>
@@ -70,7 +70,7 @@
           <button
             @click="queryKey"
             :disabled="isQuerying"
-            class="h-12 px-7 rounded-md bg-metal-silver text-foreground font-medium text-sm shadow-metal-edge transition-all active:scale-[0.97] flex items-center gap-2 whitespace-nowrap disabled:opacity-60"
+            class="h-12 px-7 rounded-md bg-foreground text-foreground font-medium text-sm  transition-all active:scale-[0.97] flex items-center gap-2 whitespace-nowrap disabled:opacity-60"
           >
             <svg v-if="isQuerying" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity="0.25"/>
@@ -96,7 +96,7 @@
               @click="setDateRange(range.key)"
               class="text-xs px-3 py-1.5 rounded-md border transition-all"
               :class="currentRange === range.key
-                ? 'bg-metal-silver text-foreground border-border shadow-metal-edge'
+                ? 'bg-foreground text-foreground border-border '
                 : 'border-border bg-card text-foreground/85 hover:bg-accent'"
             >{{ range.label }}</button>
             <div v-if="currentRange === 'custom'" class="flex items-center gap-2 ml-1">
@@ -113,7 +113,7 @@
               />
               <button
                 @click="queryKey"
-                class="text-xs px-3 py-1.5 rounded-md bg-metal-silver text-foreground shadow-metal-edge"
+                class="text-xs px-3 py-1.5 rounded-md bg-foreground text-foreground "
               >{{ t('keyUsage.apply') }}</button>
             </div>
           </div>
@@ -125,16 +125,16 @@
         <!-- Loading Skeleton -->
         <div v-if="showLoading" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="rounded-lg border border-border bg-card p-8 shadow-metal">
+            <div class="rounded-lg border border-border bg-card p-8 ">
               <div class="skeleton h-5 w-24 mb-6"></div>
               <div class="flex justify-center"><div class="skeleton w-44 h-44 rounded-full"></div></div>
             </div>
-            <div class="rounded-lg border border-border bg-card p-8 shadow-metal">
+            <div class="rounded-lg border border-border bg-card p-8 ">
               <div class="skeleton h-5 w-24 mb-6"></div>
               <div class="flex justify-center"><div class="skeleton w-44 h-44 rounded-full"></div></div>
             </div>
           </div>
-          <div class="rounded-lg border border-border bg-card p-8 shadow-metal">
+          <div class="rounded-lg border border-border bg-card p-8 ">
             <div class="skeleton h-5 w-32 mb-6"></div>
             <div class="space-y-4">
               <div class="skeleton h-4 w-full"></div>
@@ -149,7 +149,7 @@
         <div v-else-if="resultData" class="space-y-6">
           <!-- Status Badge -->
           <div v-if="statusInfo" class="fade-up flex items-center justify-center mb-2">
-            <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border bg-card shadow-metal-edge">
+            <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border bg-card ">
               <span
                 class="w-2.5 h-2.5 rounded-full pulse-dot"
                 :class="statusInfo.isActive ? 'bg-emerald-400' : 'bg-red-400'"
@@ -165,7 +165,7 @@
             <div
               v-for="(ring, i) in ringItems"
               :key="i"
-              class="fade-up rounded-lg border border-border bg-card p-8 shadow-metal transition-all duration-300 hover:shadow-metal-edge"
+              class="fade-up rounded-lg border border-border bg-card p-8  transition-all duration-300 hover:"
               :class="`fade-up-delay-${Math.min(i + 1, 4)}`"
             >
               <div class="flex items-center justify-between mb-6">
@@ -232,7 +232,7 @@
           <!-- Detail Card -->
           <div
             v-if="detailRows.length > 0"
-            class="fade-up fade-up-delay-3 rounded-lg border border-border bg-card shadow-metal overflow-hidden"
+            class="fade-up fade-up-delay-3 rounded-lg border border-border bg-card  overflow-hidden"
           >
             <div class="px-8 py-5 border-b border-border">
               <h3 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{{ t('keyUsage.detailInfo') }}</h3>
@@ -265,7 +265,7 @@
           <!-- Usage Stats Card -->
           <div
             v-if="usageStatCells.length > 0"
-            class="fade-up fade-up-delay-3 rounded-lg border border-border bg-card shadow-metal overflow-hidden"
+            class="fade-up fade-up-delay-3 rounded-lg border border-border bg-card  overflow-hidden"
           >
             <div class="px-8 py-5 border-b border-border">
               <h3 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{{ t('keyUsage.tokenStats') }}</h3>
@@ -285,7 +285,7 @@
           <!-- Daily Usage Table -->
           <div
             v-if="showDailyUsage"
-            class="fade-up fade-up-delay-4 rounded-lg border border-border bg-card shadow-metal overflow-hidden"
+            class="fade-up fade-up-delay-4 rounded-lg border border-border bg-card  overflow-hidden"
           >
             <div class="flex flex-col gap-3 px-8 py-5 border-b border-border sm:flex-row sm:items-center sm:justify-between">
               <h3 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{{ t('keyUsage.dailyDetail') }}</h3>
@@ -296,7 +296,7 @@
                   @click="setDailyUsageDays(option.value)"
                   class="min-w-12 rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
                   :class="dailyUsageDays === option.value
-                    ? 'bg-metal-silver text-foreground shadow-metal-edge'
+                    ? 'bg-foreground text-foreground '
                     : 'text-foreground/85 hover:bg-accent'"
                 >
                   {{ option.label }}
@@ -341,7 +341,7 @@
           <!-- Model Stats Table -->
           <div
             v-if="modelStats.length > 0"
-            class="fade-up fade-up-delay-4 rounded-lg border border-border bg-card shadow-metal overflow-hidden"
+            class="fade-up fade-up-delay-4 rounded-lg border border-border bg-card  overflow-hidden"
           >
             <div class="px-8 py-5 border-b border-border">
               <h3 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{{ t('keyUsage.modelStats') }}</h3>

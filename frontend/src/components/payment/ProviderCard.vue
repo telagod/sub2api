@@ -14,7 +14,7 @@
       <div class="flex items-center gap-3">
         <div :class="[
           'rounded-md border border-border p-1.5',
-          provider.enabled && enabled ? 'bg-metal-raised shadow-metal-edge' : 'bg-metal-surface',
+          provider.enabled && enabled ? 'bg-secondary ' : 'bg-card',
         ]">
           <Icon
             name="server"

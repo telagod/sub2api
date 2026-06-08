@@ -181,7 +181,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="rounded-lg bg-card p-6 shadow-metal border border-border">
+  <div class="rounded-lg bg-card p-6  border border-border">
     <div class="mb-4 flex items-start justify-between gap-4">
       <div>
         <h3 class="text-sm font-bold text-foreground">{{ t('admin.ops.email.title') }}</h3>
@@ -189,7 +189,7 @@ onMounted(() => {
       </div>
       <div class="flex items-center gap-2">
         <button
-          class="flex items-center gap-1.5 rounded-md bg-metal-raised px-3 py-1.5 text-xs font-bold text-foreground/85 border border-border transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+          class="flex items-center gap-1.5 rounded-md bg-secondary px-3 py-1.5 text-xs font-bold text-foreground/85 border border-border transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="loading"
           @click="loadConfig"
         >
@@ -298,7 +298,7 @@ onMounted(() => {
               <span
                 v-for="email in draft.alert.recipients"
                 :key="email"
-                class="inline-flex items-center gap-2 rounded-full bg-metal-raised px-3 py-1 text-xs font-medium text-primary-200 border border-border shadow-metal-edge"
+                class="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-primary-200 border border-border "
               >
                 {{ email }}
                 <button
@@ -363,7 +363,7 @@ onMounted(() => {
               <span
                 v-for="email in draft.report.recipients"
                 :key="email"
-                class="inline-flex items-center gap-2 rounded-full bg-metal-raised px-3 py-1 text-xs font-medium text-primary-200 border border-border shadow-metal-edge"
+                class="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-primary-200 border border-border "
               >
                 {{ email }}
                 <button

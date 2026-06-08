@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <button type="button" :disabled="buttonDisabled" class="btn btn-secondary w-full" @click="startLogin">
       <span
-        class="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-metal-raised border border-border text-xs font-semibold text-primary-200 shadow-metal-edge"
+        class="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-secondary border border-border text-xs font-semibold text-primary-200 "
       >
         W
       </span>

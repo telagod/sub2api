@@ -3,7 +3,7 @@
     <header class="border-b border-border bg-card">
       <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
         <RouterLink to="/home" class="flex min-w-0 items-center gap-3">
-          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-metal-raised shadow-metal-edge">
+          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-secondary ">
             <img :src="siteLogo || '/logo.svg'" alt="Logo" class="h-full w-full object-contain" />
           </span>
           <span class="truncate text-base font-semibold text-foreground">
@@ -12,7 +12,7 @@
         </RouterLink>
         <RouterLink
           to="/login"
-          class="inline-flex flex-shrink-0 items-center justify-center rounded-md bg-metal-silver px-4 py-2 text-sm font-semibold text-foreground shadow-metal-edge transition hover:bg-metal-raised"
+          class="inline-flex flex-shrink-0 items-center justify-center rounded-md bg-foreground px-4 py-2 text-sm font-semibold text-foreground  transition hover:bg-secondary"
         >
           登录
         </RouterLink>
@@ -37,7 +37,7 @@
         class="rounded-lg border border-border bg-card p-6"
       >
         <div class="flex items-start gap-3">
-          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-border bg-metal-raised text-primary-200 shadow-metal-edge">
+          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-border bg-secondary text-primary-200 ">
             <Icon name="document" size="sm" />
           </span>
           <div>
@@ -52,7 +52,7 @@
       <article v-else>
         <div class="mb-8 border-b border-border pb-6">
           <div class="flex items-start gap-4">
-            <span class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md border border-border bg-metal-raised text-primary-200 shadow-metal-edge">
+            <span class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md border border-border bg-secondary text-primary-200 ">
               <Icon :name="documentIcon" size="md" />
             </span>
             <div class="min-w-0">
@@ -212,7 +212,7 @@ onMounted(async () => {
 }
 
 .legal-document-content :deep(pre) {
-  @apply my-5 overflow-x-auto rounded-md bg-metal-surface p-4 text-foreground;
+  @apply my-5 overflow-x-auto rounded-md bg-card p-4 text-foreground;
 }
 
 .legal-document-content :deep(pre code) {

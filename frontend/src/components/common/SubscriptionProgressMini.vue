@@ -3,7 +3,7 @@
     <!-- Mini Progress Display -->
     <button
       @click="toggleTooltip"
-      class="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-metal-raised px-3 py-1.5 shadow-metal-edge transition-colors hover:bg-accent"
+      class="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-secondary px-3 py-1.5  transition-colors hover:bg-accent"
       :title="t('subscriptionProgress.viewDetails')"
     >
       <Icon name="creditCard" size="sm" class="text-primary-200" />
@@ -27,7 +27,7 @@
     <transition name="dropdown">
       <div
         v-if="tooltipOpen"
-        class="absolute right-0 z-50 mt-2 w-[340px] overflow-hidden rounded-lg border border-border bg-card shadow-metal"
+        class="absolute right-0 z-50 mt-2 w-[340px] overflow-hidden rounded-lg border border-border bg-card "
       >
         <div class="border-b border-border p-3">
           <h3 class="text-sm font-semibold text-foreground">

@@ -27,7 +27,7 @@
       <div class="mb-8 text-center">
         <template v-if="settingsLoaded">
           <div
-            class="mb-4 inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-border bg-metal-raised p-2 shadow-metal-edge"
+            class="mb-4 inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-border bg-secondary p-2 "
           >
             <img :src="siteLogo || '/logo.svg'" alt="Logo" class="h-full w-full object-contain" />
           </div>
@@ -41,7 +41,7 @@
       </div>
 
       <!-- 金属卡片（gunmetal + 边缘高光 + 拉丝扫光） -->
-      <div class="metal-sheen rounded-lg border border-border bg-metal-surface p-8 shadow-metal-lg metal-card">
+      <div class="metal-sheen rounded-lg border border-border bg-card p-8 shadow-lg metal-card">
         <slot />
       </div>
 

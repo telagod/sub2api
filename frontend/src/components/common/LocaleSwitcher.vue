@@ -19,7 +19,7 @@
     <transition name="dropdown">
       <div
         v-if="isOpen"
-        class="absolute right-0 z-50 mt-1 w-32 overflow-hidden rounded-md border border-border bg-card shadow-metal"
+        class="absolute right-0 z-50 mt-1 w-32 overflow-hidden rounded-md border border-border bg-card "
       >
         <button
           v-for="locale in availableLocales"
