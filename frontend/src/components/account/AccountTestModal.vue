@@ -81,10 +81,10 @@
       <div class="group relative">
         <div
           ref="terminalRef"
-          class="max-h-[240px] min-h-[120px] overflow-y-auto rounded-md border border-border bg-gray-900 p-4 font-mono text-sm dark:bg-black"
+          class="max-h-[240px] min-h-[120px] overflow-y-auto rounded-md border border-border bg-background p-4 font-mono text-sm dark:bg-black"
         >
           <!-- Status Line -->
-          <div v-if="status === 'idle'" class="flex items-center gap-2 text-gray-500">
+          <div v-if="status === 'idle'" class="flex items-center gap-2 text-muted-foreground">
             <Icon name="play" size="sm" :stroke-width="2" />
             <span>{{ t('admin.accounts.readyToTest') }}</span>
           </div>
@@ -106,14 +106,14 @@
           <!-- Result Status -->
           <div
             v-if="status === 'success'"
-            class="mt-3 flex items-center gap-2 border-t border-gray-700 pt-3 text-green-400"
+            class="mt-3 flex items-center gap-2 border-t border-border pt-3 text-green-400"
           >
             <Icon name="check" size="sm" :stroke-width="2" />
             <span>{{ t('admin.accounts.testCompleted') }}</span>
           </div>
           <div
             v-else-if="status === 'error'"
-            class="mt-3 flex items-center gap-2 border-t border-gray-700 pt-3 text-red-400"
+            class="mt-3 flex items-center gap-2 border-t border-border pt-3 text-red-400"
           >
             <Icon name="x" size="sm" :stroke-width="2" />
             <span>{{ errorMessage }}</span>
@@ -391,7 +391,7 @@ const abortStream = () => {
   }
 }
 
-const addLine = (text: string, className: string = 'text-gray-300') => {
+const addLine = (text: string, className: string = 'text-foreground/75') => {
   outputLines.value.push({ text, class: className })
   scrollToBottom()
 }
@@ -409,8 +409,8 @@ const startTest = async () => {
   resetState()
   status.value = 'connecting'
   addLine(t('admin.accounts.startingTestForAccount', { name: props.account.name }), 'text-blue-400')
-  addLine(t('admin.accounts.testAccountTypeLabel', { type: props.account.type }), 'text-gray-400')
-  addLine('', 'text-gray-300')
+  addLine(t('admin.accounts.testAccountTypeLabel', { type: props.account.type }), 'text-muted-foreground')
+  addLine('', 'text-foreground/75')
 
   abortStream()
 
@@ -500,9 +500,9 @@ const handleEvent = (event: {
         supportsImageTest.value
             ? t('admin.accounts.sendingImageRequest')
             : t('admin.accounts.sendingTestMessage'),
-        'text-gray-400'
+        'text-muted-foreground'
       )
-      addLine('', 'text-gray-300')
+      addLine('', 'text-foreground/75')
       addLine(t('admin.accounts.response'), 'text-yellow-400')
       break
 

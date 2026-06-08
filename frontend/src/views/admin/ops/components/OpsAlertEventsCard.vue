@@ -330,16 +330,16 @@ function severityBadgeClass(severity: string | undefined): string {
   if (s === 'p0' || s === 'critical') return 'bg-red-500/10 text-red-400'
   if (s === 'p1' || s === 'warning') return 'bg-amber-500/10 text-amber-400'
   if (s === 'p2' || s === 'info') return 'bg-sky-500/10 text-sky-400'
-  if (s === 'p3') return 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-gray-300'
-  return 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-gray-300'
+  if (s === 'p3') return 'bg-muted text-foreground/85 dark:bg-dark-700 dark:text-foreground/75'
+  return 'bg-muted text-foreground/85 dark:bg-dark-700 dark:text-foreground/75'
 }
 
 function statusBadgeClass(status: string | undefined): string {
   const s = String(status || '').trim().toLowerCase()
   if (s === 'firing') return 'bg-red-50 text-red-400 ring-red-600/20 dark:ring-red-500/30'
   if (s === 'resolved') return 'bg-green-50 text-emerald-400 ring-green-600/20 dark:ring-green-500/30'
-  if (s === 'manual_resolved') return 'bg-slate-50 text-slate-700 ring-slate-600/20 dark:bg-slate-900/30 dark:text-slate-300 dark:ring-slate-500/30'
-  return 'bg-gray-50 text-gray-700 ring-gray-600/20 dark:bg-gray-900/30 dark:text-gray-300 dark:ring-gray-500/30'
+  if (s === 'manual_resolved') return 'bg-slate-50 text-slate-700 ring-slate-600/20 dark:bg-background/30 dark:text-foreground/75 dark:ring-slate-500/30'
+  return 'bg-card text-foreground/85 ring-gray-600/20 dark:bg-background/30 dark:text-foreground/75 dark:ring-gray-500/30'
 }
 
 function formatStatusLabel(status: string | undefined): string {

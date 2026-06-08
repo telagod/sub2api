@@ -328,7 +328,7 @@ function getExpirationClass(expiresAt: string): string {
   if (days <= 0) return 'text-red-400 font-medium'
   if (days <= 3) return 'text-red-400'
   if (days <= 7) return 'text-orange-600 dark:text-orange-400'
-  return 'text-gray-700 dark:text-gray-300'
+  return 'text-foreground/85'
 }
 
 function formatDurationParts(parts: RemainingDurationParts): string {

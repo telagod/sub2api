@@ -341,15 +341,15 @@ const UserCell = defineComponent({
   emits: ['open'],
   setup(cellProps, { emit }) {
     return () => h('div', { class: 'space-y-0.5' }, [
-      h('div', { class: 'font-mono text-sm text-gray-900 dark:text-white' }, `#${cellProps.id}`),
+      h('div', { class: 'font-mono text-sm text-foreground dark:text-white' }, `#${cellProps.id}`),
       h(cellProps.clickable ? 'button' : 'div', {
         class: cellProps.clickable
           ? 'max-w-56 truncate text-left text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline dark:text-primary-400 dark:hover:text-primary-300'
-          : 'max-w-56 truncate text-sm text-gray-700 dark:text-gray-300',
+          : 'max-w-56 truncate text-sm text-foreground/85',
         type: cellProps.clickable ? 'button' : undefined,
         onClick: cellProps.clickable ? () => emit('open', cellProps.id) : undefined,
       }, cellProps.email || '-'),
-      h('div', { class: 'max-w-56 truncate text-sm text-gray-500 dark:text-dark-400' }, cellProps.username || '-'),
+      h('div', { class: 'max-w-56 truncate text-sm text-muted-foreground dark:text-dark-400' }, cellProps.username || '-'),
     ])
   },
 })
@@ -363,7 +363,7 @@ const AmountText = defineComponent({
     return () => h('span', {
       class: amountProps.strong
         ? 'text-sm font-semibold text-emerald-400'
-        : 'text-sm text-gray-900 dark:text-white',
+        : 'text-sm text-foreground dark:text-white',
     }, `$${formatAmount(amountProps.value)}`)
   },
 })
@@ -376,7 +376,7 @@ const NullableAmountText = defineComponent({
     return () => {
       const value = amountProps.value
       if (value === null || value === undefined) {
-        return h('span', { class: 'text-sm text-gray-400 dark:text-dark-500' }, '-')
+        return h('span', { class: 'text-sm text-muted-foreground dark:text-dark-500' }, '-')
       }
       return h(AmountText, { value })
     }
@@ -390,12 +390,12 @@ const OverviewStat = defineComponent({
     mono: { type: Boolean, default: false },
   },
   setup(statProps) {
-    return () => h('div', { class: 'rounded-lg border border-gray-100 bg-white p-3 dark:border-dark-700 dark:bg-dark-900' }, [
-      h('div', { class: 'text-sm text-gray-500 dark:text-dark-400' }, statProps.label),
+    return () => h('div', { class: 'rounded-lg border border-border bg-white p-3  dark:bg-dark-900' }, [
+      h('div', { class: 'text-sm text-muted-foreground dark:text-dark-400' }, statProps.label),
       h('div', {
         class: statProps.mono
-          ? 'mt-1 font-mono text-base font-semibold text-gray-900 dark:text-white'
-          : 'mt-1 text-base font-semibold text-gray-900 dark:text-white',
+          ? 'mt-1 font-mono text-base font-semibold text-foreground dark:text-white'
+          : 'mt-1 text-base font-semibold text-foreground dark:text-white',
       }, statProps.value),
     ])
   },
