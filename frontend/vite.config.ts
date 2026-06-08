@@ -81,8 +81,13 @@ export default defineConfig(({ mode }) => {
               return 'vendor-vue'
             }
 
-            // UI 工具库（较大，单独分离）
-            if (id.includes('/@vueuse/') || id.includes('/xlsx/')) {
+            // shadcn-vue 底层(reka-ui)必须与 Vue 同 chunk,避免循环依赖导致白屏
+            if (id.includes('/reka-ui/') || id.includes('/@vueuse/')) {
+              return 'vendor-vue'
+            }
+
+            // 大型工具库单独分离
+            if (id.includes('/xlsx/')) {
               return 'vendor-ui'
             }
 
