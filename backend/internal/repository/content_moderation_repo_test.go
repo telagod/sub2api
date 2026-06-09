@@ -13,7 +13,7 @@ import (
 )
 
 func TestBuildContentModerationLogWhere_BlockedIncludesAllBlockActions(t *testing.T) {
-	where, args := buildContentModerationLogWhere(service.ContentModerationLogFilter{Result: "blocked"})
+	where, args := composeLogFilterClauses(service.ContentModerationLogFilter{Result: "blocked"})
 
 	require.Empty(t, args)
 	sql := strings.Join(where, " AND ")
