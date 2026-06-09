@@ -1621,8 +1621,9 @@ func (h *AuthHandler) bindPendingOAuthLogin(c *gin.Context, provider string) {
 	}
 
 	h.authService.RecordSuccessfulLogin(c.Request.Context(), user.ID)
-	// bindPendingOAuthLogin = 绑定已有账户登录，不动 users.username（用户已有自己的名字）
-	h.maybeSyncDingTalkAfterLogin(c.Request.Context(), session, user.ID)
+	if h.postLoginSyncer != nil {
+		h.postLoginSyncer.SyncAfterLogin(c.Request.Context(), session.ProviderType, user.ID, session.UpstreamIdentityClaims)
+	}
 	tokenPair, err := h.authService.GenerateTokenPair(c.Request.Context(), user, "")
 	if err != nil {
 		response.InternalError(c, "Failed to generate token pair")
@@ -1821,8 +1822,9 @@ func (h *AuthHandler) createPendingOAuthAccount(c *gin.Context, provider string)
 	}
 
 	h.authService.RecordSuccessfulLogin(c.Request.Context(), user.ID)
-	// createPendingOAuthAccount = 注册新账户，需要把钉钉昵称同步到 users.username 作为初始值
-	h.maybeSyncDingTalkAfterRegistration(c.Request.Context(), session, user.ID)
+	if h.postLoginSyncer != nil {
+		h.postLoginSyncer.SyncAfterRegistration(c.Request.Context(), session.ProviderType, user.ID, session.UpstreamIdentityClaims)
+	}
 	clearCookies()
 	writeOAuthTokenPairResponse(c, tokenPair)
 }

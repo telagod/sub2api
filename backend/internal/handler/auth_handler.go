@@ -8,8 +8,10 @@ import (
 
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/handler/dto"
+	"github.com/telagod/subme/internal/pkg/dingtalk"
 	infraerrors "github.com/telagod/subme/internal/pkg/errors"
 	"github.com/telagod/subme/internal/pkg/ip"
+	"github.com/telagod/subme/internal/pkg/oauthsync"
 	"github.com/telagod/subme/internal/pkg/response"
 	middleware2 "github.com/telagod/subme/internal/server/middleware"
 	"github.com/telagod/subme/internal/service"
@@ -28,8 +30,10 @@ type AuthHandler struct {
 	totpService          *service.TotpService
 	userAttributeService *service.UserAttributeService
 
-	dingTalkClientInstance *DingTalkClient
-	dingTalkClientMu       sync.Mutex
+	postLoginSyncer  oauthsync.PostLoginSyncer
+	dtClientInstance *dingtalk.Client
+	dtClientMu       sync.Mutex
+	dtClientKey      string
 }
 
 // NewAuthHandler creates a new AuthHandler
@@ -44,6 +48,10 @@ func NewAuthHandler(cfg *config.Config, authService *service.AuthService, userSe
 		totpService:          totpService,
 		userAttributeService: userAttributeService,
 	}
+}
+
+func (h *AuthHandler) SetPostLoginSyncer(s oauthsync.PostLoginSyncer) {
+	h.postLoginSyncer = s
 }
 
 // RegisterRequest represents the registration request payload
