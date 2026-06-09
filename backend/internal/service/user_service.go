@@ -973,7 +973,7 @@ func normalizeLoadedUserTokenVersion(user *User) {
 	if user == nil || user.TokenVersionResolved {
 		return
 	}
-	user.TokenVersion = resolvedTokenVersion(user)
+	user.TokenVersion = lookupdTokenVersion(user)
 	user.TokenVersionResolved = true
 }
 
@@ -1138,7 +1138,7 @@ func (s *UserService) SendNotifyEmailCode(ctx context.Context, userID int64, ema
 
 	// Send email first — if SMTP fails, don't write cache or increment counters,
 	// so the user is not locked out by cooldown/rate-limit for a code they never received.
-	if err := s.sendNotifyVerifyEmail(ctx, emailService, userID, email, code, firstEmailLocale(locale)); err != nil {
+	if err := s.sendNotifyVerifyEmail(ctx, emailService, userID, email, code, firstEmailLocaleV2(locale)); err != nil {
 		return err
 	}
 
@@ -1196,7 +1196,7 @@ func (s *UserService) sendNotifyVerifyEmail(ctx context.Context, emailService *E
 			Event:          NotificationEmailEventNotificationEmailVerifyCode,
 			Locale:         locale,
 			RecipientEmail: email,
-			RecipientName:  emailRecipientName(email),
+			RecipientName:  emailRecipientNameV2(email),
 			UserID:         userID,
 			Variables: map[string]string{
 				"verification_code":  code,

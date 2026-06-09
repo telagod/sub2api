@@ -533,5 +533,5 @@ func (s *TotpService) SendVerifyCode(ctx context.Context, userID int64, locale .
 	siteName := s.settingService.GetSiteName(ctx)
 
 	// Send verification code via queue
-	return s.emailQueueService.EnqueueVerifyCode(user.Email, siteName, firstEmailLocale(locale))
+	return s.emailQueueService.EnqueueVerifyCode(user.Email, siteName, firstEmailLocaleV2(locale))
 }

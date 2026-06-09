@@ -738,24 +738,24 @@ func (c *Client) FetchAvailableModels(ctx context.Context, accessToken, projectI
 
 func (c *Client) fetchAvailableModelsHTTPClient() *http.Client {
 	fetchClient := *c.httpClient
-	fetchClient.CheckRedirect = checkFetchAvailableModelsRedirect
+	fetchClient.CheckRedirect = checkModelFetchRedirect
 	return &fetchClient
 }
 
-func checkFetchAvailableModelsRedirect(req *http.Request, via []*http.Request) error {
+func checkModelFetchRedirect(req *http.Request, via []*http.Request) error {
 	if len(via) >= 10 {
 		return errors.New("stopped after 10 redirects")
 	}
 	if req == nil || req.URL == nil {
 		return errors.New("redirect url is nil")
 	}
-	if !isAllowedFetchAvailableModelsRedirectHost(req.URL.Hostname()) {
+	if !isModelFetchRedirectAllowed(req.URL.Hostname()) {
 		return fmt.Errorf("redirect to unsupported host: %s", req.URL.Hostname())
 	}
 	return nil
 }
 
-func isAllowedFetchAvailableModelsRedirectHost(host string) bool {
+func isModelFetchRedirectAllowed(host string) bool {
 	host = strings.ToLower(strings.TrimSpace(host))
 	if host == "" {
 		return false

@@ -100,8 +100,8 @@ func TestDeriveAnthropicCompatPromptCacheKey_StableAcrossLaterTurns(t *testing.T
 		},
 	}
 
-	k1 := deriveAnthropicCompatPromptCacheKey(base, "gpt-5.3-codex")
-	k2 := deriveAnthropicCompatPromptCacheKey(extended, "gpt-5.3-codex")
+	k1 := inferAnthropicCompatPromptCacheKey(base, "gpt-5.3-codex")
+	k2 := inferAnthropicCompatPromptCacheKey(extended, "gpt-5.3-codex")
 	require.NotEmpty(t, k1)
 	require.Equal(t, k1, k2, "cache key should stay stable as later Claude Code turns append history")
 }
@@ -128,8 +128,8 @@ func TestDeriveAnthropicCompatPromptCacheKey_UsesCacheControlAnchors(t *testing.
 		},
 	}
 
-	k1 := deriveAnthropicCompatPromptCacheKey(base, "gpt-5.4")
-	k2 := deriveAnthropicCompatPromptCacheKey(extended, "gpt-5.4")
+	k1 := inferAnthropicCompatPromptCacheKey(base, "gpt-5.4")
+	k2 := inferAnthropicCompatPromptCacheKey(extended, "gpt-5.4")
 	require.NotEmpty(t, k1)
 	require.Equal(t, k1, k2)
 	require.True(t, strings.HasPrefix(k1, "anthropic-cache-"))

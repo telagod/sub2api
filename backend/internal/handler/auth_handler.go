@@ -440,7 +440,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 	}
 
 	response.Success(c, UserResponse{
-		userProfileResponse: userProfileResponseFromService(user, identities),
+		userProfileResponse: userProfileResponseFromServiceV2(user, identities),
 		RunMode:             runMode,
 	})
 }

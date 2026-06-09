@@ -14,7 +14,7 @@ const dashboardStatsCacheKey = "dashboard:stats:v1"
 
 type dashboardCache struct {
 	rdb       *redis.Client
-	keyPrefix string
+	keyPrefixV2 string
 }
 
 func NewDashboardCache(rdb *redis.Client, cfg *config.Config) service.DashboardStatsCache {
@@ -27,7 +27,7 @@ func NewDashboardCache(rdb *redis.Client, cfg *config.Config) service.DashboardS
 	}
 	return &dashboardCache{
 		rdb:       rdb,
-		keyPrefix: prefix,
+		keyPrefixV2: prefix,
 	}
 }
 
@@ -47,10 +47,10 @@ func (c *dashboardCache) SetDashboardStats(ctx context.Context, data string, ttl
 }
 
 func (c *dashboardCache) buildKey() string {
-	if c.keyPrefix == "" {
+	if c.keyPrefixV2 == "" {
 		return dashboardStatsCacheKey
 	}
-	return c.keyPrefix + dashboardStatsCacheKey
+	return c.keyPrefixV2 + dashboardStatsCacheKey
 }
 
 func (c *dashboardCache) DeleteDashboardStats(ctx context.Context) error {

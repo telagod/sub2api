@@ -205,10 +205,10 @@ func TestClassifyOpsNoAvailableAccountsExcludedFromSLA(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
 
-	markOpsRoutingCapacityLimited(c)
+	markOpsRoutingCapacityLimitedV2(c)
 
 	errType := normalizeOpsErrorType("api_error", "")
-	phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(c, errType, message, "", http.StatusServiceUnavailable)
+	phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(c, errType, message, "", http.StatusServiceUnavailable)
 
 	require.Equal(t, "api_error", errType)
 	require.Equal(t, "routing", phase)
@@ -222,9 +222,9 @@ func TestClassifyOpsRoutingCapacityMarkerExcludesMaskedSelectionFailureFromSLA(t
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
 
-	markOpsRoutingCapacityLimited(c)
+	markOpsRoutingCapacityLimitedV2(c)
 
-	phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(
+	phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(
 		c,
 		"api_error",
 		"Service temporarily unavailable",
@@ -360,7 +360,7 @@ func TestClassifyOpsAuthClientErrorsExcludedFromSLA(t *testing.T) {
 			c, _ := gin.CreateTestContext(rec)
 
 			errType := normalizeOpsErrorType(tt.errType, tt.code)
-			phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(c, errType, tt.message, tt.code, tt.status)
+			phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(c, errType, tt.message, tt.code, tt.status)
 
 			require.Equal(t, "api_error", errType)
 			require.Equal(t, "auth", phase)
@@ -615,7 +615,7 @@ func TestClassifyOpsLocalBusinessLimitErrorsExcludedFromSLA(t *testing.T) {
 			c, _ := gin.CreateTestContext(rec)
 
 			errType := normalizeOpsErrorType(tt.errType, tt.code)
-			phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(c, errType, tt.message, tt.code, tt.status)
+			phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(c, errType, tt.message, tt.code, tt.status)
 
 			require.Equal(t, tt.wantErrType, errType)
 			require.Equal(t, tt.wantPhase, phase)
@@ -633,7 +633,7 @@ func TestClassifyOpsIPRestrictionAccessDeniedExcludedFromSLA(t *testing.T) {
 	service.MarkOpsClientBusinessLimited(c, service.OpsClientBusinessLimitedReasonIPRestriction)
 
 	errType := normalizeOpsErrorType("api_error", "ACCESS_DENIED")
-	phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(c, errType, "Access denied", "ACCESS_DENIED", http.StatusForbidden)
+	phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(c, errType, "Access denied", "ACCESS_DENIED", http.StatusForbidden)
 
 	require.Equal(t, "api_error", errType)
 	require.Equal(t, "auth", phase)
@@ -649,7 +649,7 @@ func TestClassifyOpsClientBusinessLimitedMarkerExcludesCustomPolicyDenialFromSLA
 	service.MarkOpsClientBusinessLimited(c, service.OpsClientBusinessLimitedReasonLocalPolicyDenied)
 
 	errType := normalizeOpsErrorType("invalid_request_error", "")
-	phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(c, errType, "custom admin policy message", "", http.StatusBadRequest)
+	phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(c, errType, "custom admin policy message", "", http.StatusBadRequest)
 
 	require.Equal(t, "invalid_request_error", errType)
 	require.Equal(t, "auth", phase)
@@ -664,7 +664,7 @@ func TestClassifyOpsOtherErrorsStillCountForSLA(t *testing.T) {
 	c, _ := gin.CreateTestContext(rec)
 
 	errType := normalizeOpsErrorType("api_error", "INTERNAL_ERROR")
-	phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(c, errType, "Failed to validate API key", "INTERNAL_ERROR", http.StatusInternalServerError)
+	phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(c, errType, "Failed to validate API key", "INTERNAL_ERROR", http.StatusInternalServerError)
 
 	require.Equal(t, "api_error", errType)
 	require.Equal(t, "internal", phase)
@@ -686,10 +686,10 @@ func TestClassifyOpsUnsupportedModelExcludedFromSLA(t *testing.T) {
 			gin.SetMode(gin.TestMode)
 			rec := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(rec)
-			markOpsRoutingCapacityLimited(c)
+			markOpsRoutingCapacityLimitedV2(c)
 
 			errType := normalizeOpsErrorType("api_error", "")
-			phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(c, errType, message, "", http.StatusServiceUnavailable)
+			phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(c, errType, message, "", http.StatusServiceUnavailable)
 
 			require.Equal(t, "api_error", errType)
 			require.Equal(t, "routing", phase)
@@ -705,7 +705,7 @@ func TestClassifyOpsUnmarkedNoAvailableTextStillCountsForSLA(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
 
-	phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(
+	phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(
 		c,
 		"api_error",
 		"No available accounts",
@@ -843,7 +843,7 @@ func TestClassifyOpsUpstreamAuthTextStillCountsForSLA(t *testing.T) {
 			c, _ := gin.CreateTestContext(rec)
 			service.SetOpsUpstreamError(c, tt.status, tt.message, "")
 
-			phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(
+			phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(
 				c,
 				"api_error",
 				tt.message,
@@ -865,7 +865,7 @@ func TestClassifyOpsUpstreamNoAvailableTextStillCountsForSLA(t *testing.T) {
 	c, _ := gin.CreateTestContext(rec)
 	service.SetOpsUpstreamError(c, http.StatusServiceUnavailable, "No available accounts", "")
 
-	phase, isBusinessLimited, errorOwner, errorSource := classifyOpsErrorLog(
+	phase, isBusinessLimited, errorOwner, errorSource := categorizeOpsErrorLog(
 		c,
 		"api_error",
 		"No available accounts",
@@ -938,7 +938,7 @@ func TestGetOpsAPIKeyFallsBackToOpsFallbackKey(t *testing.T) {
 	c, _ := gin.CreateTestContext(rec)
 
 	// 主 key 缺席（鉴权早退场景）：返回 nil。
-	require.Nil(t, getOpsAPIKey(c))
+	require.Nil(t, readOpsAPIKey(c))
 
 	// 写入 ops 专用 fallback key 后应能取到，且带齐 user/group。
 	groupID := int64(55)
@@ -950,7 +950,7 @@ func TestGetOpsAPIKeyFallsBackToOpsFallbackKey(t *testing.T) {
 	}
 	c.Set(string(middleware2.ContextKeyOpsFallbackAPIKey), apiKey)
 
-	got := getOpsAPIKey(c)
+	got := readOpsAPIKey(c)
 	require.NotNil(t, got)
 	require.Equal(t, int64(100), got.ID)
 	require.NotNil(t, got.User)
@@ -969,7 +969,7 @@ func TestGetOpsAPIKeyPrefersPrimaryContextKey(t *testing.T) {
 	c.Set(string(middleware2.ContextKeyAPIKey), primary)
 	c.Set(string(middleware2.ContextKeyOpsFallbackAPIKey), fallback)
 
-	got := getOpsAPIKey(c)
+	got := readOpsAPIKey(c)
 	require.NotNil(t, got)
 	require.Equal(t, int64(1), got.ID, "已鉴权请求应优先使用正式 api key")
 }

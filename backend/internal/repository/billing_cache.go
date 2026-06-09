@@ -334,15 +334,15 @@ func (c *billingCache) InvalidateAPIKeyRateLimit(ctx context.Context, keyID int6
 // user × platform quota 缓存
 // ============================================
 
-// userPlatformQuotaCacheKey 构造 Redis key
-func userPlatformQuotaCacheKey(userID int64, platform string) string {
+// userPlatformQuotaCacheKeyV2 构造 Redis key
+func userPlatformQuotaCacheKeyV2(userID int64, platform string) string {
 	return fmt.Sprintf("billing:user_platform_quota:%d:%s", userID, platform)
 }
 
-// parseUserPlatformQuotaHash 将 Redis HGETALL 返回的 map[string]string 反序列化为
+// decodeUserPlatformQuotaHash 将 Redis HGETALL 返回的 map[string]string 反序列化为
 // *service.UserPlatformQuotaCacheEntry。空 map（key 不存在）返回 nil。
 // GetUserPlatformQuotaCache 和 BatchGetUserPlatformQuotaCache 共用此函数，确保解析逻辑一致。
-func parseUserPlatformQuotaHash(m map[string]string) *service.UserPlatformQuotaCacheEntry {
+func decodeUserPlatformQuotaHash(m map[string]string) *service.UserPlatformQuotaCacheEntry {
 	if len(m) == 0 {
 		return nil
 	}
@@ -398,12 +398,12 @@ func parseUserPlatformQuotaHash(m map[string]string) *service.UserPlatformQuotaC
 }
 
 func (c *billingCache) GetUserPlatformQuotaCache(ctx context.Context, userID int64, platform string) (*service.UserPlatformQuotaCacheEntry, bool, error) {
-	key := userPlatformQuotaCacheKey(userID, platform)
+	key := userPlatformQuotaCacheKeyV2(userID, platform)
 	m, err := c.rdb.HGetAll(ctx, key).Result()
 	if err != nil {
 		return nil, false, err
 	}
-	entry := parseUserPlatformQuotaHash(m)
+	entry := decodeUserPlatformQuotaHash(m)
 	if entry == nil {
 		// 空 map → key 不存在 → MISS
 		return nil, false, nil
@@ -415,7 +415,7 @@ func (c *billingCache) SetUserPlatformQuotaCache(ctx context.Context, userID int
 	if entry == nil {
 		return nil
 	}
-	key := userPlatformQuotaCacheKey(userID, platform)
+	key := userPlatformQuotaCacheKeyV2(userID, platform)
 	pipe := c.rdb.TxPipeline()
 
 	// 浮点可空字段：nil → 空字符串（读取时 parseFloatPtr 返回 nil，表示无限额）
@@ -452,7 +452,7 @@ func (c *billingCache) SetUserPlatformQuotaCache(ctx context.Context, userID int
 }
 
 func (c *billingCache) DeleteUserPlatformQuotaCache(ctx context.Context, userID int64, platform string) error {
-	return c.rdb.Del(ctx, userPlatformQuotaCacheKey(userID, platform)).Err()
+	return c.rdb.Del(ctx, userPlatformQuotaCacheKeyV2(userID, platform)).Err()
 }
 
 // updateUserPlatformQuotaUsageScript 缓存累加：EXISTS + schema_version 双重守卫。
@@ -486,26 +486,26 @@ end
 return 1
 `
 
-// userPlatformQuotaDirtySetKey 返回脏集（dirty set）的 Redis key。
-// 使用与 userPlatformQuotaCacheKey 相同的前缀 "billing:"。
-func userPlatformQuotaDirtySetKey() string { return "billing:" + "upq:dirty" }
+// userPlatformQuotaDirtySetKeyV2 返回脏集（dirty set）的 Redis key。
+// 使用与 userPlatformQuotaCacheKeyV2 相同的前缀 "billing:"。
+func userPlatformQuotaDirtySetKeyV2() string { return "billing:" + "upq:dirty" }
 
 // userPlatformQuotaDirtyTTLSeconds 脏集兜底 TTL（秒）：初始 SADD（Lua）与 Readd 共用，
 // 确保 flusher 长期停摆时脏集最终过期；正常运行因持续 SADD 不断续期。
 const userPlatformQuotaDirtyTTLSeconds = 86400
 
-// userPlatformQuotaDirtyMember 构造脏集成员字符串 "userID:platform"。
-func userPlatformQuotaDirtyMember(userID int64, platform string) string {
+// userPlatformQuotaDirtyMemberV2 构造脏集成员字符串 "userID:platform"。
+func userPlatformQuotaDirtyMemberV2(userID int64, platform string) string {
 	return strconv.FormatInt(userID, 10) + ":" + platform
 }
 
 func (c *billingCache) IncrUserPlatformQuotaUsageCache(ctx context.Context, userID int64, platform string, cost float64, ttl time.Duration, markDirty bool) error {
 	member := ""
 	if markDirty {
-		member = userPlatformQuotaDirtyMember(userID, platform)
+		member = userPlatformQuotaDirtyMemberV2(userID, platform)
 	}
 	_, err := c.rdb.Eval(ctx, updateUserPlatformQuotaUsageScript,
-		[]string{userPlatformQuotaCacheKey(userID, platform), userPlatformQuotaDirtySetKey()},
+		[]string{userPlatformQuotaCacheKeyV2(userID, platform), userPlatformQuotaDirtySetKeyV2()},
 		strconv.FormatFloat(cost, 'f', -1, 64),
 		int(ttl.Seconds()),
 		service.UserPlatformQuotaCacheSchemaV1,
@@ -518,9 +518,9 @@ func (c *billingCache) IncrUserPlatformQuotaUsageCache(ctx context.Context, user
 	return nil
 }
 
-// parseUserPlatformQuotaDirtyMember 将脏集成员字符串 "userID:platform" 解析为
+// decodeUserPlatformQuotaDirtyMember 将脏集成员字符串 "userID:platform" 解析为
 // service.UserPlatformQuotaKey。解析失败返回 ok=false。
-func parseUserPlatformQuotaDirtyMember(m string) (service.UserPlatformQuotaKey, bool) {
+func decodeUserPlatformQuotaDirtyMember(m string) (service.UserPlatformQuotaKey, bool) {
 	parts := strings.SplitN(m, ":", 2)
 	if len(parts) != 2 {
 		return service.UserPlatformQuotaKey{}, false
@@ -535,7 +535,7 @@ func parseUserPlatformQuotaDirtyMember(m string) (service.UserPlatformQuotaKey, 
 // PopDirtyUserPlatformQuotaKeys 从脏集随机弹出最多 n 个 key。
 // 脏集为空时返回 (nil, nil)。
 func (c *billingCache) PopDirtyUserPlatformQuotaKeys(ctx context.Context, n int) ([]service.UserPlatformQuotaKey, error) {
-	members, err := c.rdb.SPopN(ctx, userPlatformQuotaDirtySetKey(), int64(n)).Result()
+	members, err := c.rdb.SPopN(ctx, userPlatformQuotaDirtySetKeyV2(), int64(n)).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return nil, nil
@@ -544,7 +544,7 @@ func (c *billingCache) PopDirtyUserPlatformQuotaKeys(ctx context.Context, n int)
 	}
 	keys := make([]service.UserPlatformQuotaKey, 0, len(members))
 	for _, m := range members {
-		k, ok := parseUserPlatformQuotaDirtyMember(m)
+		k, ok := decodeUserPlatformQuotaDirtyMember(m)
 		if !ok {
 			log.Printf("billing_cache: skipping invalid dirty member %q", m)
 			continue
@@ -561,10 +561,10 @@ func (c *billingCache) ReaddDirtyUserPlatformQuotaKeys(ctx context.Context, keys
 	if len(keys) == 0 {
 		return nil
 	}
-	dirtyKey := userPlatformQuotaDirtySetKey()
+	dirtyKey := userPlatformQuotaDirtySetKeyV2()
 	members := make([]any, len(keys))
 	for i, k := range keys {
-		members[i] = userPlatformQuotaDirtyMember(k.UserID, k.Platform)
+		members[i] = userPlatformQuotaDirtyMemberV2(k.UserID, k.Platform)
 	}
 	pipe := c.rdb.Pipeline()
 	pipe.SAdd(ctx, dirtyKey, members...)
@@ -582,7 +582,7 @@ func (c *billingCache) BatchGetUserPlatformQuotaCache(ctx context.Context, keys 
 	pipe := c.rdb.Pipeline()
 	cmds := make([]*redis.MapStringStringCmd, len(keys))
 	for i, k := range keys {
-		cmds[i] = pipe.HGetAll(ctx, userPlatformQuotaCacheKey(k.UserID, k.Platform))
+		cmds[i] = pipe.HGetAll(ctx, userPlatformQuotaCacheKeyV2(k.UserID, k.Platform))
 	}
 	if _, err := pipe.Exec(ctx); err != nil && !errors.Is(err, redis.Nil) {
 		return nil, err
@@ -597,7 +597,7 @@ func (c *billingCache) BatchGetUserPlatformQuotaCache(ctx context.Context, keys 
 			// 单个命令失败 → 对应位置 nil，继续
 			continue
 		}
-		results[i] = parseUserPlatformQuotaHash(m)
+		results[i] = decodeUserPlatformQuotaHash(m)
 	}
 	return results, nil
 }

@@ -1708,7 +1708,7 @@ func (s *ContentModerationService) sendViolationEmail(ctx context.Context, cfg *
 		if err := s.emailService.notificationEmailService.Send(ctx, NotificationEmailSendInput{
 			Event:          NotificationEmailEventContentModerationViolation,
 			RecipientEmail: log.UserEmail,
-			RecipientName:  emailRecipientName(log.UserEmail),
+			RecipientName:  emailRecipientNameV2(log.UserEmail),
 			UserID:         contentModerationEmailUserID(log),
 			SourceType:     "content_moderation",
 			SourceID:       contentModerationEmailSourceID(log),
@@ -1733,7 +1733,7 @@ func (s *ContentModerationService) sendAccountDisabledEmail(ctx context.Context,
 		if err := s.emailService.notificationEmailService.Send(ctx, NotificationEmailSendInput{
 			Event:          NotificationEmailEventContentModerationDisabled,
 			RecipientEmail: log.UserEmail,
-			RecipientName:  emailRecipientName(log.UserEmail),
+			RecipientName:  emailRecipientNameV2(log.UserEmail),
 			UserID:         contentModerationEmailUserID(log),
 			SourceType:     "content_moderation",
 			SourceID:       contentModerationEmailSourceID(log),

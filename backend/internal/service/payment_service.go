@@ -192,7 +192,7 @@ type PaymentService struct {
 
 func NewPaymentService(entClient *dbent.Client, registry *payment.Registry, loadBalancer payment.LoadBalancer, redeemService *RedeemService, subscriptionSvc *SubscriptionService, configService *PaymentConfigService, userRepo UserRepository, groupRepo GroupRepository, affiliateService *AffiliateService) *PaymentService {
 	svc := &PaymentService{entClient: entClient, registry: registry, loadBalancer: newVisibleMethodLoadBalancer(loadBalancer, configService), redeemService: redeemService, subscriptionSvc: subscriptionSvc, configService: configService, userRepo: userRepo, groupRepo: groupRepo, affiliateService: affiliateService}
-	svc.resumeService = psNewPaymentResumeService(configService)
+	svc.resumeService = psNewPaymentResumeServiceV2(configService)
 	return svc
 }
 
@@ -276,31 +276,31 @@ func (s *PaymentService) paymentResume() *PaymentResumeService {
 	if s.resumeService != nil {
 		return s.resumeService
 	}
-	return psNewPaymentResumeService(s.configService)
+	return psNewPaymentResumeServiceV2(s.configService)
 }
 
 func NewLegacyAwarePaymentResumeService(legacyKey []byte) *PaymentResumeService {
-	return newLegacyAwarePaymentResumeService(legacyKey)
+	return newLegacyAwarePaymentResumeServiceV2(legacyKey)
 }
 
-func psNewPaymentResumeService(configService *PaymentConfigService) *PaymentResumeService {
-	return newLegacyAwarePaymentResumeService(psResumeLegacyVerificationKey(configService))
+func psNewPaymentResumeServiceV2(configService *PaymentConfigService) *PaymentResumeService {
+	return newLegacyAwarePaymentResumeServiceV2(psResumeLegacyVerificationKeyV2(configService))
 }
 
-func newLegacyAwarePaymentResumeService(legacyKey []byte) *PaymentResumeService {
-	signingKey, verifyFallbacks := resolvePaymentResumeSigningKeys(legacyKey)
+func newLegacyAwarePaymentResumeServiceV2(legacyKey []byte) *PaymentResumeService {
+	signingKey, verifyFallbacks := lookupPaymentResumeSigningKeys(legacyKey)
 	return NewPaymentResumeService(signingKey, verifyFallbacks...)
 }
 
-func psResumeLegacyVerificationKey(configService *PaymentConfigService) []byte {
+func psResumeLegacyVerificationKeyV2(configService *PaymentConfigService) []byte {
 	if configService == nil {
 		return nil
 	}
 	return configService.encryptionKey
 }
 
-func resolvePaymentResumeSigningKeys(legacyKey []byte) ([]byte, [][]byte) {
-	signingKey := parsePaymentResumeSigningKey(os.Getenv(paymentResumeSigningKeyEnv))
+func lookupPaymentResumeSigningKeys(legacyKey []byte) ([]byte, [][]byte) {
+	signingKey := decodePaymentResumeSigningKey(os.Getenv(paymentResumeSigningKeyEnv))
 	if len(signingKey) == 0 {
 		if len(legacyKey) == 0 {
 			return nil, nil
@@ -313,7 +313,7 @@ func resolvePaymentResumeSigningKeys(legacyKey []byte) ([]byte, [][]byte) {
 	return signingKey, [][]byte{legacyKey}
 }
 
-func parsePaymentResumeSigningKey(raw string) []byte {
+func decodePaymentResumeSigningKey(raw string) []byte {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return nil

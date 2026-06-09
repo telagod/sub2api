@@ -105,7 +105,7 @@ func (s *EmailQueueService) EnqueueVerifyCode(email, siteName string, locale ...
 		Email:    email,
 		SiteName: siteName,
 		TaskType: TaskTypeVerifyCode,
-		Locale:   firstEmailLocale(locale),
+		Locale:   firstEmailLocaleV2(locale),
 	}
 
 	select {
@@ -124,7 +124,7 @@ func (s *EmailQueueService) EnqueuePasswordReset(email, siteName, resetURL strin
 		SiteName: siteName,
 		TaskType: TaskTypePasswordReset,
 		ResetURL: resetURL,
-		Locale:   firstEmailLocale(locale),
+		Locale:   firstEmailLocaleV2(locale),
 	}
 
 	select {

@@ -313,7 +313,7 @@ func (s *AuthService) SendVerifyCode(ctx context.Context, email string, locale .
 		siteName = s.settingService.GetSiteName(ctx)
 	}
 
-	return s.emailService.SendVerifyCode(ctx, email, siteName, firstEmailLocale(locale))
+	return s.emailService.SendVerifyCode(ctx, email, siteName, firstEmailLocaleV2(locale))
 }
 
 // SendVerifyCodeAsync 异步发送邮箱验证码并返回倒计时
@@ -358,7 +358,7 @@ func (s *AuthService) SendVerifyCodeAsync(ctx context.Context, email string, loc
 
 	// 异步发送
 	logger.LegacyPrintf("service.auth", "[Auth] Enqueueing verify code for: %s", email)
-	if err := s.emailQueueService.EnqueueVerifyCode(email, siteName, firstEmailLocale(locale)); err != nil {
+	if err := s.emailQueueService.EnqueueVerifyCode(email, siteName, firstEmailLocaleV2(locale)); err != nil {
 		logger.LegacyPrintf("service.auth", "[Auth] Failed to enqueue: %v", err)
 		return nil, fmt.Errorf("enqueue verify code: %w", err)
 	}
@@ -506,7 +506,7 @@ func (s *AuthService) LoginOrRegisterOAuth(ctx context.Context, email, username 
 				return "", nil, fmt.Errorf("hash password: %w", err)
 			}
 
-			signupSource := inferLegacySignupSource(email)
+			signupSource := inferLegacySignupSourceV2(email)
 			grantPlan := s.resolveSignupGrantPlan(ctx, signupSource)
 			var defaultRPMLimit int
 			if s.settingService != nil {
@@ -642,7 +642,7 @@ func (s *AuthService) LoginOrRegisterOAuthWithTokenPair(ctx context.Context, ema
 			// 优先用 caller 显式传入的 signupSource（如 "dingtalk" / "linuxdo" / "oidc" / "wechat"），
 			// 否则才按邮箱后缀推断——避免有真实邮箱的 OAuth 用户被推断为 "email" 渠道，导致渠道授权错读。
 			if strings.TrimSpace(signupSource) == "" {
-				signupSource = inferLegacySignupSource(email)
+				signupSource = inferLegacySignupSourceV2(email)
 			}
 			grantPlan := s.resolveSignupGrantPlan(ctx, signupSource)
 			var defaultRPMLimit int
@@ -812,7 +812,7 @@ func (s *AuthService) resolveSignupGrantPlan(ctx context.Context, signupSource s
 	return plan
 }
 
-func authSourceSignupSettings(defaults *AuthSourceDefaultSettings, signupSource string) (ProviderDefaultGrantSettings, bool) {
+func signupSettingsForSource(defaults *AuthSourceDefaultSettings, signupSource string) (ProviderDefaultGrantSettings, bool) {
 	if defaults == nil {
 		return ProviderDefaultGrantSettings{}, false
 	}
@@ -913,7 +913,7 @@ func (s *AuthService) shouldApplyEmailFirstBindDefaults(
 	identity *dbent.AuthIdentity,
 	created bool,
 ) bool {
-	source := emailAuthIdentitySource(identity.Metadata)
+	source := emailAuthIdentitySourceV2(identity.Metadata)
 	if source == "auth_service_login_backfill" {
 		return false
 	}
@@ -935,7 +935,7 @@ func (s *AuthService) shouldApplyEmailFirstBindDefaults(
 	return !hasGrant
 }
 
-func emailAuthIdentitySource(metadata map[string]any) string {
+func emailAuthIdentitySourceV2(metadata map[string]any) string {
 	if len(metadata) == 0 {
 		return ""
 	}
@@ -1042,7 +1042,7 @@ func (s *AuthService) ensureEmailAuthIdentity(ctx context.Context, user *User, s
 	return identity, !existed
 }
 
-func inferLegacySignupSource(email string) string {
+func inferLegacySignupSourceV2(email string) string {
 	normalized := strings.ToLower(strings.TrimSpace(email))
 	switch {
 	case strings.HasSuffix(normalized, DingTalkConnectSyntheticEmailDomain):
@@ -1161,7 +1161,7 @@ func (s *AuthService) GenerateToken(user *User) (string, error) {
 		UserID:       user.ID,
 		Email:        user.Email,
 		Role:         user.Role,
-		TokenVersion: resolvedTokenVersion(user),
+		TokenVersion: lookupdTokenVersion(user),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(now),
@@ -1227,7 +1227,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, oldTokenString string) (
 
 	// Security: Check TokenVersion to prevent refreshing revoked tokens
 	// This ensures tokens issued before a password change cannot be refreshed
-	if claims.TokenVersion != resolvedTokenVersion(user) {
+	if claims.TokenVersion != lookupdTokenVersion(user) {
 		return "", ErrTokenRevoked
 	}
 
@@ -1297,7 +1297,7 @@ func (s *AuthService) RequestPasswordReset(ctx context.Context, email, frontendB
 		return nil // Silent success to prevent enumeration
 	}
 
-	if err := s.emailService.SendPasswordResetEmail(ctx, email, siteName, resetURL, firstEmailLocale(locale)); err != nil {
+	if err := s.emailService.SendPasswordResetEmail(ctx, email, siteName, resetURL, firstEmailLocaleV2(locale)); err != nil {
 		logger.LegacyPrintf("service.auth", "[Auth] Failed to send password reset email to %s: %v", email, err)
 		return nil // Silent success to prevent enumeration
 	}
@@ -1321,7 +1321,7 @@ func (s *AuthService) RequestPasswordResetAsync(ctx context.Context, email, fron
 		return nil // Silent success to prevent enumeration
 	}
 
-	if err := s.emailQueueService.EnqueuePasswordReset(email, siteName, resetURL, firstEmailLocale(locale)); err != nil {
+	if err := s.emailQueueService.EnqueuePasswordReset(email, siteName, resetURL, firstEmailLocaleV2(locale)); err != nil {
 		logger.LegacyPrintf("service.auth", "[Auth] Failed to enqueue password reset email for %s: %v", email, err)
 		return nil // Silent success to prevent enumeration
 	}
@@ -1455,7 +1455,7 @@ func (s *AuthService) generateRefreshToken(ctx context.Context, user *User, fami
 
 	data := &RefreshTokenData{
 		UserID:       user.ID,
-		TokenVersion: resolvedTokenVersion(user),
+		TokenVersion: lookupdTokenVersion(user),
 		FamilyID:     familyID,
 		CreatedAt:    now,
 		ExpiresAt:    now.Add(ttl),
@@ -1535,7 +1535,7 @@ func (s *AuthService) RefreshTokenPair(ctx context.Context, refreshToken string)
 	}
 
 	// 检查TokenVersion（密码更改后所有Token失效）
-	if data.TokenVersion != resolvedTokenVersion(user) {
+	if data.TokenVersion != lookupdTokenVersion(user) {
 		// TokenVersion不匹配，撤销整个Token家族
 		_ = s.refreshTokenCache.DeleteTokenFamily(ctx, data.FamilyID)
 		return nil, ErrTokenRevoked
@@ -1606,7 +1606,7 @@ func hashToken(token string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func resolvedTokenVersion(user *User) int64 {
+func lookupdTokenVersion(user *User) int64 {
 	if user == nil {
 		return 0
 	}

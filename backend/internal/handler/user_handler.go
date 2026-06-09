@@ -535,16 +535,16 @@ func (h *UserHandler) buildUserProfileResponse(ctx context.Context, userID int64
 	if err != nil {
 		return userProfileResponse{}, err
 	}
-	return userProfileResponseFromService(user, identities), nil
+	return userProfileResponseFromServiceV2(user, identities), nil
 }
 
-func userProfileResponseFromService(user *service.User, identities service.UserIdentitySummarySet) userProfileResponse {
+func userProfileResponseFromServiceV2(user *service.User, identities service.UserIdentitySummarySet) userProfileResponse {
 	base := dto.UserFromService(user)
 	if base == nil {
 		return userProfileResponse{}
 	}
-	bindings := userProfileBindingMap(identities)
-	profileSources, avatarSource, usernameSource := inferUserProfileSources(user, identities)
+	bindings := userProfileBindingMapV2(identities)
+	profileSources, avatarSource, usernameSource := inferUserProfileSourcesV2(user, identities)
 	return userProfileResponse{
 		User:              *base,
 		AvatarURL:         user.AvatarURL,
@@ -564,7 +564,7 @@ func userProfileResponseFromService(user *service.User, identities service.UserI
 	}
 }
 
-func userProfileBindingMap(identities service.UserIdentitySummarySet) map[string]service.UserIdentitySummary {
+func userProfileBindingMapV2(identities service.UserIdentitySummarySet) map[string]service.UserIdentitySummary {
 	return map[string]service.UserIdentitySummary{
 		"email":    identities.Email,
 		"linuxdo":  identities.LinuxDo,
@@ -574,7 +574,7 @@ func userProfileBindingMap(identities service.UserIdentitySummarySet) map[string
 	}
 }
 
-func inferUserProfileSources(user *service.User, identities service.UserIdentitySummarySet) (
+func inferUserProfileSourcesV2(user *service.User, identities service.UserIdentitySummarySet) (
 	map[string]*userProfileSourceContext,
 	*userProfileSourceContext,
 	*userProfileSourceContext,
@@ -583,12 +583,12 @@ func inferUserProfileSources(user *service.User, identities service.UserIdentity
 		return nil, nil, nil
 	}
 
-	thirdParty := thirdPartyIdentityProviders(identities)
+	thirdParty := thirdPartyIdentityProvidersV2(identities)
 	var avatarSource *userProfileSourceContext
 	avatarValue := strings.TrimSpace(user.AvatarURL)
 	for _, summary := range thirdParty {
 		if avatarValue != "" && avatarValue == strings.TrimSpace(summary.AvatarURL) {
-			avatarSource = buildUserProfileSourceContext(summary.Provider)
+			avatarSource = profileSourceCtx(summary.Provider)
 			break
 		}
 	}
@@ -597,7 +597,7 @@ func inferUserProfileSources(user *service.User, identities service.UserIdentity
 	var usernameSource *userProfileSourceContext
 	for _, summary := range thirdParty {
 		if usernameValue != "" && usernameValue == strings.TrimSpace(summary.DisplayName) {
-			usernameSource = buildUserProfileSourceContext(summary.Provider)
+			usernameSource = profileSourceCtx(summary.Provider)
 			break
 		}
 	}
@@ -617,7 +617,7 @@ func inferUserProfileSources(user *service.User, identities service.UserIdentity
 	return profileSources, avatarSource, usernameSource
 }
 
-func thirdPartyIdentityProviders(identities service.UserIdentitySummarySet) []service.UserIdentitySummary {
+func thirdPartyIdentityProvidersV2(identities service.UserIdentitySummarySet) []service.UserIdentitySummary {
 	out := make([]service.UserIdentitySummary, 0, 3)
 	for _, summary := range []service.UserIdentitySummary{identities.LinuxDo, identities.OIDC, identities.WeChat, identities.DingTalk} {
 		if summary.Bound {
@@ -627,7 +627,7 @@ func thirdPartyIdentityProviders(identities service.UserIdentitySummarySet) []se
 	return out
 }
 
-func buildUserProfileSourceContext(provider string) *userProfileSourceContext {
+func profileSourceCtx(provider string) *userProfileSourceContext {
 	provider = strings.TrimSpace(provider)
 	if provider == "" {
 		return nil

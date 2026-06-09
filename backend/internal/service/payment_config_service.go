@@ -414,7 +414,7 @@ func pcParseInt(s string, defaultVal int) int {
 	return v
 }
 
-func buildVisibleMethodSourceAvailability(instances []*dbent.PaymentProviderInstance) map[string]bool {
+func methodSourceAvail(instances []*dbent.PaymentProviderInstance) map[string]bool {
 	available := make(map[string]bool, 4)
 	for _, inst := range instances {
 		switch inst.ProviderKey {
@@ -440,10 +440,10 @@ func buildVisibleMethodSourceAvailability(instances []*dbent.PaymentProviderInst
 	return available
 }
 
-func applyVisibleMethodRoutingToEnabledTypes(base []string, vals map[string]string, available map[string]bool) []string {
+func routeMethodTypes(base []string, vals map[string]string, available map[string]bool) []string {
 	shouldExpose := map[string]bool{
-		payment.TypeAlipay: visibleMethodShouldBeExposed(payment.TypeAlipay, vals, available),
-		payment.TypeWxpay:  visibleMethodShouldBeExposed(payment.TypeWxpay, vals, available),
+		payment.TypeAlipay: visibleMethodShouldBeExposedV2(payment.TypeAlipay, vals, available),
+		payment.TypeWxpay:  visibleMethodShouldBeExposedV2(payment.TypeWxpay, vals, available),
 	}
 
 	seen := make(map[string]struct{}, len(base)+2)
@@ -480,7 +480,7 @@ func applyVisibleMethodRoutingToEnabledTypes(base []string, vals map[string]stri
 	return out
 }
 
-func visibleMethodShouldBeExposed(method string, vals map[string]string, available map[string]bool) bool {
+func visibleMethodShouldBeExposedV2(method string, vals map[string]string, available map[string]bool) bool {
 	enabledKey := visibleMethodEnabledSettingKey(method)
 	sourceKey := visibleMethodSourceSettingKey(method)
 	if enabledKey == "" || sourceKey == "" || vals[enabledKey] != "true" {

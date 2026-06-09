@@ -896,9 +896,9 @@ INSERT INTO ops_system_log_cleanup_audits (
 
 var likePatternReplacer = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
-// escapeLikePattern 转义 LIKE/ILIKE 通配符（\ % _），避免用户输入被当作通配符。
+// sanitizeLikePattern 转义 LIKE/ILIKE 通配符（\ % _），避免用户输入被当作通配符。
 // Postgres 默认以反斜杠为转义符，无需额外 ESCAPE 子句。
-func escapeLikePattern(s string) string {
+func sanitizeLikePattern(s string) string {
 	return likePatternReplacer.Replace(s)
 }
 
@@ -1030,7 +1030,7 @@ func buildOpsErrorLogsWhere(filter *service.OpsErrorLogFilter) (string, []any) {
 	}
 	if m := strings.TrimSpace(filter.Model); m != "" {
 		if filter.ModelFuzzy {
-			args = append(args, "%"+escapeLikePattern(m)+"%")
+			args = append(args, "%"+sanitizeLikePattern(m)+"%")
 			clauses = append(clauses, "COALESCE(e.requested_model, e.model, '') ILIKE $"+itoa(len(args)))
 		} else {
 			args = append(args, m)

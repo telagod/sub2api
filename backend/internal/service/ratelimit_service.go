@@ -721,7 +721,7 @@ func (s *RateLimitService) handleAuthError(ctx context.Context, account *Account
 	slog.Warn("account_disabled_auth_error", "account_id", account.ID, "error", errorMsg)
 }
 
-func buildForbiddenErrorMessage(prefix string, upstreamMsg string, responseBody []byte, fallback string) string {
+func forbiddenMessage(prefix string, upstreamMsg string, responseBody []byte, fallback string) string {
 	prefix = strings.TrimSpace(prefix)
 	if prefix != "" && !strings.HasSuffix(prefix, " ") {
 		prefix += " "
@@ -756,7 +756,7 @@ func (s *RateLimitService) handle403(ctx context.Context, account *Account, upst
 		return s.handleOpenAI403(ctx, account, upstreamMsg, responseBody)
 	}
 	// 非 Antigravity 平台：保持原有行为
-	msg := buildForbiddenErrorMessage(
+	msg := forbiddenMessage(
 		"Access forbidden (403):",
 		upstreamMsg,
 		responseBody,
@@ -767,7 +767,7 @@ func (s *RateLimitService) handle403(ctx context.Context, account *Account, upst
 }
 
 func (s *RateLimitService) handleOpenAI403(ctx context.Context, account *Account, upstreamMsg string, responseBody []byte) (shouldDisable bool) {
-	msg := buildForbiddenErrorMessage(
+	msg := forbiddenMessage(
 		"Access forbidden (403):",
 		upstreamMsg,
 		responseBody,
@@ -821,7 +821,7 @@ func (s *RateLimitService) handleAntigravity403(ctx context.Context, account *Ac
 	switch fbType {
 	case forbiddenTypeValidation:
 		// VALIDATION_REQUIRED: 永久禁用，需人工去 Google 验证后手动恢复
-		msg := buildForbiddenErrorMessage(
+		msg := forbiddenMessage(
 			"Validation required (403):",
 			upstreamMsg,
 			responseBody,
@@ -835,7 +835,7 @@ func (s *RateLimitService) handleAntigravity403(ctx context.Context, account *Ac
 
 	case forbiddenTypeViolation:
 		// 违规封号: 永久禁用，需人工处理
-		msg := buildForbiddenErrorMessage(
+		msg := forbiddenMessage(
 			"Account violation (403):",
 			upstreamMsg,
 			responseBody,
@@ -846,7 +846,7 @@ func (s *RateLimitService) handleAntigravity403(ctx context.Context, account *Ac
 
 	default:
 		// 通用 403: 保持原有行为
-		msg := buildForbiddenErrorMessage(
+		msg := forbiddenMessage(
 			"Access forbidden (403):",
 			upstreamMsg,
 			responseBody,
@@ -873,9 +873,9 @@ func (s *RateLimitService) handleCustomErrorCode(ctx context.Context, account *A
 func (s *RateLimitService) handle429(ctx context.Context, account *Account, headers http.Header, responseBody []byte) {
 	// 1. OpenAI 平台：优先尝试解析 x-codex-* 响应头（用于 rate_limit_exceeded）
 	if account.Platform == PlatformOpenAI {
-		persistOpenAI429PlanType(ctx, s.accountRepo, account, responseBody)
+		persistOpenAI429PlanTypeV2(ctx, s.accountRepo, account, responseBody)
 		s.persistOpenAICodexSnapshot(ctx, account, headers)
-		if resetAt := s.calculateOpenAI429ResetTime(headers); resetAt != nil {
+		if resetAt := s.calcOpenAI429ResetTime(headers); resetAt != nil {
 			s.notifyAccountSchedulingBlocked(account, *resetAt, "429")
 			if err := s.accountRepo.SetRateLimited(ctx, account.ID, *resetAt); err != nil {
 				slog.Warn("rate_limit_set_failed", "account_id", account.ID, "error", err)
@@ -1004,18 +1004,18 @@ func (s *RateLimitService) get429FallbackCooldown(ctx context.Context, account *
 			if !settings.Enabled {
 				return 0, false
 			}
-			seconds := clampRateLimit429CooldownSeconds(settings.CooldownSeconds)
+			seconds := boundRateLimit429CooldownSeconds(settings.CooldownSeconds)
 			return time.Duration(seconds) * time.Second, true
 		}
 		slog.Warn("rate_limit_429_settings_read_failed", "account_id", account.ID, "error", err)
 	}
 
 	seconds := defaultRateLimit429CooldownSeconds
-	seconds = clampRateLimit429CooldownSeconds(seconds)
+	seconds = boundRateLimit429CooldownSeconds(seconds)
 	return time.Duration(seconds) * time.Second, true
 }
 
-func clampRateLimit429CooldownSeconds(seconds int) int {
+func boundRateLimit429CooldownSeconds(seconds int) int {
 	if seconds < 1 {
 		return 1
 	}
@@ -1025,9 +1025,9 @@ func clampRateLimit429CooldownSeconds(seconds int) int {
 	return seconds
 }
 
-// calculateOpenAI429ResetTime 从 OpenAI 429 响应头计算正确的重置时间
+// calcOpenAI429ResetTime 从 OpenAI 429 响应头计算正确的重置时间
 // 返回 nil 表示无法从响应头中确定重置时间
-func calculateOpenAI429ResetTime(headers http.Header) *time.Time {
+func calcOpenAI429ResetTime(headers http.Header) *time.Time {
 	snapshot := ParseCodexRateLimitHeaders(headers)
 	if snapshot == nil {
 		return nil
@@ -1073,8 +1073,8 @@ func calculateOpenAI429ResetTime(headers http.Header) *time.Time {
 	return nil
 }
 
-func (s *RateLimitService) calculateOpenAI429ResetTime(headers http.Header) *time.Time {
-	return calculateOpenAI429ResetTime(headers)
+func (s *RateLimitService) calcOpenAI429ResetTime(headers http.Header) *time.Time {
+	return calcOpenAI429ResetTime(headers)
 }
 
 // anthropic429Result holds the parsed Anthropic 429 rate-limit information.
@@ -1254,7 +1254,7 @@ func parseOpenAIRateLimitResetTime(body []byte) *int64 {
 	return nil
 }
 
-func parseOpenAIRateLimitPlanType(body []byte) string {
+func decodeOpenAIRateLimitPlanType(body []byte) string {
 	var parsed map[string]any
 	if err := json.Unmarshal(body, &parsed); err != nil {
 		return ""
@@ -1274,12 +1274,12 @@ func parseOpenAIRateLimitPlanType(body []byte) string {
 	return strings.ToLower(strings.TrimSpace(planType))
 }
 
-func persistOpenAI429PlanType(ctx context.Context, repo AccountRepository, account *Account, body []byte) {
+func persistOpenAI429PlanTypeV2(ctx context.Context, repo AccountRepository, account *Account, body []byte) {
 	if repo == nil || account == nil || account.Platform != PlatformOpenAI {
 		return
 	}
 
-	planType := parseOpenAIRateLimitPlanType(body)
+	planType := decodeOpenAIRateLimitPlanType(body)
 	if planType == "" {
 		return
 	}
@@ -1637,11 +1637,11 @@ func (s *RateLimitService) HandleOpenAIImageRateLimit(ctx context.Context, accou
 		slog.Info("openai_image_rate_limit_skipped_by_error_code_policy", "account_id", account.ID, "status_code", statusCode)
 		return false
 	}
-	if !isOpenAIImageRateLimitError(statusCode, responseBody) {
+	if !checkOpenAIImageRateLimitError(statusCode, responseBody) {
 		return false
 	}
 
-	resetAt := openAIImageRateLimitResetAt(headers, responseBody)
+	resetAt := openAIImageRateLimitResetAtV2(headers, responseBody)
 	if err := s.accountRepo.SetModelRateLimit(ctx, account.ID, openAIImageGenerationRateLimitKey, resetAt, openAIImageRateLimitReason); err != nil {
 		slog.Warn("openai_image_rate_limit_set_model_rate_limit_failed", "account_id", account.ID, "scope", openAIImageGenerationRateLimitKey, "error", err)
 		return true
@@ -1650,7 +1650,7 @@ func (s *RateLimitService) HandleOpenAIImageRateLimit(ctx context.Context, accou
 	return true
 }
 
-func isOpenAIImageRateLimitError(statusCode int, body []byte) bool {
+func checkOpenAIImageRateLimitError(statusCode int, body []byte) bool {
 	if statusCode != http.StatusTooManyRequests || len(body) == 0 {
 		return false
 	}
@@ -1668,12 +1668,12 @@ func isOpenAIImageRateLimitError(statusCode int, body []byte) bool {
 	return false
 }
 
-func openAIImageRateLimitResetAt(headers http.Header, body []byte) time.Time {
+func openAIImageRateLimitResetAtV2(headers http.Header, body []byte) time.Time {
 	now := time.Now()
-	if resetAt := parseRetryAfterResetTime(headers, now); resetAt != nil && resetAt.After(now) {
+	if resetAt := decodeRetryAfterResetTime(headers, now); resetAt != nil && resetAt.After(now) {
 		return *resetAt
 	}
-	if resetAt := calculateOpenAI429ResetTime(headers); resetAt != nil && resetAt.After(now) {
+	if resetAt := calcOpenAI429ResetTime(headers); resetAt != nil && resetAt.After(now) {
 		return *resetAt
 	}
 	if resetUnix := parseOpenAIRateLimitResetTime(body); resetUnix != nil {
@@ -1681,13 +1681,13 @@ func openAIImageRateLimitResetAt(headers http.Header, body []byte) time.Time {
 			return resetAt
 		}
 	}
-	if cooldown := parseOpenAIImageTryAgainCooldown(body); cooldown > 0 {
+	if cooldown := decodeOpenAIImageTryAgainCooldown(body); cooldown > 0 {
 		return now.Add(cooldown)
 	}
 	return now.Add(openAIImageRateLimitDefaultCooldown)
 }
 
-func parseRetryAfterResetTime(headers http.Header, now time.Time) *time.Time {
+func decodeRetryAfterResetTime(headers http.Header, now time.Time) *time.Time {
 	if headers == nil {
 		return nil
 	}
@@ -1705,7 +1705,7 @@ func parseRetryAfterResetTime(headers http.Header, now time.Time) *time.Time {
 	return nil
 }
 
-func parseOpenAIImageTryAgainCooldown(body []byte) time.Duration {
+func decodeOpenAIImageTryAgainCooldown(body []byte) time.Duration {
 	if len(body) == 0 {
 		return 0
 	}
@@ -1744,7 +1744,7 @@ func (s *RateLimitService) HandleUpstreamModelNotFound(ctx context.Context, acco
 	if !isUpstreamModelNotFoundError(statusCode, responseBody) {
 		return false
 	}
-	modelKey := modelRateLimitKeyForUpstreamModelNotFound(ctx, account, requestedModel)
+	modelKey := modelRateLimitKeyForUpstreamModelNotFoundV2(ctx, account, requestedModel)
 	if modelKey == "" {
 		return false
 	}
@@ -1757,7 +1757,7 @@ func (s *RateLimitService) HandleUpstreamModelNotFound(ctx context.Context, acco
 	return true
 }
 
-func modelRateLimitKeyForUpstreamModelNotFound(ctx context.Context, account *Account, requestedModel string) string {
+func modelRateLimitKeyForUpstreamModelNotFoundV2(ctx context.Context, account *Account, requestedModel string) string {
 	modelKey := strings.TrimSpace(requestedModel)
 	if account == nil || modelKey == "" {
 		return modelKey

@@ -26,7 +26,7 @@ func TestCalculateOpenAI429ResetTime_7dExhausted(t *testing.T) {
 	headers.Set("x-codex-secondary-window-minutes", "300")        // 5 hours
 
 	before := time.Now()
-	resetAt := svc.calculateOpenAI429ResetTime(headers)
+	resetAt := svc.calcOpenAI429ResetTime(headers)
 	after := time.Now()
 
 	if resetAt == nil {
@@ -56,7 +56,7 @@ func TestCalculateOpenAI429ResetTime_5hExhausted(t *testing.T) {
 	headers.Set("x-codex-secondary-window-minutes", "300")       // 5 hours
 
 	before := time.Now()
-	resetAt := svc.calculateOpenAI429ResetTime(headers)
+	resetAt := svc.calcOpenAI429ResetTime(headers)
 	after := time.Now()
 
 	if resetAt == nil {
@@ -86,7 +86,7 @@ func TestCalculateOpenAI429ResetTime_NeitherExhausted_UsesMax(t *testing.T) {
 	headers.Set("x-codex-secondary-window-minutes", "300")
 
 	before := time.Now()
-	resetAt := svc.calculateOpenAI429ResetTime(headers)
+	resetAt := svc.calcOpenAI429ResetTime(headers)
 	after := time.Now()
 
 	if resetAt == nil {
@@ -110,7 +110,7 @@ func TestCalculateOpenAI429ResetTime_NoCodexHeaders(t *testing.T) {
 	headers := http.Header{}
 	headers.Set("content-type", "application/json")
 
-	resetAt := svc.calculateOpenAI429ResetTime(headers)
+	resetAt := svc.calcOpenAI429ResetTime(headers)
 
 	if resetAt != nil {
 		t.Errorf("expected nil resetAt when no codex headers, got %v", resetAt)
@@ -130,7 +130,7 @@ func TestCalculateOpenAI429ResetTime_ReversedWindowOrder(t *testing.T) {
 	headers.Set("x-codex-secondary-window-minutes", "10080") // 7 days - larger!
 
 	before := time.Now()
-	resetAt := svc.calculateOpenAI429ResetTime(headers)
+	resetAt := svc.calcOpenAI429ResetTime(headers)
 	after := time.Now()
 
 	if resetAt == nil {
@@ -411,9 +411,9 @@ func TestHandle429_AnthropicPlatformUnaffected(t *testing.T) {
 	headers := http.Header{}
 	headers.Set("anthropic-ratelimit-unified-reset", "1737820800") // A future Unix timestamp
 
-	// For Anthropic platform, calculateOpenAI429ResetTime should return nil
+	// For Anthropic platform, calcOpenAI429ResetTime should return nil
 	// because it only handles OpenAI platform
-	resetAt := svc.calculateOpenAI429ResetTime(headers)
+	resetAt := svc.calcOpenAI429ResetTime(headers)
 
 	// Should return nil since there are no x-codex-* headers
 	if resetAt != nil {
@@ -442,7 +442,7 @@ func TestCalculateOpenAI429ResetTime_UserProvidedScenario(t *testing.T) {
 	headers.Set("x-codex-secondary-window-minutes", "300") // 5 hours = 300 minutes
 
 	before := time.Now()
-	resetAt := svc.calculateOpenAI429ResetTime(headers)
+	resetAt := svc.calcOpenAI429ResetTime(headers)
 	after := time.Now()
 
 	if resetAt == nil {
@@ -480,7 +480,7 @@ func TestCalculateOpenAI429ResetTime_5MinFallbackWhenNoReset(t *testing.T) {
 	headers.Set("x-codex-primary-used-percent", "100")
 	// No reset_after_seconds!
 
-	resetAt := svc.calculateOpenAI429ResetTime(headers)
+	resetAt := svc.calcOpenAI429ResetTime(headers)
 
 	// Should return nil since there's no reset time available
 	if resetAt != nil {

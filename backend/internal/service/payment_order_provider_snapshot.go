@@ -82,7 +82,7 @@ func (s *PaymentService) resolveSnapshotOrderProviderInstance(ctx context.Contex
 	}
 
 	snapshotInstanceID := strings.TrimSpace(snapshot.ProviderInstanceID)
-	columnInstanceID := strings.TrimSpace(psStringValue(order.ProviderInstanceID))
+	columnInstanceID := strings.TrimSpace(psStringValueV2(order.ProviderInstanceID))
 	if snapshotInstanceID == "" {
 		snapshotInstanceID = columnInstanceID
 	}
@@ -118,12 +118,12 @@ func expectedNotificationProviderKeyForOrder(registry *payment.Registry, order *
 		return strings.TrimSpace(instanceProviderKey)
 	}
 
-	orderProviderKey := psStringValue(order.ProviderKey)
+	orderProviderKey := psStringValueV2(order.ProviderKey)
 	if snapshot := psOrderProviderSnapshot(order); snapshot != nil && snapshot.ProviderKey != "" {
 		orderProviderKey = snapshot.ProviderKey
 	}
 
-	return expectedNotificationProviderKey(registry, order.PaymentType, orderProviderKey, instanceProviderKey)
+	return expectedNotificationProviderKeyV2(registry, order.PaymentType, orderProviderKey, instanceProviderKey)
 }
 
 func validateProviderSnapshotMetadata(order *dbent.PaymentOrder, providerKey string, metadata map[string]string) error {

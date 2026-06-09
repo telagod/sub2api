@@ -92,7 +92,7 @@ func nextWeeklyResetTime(now time.Time) time.Time {
 
 // NextMonthlyResetTimeFrom 计算 30 天滚动月度窗口的下次重置时间。
 // 语义：
-//   - start != nil → 返回 start + 30d（与 billing_cache_service.nextMonthlyResetFrom 一致）
+//   - start != nil → 返回 start + 30d（与 billing_cache_service.nextMonthlyResetFromV2 一致）
 //   - start == nil → 退化为 now + 30d（保留旧行为，避免 nil 崩溃）
 //
 // 导出（首字母大写）以允许测试直接调用。

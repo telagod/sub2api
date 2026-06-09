@@ -1072,19 +1072,19 @@ func (s *BillingCacheService) checkUserPlatformQuotaEligibility(
 		newDailyStart := entry.DailyWindowStart
 		newWeeklyStart := entry.WeeklyWindowStart
 		newMonthlyStart := entry.MonthlyWindowStart
-		if quotaWindowExpired(entry.DailyWindowStart, timezone.StartOfDay(now)) {
+		if quotaWindowExpiredV2(entry.DailyWindowStart, timezone.StartOfDay(now)) {
 			dailyUsage = 0
 			windowExpired = true
 			dayStart := timezone.StartOfDay(now)
 			newDailyStart = &dayStart
 		}
-		if quotaWindowExpired(entry.WeeklyWindowStart, timezone.StartOfWeek(now)) {
+		if quotaWindowExpiredV2(entry.WeeklyWindowStart, timezone.StartOfWeek(now)) {
 			weeklyUsage = 0
 			windowExpired = true
 			weekStart := timezone.StartOfWeek(now)
 			newWeeklyStart = &weekStart
 		}
-		if monthlyQuotaWindowExpired(entry.MonthlyWindowStart, now) {
+		if monthlyQuotaWindowExpiredV2(entry.MonthlyWindowStart, now) {
 			monthlyUsage = 0
 			windowExpired = true
 			monthStart := now
@@ -1125,13 +1125,13 @@ func (s *BillingCacheService) checkUserPlatformQuotaEligibility(
 			setCancel()
 		}
 		if entry.DailyLimitUSD != nil && dailyUsage >= *entry.DailyLimitUSD {
-			return withWindowResetsMetadata(ErrUserPlatformDailyQuotaExhausted, nextDailyReset(now))
+			return withWindowResetsMetadataV2(ErrUserPlatformDailyQuotaExhausted, nextDailyResetV2(now))
 		}
 		if entry.WeeklyLimitUSD != nil && weeklyUsage >= *entry.WeeklyLimitUSD {
-			return withWindowResetsMetadata(ErrUserPlatformWeeklyQuotaExhausted, nextWeeklyReset(now))
+			return withWindowResetsMetadataV2(ErrUserPlatformWeeklyQuotaExhausted, nextWeeklyResetV2(now))
 		}
 		if entry.MonthlyLimitUSD != nil && monthlyUsage >= *entry.MonthlyLimitUSD {
-			return withWindowResetsMetadata(ErrUserPlatformMonthlyQuotaExhausted, nextMonthlyResetFrom(entry.MonthlyWindowStart, now))
+			return withWindowResetsMetadataV2(ErrUserPlatformMonthlyQuotaExhausted, nextMonthlyResetFromV2(entry.MonthlyWindowStart, now))
 		}
 		return nil
 	}
@@ -1199,26 +1199,26 @@ func (s *BillingCacheService) checkUserPlatformQuotaEligibility(
 	dailyUsage := rec.DailyUsageUSD
 	weeklyUsage := rec.WeeklyUsageUSD
 	monthlyUsage := rec.MonthlyUsageUSD
-	if quotaWindowExpired(rec.DailyWindowStart, timezone.StartOfDay(now)) {
+	if quotaWindowExpiredV2(rec.DailyWindowStart, timezone.StartOfDay(now)) {
 		dailyUsage = 0
 	}
-	if quotaWindowExpired(rec.WeeklyWindowStart, timezone.StartOfWeek(now)) {
+	if quotaWindowExpiredV2(rec.WeeklyWindowStart, timezone.StartOfWeek(now)) {
 		weeklyUsage = 0
 	}
-	if monthlyQuotaWindowExpired(rec.MonthlyWindowStart, now) {
+	if monthlyQuotaWindowExpiredV2(rec.MonthlyWindowStart, now) {
 		monthlyUsage = 0
 	}
 
 	// Redis 故障时 fail-open：不回填，直接用 DB 数据做一次性检查
 	if cacheErr != nil {
 		if rec.DailyLimitUSD != nil && dailyUsage >= *rec.DailyLimitUSD {
-			return withWindowResetsMetadata(ErrUserPlatformDailyQuotaExhausted, nextDailyReset(now))
+			return withWindowResetsMetadataV2(ErrUserPlatformDailyQuotaExhausted, nextDailyResetV2(now))
 		}
 		if rec.WeeklyLimitUSD != nil && weeklyUsage >= *rec.WeeklyLimitUSD {
-			return withWindowResetsMetadata(ErrUserPlatformWeeklyQuotaExhausted, nextWeeklyReset(now))
+			return withWindowResetsMetadataV2(ErrUserPlatformWeeklyQuotaExhausted, nextWeeklyResetV2(now))
 		}
 		if rec.MonthlyLimitUSD != nil && monthlyUsage >= *rec.MonthlyLimitUSD {
-			return withWindowResetsMetadata(ErrUserPlatformMonthlyQuotaExhausted, nextMonthlyResetFrom(rec.MonthlyWindowStart, now))
+			return withWindowResetsMetadataV2(ErrUserPlatformMonthlyQuotaExhausted, nextMonthlyResetFromV2(rec.MonthlyWindowStart, now))
 		}
 		return nil
 	}
@@ -1249,19 +1249,19 @@ func (s *BillingCacheService) checkUserPlatformQuotaEligibility(
 	}
 
 	if rec.DailyLimitUSD != nil && dailyUsage >= *rec.DailyLimitUSD {
-		return withWindowResetsMetadata(ErrUserPlatformDailyQuotaExhausted, nextDailyReset(now))
+		return withWindowResetsMetadataV2(ErrUserPlatformDailyQuotaExhausted, nextDailyResetV2(now))
 	}
 	if rec.WeeklyLimitUSD != nil && weeklyUsage >= *rec.WeeklyLimitUSD {
-		return withWindowResetsMetadata(ErrUserPlatformWeeklyQuotaExhausted, nextWeeklyReset(now))
+		return withWindowResetsMetadataV2(ErrUserPlatformWeeklyQuotaExhausted, nextWeeklyResetV2(now))
 	}
 	if rec.MonthlyLimitUSD != nil && monthlyUsage >= *rec.MonthlyLimitUSD {
-		return withWindowResetsMetadata(ErrUserPlatformMonthlyQuotaExhausted, nextMonthlyResetFrom(rec.MonthlyWindowStart, now))
+		return withWindowResetsMetadataV2(ErrUserPlatformMonthlyQuotaExhausted, nextMonthlyResetFromV2(rec.MonthlyWindowStart, now))
 	}
 	return nil
 }
 
-// withWindowResetsMetadata 给 quota error 附加 window_resets_at metadata（RFC3339）。
-func withWindowResetsMetadata(err error, resetAt time.Time) error {
+// withWindowResetsMetadataV2 给 quota error 附加 window_resets_at metadata（RFC3339）。
+func withWindowResetsMetadataV2(err error, resetAt time.Time) error {
 	appErr, ok := err.(*infraerrors.ApplicationError)
 	if !ok || appErr == nil {
 		return err
@@ -1271,41 +1271,41 @@ func withWindowResetsMetadata(err error, resetAt time.Time) error {
 	})
 }
 
-// nextDailyReset 计算下一个日窗口起点（次日全局时区 0 点）。
+// nextDailyResetV2 计算下一个日窗口起点（次日全局时区 0 点）。
 // 必须与 timezone.StartOfDay 同口径，否则 Retry-After 会偏差。
-func nextDailyReset(now time.Time) time.Time {
+func nextDailyResetV2(now time.Time) time.Time {
 	return timezone.StartOfDay(now).AddDate(0, 0, 1)
 }
 
-// nextWeeklyReset 计算下一个周窗口起点（下周一全局时区 0 点）。
+// nextWeeklyResetV2 计算下一个周窗口起点（下周一全局时区 0 点）。
 // 必须与 timezone.StartOfWeek 同口径，否则 Retry-After 会偏差。
-func nextWeeklyReset(now time.Time) time.Time {
+func nextWeeklyResetV2(now time.Time) time.Time {
 	return timezone.StartOfWeek(now).AddDate(0, 0, 7)
 }
 
-// nextMonthlyResetFrom 返回 30 天滚动窗口的下次重置时间（start + 30d）。
-// start 为 nil（未初始化）或已过期（now-start >= 30d，与 monthlyQuotaWindowExpired 同口径）时
+// nextMonthlyResetFromV2 返回 30 天滚动窗口的下次重置时间（start + 30d）。
+// start 为 nil（未初始化）或已过期（now-start >= 30d，与 monthlyQuotaWindowExpiredV2 同口径）时
 // 退化为 now+30d：过期窗口会在下次 increment 时重置为 now，下次重置即 now+30d；
 // 否则按 start 计算会得到一个过去的时间，使 Retry-After 落回 fallback 并触发客户端紧凑重试。
-func nextMonthlyResetFrom(start *time.Time, now time.Time) time.Time {
+func nextMonthlyResetFromV2(start *time.Time, now time.Time) time.Time {
 	if start == nil || now.Sub(*start) >= 30*24*time.Hour {
 		return now.Add(30 * 24 * time.Hour)
 	}
 	return start.Add(30 * 24 * time.Hour)
 }
 
-// quotaWindowExpired 判断窗口是否已过期：start 为 nil（未初始化）或在 currWindowStart 之前视为已过期。
-func quotaWindowExpired(start *time.Time, currWindowStart time.Time) bool {
+// quotaWindowExpiredV2 判断窗口是否已过期：start 为 nil（未初始化）或在 currWindowStart 之前视为已过期。
+func quotaWindowExpiredV2(start *time.Time, currWindowStart time.Time) bool {
 	if start == nil {
 		return true
 	}
 	return start.Before(currWindowStart)
 }
 
-// monthlyQuotaWindowExpired 判断 30 天滚动月度窗口是否已过期。
+// monthlyQuotaWindowExpiredV2 判断 30 天滚动月度窗口是否已过期。
 // 过期条件：now - start >= 30×24h（与订阅模式 NeedsMonthlyReset 语义一致）。
 // start 为 nil 时视为已过期（未初始化窗口）。
-func monthlyQuotaWindowExpired(start *time.Time, now time.Time) bool {
+func monthlyQuotaWindowExpiredV2(start *time.Time, now time.Time) bool {
 	if start == nil {
 		return true
 	}

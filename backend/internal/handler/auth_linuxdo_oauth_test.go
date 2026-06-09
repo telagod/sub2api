@@ -55,7 +55,7 @@ func TestLinuxDoParseUserInfoParsesIDAndUsername(t *testing.T) {
 		UserInfoURL: "https://connect.linux.do/api/user",
 	}
 
-	email, username, subject, displayName, avatarURL, err := linuxDoParseUserInfo(`{"id":123,"username":"alice","name":"Alice","avatar_url":"https://cdn.example/avatar.png"}`, cfg)
+	email, username, subject, displayName, avatarURL, err := parseLinuxDoUserInfo(`{"id":123,"username":"alice","name":"Alice","avatar_url":"https://cdn.example/avatar.png"}`, cfg)
 	require.NoError(t, err)
 	require.Equal(t, "123", subject)
 	require.Equal(t, "alice", username)
@@ -69,7 +69,7 @@ func TestLinuxDoParseUserInfoDefaultsUsername(t *testing.T) {
 		UserInfoURL: "https://connect.linux.do/api/user",
 	}
 
-	email, username, subject, displayName, avatarURL, err := linuxDoParseUserInfo(`{"id":"123"}`, cfg)
+	email, username, subject, displayName, avatarURL, err := parseLinuxDoUserInfo(`{"id":"123"}`, cfg)
 	require.NoError(t, err)
 	require.Equal(t, "123", subject)
 	require.Equal(t, "linuxdo_123", username)
@@ -83,11 +83,11 @@ func TestLinuxDoParseUserInfoRejectsUnsafeSubject(t *testing.T) {
 		UserInfoURL: "https://connect.linux.do/api/user",
 	}
 
-	_, _, _, _, _, err := linuxDoParseUserInfo(`{"id":"123@456"}`, cfg)
+	_, _, _, _, _, err := parseLinuxDoUserInfo(`{"id":"123@456"}`, cfg)
 	require.Error(t, err)
 
 	tooLong := strings.Repeat("a", linuxDoOAuthMaxSubjectLen+1)
-	_, _, _, _, _, err = linuxDoParseUserInfo(`{"id":"`+tooLong+`"}`, cfg)
+	_, _, _, _, _, err = parseLinuxDoUserInfo(`{"id":"`+tooLong+`"}`, cfg)
 	require.Error(t, err)
 }
 
@@ -166,7 +166,7 @@ func TestLinuxDoOAuthBindStartRedirectsAndSetsBindCookies(t *testing.T) {
 
 	bindCookie := findCookie(cookies, linuxDoOAuthBindUserCookieName)
 	require.NotNil(t, bindCookie)
-	userID, err := parseOAuthBindUserCookieValue(decodeCookieValueForTest(t, bindCookie.Value), "test-secret")
+	userID, err := decodeOAuthBindUserCookieValue(decodeCookieValueForTest(t, bindCookie.Value), "test-secret")
 	require.NoError(t, err)
 	require.Equal(t, int64(42), userID)
 }
@@ -304,7 +304,7 @@ func TestLinuxDoOAuthBindStartAcceptsAccessTokenCookie(t *testing.T) {
 
 	bindCookie := findCookie(recorder.Result().Cookies(), linuxDoOAuthBindUserCookieName)
 	require.NotNil(t, bindCookie)
-	userID, err := parseOAuthBindUserCookieValue(decodeCookieValueForTest(t, bindCookie.Value), "test-secret")
+	userID, err := decodeOAuthBindUserCookieValue(decodeCookieValueForTest(t, bindCookie.Value), "test-secret")
 	require.NoError(t, err)
 	require.Equal(t, user.ID, userID)
 

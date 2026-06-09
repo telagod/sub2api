@@ -67,7 +67,7 @@ func TestApplyCodexOAuthTransform_MessagesBridgePromptCacheKeyIsHeaderOnly(t *te
 		},
 	}
 
-	result := applyCodexOAuthTransformWithOptions(reqBody, codexOAuthTransformOptions{
+	result := codexOAuthTransform(reqBody, codexOAuthTransformOptions{
 		SkipDefaultInstructions: true,
 		PreserveToolCallIDs:     true,
 	})
@@ -389,7 +389,7 @@ func TestApplyCodexOAuthTransform_PreservesMCPToolCallIDAndName(t *testing.T) {
 
 func TestCodexInputItemRequiresNameTypesAllowCallID(t *testing.T) {
 	for _, typ := range []string{"function_call", "custom_tool_call", "mcp_tool_call"} {
-		require.True(t, codexInputItemRequiresName(typ), typ)
+		require.True(t, codexInputItemRequiresNameV2(typ), typ)
 		require.True(t, isCodexToolCallItemType(typ), typ)
 	}
 }
@@ -530,7 +530,7 @@ func TestNormalizeOpenAIResponsesImageGenerationTools_RewritesLegacyFields(t *te
 		},
 	}
 
-	modified := normalizeOpenAIResponsesImageGenerationTools(reqBody)
+	modified := sanitizeOpenAIResponsesImageGenerationTools(reqBody)
 	require.True(t, modified)
 
 	tools, ok := reqBody["tools"].([]any)
@@ -551,7 +551,7 @@ func TestEnsureOpenAIResponsesImageGenerationTool_NoTools(t *testing.T) {
 		"input": "draw a cat",
 	}
 
-	modified := ensureOpenAIResponsesImageGenerationTool(reqBody)
+	modified := requireOpenAIResponsesImageGenerationTool(reqBody)
 	require.True(t, modified)
 
 	tools, ok := reqBody["tools"].([]any)
@@ -569,7 +569,7 @@ func TestEnsureOpenAIResponsesImageGenerationTool_SkipsSpark(t *testing.T) {
 		"input": "draw a cat",
 	}
 
-	modified := ensureOpenAIResponsesImageGenerationTool(reqBody)
+	modified := requireOpenAIResponsesImageGenerationTool(reqBody)
 	require.False(t, modified)
 	require.NotContains(t, reqBody, "tools")
 }
@@ -582,7 +582,7 @@ func TestEnsureOpenAIResponsesImageGenerationTool_AppendsToExistingTools(t *test
 		},
 	}
 
-	modified := ensureOpenAIResponsesImageGenerationTool(reqBody)
+	modified := requireOpenAIResponsesImageGenerationTool(reqBody)
 	require.True(t, modified)
 
 	tools, ok := reqBody["tools"].([]any)
@@ -606,7 +606,7 @@ func TestEnsureOpenAIResponsesImageGenerationTool_PreservesExistingImageTool(t *
 		},
 	}
 
-	modified := ensureOpenAIResponsesImageGenerationTool(reqBody)
+	modified := requireOpenAIResponsesImageGenerationTool(reqBody)
 	require.False(t, modified)
 
 	tools, ok := reqBody["tools"].([]any)
@@ -626,7 +626,7 @@ func TestApplyCodexImageGenerationBridgeInstructions_AppendsBridgeOnce(t *testin
 		},
 	}
 
-	modified := applyCodexImageGenerationBridgeInstructions(reqBody)
+	modified := injectCodexImageBridge(reqBody)
 	require.True(t, modified)
 
 	instructions, ok := reqBody["instructions"].(string)
@@ -635,7 +635,7 @@ func TestApplyCodexImageGenerationBridgeInstructions_AppendsBridgeOnce(t *testin
 	require.Contains(t, instructions, codexImageGenerationBridgeMarker)
 	require.Contains(t, instructions, "Responses native `image_generation` tool")
 
-	modified = applyCodexImageGenerationBridgeInstructions(reqBody)
+	modified = injectCodexImageBridge(reqBody)
 	require.False(t, modified)
 }
 
@@ -648,7 +648,7 @@ func TestApplyCodexImageGenerationBridgeInstructions_SkipsSpark(t *testing.T) {
 		},
 	}
 
-	modified := applyCodexImageGenerationBridgeInstructions(reqBody)
+	modified := injectCodexImageBridge(reqBody)
 	require.False(t, modified)
 	require.Equal(t, "existing instructions", reqBody["instructions"])
 }
@@ -661,7 +661,7 @@ func TestApplyCodexImageGenerationBridgeInstructions_SkipsWithoutImageTool(t *te
 		},
 	}
 
-	modified := applyCodexImageGenerationBridgeInstructions(reqBody)
+	modified := injectCodexImageBridge(reqBody)
 	require.False(t, modified)
 	require.Equal(t, "existing instructions", reqBody["instructions"])
 }
@@ -680,7 +680,7 @@ func TestValidateCodexSparkInputRejectsInputImage(t *testing.T) {
 		},
 	}
 
-	err := validateCodexSparkInput(reqBody, "gpt-5.3-codex-spark")
+	err := verifyCodexSparkInput(reqBody, "gpt-5.3-codex-spark")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "does not support image input")
 }
@@ -699,7 +699,7 @@ func TestValidateCodexSparkInputRejectsChatImageURL(t *testing.T) {
 		},
 	}
 
-	err := validateCodexSparkInput(reqBody, "gpt-5.3-codex-spark")
+	err := verifyCodexSparkInput(reqBody, "gpt-5.3-codex-spark")
 	require.Error(t, err)
 }
 
@@ -716,7 +716,7 @@ func TestValidateCodexSparkInputAllowsTextOnly(t *testing.T) {
 		},
 	}
 
-	require.NoError(t, validateCodexSparkInput(reqBody, "gpt-5.3-codex-spark"))
+	require.NoError(t, verifyCodexSparkInput(reqBody, "gpt-5.3-codex-spark"))
 }
 
 func TestApplyCodexOAuthTransform_AddsSparkImageUnsupportedInstructions(t *testing.T) {
@@ -759,7 +759,7 @@ func TestNormalizeOpenAIResponsesImageOnlyModel_BuildsImageToolRequest(t *testin
 		"output_format": "png",
 	}
 
-	modified := normalizeOpenAIResponsesImageOnlyModel(reqBody)
+	modified := sanitizeOpenAIResponsesImageOnlyModel(reqBody)
 	require.True(t, modified)
 	require.Equal(t, openAIImagesResponsesMainModel, reqBody["model"])
 	require.Equal(t, "draw a cat", reqBody["input"])
@@ -796,7 +796,7 @@ func TestNormalizeOpenAIResponsesImageOnlyModel_PreservesExistingImageTool(t *te
 		"tool_choice": "auto",
 	}
 
-	modified := normalizeOpenAIResponsesImageOnlyModel(reqBody)
+	modified := sanitizeOpenAIResponsesImageOnlyModel(reqBody)
 	require.True(t, modified)
 	require.Equal(t, openAIImagesResponsesMainModel, reqBody["model"])
 	require.Equal(t, "auto", reqBody["tool_choice"])
@@ -810,7 +810,7 @@ func TestNormalizeOpenAIResponsesImageOnlyModel_PreservesExistingImageTool(t *te
 }
 
 func TestValidateOpenAIResponsesImageModel_RejectsImageOnlyModel(t *testing.T) {
-	err := validateOpenAIResponsesImageModel(map[string]any{
+	err := verifyOpenAIResponsesImageModel(map[string]any{
 		"tools": []any{
 			map[string]any{"type": "image_generation"},
 		},

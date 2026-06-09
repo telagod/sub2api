@@ -264,8 +264,8 @@ func (s *httpUpstreamService) getClientEntryWithTLS(proxyURL string, accountID i
 	settings := s.resolvePoolSettings(isolation, accountConcurrency)
 	settings = s.applyProfilePoolSettings(settings, upstreamProfile)
 	// TLS 指纹客户端使用独立的缓存键，加 "tls:" 前缀
-	cacheKey := "tls:" + buildCacheKey(isolation, proxyKey, accountID, upstreamProtocolModeDefault)
-	poolKey := buildPoolKey(settings, upstreamProtocolModeDefault) + ":tls"
+	cacheKey := "tls:" + composeCacheKey(isolation, proxyKey, accountID, upstreamProtocolModeDefault)
+	poolKey := composePoolKey(settings, upstreamProtocolModeDefault) + ":tls"
 
 	now := time.Now()
 	nowUnix := now.UnixNano()
@@ -424,9 +424,9 @@ func (s *httpUpstreamService) getClientEntry(proxyURL string, accountID int64, a
 	settings := s.resolvePoolSettings(isolation, accountConcurrency)
 	settings = s.applyProfilePoolSettings(settings, profile)
 	// 构建缓存键（根据隔离策略不同）
-	cacheKey := buildCacheKey(isolation, proxyKey, accountID, protocolMode)
+	cacheKey := composeCacheKey(isolation, proxyKey, accountID, protocolMode)
 	// 构建连接池配置键（用于检测配置变更）
-	poolKey := buildPoolKey(settings, protocolMode)
+	poolKey := composePoolKey(settings, protocolMode)
 
 	now := time.Now()
 	nowUnix := now.UnixNano()
@@ -469,7 +469,7 @@ func (s *httpUpstreamService) getClientEntry(proxyURL string, accountID int64, a
 	}
 
 	// 缓存未命中或需要重建，创建新客户端
-	transport, err := buildUpstreamTransport(settings, parsedProxy, protocolMode)
+	transport, err := upstreamTransport(settings, parsedProxy, protocolMode)
 	if err != nil {
 		s.mu.Unlock()
 		return nil, fmt.Errorf("build transport: %w", err)
@@ -677,8 +677,8 @@ func (s *httpUpstreamService) applyProfilePoolSettings(settings poolSettings, pr
 	return settings
 }
 
-// buildPoolKey 构建连接池配置键，用于检测连接池配置变更。
-func buildPoolKey(settings poolSettings, protocolMode string) string {
+// composePoolKey 构建连接池配置键，用于检测连接池配置变更。
+func composePoolKey(settings poolSettings, protocolMode string) string {
 	base := fmt.Sprintf(
 		"idle:%d|idle_host:%d|max:%d|idle_timeout:%s|header_timeout:%s",
 		settings.maxIdleConns,
@@ -693,7 +693,7 @@ func buildPoolKey(settings poolSettings, protocolMode string) string {
 	return base + "|proto:" + protocolMode
 }
 
-// buildCacheKey 构建客户端缓存键
+// composeCacheKey 构建客户端缓存键
 // 根据隔离策略决定缓存键的组成
 //
 // 参数:
@@ -708,7 +708,7 @@ func buildPoolKey(settings poolSettings, protocolMode string) string {
 //   - proxy 模式: "proxy:{proxyKey}"
 //   - account 模式: "account:{accountID}"
 //   - account_proxy 模式: "account:{accountID}|proxy:{proxyKey}"
-func buildCacheKey(isolation, proxyKey string, accountID int64, protocolMode string) string {
+func composeCacheKey(isolation, proxyKey string, accountID int64, protocolMode string) string {
 	var base string
 	switch isolation {
 	case config.ConnectionPoolIsolationAccount:
@@ -793,15 +793,15 @@ func (s *httpUpstreamService) getOrCreateOpenAIHTTP2FallbackState(proxyKey strin
 	return cached
 }
 
-func isHTTPProxyKey(proxyKey string) bool {
+func checkHTTPProxyKey(proxyKey string) bool {
 	return strings.HasPrefix(proxyKey, "http://") || strings.HasPrefix(proxyKey, "https://")
 }
 
-func isOpenAIHTTP2CompatibilityError(err error) bool {
+func checkOpenAIHTTP2CompatibilityError(err error) bool {
 	if err == nil {
 		return false
 	}
-	if isUpstreamTimeoutError(err) {
+	if checkUpstreamTimeoutError(err) {
 		return false
 	}
 	msg := strings.ToLower(err.Error())
@@ -825,7 +825,7 @@ func isOpenAIHTTP2CompatibilityError(err error) bool {
 	return false
 }
 
-func isUpstreamTimeoutError(err error) bool {
+func checkUpstreamTimeoutError(err error) bool {
 	if err == nil {
 		return false
 	}
@@ -863,7 +863,7 @@ func (s *httpUpstreamService) recordOpenAIHTTP2Failure(profile service.HTTPUpstr
 	if !settings.enabled || !settings.allowProxyFallbackToHTTP1 {
 		return
 	}
-	if !isHTTPProxyKey(proxyKey) || !isOpenAIHTTP2CompatibilityError(err) {
+	if !checkHTTPProxyKey(proxyKey) || !checkOpenAIHTTP2CompatibilityError(err) {
 		return
 	}
 	state := s.getOrCreateOpenAIHTTP2FallbackState(proxyKey)
@@ -879,7 +879,7 @@ func (s *httpUpstreamService) recordOpenAIHTTP2Success(profile service.HTTPUpstr
 	if profile != service.HTTPUpstreamProfileOpenAI || protocolMode != upstreamProtocolModeOpenAIH2 {
 		return
 	}
-	if !isHTTPProxyKey(proxyKey) {
+	if !checkHTTPProxyKey(proxyKey) {
 		return
 	}
 	raw, ok := s.openAIHTTP2Fallbacks.Load(proxyKey)
@@ -1032,7 +1032,7 @@ func defaultPoolSettings(cfg *config.Config) poolSettings {
 	}
 }
 
-// buildUpstreamTransport 构建上游请求的 Transport
+// upstreamTransport 构建上游请求的 Transport
 // 使用配置文件中的连接池参数，支持生产环境调优
 //
 // 参数:
@@ -1049,7 +1049,7 @@ func defaultPoolSettings(cfg *config.Config) poolSettings {
 //   - MaxConnsPerHost: 每主机最大连接数（达到后新请求等待）
 //   - IdleConnTimeout: 空闲连接超时（超时后关闭）
 //   - ResponseHeaderTimeout: 等待响应头超时（不影响流式传输）
-func buildUpstreamTransport(settings poolSettings, proxyURL *url.URL, protocolMode string) (*http.Transport, error) {
+func upstreamTransport(settings poolSettings, proxyURL *url.URL, protocolMode string) (*http.Transport, error) {
 	transport := &http.Transport{
 		MaxIdleConns:          settings.maxIdleConns,
 		MaxIdleConnsPerHost:   settings.maxIdleConnsPerHost,

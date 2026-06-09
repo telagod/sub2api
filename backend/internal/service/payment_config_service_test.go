@@ -244,14 +244,14 @@ func TestApplyVisibleMethodRoutingToEnabledTypes(t *testing.T) {
 		VisibleMethodSourceOfficialWechat: false,
 	}
 
-	got := applyVisibleMethodRoutingToEnabledTypes(base, vals, available)
+	got := routeMethodTypes(base, vals, available)
 	want := []string{"alipay", "stripe"}
 	if len(got) != len(want) {
-		t.Fatalf("applyVisibleMethodRoutingToEnabledTypes len = %d, want %d (%v)", len(got), len(want), got)
+		t.Fatalf("routeMethodTypes len = %d, want %d (%v)", len(got), len(want), got)
 	}
 	for i := range want {
 		if got[i] != want[i] {
-			t.Fatalf("applyVisibleMethodRoutingToEnabledTypes[%d] = %q, want %q (full=%v)", i, got[i], want[i], got)
+			t.Fatalf("routeMethodTypes[%d] = %q, want %q (full=%v)", i, got[i], want[i], got)
 		}
 	}
 }
@@ -268,14 +268,14 @@ func TestApplyVisibleMethodRoutingAddsConfiguredVisibleMethod(t *testing.T) {
 		VisibleMethodSourceEasyPayAlipay: true,
 	}
 
-	got := applyVisibleMethodRoutingToEnabledTypes(base, vals, available)
+	got := routeMethodTypes(base, vals, available)
 	want := []string{"stripe", "alipay"}
 	if len(got) != len(want) {
-		t.Fatalf("applyVisibleMethodRoutingToEnabledTypes len = %d, want %d (%v)", len(got), len(want), got)
+		t.Fatalf("routeMethodTypes len = %d, want %d (%v)", len(got), len(want), got)
 	}
 	for i := range want {
 		if got[i] != want[i] {
-			t.Fatalf("applyVisibleMethodRoutingToEnabledTypes[%d] = %q, want %q (full=%v)", i, got[i], want[i], got)
+			t.Fatalf("routeMethodTypes[%d] = %q, want %q (full=%v)", i, got[i], want[i], got)
 		}
 	}
 }
@@ -289,7 +289,7 @@ func TestBuildVisibleMethodSourceAvailability(t *testing.T) {
 		{ProviderKey: payment.TypeWxpay, SupportedTypes: "wxpay_direct"},
 	}
 
-	got := buildVisibleMethodSourceAvailability(instances)
+	got := methodSourceAvail(instances)
 	if !got[VisibleMethodSourceOfficialAlipay] {
 		t.Fatalf("expected %q to be available", VisibleMethodSourceOfficialAlipay)
 	}

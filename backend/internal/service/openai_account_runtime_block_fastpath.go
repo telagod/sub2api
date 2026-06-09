@@ -35,7 +35,7 @@ func (s *OpenAIGatewayService) handleOpenAIAccountUpstreamError(ctx context.Cont
 	stateCtx, cancel := openAIAccountStateContext(ctx)
 	defer cancel()
 
-	if isOpenAIImageRateLimitError(statusCode, responseBody) {
+	if checkOpenAIImageRateLimitError(statusCode, responseBody) {
 		if s != nil && s.rateLimitService != nil {
 			_ = s.rateLimitService.HandleOpenAIImageRateLimit(stateCtx, account, statusCode, headers, responseBody)
 		}
@@ -66,7 +66,7 @@ func (s *OpenAIGatewayService) markOpenAIOAuth429RateLimited(ctx context.Context
 
 	cooldownUntil := time.Now().Add(openAIOAuth429FallbackCooldown)
 	if s.rateLimitService != nil {
-		if resetAt := s.rateLimitService.calculateOpenAI429ResetTime(headers); resetAt != nil && resetAt.After(time.Now()) {
+		if resetAt := s.rateLimitService.calcOpenAI429ResetTime(headers); resetAt != nil && resetAt.After(time.Now()) {
 			cooldownUntil = *resetAt
 		} else if resetUnix := parseOpenAIRateLimitResetTime(responseBody); resetUnix != nil {
 			if resetAt := time.Unix(*resetUnix, 0); resetAt.After(time.Now()) {

@@ -129,7 +129,7 @@ func synthesizeResponseID(c *gin.Context) string {
 	return "resp_" + strings.ReplaceAll(uuid.NewString(), "-", "")
 }
 
-// requestModel 取当前请求的 inbound model（由 setOpsRequestContext 写入）。
+// requestModel 取当前请求的 inbound model（由 assignOpsRequestContext 写入）。
 // 缺失时返回 ""；caller 据此决定是否忽略该字段。
 func requestModel(c *gin.Context) string {
 	if c == nil {

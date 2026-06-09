@@ -452,7 +452,7 @@ func (s *OpsService) UpdateErrorResolution(ctx context.Context, errorID int64, r
 	return s.opsRepo.UpdateErrorResolution(ctx, errorID, resolved, resolvedByUserID, nil)
 }
 
-func sanitizeAndTrimJSONPayload(raw []byte, maxBytes int) (jsonString string, truncated bool, bytesLen int) {
+func sanitizeAndTrimJSONPayloadV2(raw []byte, maxBytes int) (jsonString string, truncated bool, bytesLen int) {
 	bytesLen = len(raw)
 	if len(raw) == 0 {
 		return "", false, 0
@@ -763,7 +763,7 @@ func sanitizeErrorBodyForStorage(raw string, maxBytes int) (sanitized string, tr
 	}
 
 	// Prefer JSON-safe sanitization when possible.
-	if out, trunc, _ := sanitizeAndTrimJSONPayload([]byte(raw), maxBytes); out != "" {
+	if out, trunc, _ := sanitizeAndTrimJSONPayloadV2([]byte(raw), maxBytes); out != "" {
 		return out, trunc
 	}
 

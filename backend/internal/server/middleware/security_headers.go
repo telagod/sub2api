@@ -136,7 +136,7 @@ func enhanceCSPPolicy(policy string) string {
 	}
 
 	for _, required := range requiredCSPDirectiveValues {
-		if !directiveHasValue(policy, required.directive, required.value) {
+		if !directiveContains(policy, required.directive, required.value) {
 			policy = addToDirective(policy, required.directive, required.value)
 		}
 	}
@@ -144,7 +144,7 @@ func enhanceCSPPolicy(policy string) string {
 	return policy
 }
 
-func directiveHasValue(policy, directive, value string) bool {
+func directiveContains(policy, directive, value string) bool {
 	for _, rawDirective := range strings.Split(policy, ";") {
 		fields := strings.Fields(strings.TrimSpace(rawDirective))
 		if len(fields) == 0 || fields[0] != directive {

@@ -413,7 +413,7 @@ const (
 	OpenAICompactModeForceOff = "force_off"
 )
 
-func normalizeOpenAICompactMode(mode string) string {
+func sanitizeOpenAICompactMode(mode string) string {
 	switch strings.ToLower(strings.TrimSpace(mode)) {
 	case OpenAICompactModeForceOn:
 		return OpenAICompactModeForceOn
@@ -424,7 +424,7 @@ func normalizeOpenAICompactMode(mode string) string {
 	}
 }
 
-func stringMappingFromRaw(raw any) map[string]string {
+func stringMappingFromRawV2(raw any) map[string]string {
 	switch mapping := raw.(type) {
 	case map[string]any:
 		if len(mapping) == 0 {
@@ -666,7 +666,7 @@ func (a *Account) GetOpenAICompactMode() string {
 		return OpenAICompactModeAuto
 	}
 	mode, _ := a.Extra["openai_compact_mode"].(string)
-	return normalizeOpenAICompactMode(mode)
+	return sanitizeOpenAICompactMode(mode)
 }
 
 // OpenAICompactSupportKnown reports whether compact capability is known for this
@@ -714,7 +714,7 @@ func (a *Account) GetCompactModelMapping() map[string]string {
 	if a == nil || a.Credentials == nil {
 		return nil
 	}
-	return stringMappingFromRaw(a.Credentials["compact_model_mapping"])
+	return stringMappingFromRawV2(a.Credentials["compact_model_mapping"])
 }
 
 // ResolveCompactMappedModel resolves compact-only model remapping and reports
@@ -2064,7 +2064,7 @@ func NormalizeFixedQuotaWindows(extra map[string]any) {
 			hour = 0
 		}
 		lastReset := lastFixedDailyReset(hour, tz, now)
-		start := parseExtraTime(extra["quota_daily_start"])
+		start := decodeExtraTime(extra["quota_daily_start"])
 		if start.IsZero() || start.Before(lastReset) {
 			extra["quota_daily_used"] = 0.0
 			extra["quota_daily_start"] = lastReset.UTC().Format(time.RFC3339)
@@ -2084,7 +2084,7 @@ func NormalizeFixedQuotaWindows(extra map[string]any) {
 			hour = 0
 		}
 		lastReset := lastFixedWeeklyReset(day, hour, tz, now)
-		start := parseExtraTime(extra["quota_weekly_start"])
+		start := decodeExtraTime(extra["quota_weekly_start"])
 		if start.IsZero() || start.Before(lastReset) {
 			extra["quota_weekly_used"] = 0.0
 			extra["quota_weekly_start"] = lastReset.UTC().Format(time.RFC3339)
@@ -2420,7 +2420,7 @@ func parseExtraFloat64(value any) float64 {
 	return 0
 }
 
-func parseExtraTime(value any) time.Time {
+func decodeExtraTime(value any) time.Time {
 	if s, ok := value.(string); ok {
 		if t, err := time.Parse(time.RFC3339Nano, s); err == nil {
 			return t

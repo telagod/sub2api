@@ -391,24 +391,24 @@ func TestCheckUserPlatformQuotaEligibility_WindowExpiredRefreshesCache(t *testin
 
 // ── T5 tests: QueueUpdateUserPlatformQuotaUsage ───────────────────────────────
 
-// ── C-NEW-1: monthlyQuotaWindowExpired 30 天滚动测试 ─────────────────────────
+// ── C-NEW-1: monthlyQuotaWindowExpiredV2 30 天滚动测试 ─────────────────────────
 
 func TestMonthlyQuotaWindowExpired_NilStart(t *testing.T) {
-	if !monthlyQuotaWindowExpired(nil, time.Now().UTC()) {
+	if !monthlyQuotaWindowExpiredV2(nil, time.Now().UTC()) {
 		t.Error("nil start should be considered expired")
 	}
 }
 
 func TestMonthlyQuotaWindowExpired_Expired(t *testing.T) {
 	start := time.Now().UTC().Add(-30 * 24 * time.Hour)
-	if !monthlyQuotaWindowExpired(&start, time.Now().UTC()) {
+	if !monthlyQuotaWindowExpiredV2(&start, time.Now().UTC()) {
 		t.Error("start exactly 30 days ago should be expired")
 	}
 }
 
 func TestMonthlyQuotaWindowExpired_Active(t *testing.T) {
 	start := time.Now().UTC().Add(-29 * 24 * time.Hour)
-	if monthlyQuotaWindowExpired(&start, time.Now().UTC()) {
+	if monthlyQuotaWindowExpiredV2(&start, time.Now().UTC()) {
 		t.Error("start 29 days ago should NOT be expired")
 	}
 }
@@ -418,7 +418,7 @@ func TestMonthlyQuotaWindowExpired_CrossMonthBoundary(t *testing.T) {
 	// 窗口起始 4 月 20 日；5 月 1 日只过了 11 天，不足 30 天
 	start := time.Date(2026, 4, 20, 0, 0, 0, 0, time.UTC)
 	now := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)
-	if monthlyQuotaWindowExpired(&start, now) {
+	if monthlyQuotaWindowExpiredV2(&start, now) {
 		t.Error("11 days into window should NOT be expired (30-day rolling, not calendar month)")
 	}
 }
@@ -428,30 +428,30 @@ func TestNextMonthlyResetFrom_WithStart(t *testing.T) {
 	start := time.Date(2026, 5, 1, 10, 0, 0, 0, time.UTC)
 	want := start.Add(30 * 24 * time.Hour)
 	now := time.Date(2026, 5, 22, 0, 0, 0, 0, time.UTC)
-	got := nextMonthlyResetFrom(&start, now)
+	got := nextMonthlyResetFromV2(&start, now)
 	if !got.Equal(want) {
-		t.Errorf("nextMonthlyResetFrom = %v, want %v", got, want)
+		t.Errorf("nextMonthlyResetFromV2 = %v, want %v", got, want)
 	}
 }
 
 func TestNextMonthlyResetFrom_NilStart(t *testing.T) {
 	now := time.Date(2026, 5, 22, 0, 0, 0, 0, time.UTC)
-	got := nextMonthlyResetFrom(nil, now)
+	got := nextMonthlyResetFromV2(nil, now)
 	want := now.Add(30 * 24 * time.Hour)
 	if !got.Equal(want) {
-		t.Errorf("nextMonthlyResetFrom(nil) = %v, want now+30d=%v", got, want)
+		t.Errorf("nextMonthlyResetFromV2(nil) = %v, want now+30d=%v", got, want)
 	}
 }
 
 func TestNextMonthlyResetFrom_NilStart_NotEqualToNow(t *testing.T) {
 	now := time.Date(2026, 5, 22, 12, 0, 0, 0, time.UTC)
-	got := nextMonthlyResetFrom(nil, now)
+	got := nextMonthlyResetFromV2(nil, now)
 	want := now.Add(30 * 24 * time.Hour)
 	if !got.Equal(want) {
-		t.Errorf("nextMonthlyResetFrom(nil) = %v, want %v (now+30d)", got, want)
+		t.Errorf("nextMonthlyResetFromV2(nil) = %v, want %v (now+30d)", got, want)
 	}
 	if got.Equal(now) {
-		t.Error("nextMonthlyResetFrom(nil) must not return now (should be now+30d)")
+		t.Error("nextMonthlyResetFromV2(nil) must not return now (should be now+30d)")
 	}
 }
 
@@ -461,10 +461,10 @@ func TestNextMonthlyResetFrom_NilStart_NotEqualToNow(t *testing.T) {
 func TestNextMonthlyResetFrom_ExpiredStart(t *testing.T) {
 	start := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)
 	now := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC) // 距 start 61 天，已过期
-	got := nextMonthlyResetFrom(&start, now)
+	got := nextMonthlyResetFromV2(&start, now)
 	want := now.Add(30 * 24 * time.Hour)
 	if !got.Equal(want) {
-		t.Errorf("nextMonthlyResetFrom(expired) = %v, want now+30d=%v", got, want)
+		t.Errorf("nextMonthlyResetFromV2(expired) = %v, want now+30d=%v", got, want)
 	}
 	if !got.After(now) {
 		t.Error("expired window 的下次重置必须在 now 之后，不能是过去时间")
@@ -614,14 +614,14 @@ func TestCheckBillingEligibility_NonSubscriptionGroup_AppliesQuota(t *testing.T)
 	}
 }
 
-// ── B-3: monthlyQuotaWindowExpired 30 天边界表驱动测试 ────────────────────────
+// ── B-3: monthlyQuotaWindowExpiredV2 30 天边界表驱动测试 ────────────────────────
 // 覆盖 4 个必须场景:
 //  1. 恰好 30 天 → expired
 //  2. 30*24h - 1ns → not expired
 //  3. 跨月末（2024-02-28 → 2024-03-29T00:00:01Z）→ expired
 //  4. 跨年（2024-12-15 → 2025-01-14T00:00:01Z）→ expired
 //
-// repo 层 monthlyMaybeReset 不可导出，通过 service 层 monthlyQuotaWindowExpired 间接覆盖。
+// repo 层 monthlyMaybeReset 不可导出，通过 service 层 monthlyQuotaWindowExpiredV2 间接覆盖。
 func TestMonthlyQuotaWindowExpired_BoundaryTable(t *testing.T) {
 	const thirtyDays = 30 * 24 * time.Hour
 
@@ -660,9 +660,9 @@ func TestMonthlyQuotaWindowExpired_BoundaryTable(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc // capture range variable
 		t.Run(tc.name, func(t *testing.T) {
-			got := monthlyQuotaWindowExpired(&tc.start, tc.now)
+			got := monthlyQuotaWindowExpiredV2(&tc.start, tc.now)
 			if got != tc.expired {
-				t.Errorf("monthlyQuotaWindowExpired(start=%v, now=%v) = %v, want %v",
+				t.Errorf("monthlyQuotaWindowExpiredV2(start=%v, now=%v) = %v, want %v",
 					tc.start, tc.now, got, tc.expired)
 			}
 		})

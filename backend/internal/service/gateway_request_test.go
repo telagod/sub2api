@@ -1084,7 +1084,7 @@ func parseGatewayRequestOld(body []byte, protocol string) (*ParsedRequest, error
 		}
 	}
 
-	if err := refreshGatewayRequestRanges(parsed, protocol); err != nil {
+	if err := refreshGatewayRequestRangesV2(parsed, protocol); err != nil {
 		return nil, err
 	}
 

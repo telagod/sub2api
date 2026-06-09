@@ -76,12 +76,12 @@ func (c *openAIWSPolicyEnforcingFrameConn) Close() error {
 	return c.inner.Close()
 }
 
-// openAIWSPassthroughPolicyModelForFrame returns the upstream-perspective
+// openAIWSPassthroughPolicyModelForFrameV2 returns the upstream-perspective
 // model name that should be passed to evaluateOpenAIFastPolicy for a single
 // passthrough WS frame. Mirrors the HTTP-side normalization
 // (account.GetMappedModel + normalizeOpenAIModelForUpstream) so the WS path
 // matches model whitelists identically.
-func openAIWSPassthroughPolicyModelForFrame(account *Account, payload []byte) string {
+func openAIWSPassthroughPolicyModelForFrameV2(account *Account, payload []byte) string {
 	if account == nil || len(payload) == 0 {
 		return ""
 	}
@@ -92,7 +92,7 @@ func openAIWSPassthroughPolicyModelForFrame(account *Account, payload []byte) st
 	return normalizeOpenAIModelForUpstream(account, account.GetMappedModel(original))
 }
 
-// openAIWSPassthroughPolicyModelFromSessionFrame returns the upstream model
+// openAIWSPassthroughPolicyModelFromSessionFrameV2 returns the upstream model
 // derived from a session.update frame's session.model field. Returns "" when
 // the frame is not a session.update event or carries no session.model. Used
 // by the per-frame policy filter (client→upstream direction) to keep
@@ -109,7 +109,7 @@ func openAIWSPassthroughPolicyModelForFrame(account *Account, payload []byte) st
 // session.update to gpt-5.5, then send response.create without "model" so
 // the per-frame resolver returns "" and the stale capturedSessionModel falls
 // back to gpt-4o — defeating the gpt-5.5 fast-policy filter.
-func openAIWSPassthroughPolicyModelFromSessionFrame(account *Account, payload []byte) string {
+func openAIWSPassthroughPolicyModelFromSessionFrameV2(account *Account, payload []byte) string {
 	if account == nil || len(payload) == 0 {
 		return ""
 	}
@@ -132,12 +132,12 @@ type openAIWSPassthroughUsageMeta struct {
 	sessionRequestModel string
 }
 
-func newOpenAIWSPassthroughUsageMeta(initialRequestModel string, firstFrame []byte) *openAIWSPassthroughUsageMeta {
+func newOpenAIWSPassthroughUsageMetaV2(initialRequestModel string, firstFrame []byte) *openAIWSPassthroughUsageMeta {
 	meta := &openAIWSPassthroughUsageMeta{
 		sessionRequestModel: strings.TrimSpace(initialRequestModel),
 	}
 	if meta.sessionRequestModel == "" {
-		meta.sessionRequestModel = openAIWSPassthroughRequestModelForFrame(firstFrame)
+		meta.sessionRequestModel = openAIWSPassthroughRequestModelForFrameV2(firstFrame)
 	}
 	return meta
 }
@@ -154,16 +154,16 @@ func (m *openAIWSPassthroughUsageMeta) updateSessionRequestModel(payload []byte)
 	if m == nil {
 		return
 	}
-	if model := openAIWSPassthroughRequestModelFromSessionFrame(payload); model != "" {
+	if model := openAIWSPassthroughRequestModelFromSessionFrameV2(payload); model != "" {
 		m.sessionRequestModel = model
 	}
 }
 
 func (m *openAIWSPassthroughUsageMeta) requestModelForFrame(payload []byte) string {
 	if m == nil {
-		return openAIWSPassthroughRequestModelForFrame(payload)
+		return openAIWSPassthroughRequestModelForFrameV2(payload)
 	}
-	if model := openAIWSPassthroughRequestModelForFrame(payload); model != "" {
+	if model := openAIWSPassthroughRequestModelForFrameV2(payload); model != "" {
 		return model
 	}
 	return m.sessionRequestModel
@@ -177,14 +177,14 @@ func (m *openAIWSPassthroughUsageMeta) updateFromResponseCreate(policyOutput []b
 	m.reasoningEffort.Store(extractOpenAIReasoningEffortFromBody(policyOutput, requestModelForFrame))
 }
 
-func openAIWSPassthroughRequestModelForFrame(payload []byte) string {
+func openAIWSPassthroughRequestModelForFrameV2(payload []byte) string {
 	if len(payload) == 0 || strings.TrimSpace(gjson.GetBytes(payload, "type").String()) != "response.create" {
 		return ""
 	}
 	return strings.TrimSpace(gjson.GetBytes(payload, "model").String())
 }
 
-func openAIWSPassthroughRequestModelFromSessionFrame(payload []byte) string {
+func openAIWSPassthroughRequestModelFromSessionFrameV2(payload []byte) string {
 	if len(payload) == 0 || strings.TrimSpace(gjson.GetBytes(payload, "type").String()) != "session.update" {
 		return ""
 	}
@@ -269,12 +269,12 @@ func (s *OpenAIGatewayService) proxyResponsesWebSocketV2Passthrough(
 	// negotiated at session.update time. Without this fallback, an empty
 	// model would miss any admin-configured model whitelist and be silently
 	// passed through, defeating that policy on every frame after the first.
-	capturedSessionModel := openAIWSPassthroughPolicyModelForFrame(account, firstClientMessage)
+	capturedSessionModel := openAIWSPassthroughPolicyModelForFrameV2(account, firstClientMessage)
 	initialRequestModel := ""
 	if hooks != nil {
 		initialRequestModel = hooks.InitialRequestModel
 	}
-	usageMeta := newOpenAIWSPassthroughUsageMeta(initialRequestModel, firstClientMessage)
+	usageMeta := newOpenAIWSPassthroughUsageMetaV2(initialRequestModel, firstClientMessage)
 	updatedFirst, blocked, policyErr := s.applyOpenAIFastPolicyToWSResponseCreate(ctx, account, capturedSessionModel, firstClientMessage)
 	if policyErr != nil {
 		return fmt.Errorf("apply openai fast policy on first ws frame: %w", policyErr)
@@ -421,7 +421,7 @@ func (s *OpenAIGatewayService) proxyResponsesWebSocketV2Passthrough(
 			// → 不带 model 的 response.create fallback 到 gpt-4o" 的
 			// 绕过路径。这里只看 session.update 事件中的 session.model
 			// 字段，response.create 自己的 model 仍然由其本帧字段决定。
-			if updated := openAIWSPassthroughPolicyModelFromSessionFrame(account, payload); updated != "" {
+			if updated := openAIWSPassthroughPolicyModelFromSessionFrameV2(account, payload); updated != "" {
 				capturedSessionModel = updated
 			}
 			usageMeta.updateSessionRequestModel(payload)
@@ -431,7 +431,7 @@ func (s *OpenAIGatewayService) proxyResponsesWebSocketV2Passthrough(
 			// session-level model captured from the first frame so the
 			// model whitelist still resolves. An empty model would miss
 			// any whitelist and silently fall back to pass.
-			model := openAIWSPassthroughPolicyModelForFrame(account, payload)
+			model := openAIWSPassthroughPolicyModelForFrameV2(account, payload)
 			if model == "" {
 				model = capturedSessionModel
 			}

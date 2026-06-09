@@ -98,7 +98,7 @@ func TestGatewayService_BuildAnthropicVertexServiceAccount_StripsContextManageme
 		"Vertex 路径下客户端 header 缺 context-management beta 时，必须 strip body 同名字段")
 	// header 对称断言：覆盖未来某人在 Vertex builder 里加入与 sanitize 不一致的 header 处理。
 	outBeta := getHeaderRaw(req.Header, "anthropic-beta")
-	require.False(t, anthropicBetaTokensContains(outBeta, "context-management-2025-06-27"),
+	require.False(t, betaTokensHas(outBeta, "context-management-2025-06-27"),
 		"与 body 对称：outgoing anthropic-beta header 也不含 context-management beta")
 }
 
@@ -127,6 +127,6 @@ func TestGatewayService_BuildAnthropicVertexServiceAccount_PreservesContextManag
 	require.True(t, gjson.GetBytes(got, "context_management").Exists(),
 		"Vertex + 客户端 header 包含 context-management beta 时字段必须保留")
 	outBeta := getHeaderRaw(req.Header, "anthropic-beta")
-	require.True(t, anthropicBetaTokensContains(outBeta, "context-management-2025-06-27"),
+	require.True(t, betaTokensHas(outBeta, "context-management-2025-06-27"),
 		"与 body 对称：outgoing anthropic-beta header 同步含 context-management beta")
 }

@@ -2635,14 +2635,14 @@ func (s *OpenAIGatewayService) ProxyResponsesWebSocketFromClient(
 				return openAIWSClientPayload{}, NewOpenAIWSClientCloseError(coderws.StatusPolicyViolation, "invalid websocket request payload", err)
 			}
 			bridgeModified := false
-			if ensureOpenAIResponsesImageGenerationTool(payloadMap) {
+			if requireOpenAIResponsesImageGenerationTool(payloadMap) {
 				bridgeModified = true
 				logOpenAIWSModeInfo("ingress_ws_codex_image_tool_injected account_id=%d", account.ID)
 			}
-			if normalizeOpenAIResponsesImageGenerationTools(payloadMap) {
+			if sanitizeOpenAIResponsesImageGenerationTools(payloadMap) {
 				bridgeModified = true
 			}
-			if applyCodexImageGenerationBridgeInstructions(payloadMap) {
+			if injectCodexImageBridge(payloadMap) {
 				bridgeModified = true
 				logOpenAIWSModeInfo("ingress_ws_codex_image_bridge_instructions_added account_id=%d", account.ID)
 			}

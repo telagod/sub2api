@@ -21,24 +21,24 @@ func TestLooksLikeSystemKey(t *testing.T) {
 		{"", false},
 	}
 	for _, c := range cases {
-		if got := looksLikeSystemKey(c.in); got != c.want {
-			t.Errorf("looksLikeSystemKey(%q)=%v want %v", c.in, got, c.want)
+		if got := looksLikeSystemKeyV2(c.in); got != c.want {
+			t.Errorf("looksLikeSystemKeyV2(%q)=%v want %v", c.in, got, c.want)
 		}
 	}
 	long := make([]byte, 129)
 	for i := range long {
 		long[i] = 'a'
 	}
-	if looksLikeSystemKey(string(long)) {
+	if looksLikeSystemKeyV2(string(long)) {
 		t.Errorf("129-char key should be rejected")
 	}
 }
 
 func TestKeyPrefix(t *testing.T) {
-	if got := keyPrefix("sk-3f2a9c7e", 8); got != "sk-3f2a9" {
-		t.Errorf("keyPrefix=%q want %q", got, "sk-3f2a9")
+	if got := keyPrefixV2("sk-3f2a9c7e", 8); got != "sk-3f2a9" {
+		t.Errorf("keyPrefixV2=%q want %q", got, "sk-3f2a9")
 	}
-	if got := keyPrefix("abc", 8); got != "abc" {
+	if got := keyPrefixV2("abc", 8); got != "abc" {
 		t.Errorf("short key should be returned as-is, got %q", got)
 	}
 }
@@ -109,9 +109,9 @@ func TestExtractAttemptedKey(t *testing.T) {
 			}
 			c.Request = req
 
-			got := extractAttemptedKey(c)
+			got := pullAttemptedKey(c)
 			if got != tc.want {
-				t.Errorf("extractAttemptedKey(%v) = %q, want %q", tc.headers, got, tc.want)
+				t.Errorf("pullAttemptedKey(%v) = %q, want %q", tc.headers, got, tc.want)
 			}
 		})
 	}

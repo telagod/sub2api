@@ -200,7 +200,7 @@ func TestExpectedNotificationProviderKeyPrefersOrderInstanceProvider(t *testing.
 
 	assert.Equal(t,
 		payment.TypeEasyPay,
-		expectedNotificationProviderKey(registry, payment.TypeAlipay, "", payment.TypeEasyPay),
+		expectedNotificationProviderKeyV2(registry, payment.TypeAlipay, "", payment.TypeEasyPay),
 	)
 }
 
@@ -215,7 +215,7 @@ func TestExpectedNotificationProviderKeyUsesRegistryMappingForLegacyOrders(t *te
 
 	assert.Equal(t,
 		payment.TypeEasyPay,
-		expectedNotificationProviderKey(registry, payment.TypeAlipay, "", ""),
+		expectedNotificationProviderKeyV2(registry, payment.TypeAlipay, "", ""),
 	)
 }
 
@@ -224,7 +224,7 @@ func TestExpectedNotificationProviderKeyFallsBackToPaymentType(t *testing.T) {
 
 	assert.Equal(t,
 		payment.TypeWxpay,
-		expectedNotificationProviderKey(nil, payment.TypeWxpay, "", ""),
+		expectedNotificationProviderKeyV2(nil, payment.TypeWxpay, "", ""),
 	)
 }
 
@@ -239,7 +239,7 @@ func TestExpectedNotificationProviderKeyPrefersOrderSnapshotProviderKey(t *testi
 
 	assert.Equal(t,
 		payment.TypeEasyPay,
-		expectedNotificationProviderKey(registry, payment.TypeAlipay, payment.TypeEasyPay, ""),
+		expectedNotificationProviderKeyV2(registry, payment.TypeAlipay, payment.TypeEasyPay, ""),
 	)
 }
 
@@ -279,7 +279,7 @@ func TestValidateProviderNotificationMetadataRejectsWxpaySnapshotMismatch(t *tes
 		},
 	}
 
-	err := validateProviderNotificationMetadata(order, payment.TypeWxpay, map[string]string{
+	err := verifyProviderNotificationMetadata(order, payment.TypeWxpay, map[string]string{
 		"appid":       "wx-app-other",
 		"mchid":       "mch-expected",
 		"currency":    "CNY",
@@ -300,7 +300,7 @@ func TestValidateProviderNotificationMetadataAllowsLegacyOrdersWithoutSnapshotFi
 		},
 	}
 
-	err := validateProviderNotificationMetadata(order, payment.TypeWxpay, map[string]string{
+	err := verifyProviderNotificationMetadata(order, payment.TypeWxpay, map[string]string{
 		"appid":       "wx-app-runtime",
 		"mchid":       "mch-runtime",
 		"currency":    "CNY",
@@ -312,25 +312,25 @@ func TestValidateProviderNotificationMetadataAllowsLegacyOrdersWithoutSnapshotFi
 func TestParseLegacyPaymentOrderID(t *testing.T) {
 	t.Parallel()
 
-	oid, ok := parseLegacyPaymentOrderID("sub2_42", &dbent.NotFoundError{})
+	oid, ok := decodeLegacyPaymentOrderID("sub2_42", &dbent.NotFoundError{})
 	assert.True(t, ok)
 	assert.EqualValues(t, 42, oid)
 
-	_, ok = parseLegacyPaymentOrderID("42", &dbent.NotFoundError{})
+	_, ok = decodeLegacyPaymentOrderID("42", &dbent.NotFoundError{})
 	assert.False(t, ok)
 
-	_, ok = parseLegacyPaymentOrderID("sub2_42", errors.New("db down"))
+	_, ok = decodeLegacyPaymentOrderID("sub2_42", errors.New("db down"))
 	assert.False(t, ok)
 }
 
 func TestIsValidProviderAmount(t *testing.T) {
 	t.Parallel()
 
-	assert.True(t, isValidProviderAmount(0.01))
-	assert.False(t, isValidProviderAmount(0))
-	assert.False(t, isValidProviderAmount(-1))
-	assert.False(t, isValidProviderAmount(math.NaN()))
-	assert.False(t, isValidProviderAmount(math.Inf(1)))
+	assert.True(t, checkValidProviderAmount(0.01))
+	assert.False(t, checkValidProviderAmount(0))
+	assert.False(t, checkValidProviderAmount(-1))
+	assert.False(t, checkValidProviderAmount(math.NaN()))
+	assert.False(t, checkValidProviderAmount(math.Inf(1)))
 }
 
 func TestValidateProviderNotificationMetadataRejectsAlipaySnapshotMismatch(t *testing.T) {
@@ -344,7 +344,7 @@ func TestValidateProviderNotificationMetadataRejectsAlipaySnapshotMismatch(t *te
 		},
 	}
 
-	err := validateProviderNotificationMetadata(order, payment.TypeAlipay, map[string]string{
+	err := verifyProviderNotificationMetadata(order, payment.TypeAlipay, map[string]string{
 		"app_id": "alipay-app-other",
 	})
 	assert.ErrorContains(t, err, "alipay app_id mismatch")
@@ -361,7 +361,7 @@ func TestValidateProviderNotificationMetadataRejectsEasyPaySnapshotMismatch(t *t
 		},
 	}
 
-	err := validateProviderNotificationMetadata(order, payment.TypeEasyPay, map[string]string{
+	err := verifyProviderNotificationMetadata(order, payment.TypeEasyPay, map[string]string{
 		"pid": "pid-other",
 	})
 	assert.ErrorContains(t, err, "easypay pid mismatch")
@@ -379,14 +379,14 @@ func TestValidateProviderNotificationMetadataRejectsAirwallexSnapshotMismatch(t 
 		},
 	}
 
-	err := validateProviderNotificationMetadata(order, payment.TypeAirwallex, map[string]string{
+	err := verifyProviderNotificationMetadata(order, payment.TypeAirwallex, map[string]string{
 		"account_id": "acct_other",
 		"currency":   "CNY",
 		"status":     "SUCCEEDED",
 	})
 	assert.ErrorContains(t, err, "airwallex account_id mismatch")
 
-	err = validateProviderNotificationMetadata(order, payment.TypeAirwallex, map[string]string{
+	err = verifyProviderNotificationMetadata(order, payment.TypeAirwallex, map[string]string{
 		"account_id": "acct_expected",
 		"currency":   "USD",
 		"status":     "SUCCEEDED",
@@ -405,7 +405,7 @@ func TestValidateProviderNotificationMetadataRejectsStripeCurrencyMismatch(t *te
 		},
 	}
 
-	err := validateProviderNotificationMetadata(order, payment.TypeStripe, map[string]string{
+	err := verifyProviderNotificationMetadata(order, payment.TypeStripe, map[string]string{
 		"currency": "USD",
 	})
 	assert.ErrorContains(t, err, "stripe currency mismatch")
@@ -414,7 +414,7 @@ func TestValidateProviderNotificationMetadataRejectsStripeCurrencyMismatch(t *te
 func TestPaymentAmountToleranceForThreeDecimalCurrency(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, amountToleranceCNY, paymentAmountToleranceForCurrency("CNY"))
-	assert.Equal(t, amountToleranceCNY, paymentAmountToleranceForCurrency("JPY"))
-	assert.InDelta(t, 0.0005, paymentAmountToleranceForCurrency("KWD"), 1e-12)
+	assert.Equal(t, amountToleranceCNY, paymentAmountToleranceForCurrencyV2("CNY"))
+	assert.Equal(t, amountToleranceCNY, paymentAmountToleranceForCurrencyV2("JPY"))
+	assert.InDelta(t, 0.0005, paymentAmountToleranceForCurrencyV2("KWD"), 1e-12)
 }

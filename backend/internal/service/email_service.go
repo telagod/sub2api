@@ -111,14 +111,14 @@ func (s *EmailService) SetNotificationEmailService(notificationEmailService *Not
 	s.notificationEmailService = notificationEmailService
 }
 
-func firstEmailLocale(locales []string) string {
+func firstEmailLocaleV2(locales []string) string {
 	if len(locales) == 0 {
 		return ""
 	}
 	return strings.TrimSpace(locales[0])
 }
 
-func emailRecipientName(email string) string {
+func emailRecipientNameV2(email string) string {
 	trimmed := strings.TrimSpace(email)
 	if trimmed == "" {
 		return ""
@@ -353,9 +353,9 @@ func (s *EmailService) SendVerifyCode(ctx context.Context, email, siteName strin
 	if s.notificationEmailService != nil {
 		err := s.notificationEmailService.Send(ctx, NotificationEmailSendInput{
 			Event:          NotificationEmailEventAuthVerifyCode,
-			Locale:         firstEmailLocale(locale),
+			Locale:         firstEmailLocaleV2(locale),
 			RecipientEmail: email,
-			RecipientName:  emailRecipientName(email),
+			RecipientName:  emailRecipientNameV2(email),
 			Variables: map[string]string{
 				"verification_code":  code,
 				"expires_in_minutes": strconv.Itoa(int(verifyCodeTTL / time.Minute)),
@@ -548,9 +548,9 @@ func (s *EmailService) SendPasswordResetEmail(ctx context.Context, email, siteNa
 	if s.notificationEmailService != nil {
 		err := s.notificationEmailService.Send(ctx, NotificationEmailSendInput{
 			Event:          NotificationEmailEventAuthPasswordReset,
-			Locale:         firstEmailLocale(locale),
+			Locale:         firstEmailLocaleV2(locale),
 			RecipientEmail: email,
-			RecipientName:  emailRecipientName(email),
+			RecipientName:  emailRecipientNameV2(email),
 			Variables: map[string]string{
 				"reset_url":          fullResetURL,
 				"expires_in_minutes": strconv.Itoa(int(passwordResetTokenTTL / time.Minute)),
@@ -587,7 +587,7 @@ func (s *EmailService) SendPasswordResetEmailWithCooldown(ctx context.Context, e
 	}
 
 	// Send email using core method
-	if err := s.SendPasswordResetEmail(ctx, email, siteName, resetURL, firstEmailLocale(locale)); err != nil {
+	if err := s.SendPasswordResetEmail(ctx, email, siteName, resetURL, firstEmailLocaleV2(locale)); err != nil {
 		return err
 	}
 

@@ -723,10 +723,10 @@ func (s *OpsAlertEvaluatorService) maybeSendAlertEmail(ctx context.Context, runt
 			if err := s.emailService.notificationEmailService.Send(ctx, NotificationEmailSendInput{
 				Event:          NotificationEmailEventOpsAlert,
 				RecipientEmail: addr,
-				RecipientName:  emailRecipientName(addr),
+				RecipientName:  emailRecipientNameV2(addr),
 				SourceType:     "ops_alert",
 				SourceID:       fmt.Sprintf("%d", event.ID),
-				Variables:      opsAlertEmailVariables(rule, event),
+				Variables:      opsAlertEmailVariablesV2(rule, event),
 			}); err == nil {
 				anySent = true
 				continue
@@ -747,7 +747,7 @@ func (s *OpsAlertEvaluatorService) maybeSendAlertEmail(ctx context.Context, runt
 	return anySent
 }
 
-func opsAlertEmailVariables(rule *OpsAlertRule, event *OpsAlertEvent) map[string]string {
+func opsAlertEmailVariablesV2(rule *OpsAlertRule, event *OpsAlertEvent) map[string]string {
 	variables := map[string]string{
 		"rule_name":         "-",
 		"severity":          "-",

@@ -424,7 +424,7 @@ const (
 	maxAPIKeyDailyUsageDays     = 90
 )
 
-func parseAPIKeyDailyUsageDays(raw string) (int, bool) {
+func decodeAPIKeyDailyUsageDays(raw string) (int, bool) {
 	if strings.TrimSpace(raw) == "" {
 		return defaultAPIKeyDailyUsageDays, true
 	}
@@ -435,7 +435,7 @@ func parseAPIKeyDailyUsageDays(raw string) (int, bool) {
 	return days, true
 }
 
-func apiKeyDailyUsageRange(days int, userTZ string) (time.Time, time.Time) {
+func keyDailyRange(days int, userTZ string) (time.Time, time.Time) {
 	now := timezone.NowInUserLocation(userTZ)
 	startTime := timezone.StartOfDayInUserLocation(now.AddDate(0, 0, -(days-1)), userTZ)
 	endTime := timezone.StartOfDayInUserLocation(now.AddDate(0, 0, 1), userTZ)
@@ -576,7 +576,7 @@ func (h *UsageHandler) GetMyAPIKeyDailyUsage(c *gin.Context) {
 		return
 	}
 
-	days, ok := parseAPIKeyDailyUsageDays(c.DefaultQuery("days", ""))
+	days, ok := decodeAPIKeyDailyUsageDays(c.DefaultQuery("days", ""))
 	if !ok {
 		response.BadRequest(c, "Invalid days, allowed range is 1-90")
 		return
@@ -598,7 +598,7 @@ func (h *UsageHandler) GetMyAPIKeyDailyUsage(c *gin.Context) {
 	}
 
 	userTZ := c.Query("timezone")
-	startTime, endTime := apiKeyDailyUsageRange(days, userTZ)
+	startTime, endTime := keyDailyRange(days, userTZ)
 	items, err := h.usageService.GetAPIKeyDailyUsage(c.Request.Context(), subject.UserID, apiKeyID, startTime, endTime)
 	if err != nil {
 		response.ErrorFrom(c, err)

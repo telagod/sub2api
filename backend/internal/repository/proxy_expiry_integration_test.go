@@ -22,7 +22,7 @@ type ProxyExpirySuite struct {
 func (s *ProxyExpirySuite) SetupTest() {
 	s.ctx = context.Background()
 	s.tx = testEntTx(s.T())
-	s.repo = newProxyRepositoryWithSQL(s.tx.Client(), s.tx)
+	s.repo = newProxyRepositoryWithSQLV2(s.tx.Client(), s.tx)
 }
 func TestProxyExpirySuite(t *testing.T) { suite.Run(t, new(ProxyExpirySuite)) }
 

@@ -47,7 +47,7 @@ func (s *AuthService) SendPendingOAuthVerifyCode(ctx context.Context, email stri
 	if s.settingService != nil {
 		siteName = s.settingService.GetSiteName(ctx)
 	}
-	if err := s.emailService.SendVerifyCode(ctx, email, siteName, firstEmailLocale(locale)); err != nil {
+	if err := s.emailService.SendVerifyCode(ctx, email, siteName, firstEmailLocaleV2(locale)); err != nil {
 		return nil, err
 	}
 	return &SendVerifyCodeResult{

@@ -185,7 +185,7 @@ func (h *AuthHandler) DingTalkOAuthStart(c *gin.Context) {
 	secure := isRequestHTTPS(c)
 	setDTCookie(c, dtStateCookie, encodeCookieValue(state), dtCookieMaxAge, secure)
 	setDTCookie(c, dtRedirectCookie, encodeCookieValue(redirectTo), dtCookieMaxAge, secure)
-	intent := normalizeOAuthIntent(c.Query("intent"))
+	intent := sanitizeOAuthIntent(c.Query("intent"))
 	setDTCookie(c, dtIntentCookie, encodeCookieValue(intent), dtCookieMaxAge, secure)
 	setOAuthPendingBrowserCookie(c, browserKey, secure)
 	clearOAuthPendingSessionCookie(c, secure)
@@ -240,7 +240,7 @@ func (h *AuthHandler) DingTalkOAuthCallback(c *gin.Context) {
 	}
 	redirectTo, _ := readCookieDecoded(c, dtRedirectCookie)
 	intent, _ := readCookieDecoded(c, dtIntentCookie)
-	intent = normalizeOAuthIntent(intent)
+	intent = sanitizeOAuthIntent(intent)
 	browserKey, _ := readOAuthPendingBrowserCookie(c)
 	if strings.TrimSpace(browserKey) == "" {
 		redirectOAuthError(c, frontendCB, "missing_browser_session", "missing browser session cookie", "")

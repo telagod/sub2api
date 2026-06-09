@@ -197,7 +197,7 @@ func PrepareBedrockRequestBodyWithTokens(body []byte, modelID string, betaTokens
 	var err error
 
 	betaTokens = filterBedrockBetaTokens(betaTokens)
-	body = sanitizeBedrockFieldsForBetaTokens(body, betaTokens)
+	body = sanitizeBedrockFieldsForBetaTokensV2(body, betaTokens)
 
 	// 注入 anthropic_version（Bedrock 要求）
 	body, err = sjson.SetBytes(body, "anthropic_version", "bedrock-2023-05-31")
@@ -249,8 +249,8 @@ func PrepareBedrockRequestBodyWithTokens(body []byte, modelID string, betaTokens
 
 	// CC 兼容模式：修复 CC 发送的 Bedrock 不兼容字段
 	if ccCompat {
-		body = sanitizeBedrockThinking(body, modelID)
-		body = sanitizeBedrockToolUseIDs(body)
+		body = sanitizeBedrockThinkingV2(body, modelID)
+		body = sanitizeBedrockToolUseIDsV2(body)
 	}
 
 	return body, nil
@@ -623,14 +623,14 @@ func filterBedrockBetaTokens(tokens []string) []string {
 	return result
 }
 
-func sanitizeBedrockFieldsForBetaTokens(body []byte, betaTokens []string) []byte {
-	if !containsBedrockBetaToken(betaTokens, bedrockContextManagementBetaToken) && gjson.GetBytes(body, "context_management").Exists() {
+func sanitizeBedrockFieldsForBetaTokensV2(body []byte, betaTokens []string) []byte {
+	if !hasBedrockBetaToken(betaTokens, bedrockContextManagementBetaToken) && gjson.GetBytes(body, "context_management").Exists() {
 		body, _ = sjson.DeleteBytes(body, "context_management")
 	}
 	return body
 }
 
-func containsBedrockBetaToken(tokens []string, target string) bool {
+func hasBedrockBetaToken(tokens []string, target string) bool {
 	for _, token := range tokens {
 		if token == target {
 			return true
@@ -642,9 +642,9 @@ func containsBedrockBetaToken(tokens []string, target string) bool {
 // bedrockToolUseIDRe 匹配 Bedrock 允许的 tool_use ID 字符（字母、数字、下划线、连字符）
 var bedrockToolUseIDRe = regexp.MustCompile(`[^a-zA-Z0-9_-]`)
 
-// isBedrockOpus47OrNewer 判断 Bedrock 模型 ID 是否为 Claude Opus 4.7 或更新版本
+// checkBedrockOpus47OrNewer 判断 Bedrock 模型 ID 是否为 Claude Opus 4.7 或更新版本
 // Opus 4.7 仅支持 thinking.type: "adaptive"，不支持 "enabled"
-func isBedrockOpus47OrNewer(modelID string) bool {
+func checkBedrockOpus47OrNewer(modelID string) bool {
 	lower := strings.ToLower(modelID)
 	if !strings.Contains(lower, "opus") {
 		return false
@@ -660,10 +660,10 @@ func isBedrockOpus47OrNewer(modelID string) bool {
 
 const defaultThinkingBudgetTokens = 10000
 
-// sanitizeBedrockThinking 修复 thinking 字段的 Bedrock 兼容性问题：
+// sanitizeBedrockThinkingV2 修复 thinking 字段的 Bedrock 兼容性问题：
 //   - Opus 4.7+: 仅支持 "adaptive"，将 "enabled" 转换为 "adaptive" 并移除 budget_tokens
 //   - 其他模型: "enabled" 必须带 budget_tokens，缺失时补充默认值
-func sanitizeBedrockThinking(body []byte, modelID string) []byte {
+func sanitizeBedrockThinkingV2(body []byte, modelID string) []byte {
 	thinking := gjson.GetBytes(body, "thinking")
 	if !thinking.Exists() || !thinking.IsObject() {
 		return body
@@ -674,7 +674,7 @@ func sanitizeBedrockThinking(body []byte, modelID string) []byte {
 		return body
 	}
 
-	if isBedrockOpus47OrNewer(modelID) {
+	if checkBedrockOpus47OrNewer(modelID) {
 		if thinkingType == "enabled" {
 			body, _ = sjson.SetBytes(body, "thinking.type", "adaptive")
 			body, _ = sjson.DeleteBytes(body, "thinking.budget_tokens")
@@ -689,9 +689,9 @@ func sanitizeBedrockThinking(body []byte, modelID string) []byte {
 	return body
 }
 
-// sanitizeBedrockToolUseIDs 清理 messages 中 tool_use.id 和 tool_result.tool_use_id
+// sanitizeBedrockToolUseIDsV2 清理 messages 中 tool_use.id 和 tool_result.tool_use_id
 // 的非法字符。Bedrock 要求 ID 匹配 '^[a-zA-Z0-9_-]+$'。
-func sanitizeBedrockToolUseIDs(body []byte) []byte {
+func sanitizeBedrockToolUseIDsV2(body []byte) []byte {
 	messages := gjson.GetBytes(body, "messages")
 	if !messages.Exists() || !messages.IsArray() {
 		return body
@@ -704,16 +704,16 @@ func sanitizeBedrockToolUseIDs(body []byte) []byte {
 		for ci, block := range content.Array() {
 			switch block.Get("type").String() {
 			case "tool_use":
-				body = sanitizeIDField(body, block.Get("id").String(), fmt.Sprintf("messages.%d.content.%d.id", mi, ci))
+				body = sanitizeIDFieldV2(body, block.Get("id").String(), fmt.Sprintf("messages.%d.content.%d.id", mi, ci))
 			case "tool_result":
-				body = sanitizeIDField(body, block.Get("tool_use_id").String(), fmt.Sprintf("messages.%d.content.%d.tool_use_id", mi, ci))
+				body = sanitizeIDFieldV2(body, block.Get("tool_use_id").String(), fmt.Sprintf("messages.%d.content.%d.tool_use_id", mi, ci))
 			}
 		}
 	}
 	return body
 }
 
-func sanitizeIDField(body []byte, id, path string) []byte {
+func sanitizeIDFieldV2(body []byte, id, path string) []byte {
 	if id == "" {
 		return body
 	}
@@ -726,13 +726,13 @@ func sanitizeIDField(body []byte, id, path string) []byte {
 
 const defaultCCMaxTokens = 81920
 
-// sanitizeBedrockCCFields 处理 Claude Code 发送的 Bedrock 不兼容字段：
+// sanitizeBedrockCCFieldsV2 处理 Claude Code 发送的 Bedrock 不兼容字段：
 //   - 移除 service_tier（Anthropic API 专有，Bedrock 不支持）
 //   - 移除 interface_geo（Anthropic API 专有，Bedrock 不支持）
 //   - 移除 context_management（Anthropic API 专有，Bedrock 不支持，CC v2.1.87+ 默认携带）
 //   - 注入 max_tokens 默认值 81920（CC 可能省略，Bedrock 要求必须提供）
 //   - 注入 anthropic_version（CC 通过 HTTP 头发送，Bedrock 需要放在请求体中）
-func sanitizeBedrockCCFields(body []byte) []byte {
+func sanitizeBedrockCCFieldsV2(body []byte) []byte {
 	if gjson.GetBytes(body, "service_tier").Exists() {
 		body, _ = sjson.DeleteBytes(body, "service_tier")
 	}
@@ -751,9 +751,9 @@ func sanitizeBedrockCCFields(body []byte) []byte {
 	return body
 }
 
-// sanitizeBedrockCCBetaTokens 清理请求体中的 anthropic_beta 字段，只保留 Bedrock 支持的 beta token
+// sanitizeBedrockCCBetaTokensV2 清理请求体中的 anthropic_beta 字段，只保留 Bedrock 支持的 beta token
 // CC 可能在请求体中注入了 Bedrock 不支持的 beta token（如 prompt-caching 等），导致 ValidationException
-func sanitizeBedrockCCBetaTokens(body []byte, modelID string) []byte {
+func sanitizeBedrockCCBetaTokensV2(body []byte, modelID string) []byte {
 	betaField := gjson.GetBytes(body, "anthropic_beta")
 	if !betaField.Exists() {
 		return body

@@ -182,7 +182,7 @@ func TestOIDCOAuthBindStartRedirectsAndSetsBindCookies(t *testing.T) {
 
 	bindCookie := findCookie(cookies, oidcOAuthBindUserCookieName)
 	require.NotNil(t, bindCookie)
-	userID, err := parseOAuthBindUserCookieValue(decodeCookieValueForTest(t, bindCookie.Value), "test-secret")
+	userID, err := decodeOAuthBindUserCookieValue(decodeCookieValueForTest(t, bindCookie.Value), "test-secret")
 	require.NoError(t, err)
 	require.Equal(t, int64(84), userID)
 }
@@ -1194,7 +1194,7 @@ func newOIDCOAuthHandlerAndClientWithSettings(
 
 	values := map[string]string{
 		service.SettingKeyOIDCConnectEnabled:              "true",
-		service.SettingKeyOIDCConnectProviderName:         strings.TrimSpace(firstNonEmpty(oauthCfg.ProviderName, "OIDC")),
+		service.SettingKeyOIDCConnectProviderName:         strings.TrimSpace(coalesce(oauthCfg.ProviderName, "OIDC")),
 		service.SettingKeyOIDCConnectClientID:             oauthCfg.ClientID,
 		service.SettingKeyOIDCConnectClientSecret:         oauthCfg.ClientSecret,
 		service.SettingKeyOIDCConnectIssuerURL:            oauthCfg.IssuerURL,

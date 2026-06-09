@@ -473,7 +473,7 @@ func TestSettingHandler_UpdateSettings_DoesNotPersistPartialSystemSettingsWhenAu
 }
 
 func TestDiffSettings_IncludesAuthSourceDefaultsAndForceEmail(t *testing.T) {
-	changed := diffSettings(
+	changed := settingsDiff(
 		&service.SystemSettings{},
 		&service.SystemSettings{},
 		&service.AuthSourceDefaultSettings{

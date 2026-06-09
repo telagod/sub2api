@@ -45,7 +45,7 @@ func scopesContainOpenID(scopes string) bool {
 	return false
 }
 
-func firstNonEmpty(values ...string) string {
+func coalesce(values ...string) string {
 	for _, value := range values {
 		if trimmed := strings.TrimSpace(value); trimmed != "" {
 			return trimmed
@@ -131,7 +131,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		LoginAgreementEnabled:                  settings.LoginAgreementEnabled,
 		LoginAgreementMode:                     settings.LoginAgreementMode,
 		LoginAgreementUpdatedAt:                settings.LoginAgreementUpdatedAt,
-		LoginAgreementDocuments:                loginAgreementDocumentsToDTO(settings.LoginAgreementDocuments),
+		LoginAgreementDocuments:                agreementDocsToDTO(settings.LoginAgreementDocuments),
 		SMTPHost:                               settings.SMTPHost,
 		SMTPPort:                               settings.SMTPPort,
 		SMTPUsername:                           settings.SMTPUsername,
@@ -305,7 +305,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 	if fastPolicy, err := h.settingService.GetOpenAIFastPolicySettings(c.Request.Context()); err != nil {
 		slog.Error("openai_fast_policy_settings_get_failed", "error", err)
 	} else if fastPolicy != nil {
-		payload.OpenAIFastPolicySettings = openaiFastPolicySettingsToDTO(fastPolicy)
+		payload.OpenAIFastPolicySettings = fastPolicyToDTO(fastPolicy)
 	}
 
 	// Default platform quotas（JSON map）
@@ -315,11 +315,11 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		payload.DefaultPlatformQuotas = platformQuotas
 	}
 
-	response.Success(c, systemSettingsResponseData(payload, authSourceDefaults))
+	response.Success(c, settingsPayload(payload, authSourceDefaults))
 }
 
-// openaiFastPolicySettingsToDTO converts service -> dto for OpenAI fast policy.
-func openaiFastPolicySettingsToDTO(s *service.OpenAIFastPolicySettings) *dto.OpenAIFastPolicySettings {
+// fastPolicyToDTO converts service -> dto for OpenAI fast policy.
+func fastPolicyToDTO(s *service.OpenAIFastPolicySettings) *dto.OpenAIFastPolicySettings {
 	if s == nil {
 		return nil
 	}
@@ -330,13 +330,13 @@ func openaiFastPolicySettingsToDTO(s *service.OpenAIFastPolicySettings) *dto.Ope
 	return &dto.OpenAIFastPolicySettings{Rules: rules}
 }
 
-// openaiFastPolicySettingsFromDTO converts dto -> service for OpenAI fast policy.
+// fastPolicyFromDTO converts dto -> service for OpenAI fast policy.
 //
 // 规范化 ServiceTier：在 DTO 进入 service 层之前统一把空字符串归一为
 // service.OpenAIFastTierAny ("all")，避免管理员保存时空串与 "all" 同时
 // 表达"匹配任意 tier"造成数据库取值的二义性。其它非空值原样透传，由
 // service.SetOpenAIFastPolicySettings 负责合法值校验。
-func openaiFastPolicySettingsFromDTO(s *dto.OpenAIFastPolicySettings) *service.OpenAIFastPolicySettings {
+func fastPolicyFromDTO(s *dto.OpenAIFastPolicySettings) *service.OpenAIFastPolicySettings {
 	if s == nil {
 		return nil
 	}
@@ -352,7 +352,7 @@ func openaiFastPolicySettingsFromDTO(s *dto.OpenAIFastPolicySettings) *service.O
 	return &service.OpenAIFastPolicySettings{Rules: rules}
 }
 
-func loginAgreementDocumentsToDTO(items []service.LoginAgreementDocument) []dto.LoginAgreementDocument {
+func agreementDocsToDTO(items []service.LoginAgreementDocument) []dto.LoginAgreementDocument {
 	result := make([]dto.LoginAgreementDocument, 0, len(items))
 	for _, item := range items {
 		result = append(result, dto.LoginAgreementDocument{
@@ -364,7 +364,7 @@ func loginAgreementDocumentsToDTO(items []service.LoginAgreementDocument) []dto.
 	return result
 }
 
-func loginAgreementDocumentsToService(items []dto.LoginAgreementDocument) []service.LoginAgreementDocument {
+func agreementDocsFromDTO(items []dto.LoginAgreementDocument) []service.LoginAgreementDocument {
 	result := make([]service.LoginAgreementDocument, 0, len(items))
 	for _, item := range items {
 		title := strings.TrimSpace(item.Title)
@@ -744,11 +744,11 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		req.SMTPPort = 587
 	}
 	req.DefaultSubscriptions = normalizeDefaultSubscriptions(req.DefaultSubscriptions)
-	req.AuthSourceDefaultEmailSubscriptions = normalizeOptionalDefaultSubscriptions(req.AuthSourceDefaultEmailSubscriptions)
-	req.AuthSourceDefaultLinuxDoSubscriptions = normalizeOptionalDefaultSubscriptions(req.AuthSourceDefaultLinuxDoSubscriptions)
-	req.AuthSourceDefaultOIDCSubscriptions = normalizeOptionalDefaultSubscriptions(req.AuthSourceDefaultOIDCSubscriptions)
-	req.AuthSourceDefaultWeChatSubscriptions = normalizeOptionalDefaultSubscriptions(req.AuthSourceDefaultWeChatSubscriptions)
-	req.AuthSourceDefaultDingTalkSubscriptions = normalizeOptionalDefaultSubscriptions(req.AuthSourceDefaultDingTalkSubscriptions)
+	req.AuthSourceDefaultEmailSubscriptions = normalizeDefaultSubs(req.AuthSourceDefaultEmailSubscriptions)
+	req.AuthSourceDefaultLinuxDoSubscriptions = normalizeDefaultSubs(req.AuthSourceDefaultLinuxDoSubscriptions)
+	req.AuthSourceDefaultOIDCSubscriptions = normalizeDefaultSubs(req.AuthSourceDefaultOIDCSubscriptions)
+	req.AuthSourceDefaultWeChatSubscriptions = normalizeDefaultSubs(req.AuthSourceDefaultWeChatSubscriptions)
+	req.AuthSourceDefaultDingTalkSubscriptions = normalizeDefaultSubs(req.AuthSourceDefaultDingTalkSubscriptions)
 
 	// SMTP 配置保护：如果请求中 smtp_host 为空但数据库中已有配置，则保留已有 SMTP 配置
 	// 防止前端加载设置失败时空表单覆盖已保存的 SMTP 配置
@@ -813,7 +813,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	if loginAgreementUpdatedAt == "" {
 		loginAgreementUpdatedAt = strings.TrimSpace(previousSettings.LoginAgreementUpdatedAt)
 	}
-	loginAgreementDocuments := loginAgreementDocumentsToService(req.LoginAgreementDocuments)
+	loginAgreementDocuments := agreementDocsFromDTO(req.LoginAgreementDocuments)
 	if len(loginAgreementDocuments) == 0 {
 		loginAgreementDocuments = previousSettings.LoginAgreementDocuments
 	}
@@ -918,7 +918,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			dingTalkCfg.AppType = "public"
 		}
 		if err := config.ValidateDingTalkConfig(dingTalkCfg); err != nil {
-			response.ErrorWithDetails(c, http.StatusBadRequest, err.Error(), mapDingTalkValidateError(err), nil)
+			response.ErrorWithDetails(c, http.StatusBadRequest, err.Error(), mapDTValidationErr(err), nil)
 			return
 		}
 
@@ -972,9 +972,9 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		req.WeChatConnectScopes = strings.TrimSpace(req.WeChatConnectScopes)
 		req.WeChatConnectRedirectURL = strings.TrimSpace(req.WeChatConnectRedirectURL)
 		req.WeChatConnectFrontendRedirectURL = strings.TrimSpace(req.WeChatConnectFrontendRedirectURL)
-		req.WeChatConnectAppID = strings.TrimSpace(firstNonEmpty(req.WeChatConnectAppID, previousSettings.WeChatConnectAppID))
-		req.WeChatConnectRedirectURL = strings.TrimSpace(firstNonEmpty(req.WeChatConnectRedirectURL, previousSettings.WeChatConnectRedirectURL))
-		req.WeChatConnectFrontendRedirectURL = strings.TrimSpace(firstNonEmpty(req.WeChatConnectFrontendRedirectURL, previousSettings.WeChatConnectFrontendRedirectURL))
+		req.WeChatConnectAppID = strings.TrimSpace(coalesce(req.WeChatConnectAppID, previousSettings.WeChatConnectAppID))
+		req.WeChatConnectRedirectURL = strings.TrimSpace(coalesce(req.WeChatConnectRedirectURL, previousSettings.WeChatConnectRedirectURL))
+		req.WeChatConnectFrontendRedirectURL = strings.TrimSpace(coalesce(req.WeChatConnectFrontendRedirectURL, previousSettings.WeChatConnectFrontendRedirectURL))
 		if req.WeChatConnectMode == "" {
 			req.WeChatConnectMode = strings.ToLower(strings.TrimSpace(previousSettings.WeChatConnectMode))
 		}
@@ -1014,21 +1014,21 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			}
 		}
 
-		req.WeChatConnectOpenAppID = strings.TrimSpace(firstNonEmpty(req.WeChatConnectOpenAppID, req.WeChatConnectAppID, previousSettings.WeChatConnectOpenAppID, previousSettings.WeChatConnectAppID))
-		req.WeChatConnectMPAppID = strings.TrimSpace(firstNonEmpty(req.WeChatConnectMPAppID, req.WeChatConnectAppID, previousSettings.WeChatConnectMPAppID, previousSettings.WeChatConnectAppID))
-		req.WeChatConnectMobileAppID = strings.TrimSpace(firstNonEmpty(req.WeChatConnectMobileAppID, req.WeChatConnectAppID, previousSettings.WeChatConnectMobileAppID, previousSettings.WeChatConnectAppID))
+		req.WeChatConnectOpenAppID = strings.TrimSpace(coalesce(req.WeChatConnectOpenAppID, req.WeChatConnectAppID, previousSettings.WeChatConnectOpenAppID, previousSettings.WeChatConnectAppID))
+		req.WeChatConnectMPAppID = strings.TrimSpace(coalesce(req.WeChatConnectMPAppID, req.WeChatConnectAppID, previousSettings.WeChatConnectMPAppID, previousSettings.WeChatConnectAppID))
+		req.WeChatConnectMobileAppID = strings.TrimSpace(coalesce(req.WeChatConnectMobileAppID, req.WeChatConnectAppID, previousSettings.WeChatConnectMobileAppID, previousSettings.WeChatConnectAppID))
 
 		if req.WeChatConnectOpenAppSecret == "" {
-			req.WeChatConnectOpenAppSecret = strings.TrimSpace(firstNonEmpty(previousSettings.WeChatConnectOpenAppSecret, previousSettings.WeChatConnectAppSecret, req.WeChatConnectAppSecret))
+			req.WeChatConnectOpenAppSecret = strings.TrimSpace(coalesce(previousSettings.WeChatConnectOpenAppSecret, previousSettings.WeChatConnectAppSecret, req.WeChatConnectAppSecret))
 		}
 		if req.WeChatConnectMPAppSecret == "" {
-			req.WeChatConnectMPAppSecret = strings.TrimSpace(firstNonEmpty(previousSettings.WeChatConnectMPAppSecret, previousSettings.WeChatConnectAppSecret, req.WeChatConnectAppSecret))
+			req.WeChatConnectMPAppSecret = strings.TrimSpace(coalesce(previousSettings.WeChatConnectMPAppSecret, previousSettings.WeChatConnectAppSecret, req.WeChatConnectAppSecret))
 		}
 		if req.WeChatConnectMobileAppSecret == "" {
-			req.WeChatConnectMobileAppSecret = strings.TrimSpace(firstNonEmpty(previousSettings.WeChatConnectMobileAppSecret, previousSettings.WeChatConnectAppSecret, req.WeChatConnectAppSecret))
+			req.WeChatConnectMobileAppSecret = strings.TrimSpace(coalesce(previousSettings.WeChatConnectMobileAppSecret, previousSettings.WeChatConnectAppSecret, req.WeChatConnectAppSecret))
 		}
 		if req.WeChatConnectAppSecret == "" {
-			req.WeChatConnectAppSecret = strings.TrimSpace(firstNonEmpty(req.WeChatConnectOpenAppSecret, req.WeChatConnectMPAppSecret, req.WeChatConnectMobileAppSecret, previousSettings.WeChatConnectAppSecret))
+			req.WeChatConnectAppSecret = strings.TrimSpace(coalesce(req.WeChatConnectOpenAppSecret, req.WeChatConnectMPAppSecret, req.WeChatConnectMobileAppSecret, previousSettings.WeChatConnectAppSecret))
 		}
 
 		if req.WeChatConnectOpenEnabled {
@@ -1112,22 +1112,22 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		req.OIDCConnectUserInfoEmailPath = strings.TrimSpace(req.OIDCConnectUserInfoEmailPath)
 		req.OIDCConnectUserInfoIDPath = strings.TrimSpace(req.OIDCConnectUserInfoIDPath)
 		req.OIDCConnectUserInfoUsernamePath = strings.TrimSpace(req.OIDCConnectUserInfoUsernamePath)
-		req.OIDCConnectProviderName = strings.TrimSpace(firstNonEmpty(req.OIDCConnectProviderName, previousSettings.OIDCConnectProviderName, "OIDC"))
-		req.OIDCConnectClientID = strings.TrimSpace(firstNonEmpty(req.OIDCConnectClientID, previousSettings.OIDCConnectClientID))
-		req.OIDCConnectIssuerURL = strings.TrimSpace(firstNonEmpty(req.OIDCConnectIssuerURL, previousSettings.OIDCConnectIssuerURL))
-		req.OIDCConnectDiscoveryURL = strings.TrimSpace(firstNonEmpty(req.OIDCConnectDiscoveryURL, previousSettings.OIDCConnectDiscoveryURL))
-		req.OIDCConnectAuthorizeURL = strings.TrimSpace(firstNonEmpty(req.OIDCConnectAuthorizeURL, previousSettings.OIDCConnectAuthorizeURL))
-		req.OIDCConnectTokenURL = strings.TrimSpace(firstNonEmpty(req.OIDCConnectTokenURL, previousSettings.OIDCConnectTokenURL))
-		req.OIDCConnectUserInfoURL = strings.TrimSpace(firstNonEmpty(req.OIDCConnectUserInfoURL, previousSettings.OIDCConnectUserInfoURL))
-		req.OIDCConnectJWKSURL = strings.TrimSpace(firstNonEmpty(req.OIDCConnectJWKSURL, previousSettings.OIDCConnectJWKSURL))
-		req.OIDCConnectScopes = strings.TrimSpace(firstNonEmpty(req.OIDCConnectScopes, previousSettings.OIDCConnectScopes, "openid email profile"))
-		req.OIDCConnectRedirectURL = strings.TrimSpace(firstNonEmpty(req.OIDCConnectRedirectURL, previousSettings.OIDCConnectRedirectURL))
-		req.OIDCConnectFrontendRedirectURL = strings.TrimSpace(firstNonEmpty(req.OIDCConnectFrontendRedirectURL, previousSettings.OIDCConnectFrontendRedirectURL, "/auth/oidc/callback"))
-		req.OIDCConnectTokenAuthMethod = strings.ToLower(strings.TrimSpace(firstNonEmpty(req.OIDCConnectTokenAuthMethod, previousSettings.OIDCConnectTokenAuthMethod, "client_secret_post")))
-		req.OIDCConnectAllowedSigningAlgs = strings.TrimSpace(firstNonEmpty(req.OIDCConnectAllowedSigningAlgs, previousSettings.OIDCConnectAllowedSigningAlgs, "RS256,ES256,PS256"))
-		req.OIDCConnectUserInfoEmailPath = strings.TrimSpace(firstNonEmpty(req.OIDCConnectUserInfoEmailPath, previousSettings.OIDCConnectUserInfoEmailPath))
-		req.OIDCConnectUserInfoIDPath = strings.TrimSpace(firstNonEmpty(req.OIDCConnectUserInfoIDPath, previousSettings.OIDCConnectUserInfoIDPath))
-		req.OIDCConnectUserInfoUsernamePath = strings.TrimSpace(firstNonEmpty(req.OIDCConnectUserInfoUsernamePath, previousSettings.OIDCConnectUserInfoUsernamePath))
+		req.OIDCConnectProviderName = strings.TrimSpace(coalesce(req.OIDCConnectProviderName, previousSettings.OIDCConnectProviderName, "OIDC"))
+		req.OIDCConnectClientID = strings.TrimSpace(coalesce(req.OIDCConnectClientID, previousSettings.OIDCConnectClientID))
+		req.OIDCConnectIssuerURL = strings.TrimSpace(coalesce(req.OIDCConnectIssuerURL, previousSettings.OIDCConnectIssuerURL))
+		req.OIDCConnectDiscoveryURL = strings.TrimSpace(coalesce(req.OIDCConnectDiscoveryURL, previousSettings.OIDCConnectDiscoveryURL))
+		req.OIDCConnectAuthorizeURL = strings.TrimSpace(coalesce(req.OIDCConnectAuthorizeURL, previousSettings.OIDCConnectAuthorizeURL))
+		req.OIDCConnectTokenURL = strings.TrimSpace(coalesce(req.OIDCConnectTokenURL, previousSettings.OIDCConnectTokenURL))
+		req.OIDCConnectUserInfoURL = strings.TrimSpace(coalesce(req.OIDCConnectUserInfoURL, previousSettings.OIDCConnectUserInfoURL))
+		req.OIDCConnectJWKSURL = strings.TrimSpace(coalesce(req.OIDCConnectJWKSURL, previousSettings.OIDCConnectJWKSURL))
+		req.OIDCConnectScopes = strings.TrimSpace(coalesce(req.OIDCConnectScopes, previousSettings.OIDCConnectScopes, "openid email profile"))
+		req.OIDCConnectRedirectURL = strings.TrimSpace(coalesce(req.OIDCConnectRedirectURL, previousSettings.OIDCConnectRedirectURL))
+		req.OIDCConnectFrontendRedirectURL = strings.TrimSpace(coalesce(req.OIDCConnectFrontendRedirectURL, previousSettings.OIDCConnectFrontendRedirectURL, "/auth/oidc/callback"))
+		req.OIDCConnectTokenAuthMethod = strings.ToLower(strings.TrimSpace(coalesce(req.OIDCConnectTokenAuthMethod, previousSettings.OIDCConnectTokenAuthMethod, "client_secret_post")))
+		req.OIDCConnectAllowedSigningAlgs = strings.TrimSpace(coalesce(req.OIDCConnectAllowedSigningAlgs, previousSettings.OIDCConnectAllowedSigningAlgs, "RS256,ES256,PS256"))
+		req.OIDCConnectUserInfoEmailPath = strings.TrimSpace(coalesce(req.OIDCConnectUserInfoEmailPath, previousSettings.OIDCConnectUserInfoEmailPath))
+		req.OIDCConnectUserInfoIDPath = strings.TrimSpace(coalesce(req.OIDCConnectUserInfoIDPath, previousSettings.OIDCConnectUserInfoIDPath))
+		req.OIDCConnectUserInfoUsernamePath = strings.TrimSpace(coalesce(req.OIDCConnectUserInfoUsernamePath, previousSettings.OIDCConnectUserInfoUsernamePath))
 		if req.OIDCConnectUsePKCE != nil {
 			oidcUsePKCE = *req.OIDCConnectUsePKCE
 		}
@@ -1775,62 +1775,62 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	// non-nil（含 empty map）表示整体覆盖：empty map = 清空该 source 的所有 quota 配置。
 	authSourceDefaults := &service.AuthSourceDefaultSettings{
 		Email: service.ProviderDefaultGrantSettings{
-			Balance:          float64ValueOrDefault(req.AuthSourceDefaultEmailBalance, previousAuthSourceDefaults.Email.Balance),
-			Concurrency:      intValueOrDefault(req.AuthSourceDefaultEmailConcurrency, previousAuthSourceDefaults.Email.Concurrency),
-			Subscriptions:    defaultSubscriptionsValueOrDefault(req.AuthSourceDefaultEmailSubscriptions, previousAuthSourceDefaults.Email.Subscriptions),
-			GrantOnSignup:    boolValueOrDefault(req.AuthSourceDefaultEmailGrantOnSignup, previousAuthSourceDefaults.Email.GrantOnSignup),
-			GrantOnFirstBind: boolValueOrDefault(req.AuthSourceDefaultEmailGrantOnFirstBind, previousAuthSourceDefaults.Email.GrantOnFirstBind),
-			PlatformQuotas:   platformQuotasValueOrDefault(req.AuthSourceEmailPlatformQuotas, previousAuthSourceDefaults.Email.PlatformQuotas),
+			Balance:          floatOr(req.AuthSourceDefaultEmailBalance, previousAuthSourceDefaults.Email.Balance),
+			Concurrency:      intOr(req.AuthSourceDefaultEmailConcurrency, previousAuthSourceDefaults.Email.Concurrency),
+			Subscriptions:    subsOr(req.AuthSourceDefaultEmailSubscriptions, previousAuthSourceDefaults.Email.Subscriptions),
+			GrantOnSignup:    boolOr(req.AuthSourceDefaultEmailGrantOnSignup, previousAuthSourceDefaults.Email.GrantOnSignup),
+			GrantOnFirstBind: boolOr(req.AuthSourceDefaultEmailGrantOnFirstBind, previousAuthSourceDefaults.Email.GrantOnFirstBind),
+			PlatformQuotas:   quotasOr(req.AuthSourceEmailPlatformQuotas, previousAuthSourceDefaults.Email.PlatformQuotas),
 		},
 		LinuxDo: service.ProviderDefaultGrantSettings{
-			Balance:          float64ValueOrDefault(req.AuthSourceDefaultLinuxDoBalance, previousAuthSourceDefaults.LinuxDo.Balance),
-			Concurrency:      intValueOrDefault(req.AuthSourceDefaultLinuxDoConcurrency, previousAuthSourceDefaults.LinuxDo.Concurrency),
-			Subscriptions:    defaultSubscriptionsValueOrDefault(req.AuthSourceDefaultLinuxDoSubscriptions, previousAuthSourceDefaults.LinuxDo.Subscriptions),
-			GrantOnSignup:    boolValueOrDefault(req.AuthSourceDefaultLinuxDoGrantOnSignup, previousAuthSourceDefaults.LinuxDo.GrantOnSignup),
-			GrantOnFirstBind: boolValueOrDefault(req.AuthSourceDefaultLinuxDoGrantOnFirstBind, previousAuthSourceDefaults.LinuxDo.GrantOnFirstBind),
-			PlatformQuotas:   platformQuotasValueOrDefault(req.AuthSourceLinuxDoPlatformQuotas, previousAuthSourceDefaults.LinuxDo.PlatformQuotas),
+			Balance:          floatOr(req.AuthSourceDefaultLinuxDoBalance, previousAuthSourceDefaults.LinuxDo.Balance),
+			Concurrency:      intOr(req.AuthSourceDefaultLinuxDoConcurrency, previousAuthSourceDefaults.LinuxDo.Concurrency),
+			Subscriptions:    subsOr(req.AuthSourceDefaultLinuxDoSubscriptions, previousAuthSourceDefaults.LinuxDo.Subscriptions),
+			GrantOnSignup:    boolOr(req.AuthSourceDefaultLinuxDoGrantOnSignup, previousAuthSourceDefaults.LinuxDo.GrantOnSignup),
+			GrantOnFirstBind: boolOr(req.AuthSourceDefaultLinuxDoGrantOnFirstBind, previousAuthSourceDefaults.LinuxDo.GrantOnFirstBind),
+			PlatformQuotas:   quotasOr(req.AuthSourceLinuxDoPlatformQuotas, previousAuthSourceDefaults.LinuxDo.PlatformQuotas),
 		},
 		OIDC: service.ProviderDefaultGrantSettings{
-			Balance:          float64ValueOrDefault(req.AuthSourceDefaultOIDCBalance, previousAuthSourceDefaults.OIDC.Balance),
-			Concurrency:      intValueOrDefault(req.AuthSourceDefaultOIDCConcurrency, previousAuthSourceDefaults.OIDC.Concurrency),
-			Subscriptions:    defaultSubscriptionsValueOrDefault(req.AuthSourceDefaultOIDCSubscriptions, previousAuthSourceDefaults.OIDC.Subscriptions),
-			GrantOnSignup:    boolValueOrDefault(req.AuthSourceDefaultOIDCGrantOnSignup, previousAuthSourceDefaults.OIDC.GrantOnSignup),
-			GrantOnFirstBind: boolValueOrDefault(req.AuthSourceDefaultOIDCGrantOnFirstBind, previousAuthSourceDefaults.OIDC.GrantOnFirstBind),
-			PlatformQuotas:   platformQuotasValueOrDefault(req.AuthSourceOIDCPlatformQuotas, previousAuthSourceDefaults.OIDC.PlatformQuotas),
+			Balance:          floatOr(req.AuthSourceDefaultOIDCBalance, previousAuthSourceDefaults.OIDC.Balance),
+			Concurrency:      intOr(req.AuthSourceDefaultOIDCConcurrency, previousAuthSourceDefaults.OIDC.Concurrency),
+			Subscriptions:    subsOr(req.AuthSourceDefaultOIDCSubscriptions, previousAuthSourceDefaults.OIDC.Subscriptions),
+			GrantOnSignup:    boolOr(req.AuthSourceDefaultOIDCGrantOnSignup, previousAuthSourceDefaults.OIDC.GrantOnSignup),
+			GrantOnFirstBind: boolOr(req.AuthSourceDefaultOIDCGrantOnFirstBind, previousAuthSourceDefaults.OIDC.GrantOnFirstBind),
+			PlatformQuotas:   quotasOr(req.AuthSourceOIDCPlatformQuotas, previousAuthSourceDefaults.OIDC.PlatformQuotas),
 		},
 		WeChat: service.ProviderDefaultGrantSettings{
-			Balance:          float64ValueOrDefault(req.AuthSourceDefaultWeChatBalance, previousAuthSourceDefaults.WeChat.Balance),
-			Concurrency:      intValueOrDefault(req.AuthSourceDefaultWeChatConcurrency, previousAuthSourceDefaults.WeChat.Concurrency),
-			Subscriptions:    defaultSubscriptionsValueOrDefault(req.AuthSourceDefaultWeChatSubscriptions, previousAuthSourceDefaults.WeChat.Subscriptions),
-			GrantOnSignup:    boolValueOrDefault(req.AuthSourceDefaultWeChatGrantOnSignup, previousAuthSourceDefaults.WeChat.GrantOnSignup),
-			GrantOnFirstBind: boolValueOrDefault(req.AuthSourceDefaultWeChatGrantOnFirstBind, previousAuthSourceDefaults.WeChat.GrantOnFirstBind),
-			PlatformQuotas:   platformQuotasValueOrDefault(req.AuthSourceWeChatPlatformQuotas, previousAuthSourceDefaults.WeChat.PlatformQuotas),
+			Balance:          floatOr(req.AuthSourceDefaultWeChatBalance, previousAuthSourceDefaults.WeChat.Balance),
+			Concurrency:      intOr(req.AuthSourceDefaultWeChatConcurrency, previousAuthSourceDefaults.WeChat.Concurrency),
+			Subscriptions:    subsOr(req.AuthSourceDefaultWeChatSubscriptions, previousAuthSourceDefaults.WeChat.Subscriptions),
+			GrantOnSignup:    boolOr(req.AuthSourceDefaultWeChatGrantOnSignup, previousAuthSourceDefaults.WeChat.GrantOnSignup),
+			GrantOnFirstBind: boolOr(req.AuthSourceDefaultWeChatGrantOnFirstBind, previousAuthSourceDefaults.WeChat.GrantOnFirstBind),
+			PlatformQuotas:   quotasOr(req.AuthSourceWeChatPlatformQuotas, previousAuthSourceDefaults.WeChat.PlatformQuotas),
 		},
 		GitHub: service.ProviderDefaultGrantSettings{
-			Balance:          float64ValueOrDefault(req.AuthSourceDefaultGitHubBalance, previousAuthSourceDefaults.GitHub.Balance),
-			Concurrency:      intValueOrDefault(req.AuthSourceDefaultGitHubConcurrency, previousAuthSourceDefaults.GitHub.Concurrency),
-			Subscriptions:    defaultSubscriptionsValueOrDefault(req.AuthSourceDefaultGitHubSubscriptions, previousAuthSourceDefaults.GitHub.Subscriptions),
-			GrantOnSignup:    boolValueOrDefault(req.AuthSourceDefaultGitHubGrantOnSignup, previousAuthSourceDefaults.GitHub.GrantOnSignup),
-			GrantOnFirstBind: boolValueOrDefault(req.AuthSourceDefaultGitHubGrantOnFirstBind, previousAuthSourceDefaults.GitHub.GrantOnFirstBind),
-			PlatformQuotas:   platformQuotasValueOrDefault(req.AuthSourceGitHubPlatformQuotas, previousAuthSourceDefaults.GitHub.PlatformQuotas),
+			Balance:          floatOr(req.AuthSourceDefaultGitHubBalance, previousAuthSourceDefaults.GitHub.Balance),
+			Concurrency:      intOr(req.AuthSourceDefaultGitHubConcurrency, previousAuthSourceDefaults.GitHub.Concurrency),
+			Subscriptions:    subsOr(req.AuthSourceDefaultGitHubSubscriptions, previousAuthSourceDefaults.GitHub.Subscriptions),
+			GrantOnSignup:    boolOr(req.AuthSourceDefaultGitHubGrantOnSignup, previousAuthSourceDefaults.GitHub.GrantOnSignup),
+			GrantOnFirstBind: boolOr(req.AuthSourceDefaultGitHubGrantOnFirstBind, previousAuthSourceDefaults.GitHub.GrantOnFirstBind),
+			PlatformQuotas:   quotasOr(req.AuthSourceGitHubPlatformQuotas, previousAuthSourceDefaults.GitHub.PlatformQuotas),
 		},
 		Google: service.ProviderDefaultGrantSettings{
-			Balance:          float64ValueOrDefault(req.AuthSourceDefaultGoogleBalance, previousAuthSourceDefaults.Google.Balance),
-			Concurrency:      intValueOrDefault(req.AuthSourceDefaultGoogleConcurrency, previousAuthSourceDefaults.Google.Concurrency),
-			Subscriptions:    defaultSubscriptionsValueOrDefault(req.AuthSourceDefaultGoogleSubscriptions, previousAuthSourceDefaults.Google.Subscriptions),
-			GrantOnSignup:    boolValueOrDefault(req.AuthSourceDefaultGoogleGrantOnSignup, previousAuthSourceDefaults.Google.GrantOnSignup),
-			GrantOnFirstBind: boolValueOrDefault(req.AuthSourceDefaultGoogleGrantOnFirstBind, previousAuthSourceDefaults.Google.GrantOnFirstBind),
-			PlatformQuotas:   platformQuotasValueOrDefault(req.AuthSourceGooglePlatformQuotas, previousAuthSourceDefaults.Google.PlatformQuotas),
+			Balance:          floatOr(req.AuthSourceDefaultGoogleBalance, previousAuthSourceDefaults.Google.Balance),
+			Concurrency:      intOr(req.AuthSourceDefaultGoogleConcurrency, previousAuthSourceDefaults.Google.Concurrency),
+			Subscriptions:    subsOr(req.AuthSourceDefaultGoogleSubscriptions, previousAuthSourceDefaults.Google.Subscriptions),
+			GrantOnSignup:    boolOr(req.AuthSourceDefaultGoogleGrantOnSignup, previousAuthSourceDefaults.Google.GrantOnSignup),
+			GrantOnFirstBind: boolOr(req.AuthSourceDefaultGoogleGrantOnFirstBind, previousAuthSourceDefaults.Google.GrantOnFirstBind),
+			PlatformQuotas:   quotasOr(req.AuthSourceGooglePlatformQuotas, previousAuthSourceDefaults.Google.PlatformQuotas),
 		},
 		DingTalk: service.ProviderDefaultGrantSettings{
-			Balance:          float64ValueOrDefault(req.AuthSourceDefaultDingTalkBalance, previousAuthSourceDefaults.DingTalk.Balance),
-			Concurrency:      intValueOrDefault(req.AuthSourceDefaultDingTalkConcurrency, previousAuthSourceDefaults.DingTalk.Concurrency),
-			Subscriptions:    defaultSubscriptionsValueOrDefault(req.AuthSourceDefaultDingTalkSubscriptions, previousAuthSourceDefaults.DingTalk.Subscriptions),
-			GrantOnSignup:    boolValueOrDefault(req.AuthSourceDefaultDingTalkGrantOnSignup, previousAuthSourceDefaults.DingTalk.GrantOnSignup),
-			GrantOnFirstBind: boolValueOrDefault(req.AuthSourceDefaultDingTalkGrantOnFirstBind, previousAuthSourceDefaults.DingTalk.GrantOnFirstBind),
-			PlatformQuotas:   platformQuotasValueOrDefault(req.AuthSourceDingTalkPlatformQuotas, previousAuthSourceDefaults.DingTalk.PlatformQuotas),
+			Balance:          floatOr(req.AuthSourceDefaultDingTalkBalance, previousAuthSourceDefaults.DingTalk.Balance),
+			Concurrency:      intOr(req.AuthSourceDefaultDingTalkConcurrency, previousAuthSourceDefaults.DingTalk.Concurrency),
+			Subscriptions:    subsOr(req.AuthSourceDefaultDingTalkSubscriptions, previousAuthSourceDefaults.DingTalk.Subscriptions),
+			GrantOnSignup:    boolOr(req.AuthSourceDefaultDingTalkGrantOnSignup, previousAuthSourceDefaults.DingTalk.GrantOnSignup),
+			GrantOnFirstBind: boolOr(req.AuthSourceDefaultDingTalkGrantOnFirstBind, previousAuthSourceDefaults.DingTalk.GrantOnFirstBind),
+			PlatformQuotas:   quotasOr(req.AuthSourceDingTalkPlatformQuotas, previousAuthSourceDefaults.DingTalk.PlatformQuotas),
 		},
-		ForceEmailOnThirdPartySignup: boolValueOrDefault(req.ForceEmailOnThirdPartySignup, previousAuthSourceDefaults.ForceEmailOnThirdPartySignup),
+		ForceEmailOnThirdPartySignup: boolOr(req.ForceEmailOnThirdPartySignup, previousAuthSourceDefaults.ForceEmailOnThirdPartySignup),
 	}
 	if err := h.settingService.UpdateSettingsWithAuthSourceDefaults(c.Request.Context(), settings, authSourceDefaults); err != nil {
 		response.ErrorFrom(c, err)
@@ -1839,7 +1839,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 
 	// Update OpenAI fast policy (stored under dedicated key, only when provided).
 	if req.OpenAIFastPolicySettings != nil {
-		if err := h.settingService.SetOpenAIFastPolicySettings(c.Request.Context(), openaiFastPolicySettingsFromDTO(req.OpenAIFastPolicySettings)); err != nil {
+		if err := h.settingService.SetOpenAIFastPolicySettings(c.Request.Context(), fastPolicyFromDTO(req.OpenAIFastPolicySettings)); err != nil {
 			response.BadRequest(c, err.Error())
 			return
 		}
@@ -1925,7 +1925,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		LoginAgreementEnabled:                  updatedSettings.LoginAgreementEnabled,
 		LoginAgreementMode:                     updatedSettings.LoginAgreementMode,
 		LoginAgreementUpdatedAt:                updatedSettings.LoginAgreementUpdatedAt,
-		LoginAgreementDocuments:                loginAgreementDocumentsToDTO(updatedSettings.LoginAgreementDocuments),
+		LoginAgreementDocuments:                agreementDocsToDTO(updatedSettings.LoginAgreementDocuments),
 		SMTPHost:                               updatedSettings.SMTPHost,
 		SMTPPort:                               updatedSettings.SMTPPort,
 		SMTPUsername:                           updatedSettings.SMTPUsername,
@@ -2096,7 +2096,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	if fastPolicy, err := h.settingService.GetOpenAIFastPolicySettings(c.Request.Context()); err != nil {
 		slog.Error("openai_fast_policy_settings_get_failed", "error", err)
 	} else if fastPolicy != nil {
-		payload.OpenAIFastPolicySettings = openaiFastPolicySettingsToDTO(fastPolicy)
+		payload.OpenAIFastPolicySettings = fastPolicyToDTO(fastPolicy)
 	}
 
 	// Default platform quotas（JSON map）—— 与 GetSettings 一致，避免保存后响应缺失该字段
@@ -2105,12 +2105,12 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	} else {
 		payload.DefaultPlatformQuotas = platformQuotas
 	}
-	response.Success(c, systemSettingsResponseData(payload, updatedAuthSourceDefaults))
+	response.Success(c, settingsPayload(payload, updatedAuthSourceDefaults))
 }
 
 // hasPaymentFields returns true if any payment-related field was explicitly provided.
-// mapDingTalkValidateError maps ValidateDingTalkConfig errors to machine-readable reason codes.
-func mapDingTalkValidateError(err error) string {
+// mapDTValidationErr maps ValidateDingTalkConfig errors to machine-readable reason codes.
+func mapDTValidationErr(err error) string {
 	switch {
 	case errors.Is(err, config.ErrDingTalkV1AppTypeMismatch):
 		return "dingtalk_apptype_mismatch"
@@ -2140,7 +2140,7 @@ func (h *SettingHandler) auditSettingsUpdate(c *gin.Context, before *service.Sys
 		return
 	}
 
-	changed := diffSettings(before, after, beforeAuthSourceDefaults, afterAuthSourceDefaults, req)
+	changed := settingsDiff(before, after, beforeAuthSourceDefaults, afterAuthSourceDefaults, req)
 	if len(changed) == 0 {
 		return
 	}
@@ -2155,7 +2155,7 @@ func (h *SettingHandler) auditSettingsUpdate(c *gin.Context, before *service.Sys
 	)
 }
 
-func diffSettings(before *service.SystemSettings, after *service.SystemSettings, beforeAuthSourceDefaults *service.AuthSourceDefaultSettings, afterAuthSourceDefaults *service.AuthSourceDefaultSettings, req UpdateSettingsRequest) []string {
+func settingsDiff(before *service.SystemSettings, after *service.SystemSettings, beforeAuthSourceDefaults *service.AuthSourceDefaultSettings, afterAuthSourceDefaults *service.AuthSourceDefaultSettings, req UpdateSettingsRequest) []string {
 	changed := make([]string, 0, 20)
 	if before.RegistrationEnabled != after.RegistrationEnabled {
 		changed = append(changed, "registration_enabled")
@@ -2190,7 +2190,7 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if before.LoginAgreementUpdatedAt != after.LoginAgreementUpdatedAt {
 		changed = append(changed, "login_agreement_updated_at")
 	}
-	if !equalLoginAgreementDocuments(before.LoginAgreementDocuments, after.LoginAgreementDocuments) {
+	if !agreementDocsEqual(before.LoginAgreementDocuments, after.LoginAgreementDocuments) {
 		changed = append(changed, "login_agreement_documents")
 	}
 	if before.SMTPHost != after.SMTPHost {
@@ -2573,14 +2573,14 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 		changed = append(changed, "risk_control_enabled")
 	}
 	// Default platform quotas（JSON map，整体比较）
-	if !equalPlatformQuotaSettings(before.DefaultPlatformQuotas, after.DefaultPlatformQuotas) {
+	if !quotaSettingsEqual(before.DefaultPlatformQuotas, after.DefaultPlatformQuotas) {
 		changed = append(changed, service.SettingKeyDefaultPlatformQuotas)
 	}
-	changed = appendAuthSourceDefaultChanges(changed, beforeAuthSourceDefaults, afterAuthSourceDefaults)
+	changed = appendSourceDefaults(changed, beforeAuthSourceDefaults, afterAuthSourceDefaults)
 	return changed
 }
 
-func appendAuthSourceDefaultChanges(changed []string, before *service.AuthSourceDefaultSettings, after *service.AuthSourceDefaultSettings) []string {
+func appendSourceDefaults(changed []string, before *service.AuthSourceDefaultSettings, after *service.AuthSourceDefaultSettings) []string {
 	if before == nil {
 		before = &service.AuthSourceDefaultSettings{}
 	}
@@ -2620,7 +2620,7 @@ func appendAuthSourceDefaultChanges(changed []string, before *service.AuthSource
 			changed = append(changed, "auth_source_default_"+field.name+"_grant_on_first_bind")
 		}
 		// Platform quotas diff：整体替换语义，发单个 JSON key。
-		if !equalPlatformQuotaSettings(field.before.PlatformQuotas, field.after.PlatformQuotas) {
+		if !quotaSettingsEqual(field.before.PlatformQuotas, field.after.PlatformQuotas) {
 			changed = append(changed, service.SettingKeyAuthSourcePlatformQuotas(field.name))
 		}
 	}
@@ -2647,7 +2647,7 @@ func normalizeDefaultSubscriptions(input []dto.DefaultSubscriptionSetting) []dto
 	return normalized
 }
 
-func normalizeOptionalDefaultSubscriptions(input *[]dto.DefaultSubscriptionSetting) *[]dto.DefaultSubscriptionSetting {
+func normalizeDefaultSubs(input *[]dto.DefaultSubscriptionSetting) *[]dto.DefaultSubscriptionSetting {
 	if input == nil {
 		return nil
 	}
@@ -2655,28 +2655,28 @@ func normalizeOptionalDefaultSubscriptions(input *[]dto.DefaultSubscriptionSetti
 	return &normalized
 }
 
-func float64ValueOrDefault(value *float64, fallback float64) float64 {
+func floatOr(value *float64, fallback float64) float64 {
 	if value == nil {
 		return fallback
 	}
 	return *value
 }
 
-func intValueOrDefault(value *int, fallback int) int {
+func intOr(value *int, fallback int) int {
 	if value == nil {
 		return fallback
 	}
 	return *value
 }
 
-func boolValueOrDefault(value *bool, fallback bool) bool {
+func boolOr(value *bool, fallback bool) bool {
 	if value == nil {
 		return fallback
 	}
 	return *value
 }
 
-func defaultSubscriptionsValueOrDefault(input *[]dto.DefaultSubscriptionSetting, fallback []service.DefaultSubscriptionSetting) []service.DefaultSubscriptionSetting {
+func subsOr(input *[]dto.DefaultSubscriptionSetting, fallback []service.DefaultSubscriptionSetting) []service.DefaultSubscriptionSetting {
 	if input == nil {
 		return fallback
 	}
@@ -2690,18 +2690,18 @@ func defaultSubscriptionsValueOrDefault(input *[]dto.DefaultSubscriptionSetting,
 	return result
 }
 
-// platformQuotasValueOrDefault 处理 auth-source platform quota 的 nil 语义：
+// quotasOr 处理 auth-source platform quota 的 nil 语义：
 // nil = 请求未包含该字段（保留 fallback），non-nil（含 empty map）= 整体覆盖。
 // 注意：JSON null 与字段省略等价——两者均反序列化为 nil map，因此都保留旧值；
 // 若要清空某 source 的所有 quota 配置，须显式发空对象 {}。
-func platformQuotasValueOrDefault(value, fallback map[string]*service.DefaultPlatformQuotaSetting) map[string]*service.DefaultPlatformQuotaSetting {
+func quotasOr(value, fallback map[string]*service.DefaultPlatformQuotaSetting) map[string]*service.DefaultPlatformQuotaSetting {
 	if value == nil {
 		return fallback
 	}
 	return value
 }
 
-func systemSettingsResponseData(settings dto.SystemSettings, authSourceDefaults *service.AuthSourceDefaultSettings) map[string]any {
+func settingsPayload(settings dto.SystemSettings, authSourceDefaults *service.AuthSourceDefaultSettings) map[string]any {
 	data := make(map[string]any)
 	raw, err := json.Marshal(settings)
 	if err == nil {
@@ -2782,7 +2782,7 @@ func equalDefaultSubscriptions(a, b []service.DefaultSubscriptionSetting) bool {
 	return true
 }
 
-func equalLoginAgreementDocuments(a, b []service.LoginAgreementDocument) bool {
+func agreementDocsEqual(a, b []service.LoginAgreementDocument) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -3495,10 +3495,10 @@ func (h *SettingHandler) ListEmailTemplates(c *gin.Context) {
 		return
 	}
 	response.Success(c, dto.EmailTemplateListResponse{
-		Events:       emailTemplateEventOptionsToDTO(events),
+		Events:       templateOptsToDTO(events),
 		Locales:      h.notificationEmailService.SupportedLocales(),
-		Templates:    emailTemplateSummariesToDTO(templates),
-		Placeholders: emailTemplatePlaceholderUnion(events),
+		Templates:    templateSummaryToDTO(templates),
+		Placeholders: mergePlaceholders(events),
 	})
 }
 
@@ -3514,7 +3514,7 @@ func (h *SettingHandler) GetEmailTemplate(c *gin.Context) {
 		response.BadRequest(c, err.Error())
 		return
 	}
-	response.Success(c, emailTemplateDetailToDTO(tmpl))
+	response.Success(c, templateDetailToDTO(tmpl))
 }
 
 // UpdateEmailTemplate saves an override for one event/locale template.
@@ -3534,7 +3534,7 @@ func (h *SettingHandler) UpdateEmailTemplate(c *gin.Context) {
 		response.BadRequest(c, err.Error())
 		return
 	}
-	response.Success(c, emailTemplateDetailToDTO(tmpl))
+	response.Success(c, templateDetailToDTO(tmpl))
 }
 
 // RestoreOfficialEmailTemplate removes an override and returns the built-in template.
@@ -3549,7 +3549,7 @@ func (h *SettingHandler) RestoreOfficialEmailTemplate(c *gin.Context) {
 		response.BadRequest(c, err.Error())
 		return
 	}
-	response.Success(c, emailTemplateDetailToDTO(tmpl))
+	response.Success(c, templateDetailToDTO(tmpl))
 }
 
 // PreviewEmailTemplate renders a template with safe sample variables without saving it.
@@ -3578,7 +3578,7 @@ func (h *SettingHandler) PreviewEmailTemplate(c *gin.Context) {
 	response.Success(c, dto.EmailTemplatePreviewResponse{Subject: preview.Subject, HTML: preview.HTML})
 }
 
-func emailTemplateEventOptionsToDTO(events []service.NotificationEmailEventInfo) []dto.EmailTemplateEventOption {
+func templateOptsToDTO(events []service.NotificationEmailEventInfo) []dto.EmailTemplateEventOption {
 	items := make([]dto.EmailTemplateEventOption, 0, len(events))
 	for _, event := range events {
 		items = append(items, dto.EmailTemplateEventOption{
@@ -3592,7 +3592,7 @@ func emailTemplateEventOptionsToDTO(events []service.NotificationEmailEventInfo)
 	return items
 }
 
-func emailTemplateSummariesToDTO(templates []service.NotificationEmailTemplate) []dto.EmailTemplateSummary {
+func templateSummaryToDTO(templates []service.NotificationEmailTemplate) []dto.EmailTemplateSummary {
 	items := make([]dto.EmailTemplateSummary, 0, len(templates))
 	for _, tmpl := range templates {
 		items = append(items, dto.EmailTemplateSummary{
@@ -3600,32 +3600,32 @@ func emailTemplateSummariesToDTO(templates []service.NotificationEmailTemplate) 
 			Locale:    tmpl.Locale,
 			Subject:   tmpl.Subject,
 			IsCustom:  tmpl.IsCustom,
-			UpdatedAt: emailTemplateUpdatedAt(tmpl),
+			UpdatedAt: templateTimestamp(tmpl),
 		})
 	}
 	return items
 }
 
-func emailTemplateDetailToDTO(tmpl service.NotificationEmailTemplate) dto.EmailTemplateDetail {
+func templateDetailToDTO(tmpl service.NotificationEmailTemplate) dto.EmailTemplateDetail {
 	return dto.EmailTemplateDetail{
 		Event:        tmpl.Event,
 		Locale:       tmpl.Locale,
 		Subject:      tmpl.Subject,
 		HTML:         tmpl.HTML,
 		IsCustom:     tmpl.IsCustom,
-		UpdatedAt:    emailTemplateUpdatedAt(tmpl),
+		UpdatedAt:    templateTimestamp(tmpl),
 		Placeholders: tmpl.Placeholders,
 	}
 }
 
-func emailTemplateUpdatedAt(tmpl service.NotificationEmailTemplate) string {
+func templateTimestamp(tmpl service.NotificationEmailTemplate) string {
 	if tmpl.UpdatedAt == nil {
 		return ""
 	}
 	return tmpl.UpdatedAt.Format("2006-01-02T15:04:05Z07:00")
 }
 
-func emailTemplatePlaceholderUnion(events []service.NotificationEmailEventInfo) []string {
+func mergePlaceholders(events []service.NotificationEmailEventInfo) []string {
 	seen := make(map[string]struct{})
 	placeholders := make([]string, 0)
 	for _, event := range events {
@@ -3640,8 +3640,8 @@ func emailTemplatePlaceholderUnion(events []service.NotificationEmailEventInfo) 
 	return placeholders
 }
 
-// equalNullableFloat compares two *float64 values treating nil as a distinct case.
-func equalNullableFloat(a, b *float64) bool {
+// nullableFloatEqual compares two *float64 values treating nil as a distinct case.
+func nullableFloatEqual(a, b *float64) bool {
 	if a == nil && b == nil {
 		return true
 	}
@@ -3651,8 +3651,8 @@ func equalNullableFloat(a, b *float64) bool {
 	return *a == *b
 }
 
-// slotOf returns the *float64 for the given window from a DefaultPlatformQuotaSetting.
-func slotOf(s *service.DefaultPlatformQuotaSetting, win string) *float64 {
+// extractSlot returns the *float64 for the given window from a DefaultPlatformQuotaSetting.
+func extractSlot(s *service.DefaultPlatformQuotaSetting, win string) *float64 {
 	if s == nil {
 		return nil
 	}
@@ -3667,18 +3667,18 @@ func slotOf(s *service.DefaultPlatformQuotaSetting, win string) *float64 {
 	return nil
 }
 
-// equalPlatformQuotaSettings reports whether two platform-quota maps are identical across all 12 slots.
-func equalPlatformQuotaSettings(before, after map[string]*service.DefaultPlatformQuotaSetting) bool {
+// quotaSettingsEqual reports whether two platform-quota maps are identical across all 12 slots.
+func quotaSettingsEqual(before, after map[string]*service.DefaultPlatformQuotaSetting) bool {
 	for _, platform := range service.AllowedQuotaPlatforms {
 		b := before[platform]
 		a := after[platform]
-		if !equalNullableFloat(slotOf(b, "daily"), slotOf(a, "daily")) {
+		if !nullableFloatEqual(extractSlot(b, "daily"), extractSlot(a, "daily")) {
 			return false
 		}
-		if !equalNullableFloat(slotOf(b, "weekly"), slotOf(a, "weekly")) {
+		if !nullableFloatEqual(extractSlot(b, "weekly"), extractSlot(a, "weekly")) {
 			return false
 		}
-		if !equalNullableFloat(slotOf(b, "monthly"), slotOf(a, "monthly")) {
+		if !nullableFloatEqual(extractSlot(b, "monthly"), extractSlot(a, "monthly")) {
 			return false
 		}
 	}

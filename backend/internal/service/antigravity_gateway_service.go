@@ -2611,7 +2611,7 @@ func (s *AntigravityGatewayService) setAntigravityModelRateLimits(ctx context.Co
 	if account == nil || repo == nil {
 		return false
 	}
-	keys := antigravityModelRateLimitKeys(modelName)
+	keys := agModelRLKeys(modelName)
 	if len(keys) == 0 {
 		return false
 	}
@@ -4291,7 +4291,7 @@ func (s *AntigravityGatewayService) ForwardUpstream(ctx context.Context, c *gin.
 	// 对称。客户端 anthropic-beta header 不含 context-management-2025-06-27 但 body 带
 	// context_management 时 strip，与 Anthropic 直连 / Bedrock / Vertex 路径保持一致。
 	clientBeta := c.GetHeader("anthropic-beta")
-	if sanitized, changed := sanitizeAnthropicBodyForBetaTokens(body, clientBeta); changed {
+	if sanitized, changed := sanitizeAnthropicBodyForBetaTokensV2(body, clientBeta); changed {
 		body = sanitized
 	}
 

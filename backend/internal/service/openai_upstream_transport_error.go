@@ -57,7 +57,7 @@ var openAIPersistentTransportErrorMarkers = []string{
 // `username/password authentication failed`; the account was nonetheless
 // rescheduled on every request, hard-failing users with 502s.
 //
-// Classification strategy (mirrors sanitizeStreamError in gateway_service.go):
+// Classification strategy (mirrors sanitizeStreamErrorV2 in gateway_service.go):
 //  1. Typed-error checks first (syscall constants, *net.DNSError) — portable and
 //     unambiguous.
 //  2. String-marker fallback for errors that have no typed form (e.g. the plain

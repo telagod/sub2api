@@ -343,7 +343,7 @@ func (s *ConcurrencyService) getAccountsLoadBatch(ctx context.Context, accounts 
 		return s.fetchAccountsLoadBatch(ctx, accounts)
 	}
 
-	key := accountLoadBatchCacheKey(accounts)
+	key := loadBatchKey(accounts)
 	if cached, ok := s.getCachedAccountLoadBatch(key, time.Now()); ok {
 		return cached, nil
 	}
@@ -357,7 +357,7 @@ func (s *ConcurrencyService) getAccountsLoadBatch(ctx context.Context, accounts 
 		if fetchErr != nil {
 			return nil, fetchErr
 		}
-		cached := cloneAccountLoadMap(loadMap)
+		cached := dupAccountLoadMap(loadMap)
 		s.storeCachedAccountLoadBatch(key, cached, now.Add(ttl))
 		return cached, nil
 	})
@@ -428,7 +428,7 @@ func (s *ConcurrencyService) storeCachedAccountLoadBatch(key string, loadMap map
 	s.accountLoadCacheMu.Unlock()
 }
 
-func accountLoadBatchCacheKey(accounts []AccountWithConcurrency) string {
+func loadBatchKey(accounts []AccountWithConcurrency) string {
 	hash := sha256.New()
 	var buf [16]byte
 	for _, account := range accounts {
@@ -440,7 +440,7 @@ func accountLoadBatchCacheKey(accounts []AccountWithConcurrency) string {
 	return strconv.Itoa(len(accounts)) + ":" + hex.EncodeToString(sum)
 }
 
-func cloneAccountLoadMap(loadMap map[int64]*AccountLoadInfo) map[int64]*AccountLoadInfo {
+func dupAccountLoadMap(loadMap map[int64]*AccountLoadInfo) map[int64]*AccountLoadInfo {
 	if len(loadMap) == 0 {
 		return map[int64]*AccountLoadInfo{}
 	}

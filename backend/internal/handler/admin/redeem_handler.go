@@ -57,7 +57,7 @@ type CreateAndRedeemCodeRequest struct {
 	ExpiresInDays *int       `json:"expires_in_days" binding:"omitempty,min=1,max=3650"`
 }
 
-func resolveRedeemCodeExpiresAt(expiresAt *time.Time, expiresInDays *int) (*time.Time, error) {
+func computeRedeemExpiry(expiresAt *time.Time, expiresInDays *int) (*time.Time, error) {
 	if expiresAt != nil && expiresInDays != nil {
 		return nil, infraerrors.BadRequest("REDEEM_CODE_EXPIRY_CONFLICT", "expires_at and expires_in_days cannot both be set")
 	}
@@ -136,7 +136,7 @@ func (h *RedeemHandler) Generate(c *gin.Context) {
 		return
 	}
 
-	expiresAt, err := resolveRedeemCodeExpiresAt(req.ExpiresAt, req.ExpiresInDays)
+	expiresAt, err := computeRedeemExpiry(req.ExpiresAt, req.ExpiresInDays)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -194,7 +194,7 @@ func (h *RedeemHandler) CreateAndRedeem(c *gin.Context) {
 		}
 	}
 
-	expiresAt, err := resolveRedeemCodeExpiresAt(req.ExpiresAt, req.ExpiresInDays)
+	expiresAt, err := computeRedeemExpiry(req.ExpiresAt, req.ExpiresInDays)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -323,7 +323,7 @@ func (h *RedeemHandler) BatchUpdate(c *gin.Context) {
 
 	result, err := h.redeemService.BatchUpdate(c.Request.Context(), &service.RedeemCodeBatchUpdateInput{
 		IDs:    req.IDs,
-		Fields: redeemBatchUpdateFieldsFromDTO(req.Fields),
+		Fields: redeemFieldsFromDTO(req.Fields),
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -336,7 +336,7 @@ func (h *RedeemHandler) BatchUpdate(c *gin.Context) {
 	})
 }
 
-func redeemBatchUpdateFieldsFromDTO(in dto.BatchUpdateRedeemCodeFields) service.RedeemCodeBatchUpdateFields {
+func redeemFieldsFromDTO(in dto.BatchUpdateRedeemCodeFields) service.RedeemCodeBatchUpdateFields {
 	out := service.RedeemCodeBatchUpdateFields{
 		Status: in.Status,
 		Notes:  in.Notes,

@@ -37,7 +37,7 @@ func (s *PaymentService) HandlePaymentNotification(ctx context.Context, n *payme
 	if err != nil {
 		// Fallback only for true legacy "sub2_N" DB-ID payloads when the
 		// current out_trade_no lookup genuinely did not find an order.
-		if oid, ok := parseLegacyPaymentOrderID(n.OrderID, err); ok {
+		if oid, ok := decodeLegacyPaymentOrderID(n.OrderID, err); ok {
 			return s.confirmPayment(ctx, oid, n.TradeNo, n.Amount, pk, n.Metadata)
 		}
 		if dbent.IsNotFound(err) {
@@ -48,7 +48,7 @@ func (s *PaymentService) HandlePaymentNotification(ctx context.Context, n *payme
 	return s.confirmPayment(ctx, order.ID, n.TradeNo, n.Amount, pk, n.Metadata)
 }
 
-func parseLegacyPaymentOrderID(orderID string, lookupErr error) (int64, bool) {
+func decodeLegacyPaymentOrderID(orderID string, lookupErr error) (int64, bool) {
 	if !dbent.IsNotFound(lookupErr) {
 		return 0, false
 	}
@@ -86,14 +86,14 @@ func (s *PaymentService) confirmPayment(ctx context.Context, oid int64, tradeNo 
 		})
 		return fmt.Errorf("provider mismatch: expected %s, got %s", expectedProviderKey, pk)
 	}
-	if err := validateProviderNotificationMetadata(o, pk, metadata); err != nil {
+	if err := verifyProviderNotificationMetadata(o, pk, metadata); err != nil {
 		s.writeAuditLog(ctx, o.ID, "PAYMENT_PROVIDER_METADATA_MISMATCH", pk, map[string]any{
 			"detail":  err.Error(),
 			"tradeNo": tradeNo,
 		})
 		return err
 	}
-	if !isValidProviderAmount(paid) {
+	if !checkValidProviderAmount(paid) {
 		s.writeAuditLog(ctx, o.ID, "PAYMENT_INVALID_AMOUNT", pk, map[string]any{
 			"expected": o.PayAmount,
 			"paid":     paid,
@@ -101,14 +101,14 @@ func (s *PaymentService) confirmPayment(ctx context.Context, oid int64, tradeNo 
 		})
 		return fmt.Errorf("invalid paid amount from provider: %v", paid)
 	}
-	if math.Abs(paid-o.PayAmount) > paymentAmountToleranceForCurrency(PaymentOrderCurrency(o)) {
+	if math.Abs(paid-o.PayAmount) > paymentAmountToleranceForCurrencyV2(PaymentOrderCurrency(o)) {
 		s.writeAuditLog(ctx, o.ID, "PAYMENT_AMOUNT_MISMATCH", pk, map[string]any{"expected": o.PayAmount, "paid": paid, "tradeNo": tradeNo})
 		return fmt.Errorf("amount mismatch: expected %s, got %s", strconv.FormatFloat(o.PayAmount, 'f', -1, 64), strconv.FormatFloat(paid, 'f', -1, 64))
 	}
 	return s.toPaid(ctx, o, tradeNo, paid, pk)
 }
 
-func paymentAmountToleranceForCurrency(currency string) float64 {
+func paymentAmountToleranceForCurrencyV2(currency string) float64 {
 	minorUnit := payment.CurrencyMinorUnit(currency)
 	if minorUnit <= 2 {
 		return amountToleranceCNY
@@ -116,15 +116,15 @@ func paymentAmountToleranceForCurrency(currency string) float64 {
 	return math.Pow10(-minorUnit) / 2
 }
 
-func isValidProviderAmount(amount float64) bool {
+func checkValidProviderAmount(amount float64) bool {
 	return amount > 0 && !math.IsNaN(amount) && !math.IsInf(amount, 0)
 }
 
-func validateProviderNotificationMetadata(order *dbent.PaymentOrder, providerKey string, metadata map[string]string) error {
+func verifyProviderNotificationMetadata(order *dbent.PaymentOrder, providerKey string, metadata map[string]string) error {
 	return validateProviderSnapshotMetadata(order, providerKey, metadata)
 }
 
-func expectedNotificationProviderKey(registry *payment.Registry, orderPaymentType string, orderProviderKey string, instanceProviderKey string) string {
+func expectedNotificationProviderKeyV2(registry *payment.Registry, orderPaymentType string, orderProviderKey string, instanceProviderKey string) string {
 	if key := strings.TrimSpace(instanceProviderKey); key != "" {
 		return key
 	}
@@ -346,7 +346,7 @@ func (s *PaymentService) sendBalanceRechargeSuccessNotification(ctx context.Cont
 	return s.notificationEmailService.Send(ctx, NotificationEmailSendInput{
 		Event:          NotificationEmailEventBalanceRechargeSuccess,
 		RecipientEmail: o.UserEmail,
-		RecipientName:  firstNonEmpty(o.UserName, o.UserEmail),
+		RecipientName:  coalesce(o.UserName, o.UserEmail),
 		UserID:         o.UserID,
 		SourceType:     "payment_order",
 		SourceID:       strconv.FormatInt(o.ID, 10),
@@ -383,7 +383,7 @@ func (s *PaymentService) sendSubscriptionPurchaseSuccessNotification(ctx context
 	return s.notificationEmailService.Send(ctx, NotificationEmailSendInput{
 		Event:          NotificationEmailEventSubscriptionPurchaseSuccess,
 		RecipientEmail: o.UserEmail,
-		RecipientName:  firstNonEmpty(o.UserName, o.UserEmail),
+		RecipientName:  coalesce(o.UserName, o.UserEmail),
 		UserID:         o.UserID,
 		SourceType:     "payment_order",
 		SourceID:       strconv.FormatInt(o.ID, 10),

@@ -78,7 +78,7 @@ func (h *AuthHandler) emailOAuthStart(c *gin.Context, provider string) {
 	emailOAuthSetCookie(c, emailOAuthStateCookieName, encodeCookieValue(state), secureCookie)
 	emailOAuthSetCookie(c, emailOAuthRedirectCookie, encodeCookieValue(redirectTo), secureCookie)
 	emailOAuthSetCookie(c, emailOAuthProviderCookie, encodeCookieValue(provider), secureCookie)
-	if affCode := strings.TrimSpace(firstNonEmpty(c.Query("aff_code"), c.Query("aff"))); affCode != "" {
+	if affCode := strings.TrimSpace(coalesce(c.Query("aff_code"), c.Query("aff"))); affCode != "" {
 		emailOAuthSetCookie(c, emailOAuthAffiliateCookie, encodeCookieValue(affCode), secureCookie)
 	} else {
 		emailOAuthClearCookie(c, emailOAuthAffiliateCookie, secureCookie)
@@ -532,8 +532,8 @@ func parseGitHubOAuthProfile(ctx context.Context, cfg config.EmailOAuthProviderC
 		Subject:       subject,
 		Email:         email,
 		EmailVerified: true,
-		Username:      firstNonEmpty(login, name, "github_"+subject),
-		DisplayName:   firstNonEmpty(name, login),
+		Username:      coalesce(login, name, "github_"+subject),
+		DisplayName:   coalesce(name, login),
 		AvatarURL:     strings.TrimSpace(gjson.Get(body, "avatar_url").String()),
 		Metadata: map[string]any{
 			"login": login,
@@ -587,7 +587,7 @@ func parseGoogleOAuthProfile(body string) (*emailOAuthProfile, error) {
 		Subject:       subject,
 		Email:         email,
 		EmailVerified: true,
-		Username:      firstNonEmpty(strings.TrimSpace(gjson.Get(body, "given_name").String()), name, email),
+		Username:      coalesce(strings.TrimSpace(gjson.Get(body, "given_name").String()), name, email),
 		DisplayName:   name,
 		AvatarURL:     strings.TrimSpace(gjson.Get(body, "picture").String()),
 		Metadata: map[string]any{

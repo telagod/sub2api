@@ -26,8 +26,8 @@ func (s *PaymentService) GetPublicOrderByResumeToken(ctx context.Context, token 
 		return nil, invalidResumeTokenMatchError()
 	}
 	snapshot := psOrderProviderSnapshot(order)
-	orderProviderInstanceID := strings.TrimSpace(psStringValue(order.ProviderInstanceID))
-	orderProviderKey := strings.TrimSpace(psStringValue(order.ProviderKey))
+	orderProviderInstanceID := strings.TrimSpace(psStringValueV2(order.ProviderInstanceID))
+	orderProviderKey := strings.TrimSpace(psStringValueV2(order.ProviderKey))
 	if snapshot != nil {
 		if snapshot.ProviderInstanceID != "" {
 			orderProviderInstanceID = snapshot.ProviderInstanceID

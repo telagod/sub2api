@@ -209,8 +209,8 @@ func (h *AuthHandler) WeChatOAuthCallback(c *gin.Context) {
 		return
 	}
 
-	unionid := strings.TrimSpace(firstNonEmpty(userInfo.UnionID, tokenResp.UnionID))
-	openid := strings.TrimSpace(firstNonEmpty(userInfo.OpenID, tokenResp.OpenID))
+	unionid := strings.TrimSpace(coalesce(userInfo.UnionID, tokenResp.UnionID))
+	openid := strings.TrimSpace(coalesce(userInfo.OpenID, tokenResp.OpenID))
 	providerSubject := unionid
 	if providerSubject == "" {
 		if cfg.requiresUnionID() {
@@ -224,7 +224,7 @@ func (h *AuthHandler) WeChatOAuthCallback(c *gin.Context) {
 		return
 	}
 
-	username := firstNonEmpty(userInfo.Nickname, wechatFallbackUsername(providerSubject))
+	username := coalesce(userInfo.Nickname, wechatFallbackUsername(providerSubject))
 	email := wechatSyntheticEmail(providerSubject)
 	upstreamClaims := map[string]any{
 		"email":                  email,
@@ -990,8 +990,8 @@ func (h *AuthHandler) getWeChatOAuthConfig(ctx context.Context, rawMode string, 
 		mode:             mode,
 		appID:            strings.TrimSpace(effective.AppIDForMode(mode)),
 		appSecret:        strings.TrimSpace(effective.AppSecretForMode(mode)),
-		redirectURI:      firstNonEmpty(strings.TrimSpace(effective.RedirectURL), resolveWeChatOAuthAbsoluteURL(apiBaseURL, c, "/api/v1/auth/oauth/wechat/callback")),
-		frontendCallback: firstNonEmpty(strings.TrimSpace(effective.FrontendRedirectURL), wechatOAuthDefaultFrontendCB),
+		redirectURI:      coalesce(strings.TrimSpace(effective.RedirectURL), resolveWeChatOAuthAbsoluteURL(apiBaseURL, c, "/api/v1/auth/oauth/wechat/callback")),
+		frontendCallback: coalesce(strings.TrimSpace(effective.FrontendRedirectURL), wechatOAuthDefaultFrontendCB),
 		scope:            effective.ScopeForMode(mode),
 		openEnabled:      effective.OpenEnabled,
 		mpEnabled:        effective.MPEnabled,

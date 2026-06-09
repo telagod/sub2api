@@ -57,7 +57,7 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 	if promptCacheKey == "" && shouldAutoInjectPromptCacheKeyForCompat(upstreamModel) {
 		promptCacheKey = promptCacheKeyFromAnthropicMetadataSession(&anthropicReq)
 		if promptCacheKey == "" {
-			promptCacheKey = deriveAnthropicCacheControlPromptCacheKey(&anthropicReq)
+			promptCacheKey = inferAnthropicCacheControlPromptCacheKey(&anthropicReq)
 		}
 		if promptCacheKey == "" {
 			anthropicDigestChain = buildOpenAICompatAnthropicDigestChain(anthropicDigestReq)
@@ -154,7 +154,7 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 		if err := json.Unmarshal(responsesBody, &reqBody); err != nil {
 			return nil, fmt.Errorf("unmarshal for codex transform: %w", err)
 		}
-		codexResult := applyCodexOAuthTransformWithOptions(reqBody, codexOAuthTransformOptions{
+		codexResult := codexOAuthTransform(reqBody, codexOAuthTransformOptions{
 			SkipDefaultInstructions: true,
 			PreserveToolCallIDs:     true,
 		})
@@ -168,7 +168,7 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 		}
 		existingInstructions, _ := reqBody["instructions"].(string)
 		if strings.TrimSpace(existingInstructions) == "" {
-			existingInstructions = extractPromptLikeInstructionsFromInput(reqBody)
+			existingInstructions = pullPromptLikeInstructionsFromInput(reqBody)
 		}
 		if _, err := applyForcedCodexInstructionsTemplate(reqBody, forcedTemplateText, forcedCodexInstructionsTemplateData{
 			ExistingInstructions: strings.TrimSpace(existingInstructions),
@@ -245,7 +245,7 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 	}
 
 	// 6. Build upstream request
-	upstreamCtx, releaseUpstreamCtx := detachUpstreamContext(ctx)
+	upstreamCtx, releaseUpstreamCtx := decoupleUpstreamContext(ctx)
 	upstreamReq, err := s.buildUpstreamRequest(upstreamCtx, c, account, responsesBody, token, isStream, promptCacheKey, false)
 	releaseUpstreamCtx()
 	if err != nil {

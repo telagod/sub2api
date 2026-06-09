@@ -204,7 +204,7 @@ func TestVerifyNotificationWithProvidersReturnsMatchedProvider(t *testing.T) {
 		},
 	}
 
-	providerKey, notification, err := verifyNotificationWithProviders(context.Background(), providers, "{}", map[string]string{"wechatpay-signature": "sig"})
+	providerKey, notification, err := verifyNotificationWithProvidersV2(context.Background(), providers, "{}", map[string]string{"wechatpay-signature": "sig"})
 	require.NoError(t, err)
 	require.Equal(t, payment.TypeWxpay, providerKey)
 	require.NotNil(t, notification)
@@ -223,7 +223,7 @@ func TestVerifyNotificationWithProvidersFailsWhenAllProvidersReject(t *testing.T
 		},
 	}
 
-	_, _, err := verifyNotificationWithProviders(context.Background(), providers, "{}", nil)
+	_, _, err := verifyNotificationWithProvidersV2(context.Background(), providers, "{}", nil)
 	require.Error(t, err)
 }
 

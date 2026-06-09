@@ -116,10 +116,10 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			AbortWithError(c, 401, "USER_INACTIVE", "User account is not active")
 			return
 		}
-		if abortIfAPIKeyGroupUnavailable(c, apiKey) {
+		if rejectUnavailableGroup(c, apiKey) {
 			return
 		}
-		if abortIfAPIKeyGroupNotAllowed(c, apiKey) {
+		if rejectDisallowedGroup(c, apiKey) {
 			return
 		}
 
@@ -285,8 +285,8 @@ func setGroupContext(c *gin.Context, group *service.Group) {
 	c.Request = c.Request.WithContext(ctx)
 }
 
-func abortIfAPIKeyGroupUnavailable(c *gin.Context, apiKey *service.APIKey) bool {
-	code, message, ok := validateAPIKeyGroupAvailable(apiKey)
+func rejectUnavailableGroup(c *gin.Context, apiKey *service.APIKey) bool {
+	code, message, ok := verifyKeyGroupAvailable(apiKey)
 	if ok {
 		return false
 	}
@@ -295,8 +295,8 @@ func abortIfAPIKeyGroupUnavailable(c *gin.Context, apiKey *service.APIKey) bool 
 	return true
 }
 
-func abortIfAPIKeyGroupNotAllowed(c *gin.Context, apiKey *service.APIKey) bool {
-	if validateAPIKeyGroupAllowed(apiKey) {
+func rejectDisallowedGroup(c *gin.Context, apiKey *service.APIKey) bool {
+	if verifyKeyGroupAllowed(apiKey) {
 		return false
 	}
 	service.MarkOpsClientBusinessLimited(c, service.OpsClientBusinessLimitedReasonAPIKeyGroupUnavailable)
@@ -304,7 +304,7 @@ func abortIfAPIKeyGroupNotAllowed(c *gin.Context, apiKey *service.APIKey) bool {
 	return true
 }
 
-func validateAPIKeyGroupAllowed(apiKey *service.APIKey) bool {
+func verifyKeyGroupAllowed(apiKey *service.APIKey) bool {
 	if apiKey == nil || apiKey.GroupID == nil || apiKey.User == nil || apiKey.Group == nil {
 		return true
 	}
@@ -315,7 +315,7 @@ func validateAPIKeyGroupAllowed(apiKey *service.APIKey) bool {
 	return apiKey.User.CanBindGroup(group.ID, group.IsExclusive)
 }
 
-func validateAPIKeyGroupAvailable(apiKey *service.APIKey) (string, string, bool) {
+func verifyKeyGroupAvailable(apiKey *service.APIKey) (string, string, bool) {
 	if apiKey == nil || apiKey.GroupID == nil {
 		return "", "", true
 	}

@@ -97,11 +97,11 @@ func ExtractUpstreamErrorCodeAndMessage(body []byte) (string, string) {
 		return "", truncateMessage(trimmed, 256)
 	}
 
-	code := firstNonEmpty(
+	code := coalesce(
 		extractNestedString(payload, "error", "code"),
 		extractRootString(payload, "code"),
 	)
-	message := firstNonEmpty(
+	message := coalesce(
 		extractNestedString(payload, "error", "message"),
 		extractRootString(payload, "message"),
 		extractNestedString(payload, "error", "detail"),
@@ -132,7 +132,7 @@ func truncateMessage(s string, max int) string {
 	return s[:max] + "...(truncated)"
 }
 
-func firstNonEmpty(values ...string) string {
+func coalesce(values ...string) string {
 	for _, v := range values {
 		if strings.TrimSpace(v) != "" {
 			return v

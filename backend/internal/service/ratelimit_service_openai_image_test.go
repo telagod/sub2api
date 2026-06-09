@@ -20,9 +20,9 @@ func TestIsOpenAIImageRateLimitError(t *testing.T) {
 	imageBody := []byte(`{"error":{"message":"Rate limit reached for gpt-image-2-codex (for limit gpt-image) in organization org on input-images per min: Limit 4000, Used 4000. Please try again in 467ms."}}`)
 	textBody := []byte(`{"error":{"message":"Rate limit reached for gpt-5.4 in organization org on tokens per min: Limit 30000, Used 30000. Please try again in 1s."}}`)
 
-	require.True(t, isOpenAIImageRateLimitError(http.StatusTooManyRequests, imageBody))
-	require.False(t, isOpenAIImageRateLimitError(http.StatusTooManyRequests, textBody))
-	require.False(t, isOpenAIImageRateLimitError(http.StatusBadRequest, imageBody))
+	require.True(t, checkOpenAIImageRateLimitError(http.StatusTooManyRequests, imageBody))
+	require.False(t, checkOpenAIImageRateLimitError(http.StatusTooManyRequests, textBody))
+	require.False(t, checkOpenAIImageRateLimitError(http.StatusBadRequest, imageBody))
 }
 
 func TestRateLimitService_HandleOpenAIImageRateLimit_ParsesTryAgainCooldown(t *testing.T) {

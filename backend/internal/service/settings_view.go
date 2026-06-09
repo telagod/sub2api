@@ -2,7 +2,7 @@ package service
 
 import "strings"
 
-func firstNonEmpty(values ...string) string {
+func coalesce(values ...string) string {
 	for _, value := range values {
 		if trimmed := strings.TrimSpace(value); trimmed != "" {
 			return trimmed
@@ -350,21 +350,21 @@ func (cfg WeChatConnectOAuthConfig) ScopeForMode(mode string) string {
 func (cfg WeChatConnectOAuthConfig) AppIDForMode(mode string) string {
 	switch normalizeWeChatConnectModeSetting(mode) {
 	case "mp":
-		return strings.TrimSpace(firstNonEmpty(cfg.MPAppID, cfg.LegacyAppID))
+		return strings.TrimSpace(coalesce(cfg.MPAppID, cfg.LegacyAppID))
 	case "mobile":
-		return strings.TrimSpace(firstNonEmpty(cfg.MobileAppID, cfg.LegacyAppID))
+		return strings.TrimSpace(coalesce(cfg.MobileAppID, cfg.LegacyAppID))
 	}
-	return strings.TrimSpace(firstNonEmpty(cfg.OpenAppID, cfg.LegacyAppID))
+	return strings.TrimSpace(coalesce(cfg.OpenAppID, cfg.LegacyAppID))
 }
 
 func (cfg WeChatConnectOAuthConfig) AppSecretForMode(mode string) string {
 	switch normalizeWeChatConnectModeSetting(mode) {
 	case "mp":
-		return strings.TrimSpace(firstNonEmpty(cfg.MPAppSecret, cfg.LegacyAppSecret))
+		return strings.TrimSpace(coalesce(cfg.MPAppSecret, cfg.LegacyAppSecret))
 	case "mobile":
-		return strings.TrimSpace(firstNonEmpty(cfg.MobileAppSecret, cfg.LegacyAppSecret))
+		return strings.TrimSpace(coalesce(cfg.MobileAppSecret, cfg.LegacyAppSecret))
 	}
-	return strings.TrimSpace(firstNonEmpty(cfg.OpenAppSecret, cfg.LegacyAppSecret))
+	return strings.TrimSpace(coalesce(cfg.OpenAppSecret, cfg.LegacyAppSecret))
 }
 
 // StreamTimeoutSettings 流超时处理配置（仅控制超时后的处理方式，超时判定由网关配置控制）

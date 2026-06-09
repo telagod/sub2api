@@ -30,7 +30,7 @@ func TestDiffSettings_DetectsGlobalPlatformQuotaChange(t *testing.T) {
 		},
 	}
 
-	changed := diffSettings(before, after, nil, nil, UpdateSettingsRequest{})
+	changed := settingsDiff(before, after, nil, nil, UpdateSettingsRequest{})
 	found := false
 	for _, key := range changed {
 		if key == service.SettingKeyDefaultPlatformQuotas {
@@ -56,7 +56,7 @@ func TestDiffSettings_NoChangeWhenEqual(t *testing.T) {
 		},
 	}
 
-	changed := diffSettings(before, after, nil, nil, UpdateSettingsRequest{})
+	changed := settingsDiff(before, after, nil, nil, UpdateSettingsRequest{})
 	for _, key := range changed {
 		if key == service.SettingKeyDefaultPlatformQuotas {
 			t.Error("equal values should not be detected as changed")
@@ -79,8 +79,8 @@ func TestEqualNullableFloat(t *testing.T) {
 		{&five, &ten, false},
 	}
 	for _, c := range cases {
-		if got := equalNullableFloat(c.a, c.b); got != c.want {
-			t.Errorf("equalNullableFloat(%v, %v) = %v, want %v", c.a, c.b, got, c.want)
+		if got := nullableFloatEqual(c.a, c.b); got != c.want {
+			t.Errorf("nullableFloatEqual(%v, %v) = %v, want %v", c.a, c.b, got, c.want)
 		}
 	}
 }
@@ -94,7 +94,7 @@ func TestEqualPlatformQuotaSettings_DetectsPerWindowChange(t *testing.T) {
 	after := map[string]*service.DefaultPlatformQuotaSetting{
 		"anthropic": {DailyLimitUSD: &ten},
 	}
-	if equalPlatformQuotaSettings(before, after) {
+	if quotaSettingsEqual(before, after) {
 		t.Error("expected unequal")
 	}
 }
@@ -117,7 +117,7 @@ func TestAppendAuthSourceDefaultChanges_DetectsPerWindow(t *testing.T) {
 		},
 	}
 
-	changed := appendAuthSourceDefaultChanges([]string{}, before, after)
+	changed := appendSourceDefaults([]string{}, before, after)
 	// 改动 B5：整体替换语义，审计 log 发单个 JSON key，而非展开 84 个扁平 key。
 	key := service.SettingKeyAuthSourcePlatformQuotas("linuxdo")
 	found := false

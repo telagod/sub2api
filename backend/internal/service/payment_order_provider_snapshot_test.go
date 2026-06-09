@@ -26,7 +26,7 @@ func TestBuildPaymentOrderProviderSnapshot_ExcludesSensitiveConfig(t *testing.T)
 		},
 	}
 
-	snapshot := buildPaymentOrderProviderSnapshot(sel, CreateOrderRequest{})
+	snapshot := providerSnapshot(sel, CreateOrderRequest{})
 	require.Equal(t, map[string]any{
 		"schema_version":       2,
 		"provider_instance_id": "12",
@@ -114,7 +114,7 @@ func TestCreateOrderInTx_WritesProviderSnapshot(t *testing.T) {
 func TestBuildPaymentOrderProviderSnapshot_UsesWxpayJSAPIAppIDForOpenIDOrders(t *testing.T) {
 	t.Parallel()
 
-	snapshot := buildPaymentOrderProviderSnapshot(&payment.InstanceSelection{
+	snapshot := providerSnapshot(&payment.InstanceSelection{
 		InstanceID:  "88",
 		ProviderKey: payment.TypeWxpay,
 		Config: map[string]string{
@@ -133,7 +133,7 @@ func TestBuildPaymentOrderProviderSnapshot_UsesWxpayJSAPIAppIDForOpenIDOrders(t 
 func TestBuildPaymentOrderProviderSnapshot_IncludesAlipayMerchantIdentity(t *testing.T) {
 	t.Parallel()
 
-	snapshot := buildPaymentOrderProviderSnapshot(&payment.InstanceSelection{
+	snapshot := providerSnapshot(&payment.InstanceSelection{
 		InstanceID:  "21",
 		ProviderKey: payment.TypeAlipay,
 		Config: map[string]string{
@@ -150,7 +150,7 @@ func TestBuildPaymentOrderProviderSnapshot_IncludesAlipayMerchantIdentity(t *tes
 func TestBuildPaymentOrderProviderSnapshot_IncludesEasyPayMerchantIdentity(t *testing.T) {
 	t.Parallel()
 
-	snapshot := buildPaymentOrderProviderSnapshot(&payment.InstanceSelection{
+	snapshot := providerSnapshot(&payment.InstanceSelection{
 		InstanceID:  "66",
 		ProviderKey: payment.TypeEasyPay,
 		Config: map[string]string{
@@ -167,7 +167,7 @@ func TestBuildPaymentOrderProviderSnapshot_IncludesEasyPayMerchantIdentity(t *te
 func TestBuildPaymentOrderProviderSnapshot_IncludesProviderCurrency(t *testing.T) {
 	t.Parallel()
 
-	stripeSnapshot := buildPaymentOrderProviderSnapshot(&payment.InstanceSelection{
+	stripeSnapshot := providerSnapshot(&payment.InstanceSelection{
 		InstanceID:  "77",
 		ProviderKey: payment.TypeStripe,
 		Config: map[string]string{
@@ -176,7 +176,7 @@ func TestBuildPaymentOrderProviderSnapshot_IncludesProviderCurrency(t *testing.T
 	}, CreateOrderRequest{})
 	require.Equal(t, "HKD", stripeSnapshot["currency"])
 
-	airwallexSnapshot := buildPaymentOrderProviderSnapshot(&payment.InstanceSelection{
+	airwallexSnapshot := providerSnapshot(&payment.InstanceSelection{
 		InstanceID:  "78",
 		ProviderKey: payment.TypeAirwallex,
 		Config: map[string]string{

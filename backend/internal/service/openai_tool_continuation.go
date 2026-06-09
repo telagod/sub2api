@@ -161,7 +161,7 @@ func ValidateFunctionCallOutputContextBytes(body []byte) FunctionCallOutputValid
 		return result
 	}
 	// handler 热路径只读扫描 input，避免 GetBytes 为大 Responses body 复制整段 JSON。
-	input := parseRawJSONView(body).Get("input")
+	input := decodeRawJSONView(body).Get("input")
 	if !input.IsArray() {
 		return result
 	}

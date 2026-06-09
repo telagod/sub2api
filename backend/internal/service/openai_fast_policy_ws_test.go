@@ -260,7 +260,7 @@ func TestPolicyEnforcingFrameConn_FollowupFrameWithoutModelUsesCapturedModel(t *
 
 	// Simulate the passthrough adapter capturing model from the first frame.
 	firstFrame := []byte(`{"type":"response.create","model":"gpt-5.5","service_tier":"priority"}`)
-	capturedSessionModel := openAIWSPassthroughPolicyModelForFrame(account, firstFrame)
+	capturedSessionModel := openAIWSPassthroughPolicyModelForFrameV2(account, firstFrame)
 	require.Equal(t, "gpt-5.5", capturedSessionModel)
 
 	// Follow-up frame deliberately omits "model" — Realtime allows this.
@@ -275,7 +275,7 @@ func TestPolicyEnforcingFrameConn_FollowupFrameWithoutModelUsesCapturedModel(t *
 			if msgType != coderws.MessageText {
 				return payload, nil, nil
 			}
-			model := openAIWSPassthroughPolicyModelForFrame(account, payload)
+			model := openAIWSPassthroughPolicyModelForFrameV2(account, payload)
 			if model == "" {
 				model = capturedSessionModel
 			}
@@ -309,7 +309,7 @@ func TestPolicyEnforcingFrameConn_WithoutCapturedFallbackPolicyMisses(t *testing
 		inner: inner,
 		filter: func(msgType coderws.MessageType, payload []byte) ([]byte, *OpenAIFastBlockedError, error) {
 			// NO fallback — emulate the pre-fix behavior.
-			model := openAIWSPassthroughPolicyModelForFrame(account, payload)
+			model := openAIWSPassthroughPolicyModelForFrameV2(account, payload)
 			return svc.applyOpenAIFastPolicyToWSResponseCreate(context.Background(), account, model, payload)
 		},
 	}
@@ -704,7 +704,7 @@ func TestPolicyEnforcingFrameConn_SessionUpdateRotatesCapturedModel(t *testing.T
 
 	// Replicate the production wiring in openai_ws_v2_passthrough_adapter.go
 	// so capturedSessionModel state is shared across frames.
-	capturedSessionModel := openAIWSPassthroughPolicyModelForFrame(account, first)
+	capturedSessionModel := openAIWSPassthroughPolicyModelForFrameV2(account, first)
 	require.Equal(t, "gpt-4o", capturedSessionModel)
 	wrapper := &openAIWSPolicyEnforcingFrameConn{
 		inner: inner,
@@ -712,10 +712,10 @@ func TestPolicyEnforcingFrameConn_SessionUpdateRotatesCapturedModel(t *testing.T
 			if msgType != coderws.MessageText {
 				return payload, nil, nil
 			}
-			if updated := openAIWSPassthroughPolicyModelFromSessionFrame(account, payload); updated != "" {
+			if updated := openAIWSPassthroughPolicyModelFromSessionFrameV2(account, payload); updated != "" {
 				capturedSessionModel = updated
 			}
-			model := openAIWSPassthroughPolicyModelForFrame(account, payload)
+			model := openAIWSPassthroughPolicyModelForFrameV2(account, payload)
 			if model == "" {
 				model = capturedSessionModel
 			}
@@ -743,7 +743,7 @@ func TestPolicyEnforcingFrameConn_SessionUpdateRotatesCapturedModel(t *testing.T
 }
 
 // TestPolicyModelFromSessionFrame_OnlySessionUpdate covers the negative
-// branches of openAIWSPassthroughPolicyModelFromSessionFrame: only
+// branches of openAIWSPassthroughPolicyModelFromSessionFrameV2: only
 // client→upstream session.update frames rotate the captured model;
 // server→client events (session.created) and unrelated frames must not.
 func TestPolicyModelFromSessionFrame_OnlySessionUpdate(t *testing.T) {
@@ -753,15 +753,15 @@ func TestPolicyModelFromSessionFrame_OnlySessionUpdate(t *testing.T) {
 	// protocol — clients never send it, so this filter (which only runs on
 	// the client→upstream direction) must ignore it even if it appears.
 	created := []byte(`{"type":"session.created","session":{"model":"gpt-5.5"}}`)
-	require.Empty(t, openAIWSPassthroughPolicyModelFromSessionFrame(account, created))
+	require.Empty(t, openAIWSPassthroughPolicyModelFromSessionFrameV2(account, created))
 
 	// Non-session.* frames must NOT trigger rotation.
 	notSession := []byte(`{"type":"response.create","session":{"model":"gpt-9"}}`)
-	require.Empty(t, openAIWSPassthroughPolicyModelFromSessionFrame(account, notSession))
+	require.Empty(t, openAIWSPassthroughPolicyModelFromSessionFrameV2(account, notSession))
 
 	// Missing session.model returns empty — caller keeps the old captured value.
 	noModel := []byte(`{"type":"session.update","session":{"voice":"alloy"}}`)
-	require.Empty(t, openAIWSPassthroughPolicyModelFromSessionFrame(account, noModel))
+	require.Empty(t, openAIWSPassthroughPolicyModelFromSessionFrameV2(account, noModel))
 }
 
 // --- Fix2: native /responses normalize "fast" → "priority" on pass ---
@@ -924,10 +924,10 @@ func TestPassthroughBilling_MultiTurnServiceTierFollowsFilteredFrames(t *testing
 		if msgType != coderws.MessageText {
 			return payload, nil, nil
 		}
-		if updated := openAIWSPassthroughPolicyModelFromSessionFrame(account, payload); updated != "" {
+		if updated := openAIWSPassthroughPolicyModelFromSessionFrameV2(account, payload); updated != "" {
 			capturedSessionModel = updated
 		}
-		model := openAIWSPassthroughPolicyModelForFrame(account, payload)
+		model := openAIWSPassthroughPolicyModelForFrameV2(account, payload)
 		if model == "" {
 			model = capturedSessionModel
 		}
@@ -946,7 +946,7 @@ func TestPassthroughBilling_MultiTurnServiceTierFollowsFilteredFrames(t *testing
 	require.NoError(t, firstErr)
 	require.Nil(t, firstBlocked)
 	requestServiceTierPtr.Store(extractOpenAIServiceTierFromBody(firstOut))
-	capturedSessionModel = openAIWSPassthroughPolicyModelForFrame(account, firstFrame)
+	capturedSessionModel = openAIWSPassthroughPolicyModelForFrameV2(account, firstFrame)
 	require.Nil(t, requestServiceTierPtr.Load(),
 		"turn 1: filter strips service_tier=priority, billing must reflect upstream-actual nil tier")
 
@@ -989,8 +989,8 @@ func TestPassthroughUsageMeta_TracksReasoningEffortAcrossTurns(t *testing.T) {
 	account := &Account{Platform: PlatformOpenAI, Type: AccountTypeAPIKey}
 
 	firstFrame := []byte(`{"type":"response.create","model":"gpt-5.5","reasoning":{"effort":"medium"},"service_tier":"priority"}`)
-	meta := newOpenAIWSPassthroughUsageMeta("", firstFrame)
-	capturedSessionModel := openAIWSPassthroughPolicyModelForFrame(account, firstFrame)
+	meta := newOpenAIWSPassthroughUsageMetaV2("", firstFrame)
+	capturedSessionModel := openAIWSPassthroughPolicyModelForFrameV2(account, firstFrame)
 	firstOut, firstBlocked, firstErr := svc.applyOpenAIFastPolicyToWSResponseCreate(context.Background(), account, capturedSessionModel, firstFrame)
 	require.NoError(t, firstErr)
 	require.Nil(t, firstBlocked)
@@ -999,12 +999,12 @@ func TestPassthroughUsageMeta_TracksReasoningEffortAcrossTurns(t *testing.T) {
 	require.Equal(t, "medium", *meta.reasoningEffort.Load())
 
 	process := func(payload []byte) ([]byte, *OpenAIFastBlockedError, error) {
-		if updated := openAIWSPassthroughPolicyModelFromSessionFrame(account, payload); updated != "" {
+		if updated := openAIWSPassthroughPolicyModelFromSessionFrameV2(account, payload); updated != "" {
 			capturedSessionModel = updated
 		}
 		meta.updateSessionRequestModel(payload)
 		requestModelForThisFrame := meta.requestModelForFrame(payload)
-		model := openAIWSPassthroughPolicyModelForFrame(account, payload)
+		model := openAIWSPassthroughPolicyModelForFrameV2(account, payload)
 		if model == "" {
 			model = capturedSessionModel
 		}

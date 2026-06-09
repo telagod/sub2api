@@ -69,11 +69,11 @@ func deriveCompatPromptCacheKey(req *apicompat.ChatCompletionsRequest, mappedMod
 	return compatPromptCacheKeyPrefix + hashSensitiveValueForLog(strings.Join(seedParts, "|"))
 }
 
-func deriveAnthropicCompatPromptCacheKey(req *apicompat.AnthropicRequest, mappedModel string) string {
+func inferAnthropicCompatPromptCacheKey(req *apicompat.AnthropicRequest, mappedModel string) string {
 	if req == nil {
 		return ""
 	}
-	if anchorKey := deriveAnthropicCacheControlPromptCacheKey(req); anchorKey != "" {
+	if anchorKey := inferAnthropicCacheControlPromptCacheKey(req); anchorKey != "" {
 		return anchorKey
 	}
 
@@ -113,7 +113,7 @@ func deriveAnthropicCompatPromptCacheKey(req *apicompat.AnthropicRequest, mapped
 	return compatPromptCacheKeyPrefix + hashSensitiveValueForLog(strings.Join(seedParts, "|"))
 }
 
-func deriveAnthropicCacheControlPromptCacheKey(req *apicompat.AnthropicRequest) string {
+func inferAnthropicCacheControlPromptCacheKey(req *apicompat.AnthropicRequest) string {
 	if req == nil {
 		return ""
 	}

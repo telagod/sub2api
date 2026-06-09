@@ -199,12 +199,12 @@ func TestFormatGatewayRefundAmountUsesOrderCurrency(t *testing.T) {
 		},
 	}
 
-	require.Equal(t, "12.345", formatGatewayRefundAmount(12.345, order))
+	require.Equal(t, "12.345", renderGatewayRefundAmount(12.345, order))
 }
 
 func TestValidateRefundProviderResponseAcceptsPending(t *testing.T) {
-	require.NoError(t, validateRefundProviderResponse(&payment.RefundResponse{Status: payment.ProviderStatusPending}))
-	require.NoError(t, validateRefundProviderResponse(&payment.RefundResponse{Status: payment.ProviderStatusSuccess}))
-	require.Error(t, validateRefundProviderResponse(&payment.RefundResponse{Status: payment.ProviderStatusFailed}))
-	require.Error(t, validateRefundProviderResponse(nil))
+	require.NoError(t, verifyRefundProviderResponse(&payment.RefundResponse{Status: payment.ProviderStatusPending}))
+	require.NoError(t, verifyRefundProviderResponse(&payment.RefundResponse{Status: payment.ProviderStatusSuccess}))
+	require.Error(t, verifyRefundProviderResponse(&payment.RefundResponse{Status: payment.ProviderStatusFailed}))
+	require.Error(t, verifyRefundProviderResponse(nil))
 }

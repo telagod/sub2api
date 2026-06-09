@@ -141,7 +141,7 @@ func (h *AuthHandler) OIDCOAuthStart(c *gin.Context) {
 	secureCookie := isRequestHTTPS(c)
 	oidcSetCookie(c, oidcOAuthStateCookieName, encodeCookieValue(state), oidcOAuthCookieMaxAgeSec, secureCookie)
 	oidcSetCookie(c, oidcOAuthRedirectCookie, encodeCookieValue(redirectTo), oidcOAuthCookieMaxAgeSec, secureCookie)
-	intent := normalizeOAuthIntent(c.Query("intent"))
+	intent := sanitizeOAuthIntent(c.Query("intent"))
 	oidcSetCookie(c, oidcOAuthIntentCookieName, encodeCookieValue(intent), oidcOAuthCookieMaxAgeSec, secureCookie)
 	setOAuthPendingBrowserCookie(c, browserSessionKey, secureCookie)
 	clearOAuthPendingSessionCookie(c, secureCookie)
@@ -245,7 +245,7 @@ func (h *AuthHandler) OIDCOAuthCallback(c *gin.Context) {
 		return
 	}
 	intent, _ := readCookieDecoded(c, oidcOAuthIntentCookieName)
-	intent = normalizeOAuthIntent(intent)
+	intent = sanitizeOAuthIntent(intent)
 
 	codeVerifier := ""
 	if cfg.UsePKCE {
@@ -352,7 +352,7 @@ func (h *AuthHandler) OIDCOAuthCallback(c *gin.Context) {
 		compatEmail = strings.TrimSpace(idClaims.Email)
 	}
 	email := oidcSyntheticEmailFromIdentityKey(identityKey)
-	username := firstNonEmpty(
+	username := coalesce(
 		userInfoClaims.Username,
 		func() string {
 			if idClaims != nil {
@@ -380,7 +380,7 @@ func (h *AuthHandler) OIDCOAuthCallback(c *gin.Context) {
 		"issuer":            issuer,
 		"email_verified":    emailVerified != nil && *emailVerified,
 		"provider_fallback": strings.TrimSpace(cfg.ProviderName),
-		"suggested_display_name": firstNonEmpty(userInfoClaims.DisplayName, func() string {
+		"suggested_display_name": coalesce(userInfoClaims.DisplayName, func() string {
 			if idClaims != nil {
 				return idClaims.Name
 			}
@@ -862,14 +862,14 @@ func oidcFetchUserInfo(
 
 func oidcParseUserInfo(body string, cfg config.OIDCConnectConfig) *oidcUserInfoClaims {
 	claims := &oidcUserInfoClaims{}
-	claims.Email = firstNonEmpty(
+	claims.Email = coalesce(
 		getGJSON(body, cfg.UserInfoEmailPath),
 		getGJSON(body, "email"),
 		getGJSON(body, "user.email"),
 		getGJSON(body, "data.email"),
 		getGJSON(body, "attributes.email"),
 	)
-	claims.Username = firstNonEmpty(
+	claims.Username = coalesce(
 		getGJSON(body, cfg.UserInfoUsernamePath),
 		getGJSON(body, "preferred_username"),
 		getGJSON(body, "username"),
@@ -877,7 +877,7 @@ func oidcParseUserInfo(body string, cfg config.OIDCConnectConfig) *oidcUserInfoC
 		getGJSON(body, "user.username"),
 		getGJSON(body, "user.name"),
 	)
-	claims.Subject = firstNonEmpty(
+	claims.Subject = coalesce(
 		getGJSON(body, cfg.UserInfoIDPath),
 		getGJSON(body, "sub"),
 		getGJSON(body, "id"),
@@ -888,14 +888,14 @@ func oidcParseUserInfo(body string, cfg config.OIDCConnectConfig) *oidcUserInfoC
 	if verified, ok := getGJSONBool(body, "email_verified"); ok {
 		claims.EmailVerified = &verified
 	}
-	claims.DisplayName = firstNonEmpty(
+	claims.DisplayName = coalesce(
 		getGJSON(body, "name"),
 		getGJSON(body, "nickname"),
 		getGJSON(body, "display_name"),
 		getGJSON(body, "preferred_username"),
 		getGJSON(body, "username"),
 	)
-	claims.AvatarURL = firstNonEmpty(
+	claims.AvatarURL = coalesce(
 		getGJSON(body, "picture"),
 		getGJSON(body, "avatar_url"),
 		getGJSON(body, "avatar"),

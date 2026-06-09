@@ -116,7 +116,7 @@ var (
 	modelsListCacheStoreTotal atomic.Int64
 
 	// Deprecated: flusher_enabled=true 后不再增长(仅 flag=false 降级直写路径使用);新主路径见 FlusherMetrics。remove after 2026-09。
-	// userPlatformQuotaDBIncrErrorTotal 统计 finalizePostUsageBilling 异步 goroutine
+	// userPlatformQuotaDBIncrErrorTotal 统计 finalizePostUsageBillingV2 异步 goroutine
 	// 中 IncrementUsageWithReset 失败次数。Redis 已成功累加 + DB 写失败意味着
 	// Redis cache TTL 过期或被清后该笔 cost 会丢失（与实际消费偏差）。
 	// oncall 通过 GatewayUserPlatformQuotaIncrStats() 暴露给 ops 面板做阈值告警。
@@ -152,7 +152,7 @@ func GatewayModelsListCacheStats() (cacheHit, cacheMiss, store int64) {
 }
 
 // GatewayUserPlatformQuotaIncrStats 返回 (mainPathErr, legacyPathErr, sentinelSetErr)。
-// mainPathErr：finalizePostUsageBilling 异步 goroutine 写 DB 失败累计次数；
+// mainPathErr：finalizePostUsageBillingV2 异步 goroutine 写 DB 失败累计次数；
 // legacyPathErr：postUsageBilling fallback 路径写 DB 失败累计次数；
 // sentinelSetErr：DB 无行时回填 sentinel cache entry 写 Redis 失败累计次数。
 // ops 监控面板可以按"持续上升斜率"做告警阈值。
@@ -767,10 +767,10 @@ func (s *GatewayService) GenerateSessionHash(parsed *ParsedRequest) string {
 		_, _ = combined.WriteString(strconv.FormatInt(parsed.SessionContext.APIKeyID, 10))
 		_, _ = combined.WriteString("|")
 	}
-	if systemText := extractTextFromSystemRaw(parsed.SystemRaw()); systemText != "" {
+	if systemText := pullTextFromSystemRaw(parsed.SystemRaw()); systemText != "" {
 		_, _ = combined.WriteString(systemText)
 	}
-	appendMessageTextsFromRaw(&combined, parsed.MessagesRaw())
+	extractMsgTexts(&combined, parsed.MessagesRaw())
 	if combined.Len() > 0 {
 		hash := s.hashContent(combined.String())
 		slog.Info("sticky.hash_source",
@@ -845,14 +845,14 @@ func (s *GatewayService) extractCacheableContent(parsed *ParsedRequest) string {
 		return ""
 	}
 
-	systemText := extractCacheableTextFromSystemRaw(parsed.SystemRaw())
-	if messageText := extractCacheableTextFromMessagesRaw(parsed.MessagesRaw()); messageText != "" {
+	systemText := pullCacheableTextFromSystemRaw(parsed.SystemRaw())
+	if messageText := pullCacheableTextFromMessagesRaw(parsed.MessagesRaw()); messageText != "" {
 		return messageText
 	}
 	return systemText
 }
 
-func parseRawJSONView(raw []byte) gjson.Result {
+func decodeRawJSONView(raw []byte) gjson.Result {
 	if len(raw) == 0 {
 		return gjson.Result{}
 	}
@@ -860,8 +860,8 @@ func parseRawJSONView(raw []byte) gjson.Result {
 	return gjson.Parse(*(*string)(unsafe.Pointer(&raw)))
 }
 
-func extractTextFromSystemRaw(raw []byte) string {
-	system := parseRawJSONView(raw)
+func pullTextFromSystemRaw(raw []byte) string {
+	system := decodeRawJSONView(raw)
 	switch system.Type {
 	case gjson.String:
 		return system.String()
@@ -881,7 +881,7 @@ func extractTextFromSystemRaw(raw []byte) string {
 	return ""
 }
 
-func extractTextFromContentRaw(content gjson.Result) string {
+func pullTextFromContentRaw(content gjson.Result) string {
 	switch content.Type {
 	case gjson.String:
 		return content.String()
@@ -903,17 +903,17 @@ func extractTextFromContentRaw(content gjson.Result) string {
 	return ""
 }
 
-func appendMessageTextsFromRaw(builder *strings.Builder, raw []byte) {
+func extractMsgTexts(builder *strings.Builder, raw []byte) {
 	if builder == nil || len(raw) == 0 {
 		return
 	}
-	messages := parseRawJSONView(raw)
+	messages := decodeRawJSONView(raw)
 	if !messages.IsArray() {
 		return
 	}
 	messages.ForEach(func(_, msg gjson.Result) bool {
 		if content := msg.Get("content"); content.Exists() {
-			_, _ = builder.WriteString(extractTextFromContentRaw(content))
+			_, _ = builder.WriteString(pullTextFromContentRaw(content))
 			return true
 		}
 		parts := msg.Get("parts")
@@ -929,8 +929,8 @@ func appendMessageTextsFromRaw(builder *strings.Builder, raw []byte) {
 	})
 }
 
-func extractCacheableTextFromSystemRaw(raw []byte) string {
-	system := parseRawJSONView(raw)
+func pullCacheableTextFromSystemRaw(raw []byte) string {
+	system := decodeRawJSONView(raw)
 	if !system.IsArray() {
 		return ""
 	}
@@ -946,8 +946,8 @@ func extractCacheableTextFromSystemRaw(raw []byte) string {
 	return builder.String()
 }
 
-func extractCacheableTextFromMessagesRaw(raw []byte) string {
-	messages := parseRawJSONView(raw)
+func pullCacheableTextFromMessagesRaw(raw []byte) string {
+	messages := decodeRawJSONView(raw)
 	if !messages.IsArray() {
 		return ""
 	}
@@ -966,7 +966,7 @@ func extractCacheableTextFromMessagesRaw(raw []byte) string {
 			return true
 		})
 		if found {
-			text = extractTextFromContentRaw(content)
+			text = pullTextFromContentRaw(content)
 			return false
 		}
 		return true
@@ -1233,9 +1233,9 @@ func normalizeClaudeOAuthRequestBody(body []byte, modelID string, opts claudeOAu
 	//
 	// 注：本函数不按 model 名决定是否保留 context_management。“最终 beta
 	// header 不含 context-management-2025-06-27 时 strip 字段”的能力维度
-	// 对称约束由 sanitizeAnthropicBodyForBetaTokens 在 buildUpstreamRequest /
+	// 对称约束由 sanitizeAnthropicBodyForBetaTokensV2 在 buildUpstreamRequest /
 	// buildCountTokensRequest 层统一执行，与 Bedrock 路径的
-	// sanitizeBedrockFieldsForBetaTokens 对称。
+	// sanitizeBedrockFieldsForBetaTokensV2 对称。
 	if !gjson.GetBytes(out, "context_management").Exists() {
 		thinkingType := gjson.GetBytes(out, "thinking.type").String()
 		if thinkingType == "enabled" || thinkingType == "adaptive" {
@@ -1293,7 +1293,7 @@ func (s *GatewayService) buildOAuthMetadataUserID(parsed *ParsedRequest, account
 	if parsed.Body != nil {
 		firstUserText = extractFirstUserText(parsed.Body.Bytes())
 	}
-	seed := buildStableSessionSeed(account.ID, sessionContextDiscriminator(parsed.SessionContext), firstUserText)
+	seed := stableSessionSeed(account.ID, sessionContextDiscriminatorV2(parsed.SessionContext), firstUserText)
 	sessionID := generateSessionUUID(seed)
 
 	// 根据指纹 UA 版本选择输出格式
@@ -1415,7 +1415,7 @@ func (s *GatewayService) buildOAuthMetadataUserIDFromBody(
 	if fp != nil {
 		clientDiscriminator = fp.ClientID
 	}
-	seed := buildStableSessionSeed(account.ID, clientDiscriminator, extractFirstUserText(body))
+	seed := stableSessionSeed(account.ID, clientDiscriminator, extractFirstUserText(body))
 	sessionID := generateSessionUUID(seed)
 
 	var uaVersion string
@@ -1426,7 +1426,7 @@ func (s *GatewayService) buildOAuthMetadataUserIDFromBody(
 	return FormatMetadataUserID(userID, accountUUID, sessionID, uaVersion)
 }
 
-// buildStableSessionSeed 为伪装路径合成的 metadata.user_id session_id 生成"会话级稳定"种子。
+// stableSessionSeed 为伪装路径合成的 metadata.user_id session_id 生成"会话级稳定"种子。
 //
 // 真实 Claude Code 的 session_id 是进程级随机 UUID，在一段会话内跨请求保持不变。无状态代理
 // 无法恢复该值，这里用"会话内不变的锚点"近似：账号 ID + 客户端区分因子 + 首条 user 消息文本。
@@ -1434,7 +1434,7 @@ func (s *GatewayService) buildOAuthMetadataUserIDFromBody(
 //
 // 注意：粘性路由键 GenerateSessionHash 按设计逐轮变化（见其测试），本函数与之独立、互不影响。
 // accountID 恒存在，故 seed 永不为空 —— 输出始终是确定性 UUID，而非随机值。
-func buildStableSessionSeed(accountID int64, clientDiscriminator, firstUserText string) string {
+func stableSessionSeed(accountID int64, clientDiscriminator, firstUserText string) string {
 	var b strings.Builder
 	_, _ = b.WriteString(strconv.FormatInt(accountID, 10))
 	_, _ = b.WriteString("::")
@@ -1444,9 +1444,9 @@ func buildStableSessionSeed(accountID int64, clientDiscriminator, firstUserText 
 	return b.String()
 }
 
-// sessionContextDiscriminator 把请求上下文（客户端 IP / 归一化 UA / API Key ID）拼成
+// sessionContextDiscriminatorV2 把请求上下文（客户端 IP / 归一化 UA / API Key ID）拼成
 // 一个跨客户端的区分因子，避免不同用户的相同首条消息派生出相同 session_id。
-func sessionContextDiscriminator(sc *SessionContext) string {
+func sessionContextDiscriminatorV2(sc *SessionContext) string {
 	if sc == nil {
 		return ""
 	}
@@ -4245,7 +4245,7 @@ type cacheControlPath struct {
 	log  string
 }
 
-func collectCacheControlPaths(body []byte) (invalidThinking []cacheControlPath, messagePaths []string, toolPaths []string, systemPaths []string) {
+func gatherCacheControlPaths(body []byte) (invalidThinking []cacheControlPath, messagePaths []string, toolPaths []string, systemPaths []string) {
 	system := gjson.GetBytes(body, "system")
 	if system.IsArray() {
 		sysIndex := 0
@@ -4316,7 +4316,7 @@ func enforceCacheControlLimit(body []byte) []byte {
 		return body
 	}
 
-	invalidThinking, messagePaths, toolPaths, systemPaths := collectCacheControlPaths(body)
+	invalidThinking, messagePaths, toolPaths, systemPaths := gatherCacheControlPaths(body)
 	out := body
 	modified := false
 
@@ -4394,13 +4394,13 @@ func enforceCacheControlLimit(body []byte) []byte {
 	return body
 }
 
-// injectAnthropicCacheControlTTL1h 将已有 ephemeral cache_control 块的 ttl 强制写为 1h。
+// injectAnthropicCacheControlTTL1hV2 将已有 ephemeral cache_control 块的 ttl 强制写为 1h。
 // 仅修改已经存在的 cache_control，不新增缓存断点。
-func injectAnthropicCacheControlTTL1h(body []byte) []byte {
-	return forceEphemeralCacheControlTTL(body, cacheTTLTarget1h)
+func injectAnthropicCacheControlTTL1hV2(body []byte) []byte {
+	return forceEphemeralCacheControlTTLV2(body, cacheTTLTarget1h)
 }
 
-func forceEphemeralCacheControlTTL(body []byte, ttl string) []byte {
+func forceEphemeralCacheControlTTLV2(body []byte, ttl string) []byte {
 	if len(body) == 0 || ttl == "" {
 		return body
 	}
@@ -4660,7 +4660,7 @@ func (s *GatewayService) Forward(ctx context.Context, c *gin.Context, account *A
 	}
 
 	if s.shouldInjectAnthropicCacheTTL1h(ctx, account) {
-		if err := replaceBody(injectAnthropicCacheControlTTL1h(body)); err != nil {
+		if err := replaceBody(injectAnthropicCacheControlTTL1hV2(body)); err != nil {
 			return nil, err
 		}
 	}
@@ -5444,7 +5444,7 @@ func (s *GatewayService) buildUpstreamRequestAnthropicAPIKeyPassthrough(
 	if c != nil && c.Request != nil {
 		clientBeta = getHeaderRaw(c.Request.Header, "anthropic-beta")
 	}
-	if sanitized, changed := sanitizeAnthropicBodyForBetaTokens(body, clientBeta); changed {
+	if sanitized, changed := sanitizeAnthropicBodyForBetaTokensV2(body, clientBeta); changed {
 		body = sanitized
 	}
 
@@ -5865,10 +5865,10 @@ func (s *GatewayService) ApplyBedrockCCCompat(ctx context.Context, body []byte, 
 	if !s.isBedrockCCCompatEnabled(ctx, account, groupID) {
 		return body
 	}
-	body = sanitizeBedrockCCFields(body)
-	body = sanitizeBedrockThinking(body, model)
-	body = sanitizeBedrockToolUseIDs(body)
-	body = sanitizeBedrockCCBetaTokens(body, model)
+	body = sanitizeBedrockCCFieldsV2(body)
+	body = sanitizeBedrockThinkingV2(body, model)
+	body = sanitizeBedrockToolUseIDsV2(body)
+	body = sanitizeBedrockCCBetaTokensV2(body, model)
 	return body
 }
 
@@ -6331,7 +6331,7 @@ func (s *GatewayService) buildUpstreamRequest(ctx context.Context, c *gin.Contex
 	)
 
 	// 能力维度 body sanitize：与最终 anthropic-beta header 对称
-	if sanitized, changed := sanitizeAnthropicBodyForBetaTokens(body, finalBetaHeader); changed {
+	if sanitized, changed := sanitizeAnthropicBodyForBetaTokensV2(body, finalBetaHeader); changed {
 		body = sanitized
 	}
 
@@ -6449,7 +6449,7 @@ func (s *GatewayService) buildUpstreamRequestAnthropicVertex(
 	// 保留 body 中的 context_management，与 Anthropic 直连 / Bedrock 路径对称。
 	if c != nil && c.Request != nil {
 		clientBeta := getHeaderRaw(c.Request.Header, "anthropic-beta")
-		if sanitized, changed := sanitizeAnthropicBodyForBetaTokens(vertexBody, clientBeta); changed {
+		if sanitized, changed := sanitizeAnthropicBodyForBetaTokensV2(vertexBody, clientBeta); changed {
 			vertexBody = sanitized
 		}
 	}
@@ -7177,11 +7177,11 @@ func (s *GatewayService) shouldFailoverOn400(respBody []byte) bool {
 	return false
 }
 
-// sanitizeStreamError 返回不含网络地址的客户端可见错误描述。
+// sanitizeStreamErrorV2 返回不含网络地址的客户端可见错误描述。
 // 默认 (*net.OpError).Error() 会拼接 Source/Addr 字段，泄露内部 IP/端口与上游
 // 服务器地址（例如 "read tcp 10.0.0.1:54321->52.1.2.3:443: read: connection
 // reset by peer"）。该函数只保留可识别的错误类别，原始 err 仍在调用点写入日志。
-func sanitizeStreamError(err error) string {
+func sanitizeStreamErrorV2(err error) string {
 	if err == nil {
 		return ""
 	}
@@ -7866,10 +7866,10 @@ func (s *GatewayService) handleStreamingResponse(ctx context.Context, resp *http
 				// 上游中途读错误（unexpected EOF / connection reset 等，常见于 HTTP/2 GOAWAY）：
 				// 若尚未向客户端写过任何字节，包成 UpstreamFailoverError 让 handler 层走 failover/重试。
 				// 已经开始写流时 SSE 协议无 resume，只能透传错误事件给客户端。
-				// 注意:面向客户端的 disconnectMsg 必须用 sanitizeStreamError 剥离地址,
+				// 注意:面向客户端的 disconnectMsg 必须用 sanitizeStreamErrorV2 剥离地址,
 				// 默认 *net.OpError 的 Error() 会泄露内部 IP/端口和上游地址。完整 ev.err
 				// 仅在下方 LegacyPrintf 内部日志中保留供运维诊断。
-				disconnectMsg := "upstream stream disconnected: " + sanitizeStreamError(ev.err)
+				disconnectMsg := "upstream stream disconnected: " + sanitizeStreamErrorV2(ev.err)
 				if !c.Writer.Written() {
 					logger.LegacyPrintf("service.gateway", "Upstream stream read error before any client output (account=%d), failing over: %v", account.ID, ev.err)
 					body, _ := json.Marshal(map[string]any{
@@ -8449,7 +8449,7 @@ func postUsageBilling(ctx context.Context, p *postUsageBillingParams, deps *bill
 		}
 	}
 
-	// NOTE: finalizePostUsageBilling is NOT called here to avoid double-queuing
+	// NOTE: finalizePostUsageBillingV2 is NOT called here to avoid double-queuing
 	// cache updates. The legacy path does DB writes directly; the finalize path
 	// does cache queue + notifications. Notifications are dispatched separately
 	// by the caller after recording the usage log.
@@ -8572,11 +8572,11 @@ func applyUsageBilling(ctx context.Context, requestID string, usageLog *UsageLog
 		}
 	}
 
-	finalizePostUsageBilling(billingCtx, p, deps, result)
+	finalizePostUsageBillingV2(billingCtx, p, deps, result)
 	return true, nil
 }
 
-func finalizePostUsageBilling(ctx context.Context, p *postUsageBillingParams, deps *billingDeps, result *UsageBillingApplyResult) {
+func finalizePostUsageBillingV2(ctx context.Context, p *postUsageBillingParams, deps *billingDeps, result *UsageBillingApplyResult) {
 	if p == nil || p.Cost == nil || deps == nil {
 		return
 	}
@@ -8607,7 +8607,7 @@ func finalizePostUsageBilling(ctx context.Context, p *postUsageBillingParams, de
 			deps.billingCacheService.IncrementUserPlatformQuotaUsage(p.User.ID, p.Platform, p.Cost.ActualCost)
 			if deps.cfg == nil || !deps.cfg.Database.UserPlatformQuotaFlusherEnabled {
 				// 降级路径:flusher 未启用时保留原有异步直写 DB
-				dbCtx, dbCancel := detachUpstreamContext(ctx)
+				dbCtx, dbCancel := decoupleUpstreamContext(ctx)
 				userID, platform, cost := p.User.ID, p.Platform, p.Cost.ActualCost
 				go func() {
 					defer func() {
@@ -8725,7 +8725,7 @@ func detachStreamUpstreamContext(ctx context.Context, stream bool) (context.Cont
 	return context.WithoutCancel(ctx), func() {}
 }
 
-func detachUpstreamContext(ctx context.Context) (context.Context, context.CancelFunc) {
+func decoupleUpstreamContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	if ctx == nil {
 		return context.Background(), func() {}
 	}
@@ -9691,14 +9691,14 @@ func (s *GatewayService) buildCountTokensRequestAnthropicAPIKeyPassthrough(
 		}
 		targetURL = validatedURL + "/v1/messages/count_tokens?beta=true"
 	}
-	body = sanitizeCountTokensRequestBody(body)
+	body = sanitizeCountTokensRequestBodyV2(body)
 
 	// 同 buildUpstreamRequestAnthropicAPIKeyPassthrough：能力维度 sanitize。
 	clientBeta := ""
 	if c != nil && c.Request != nil {
 		clientBeta = getHeaderRaw(c.Request.Header, "anthropic-beta")
 	}
-	if sanitized, changed := sanitizeAnthropicBodyForBetaTokens(body, clientBeta); changed {
+	if sanitized, changed := sanitizeAnthropicBodyForBetaTokensV2(body, clientBeta); changed {
 		body = sanitized
 	}
 
@@ -9801,14 +9801,14 @@ func (s *GatewayService) buildCountTokensRequest(ctx context.Context, c *gin.Con
 	)
 
 	// 能力维度 body sanitize：与最终 anthropic-beta header 对称
-	if sanitized, changed := sanitizeAnthropicBodyForBetaTokens(body, finalBetaHeader); changed {
+	if sanitized, changed := sanitizeAnthropicBodyForBetaTokensV2(body, finalBetaHeader); changed {
 		body = sanitized
 	}
 
 	if ctEnableCCH {
 		body = signBillingHeaderCCH(body)
 	}
-	body = sanitizeCountTokensRequestBody(body)
+	body = sanitizeCountTokensRequestBodyV2(body)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", targetURL, bytes.NewReader(body))
 	if err != nil {
@@ -9879,7 +9879,7 @@ func (s *GatewayService) buildCountTokensRequest(ctx context.Context, c *gin.Con
 	return req, body, nil
 }
 
-func sanitizeCountTokensRequestBody(body []byte) []byte {
+func sanitizeCountTokensRequestBodyV2(body []byte) []byte {
 	out := body
 	for _, path := range []string{
 		"temperature",

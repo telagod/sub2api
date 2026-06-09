@@ -391,7 +391,7 @@ func TestNewConfiguredPaymentResumeServicePrefersExplicitSigningKeyAndKeepsLegac
 	t.Setenv("PAYMENT_RESUME_SIGNING_KEY", "explicit-payment-resume-signing-key")
 
 	legacyKey := []byte("0123456789abcdef0123456789abcdef")
-	svc := newLegacyAwarePaymentResumeService(legacyKey)
+	svc := newLegacyAwarePaymentResumeServiceV2(legacyKey)
 
 	explicitToken, err := svc.CreateWeChatPaymentResumeToken(WeChatPaymentResumeClaims{
 		OpenID:      "openid-explicit-key",

@@ -242,7 +242,7 @@ func (h *PaymentHandler) CreateOrder(c *gin.Context) {
 			response.ErrorFrom(c, err)
 			return
 		}
-		if err := applyWeChatPaymentResumeClaims(&req, claims); err != nil {
+		if err := applyWeChatResume(&req, claims); err != nil {
 			response.ErrorFrom(c, err)
 			return
 		}
@@ -259,7 +259,7 @@ func (h *PaymentHandler) CreateOrder(c *gin.Context) {
 		OpenID:          req.OpenID,
 		ClientIP:        c.ClientIP(),
 		IsMobile:        mobile,
-		IsWeChatBrowser: isWeChatBrowser(c),
+		IsWeChatBrowser: checkWeChatBrowser(c),
 		SrcHost:         c.Request.Host,
 		SrcURL:          c.Request.Referer(),
 		ReturnURL:       req.ReturnURL,
@@ -275,7 +275,7 @@ func (h *PaymentHandler) CreateOrder(c *gin.Context) {
 	response.Success(c, result)
 }
 
-func applyWeChatPaymentResumeClaims(req *CreateOrderRequest, claims *service.WeChatPaymentResumeClaims) error {
+func applyWeChatResume(req *CreateOrderRequest, claims *service.WeChatPaymentResumeClaims) error {
 	if req == nil || claims == nil {
 		return infraerrors.BadRequest("INVALID_WECHAT_PAYMENT_RESUME_TOKEN", "wechat payment resume context is missing")
 	}
@@ -333,7 +333,7 @@ func (h *PaymentHandler) GetMyOrders(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Paginated(c, sanitizePaymentOrdersForResponse(orders), int64(total), page, pageSize)
+	response.Paginated(c, sanitizePaymentOrdersForResponseV2(orders), int64(total), page, pageSize)
 }
 
 // GetOrder returns a single order for the authenticated user.
@@ -355,7 +355,7 @@ func (h *PaymentHandler) GetOrder(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, sanitizePaymentOrderForResponse(order))
+	response.Success(c, sanitizePaymentOrderForResponseV2(order))
 }
 
 // CancelOrder cancels a pending order for the authenticated user.
@@ -451,7 +451,7 @@ func (h *PaymentHandler) VerifyOrder(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, sanitizePaymentOrderForResponse(order))
+	response.Success(c, sanitizePaymentOrderForResponseV2(order))
 }
 
 // PublicOrderResult is the limited order info returned by the public verify endpoint.
@@ -478,7 +478,7 @@ type PublicOrderResult struct {
 	PlanID              *int64     `json:"plan_id,omitempty"`
 }
 
-func buildPublicOrderResult(order *dbent.PaymentOrder) PublicOrderResult {
+func composePublicOrder(order *dbent.PaymentOrder) PublicOrderResult {
 	return PublicOrderResult{
 		ID:                  order.ID,
 		OutTradeNo:          order.OutTradeNo,
@@ -517,7 +517,7 @@ func (h *PaymentHandler) VerifyOrderPublic(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, buildPublicOrderResult(order))
+	response.Success(c, composePublicOrder(order))
 }
 
 // ResolveOrderPublicByResumeToken resolves a payment order from a signed resume token.
@@ -534,7 +534,7 @@ func (h *PaymentHandler) ResolveOrderPublicByResumeToken(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, buildPublicOrderResult(order))
+	response.Success(c, composePublicOrder(order))
 }
 
 // requireAuth extracts the authenticated subject from the context.
@@ -583,17 +583,17 @@ type PaymentOrderResult struct {
 	ProviderInstanceID  *string    `json:"provider_instance_id,omitempty"`
 }
 
-func sanitizePaymentOrdersForResponse(orders []*dbent.PaymentOrder) []PaymentOrderResult {
+func sanitizePaymentOrdersForResponseV2(orders []*dbent.PaymentOrder) []PaymentOrderResult {
 	out := make([]PaymentOrderResult, 0, len(orders))
 	for _, order := range orders {
-		if item := sanitizePaymentOrderForResponse(order); item != nil {
+		if item := sanitizePaymentOrderForResponseV2(order); item != nil {
 			out = append(out, *item)
 		}
 	}
 	return out
 }
 
-func sanitizePaymentOrderForResponse(order *dbent.PaymentOrder) *PaymentOrderResult {
+func sanitizePaymentOrderForResponseV2(order *dbent.PaymentOrder) *PaymentOrderResult {
 	if order == nil {
 		return nil
 	}
@@ -622,6 +622,6 @@ func sanitizePaymentOrderForResponse(order *dbent.PaymentOrder) *PaymentOrderRes
 	}
 }
 
-func isWeChatBrowser(c *gin.Context) bool {
+func checkWeChatBrowser(c *gin.Context) bool {
 	return strings.Contains(strings.ToLower(c.GetHeader("User-Agent")), "micromessenger")
 }

@@ -138,20 +138,20 @@ func isSensitiveProviderConfigField(providerKey, fieldName string) bool {
 	return found
 }
 
-func hasPendingOrderProtectedConfigChange(providerKey string, currentConfig, nextConfig map[string]string) bool {
+func hasPendingOrderProtectedConfigChangeV2(providerKey string, currentConfig, nextConfig map[string]string) bool {
 	fields, ok := providerPendingOrderProtectedConfigFields[providerKey]
 	if !ok {
 		return false
 	}
 	for fieldName := range fields {
-		if providerConfigFieldValue(currentConfig, fieldName) != providerConfigFieldValue(nextConfig, fieldName) {
+		if providerConfigFieldValueV2(currentConfig, fieldName) != providerConfigFieldValueV2(nextConfig, fieldName) {
 			return true
 		}
 	}
 	return false
 }
 
-func providerConfigFieldValue(config map[string]string, fieldName string) string {
+func providerConfigFieldValueV2(config map[string]string, fieldName string) string {
 	for key, value := range config {
 		if strings.EqualFold(key, fieldName) {
 			return value
@@ -258,7 +258,7 @@ func (s *PaymentConfigService) UpdateProviderInstance(ctx context.Context, id in
 		if err != nil {
 			return nil, err
 		}
-		if hasPendingOrderProtectedConfigChange(current.ProviderKey, currentConfig, mergedConfig) {
+		if hasPendingOrderProtectedConfigChangeV2(current.ProviderKey, currentConfig, mergedConfig) {
 			count, err := getPendingOrderCount()
 			if err != nil {
 				return nil, err

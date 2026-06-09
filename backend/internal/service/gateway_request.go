@@ -86,17 +86,17 @@ func (b *RequestBodyRef) Replace(data []byte) {
 	b.data = data
 }
 
-func missingJSONRange() jsonRange {
+func missingJSONRangeV2() jsonRange {
 	return jsonRange{start: -1, end: -1}
 }
 
-func rangeFromResult(r gjson.Result) jsonRange {
+func rangeFromResultV2(r gjson.Result) jsonRange {
 	if r.Raw == "" || r.Index <= 0 {
-		return missingJSONRange()
+		return missingJSONRangeV2()
 	}
 	end := r.Index + len(r.Raw)
 	if end < r.Index {
-		return missingJSONRange()
+		return missingJSONRangeV2()
 	}
 	return jsonRange{start: r.Index, end: end, kind: r.Type}
 }
@@ -105,8 +105,8 @@ func (r jsonRange) exists() bool {
 	return r.start >= 0 && r.end >= r.start
 }
 
-// clearGatewayRequestDerivedState 清空绑定当前 body 的轻量派生字段，防止 ReplaceBody 后读到旧值。
-func clearGatewayRequestDerivedState(parsed *ParsedRequest) {
+// resetGatewayRequestDerivedState 清空绑定当前 body 的轻量派生字段，防止 ReplaceBody 后读到旧值。
+func resetGatewayRequestDerivedState(parsed *ParsedRequest) {
 	if parsed == nil {
 		return
 	}
@@ -117,44 +117,44 @@ func clearGatewayRequestDerivedState(parsed *ParsedRequest) {
 	parsed.ThinkingEnabled = false
 	parsed.OutputEffort = ""
 	parsed.MaxTokens = 0
-	parsed.systemRange = missingJSONRange()
-	parsed.messagesRange = missingJSONRange()
+	parsed.systemRange = missingJSONRangeV2()
+	parsed.messagesRange = missingJSONRangeV2()
 }
 
-func clearGatewayRequestRanges(parsed *ParsedRequest) {
+func resetGatewayRequestRanges(parsed *ParsedRequest) {
 	if parsed == nil {
 		return
 	}
 	parsed.HasSystem = false
-	parsed.systemRange = missingJSONRange()
-	parsed.messagesRange = missingJSONRange()
+	parsed.systemRange = missingJSONRangeV2()
+	parsed.messagesRange = missingJSONRangeV2()
 }
 
-func setGatewayRequestRanges(parsed *ParsedRequest, protocol string, jsonStr string) {
+func assignGatewayRequestRanges(parsed *ParsedRequest, protocol string, jsonStr string) {
 	if parsed == nil {
 		return
 	}
 	switch protocol {
 	case domain.PlatformGemini:
 		if sysParts := gjson.Get(jsonStr, "systemInstruction.parts"); sysParts.Exists() && sysParts.IsArray() {
-			parsed.systemRange = rangeFromResult(sysParts)
+			parsed.systemRange = rangeFromResultV2(sysParts)
 		}
 		if contents := gjson.Get(jsonStr, "contents"); contents.Exists() && contents.IsArray() {
-			parsed.messagesRange = rangeFromResult(contents)
+			parsed.messagesRange = rangeFromResultV2(contents)
 		}
 	default:
 		if sys := gjson.Get(jsonStr, "system"); sys.Exists() {
 			parsed.HasSystem = true
-			parsed.systemRange = rangeFromResult(sys)
+			parsed.systemRange = rangeFromResultV2(sys)
 		}
 		if msgs := gjson.Get(jsonStr, "messages"); msgs.Exists() && msgs.IsArray() {
-			parsed.messagesRange = rangeFromResult(msgs)
+			parsed.messagesRange = rangeFromResultV2(msgs)
 		}
 	}
 }
 
-// parseGatewayRequestCurrentBody 只做标量和 raw range 轻量解析，不恢复 system/messages 对象图。
-func parseGatewayRequestCurrentBody(parsed *ParsedRequest, protocol string) error {
+// decodeGatewayRequestCurrentBody 只做标量和 raw range 轻量解析，不恢复 system/messages 对象图。
+func decodeGatewayRequestCurrentBody(parsed *ParsedRequest, protocol string) error {
 	if parsed == nil || parsed.Body == nil {
 		return fmt.Errorf("empty request body")
 	}
@@ -166,7 +166,7 @@ func parseGatewayRequestCurrentBody(parsed *ParsedRequest, protocol string) erro
 
 	// 只在当前函数内零拷贝读取 JSON 字段；ReplaceBody 后必须重新进入本函数刷新派生状态。
 	jsonStr := *(*string)(unsafe.Pointer(&bodyBytes))
-	clearGatewayRequestDerivedState(parsed)
+	resetGatewayRequestDerivedState(parsed)
 	parsed.protocol = protocol
 
 	modelResult := gjson.Get(jsonStr, "model")
@@ -201,12 +201,12 @@ func parseGatewayRequestCurrentBody(parsed *ParsedRequest, protocol string) erro
 		}
 	}
 
-	setGatewayRequestRanges(parsed, protocol, jsonStr)
+	assignGatewayRequestRanges(parsed, protocol, jsonStr)
 	return nil
 }
 
-func refreshGatewayRequestRanges(parsed *ParsedRequest, protocol string) error {
-	return parseGatewayRequestCurrentBody(parsed, protocol)
+func refreshGatewayRequestRangesV2(parsed *ParsedRequest, protocol string) error {
+	return decodeGatewayRequestCurrentBody(parsed, protocol)
 }
 
 // ParsedRequest 保存网关请求的预解析结果
@@ -292,7 +292,7 @@ func normalizeSessionUserAgentFallback(raw string) string {
 // 不同协议使用不同的 system/messages 字段名。
 func ParseGatewayRequest(body *RequestBodyRef, protocol string) (*ParsedRequest, error) {
 	parsed := &ParsedRequest{Body: body}
-	if err := parseGatewayRequestCurrentBody(parsed, protocol); err != nil {
+	if err := decodeGatewayRequestCurrentBody(parsed, protocol); err != nil {
 		return nil, err
 	}
 	return parsed, nil
@@ -353,7 +353,7 @@ func (p *ParsedRequest) CloneForBody(body []byte) (*ParsedRequest, error) {
 	clone := *p
 	clone.Body = NewRequestBodyRef(body)
 	clone.OnUpstreamAccepted = nil
-	if err := refreshGatewayRequestRanges(&clone, clone.protocol); err != nil {
+	if err := refreshGatewayRequestRangesV2(&clone, clone.protocol); err != nil {
 		return nil, err
 	}
 	return &clone, nil
@@ -369,8 +369,8 @@ func (p *ParsedRequest) ReplaceBody(data []byte) error {
 	} else {
 		p.Body.Replace(data)
 	}
-	if err := refreshGatewayRequestRanges(p, p.protocol); err != nil {
-		clearGatewayRequestRanges(p)
+	if err := refreshGatewayRequestRangesV2(p, p.protocol); err != nil {
+		resetGatewayRequestRanges(p)
 		return err
 	}
 	return nil
@@ -804,9 +804,9 @@ func removeThinkingDependentContextStrategies(body []byte) []byte {
 // claude package 的该常量含义。
 const anthropicBetaContextManagementToken = "context-management-2025-06-27"
 
-// sanitizeAnthropicBodyForBetaTokens 是对 Anthropic 直连路径上 body↔beta header
+// sanitizeAnthropicBodyForBetaTokensV2 是对 Anthropic 直连路径上 body↔beta header
 // **能力维度**对称约束的统一实现，与 Bedrock 路径的
-// `sanitizeBedrockFieldsForBetaTokens` 对称。
+// `sanitizeBedrockFieldsForBetaTokensV2` 对称。
 //
 // 问题场景：
 //   - context_management 是 Claude Code CLI 2.1.87+ 默认携带的 beta 字段
@@ -825,14 +825,14 @@ const anthropicBetaContextManagementToken = "context-management-2025-06-27"
 //
 // 返回 (sanitized, changed)：changed 表示是否发生实际删除，供调用方决定
 // 是否重用原 body 引用。
-func sanitizeAnthropicBodyForBetaTokens(body []byte, anthropicBetaHeader string) ([]byte, bool) {
+func sanitizeAnthropicBodyForBetaTokensV2(body []byte, anthropicBetaHeader string) ([]byte, bool) {
 	if len(body) == 0 {
 		return body, false
 	}
 	if !gjson.GetBytes(body, "context_management").Exists() {
 		return body, false
 	}
-	if anthropicBetaTokensContains(anthropicBetaHeader, anthropicBetaContextManagementToken) {
+	if betaTokensHas(anthropicBetaHeader, anthropicBetaContextManagementToken) {
 		return body, false
 	}
 	if b, err := sjson.DeleteBytes(body, "context_management"); err == nil {
@@ -848,9 +848,9 @@ func sanitizeAnthropicBodyForBetaTokens(body []byte, anthropicBetaHeader string)
 	return body, false
 }
 
-// anthropicBetaTokensContains 检测逗号分隔的 anthropic-beta header 是否含指定 token。
+// betaTokensHas 检测逗号分隔的 anthropic-beta header 是否含指定 token。
 // 宋体空格宽容；区分大小写（Anthropic beta token 始终是小写）。
-func anthropicBetaTokensContains(header, token string) bool {
+func betaTokensHas(header, token string) bool {
 	if header == "" || token == "" {
 		return false
 	}

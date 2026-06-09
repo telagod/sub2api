@@ -170,7 +170,7 @@ func (s *SubscriptionExpiryService) sendExpiryReminderIfDue(ctx context.Context,
 	if err := s.notificationEmailService.Send(ctx, NotificationEmailSendInput{
 		Event:          NotificationEmailEventSubscriptionExpiryReminder,
 		RecipientEmail: sub.User.Email,
-		RecipientName:  firstNonEmpty(sub.User.Username, sub.User.Email),
+		RecipientName:  coalesce(sub.User.Username, sub.User.Email),
 		UserID:         sub.UserID,
 		SourceType:     "user_subscription",
 		SourceID:       strconv.FormatInt(sub.ID, 10),

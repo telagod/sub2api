@@ -108,7 +108,7 @@ func (h *AuthHandler) LinuxDoOAuthStart(c *gin.Context) {
 	secureCookie := isRequestHTTPS(c)
 	setCookie(c, linuxDoOAuthStateCookieName, encodeCookieValue(state), linuxDoOAuthCookieMaxAgeSec, secureCookie)
 	setCookie(c, linuxDoOAuthRedirectCookie, encodeCookieValue(redirectTo), linuxDoOAuthCookieMaxAgeSec, secureCookie)
-	intent := normalizeOAuthIntent(c.Query("intent"))
+	intent := sanitizeOAuthIntent(c.Query("intent"))
 	setCookie(c, linuxDoOAuthIntentCookieName, encodeCookieValue(intent), linuxDoOAuthCookieMaxAgeSec, secureCookie)
 	setOAuthPendingBrowserCookie(c, browserSessionKey, secureCookie)
 	clearOAuthPendingSessionCookie(c, secureCookie)
@@ -201,7 +201,7 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 		return
 	}
 	intent, _ := readCookieDecoded(c, linuxDoOAuthIntentCookieName)
-	intent = normalizeOAuthIntent(intent)
+	intent = sanitizeOAuthIntent(intent)
 
 	codeVerifier := ""
 	if cfg.UsePKCE {
@@ -355,7 +355,7 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 			h.authService.RecordSuccessfulLogin(c.Request.Context(), user.ID)
 			clearOAuthPendingSessionCookie(c, secureCookie)
 			clearOAuthPendingBrowserCookie(c, secureCookie)
-			redirectOAuthTokenPair(c, frontendCallback, tokenPair, redirectTo)
+			sendOAuthTokenRedirect(c, frontendCallback, tokenPair, redirectTo)
 			return
 		}
 		if !errors.Is(err, service.ErrOAuthInvitationRequired) {
@@ -678,18 +678,18 @@ func linuxDoFetchUserInfo(
 		return "", "", "", "", "", fmt.Errorf("userinfo status=%d", resp.StatusCode)
 	}
 
-	return linuxDoParseUserInfo(resp.String(), cfg)
+	return parseLinuxDoUserInfo(resp.String(), cfg)
 }
 
-func linuxDoParseUserInfo(body string, cfg config.LinuxDoConnectConfig) (email string, username string, subject string, displayName string, avatarURL string, err error) {
-	email = firstNonEmpty(
+func parseLinuxDoUserInfo(body string, cfg config.LinuxDoConnectConfig) (email string, username string, subject string, displayName string, avatarURL string, err error) {
+	email = coalesce(
 		getGJSON(body, cfg.UserInfoEmailPath),
 		getGJSON(body, "email"),
 		getGJSON(body, "user.email"),
 		getGJSON(body, "data.email"),
 		getGJSON(body, "attributes.email"),
 	)
-	username = firstNonEmpty(
+	username = coalesce(
 		getGJSON(body, cfg.UserInfoUsernamePath),
 		getGJSON(body, "username"),
 		getGJSON(body, "preferred_username"),
@@ -697,7 +697,7 @@ func linuxDoParseUserInfo(body string, cfg config.LinuxDoConnectConfig) (email s
 		getGJSON(body, "user.username"),
 		getGJSON(body, "user.name"),
 	)
-	subject = firstNonEmpty(
+	subject = coalesce(
 		getGJSON(body, cfg.UserInfoIDPath),
 		getGJSON(body, "sub"),
 		getGJSON(body, "id"),
@@ -706,7 +706,7 @@ func linuxDoParseUserInfo(body string, cfg config.LinuxDoConnectConfig) (email s
 		getGJSON(body, "user.id"),
 	)
 
-	displayName = firstNonEmpty(
+	displayName = coalesce(
 		getGJSON(body, "name"),
 		getGJSON(body, "nickname"),
 		getGJSON(body, "display_name"),
@@ -714,7 +714,7 @@ func linuxDoParseUserInfo(body string, cfg config.LinuxDoConnectConfig) (email s
 		getGJSON(body, "user.username"),
 		username,
 	)
-	avatarURL = firstNonEmpty(
+	avatarURL = coalesce(
 		getGJSON(body, "avatar_url"),
 		getGJSON(body, "avatar"),
 		getGJSON(body, "picture"),
@@ -785,7 +785,7 @@ func redirectOAuthError(c *gin.Context, frontendCallback string, code string, me
 	redirectWithFragment(c, frontendCallback, fragment)
 }
 
-func redirectOAuthTokenPair(c *gin.Context, frontendCallback string, tokenPair *service.TokenPair, redirectTo string) {
+func sendOAuthTokenRedirect(c *gin.Context, frontendCallback string, tokenPair *service.TokenPair, redirectTo string) {
 	fragment := url.Values{}
 	if tokenPair != nil {
 		fragment.Set("access_token", truncateFragmentValue(tokenPair.AccessToken))
@@ -831,7 +831,7 @@ func redirectWithFragment(c *gin.Context, frontendCallback string, fragment url.
 	c.Redirect(http.StatusFound, u.String())
 }
 
-func firstNonEmpty(values ...string) string {
+func coalesce(values ...string) string {
 	for _, v := range values {
 		v = strings.TrimSpace(v)
 		if v != "" {
@@ -847,12 +847,12 @@ func parseOAuthProviderError(body string) (providerErr string, providerDesc stri
 		return "", ""
 	}
 
-	providerErr = firstNonEmpty(
+	providerErr = coalesce(
 		getGJSON(body, "error"),
 		getGJSON(body, "code"),
 		getGJSON(body, "error.code"),
 	)
-	providerDesc = firstNonEmpty(
+	providerDesc = coalesce(
 		getGJSON(body, "error_description"),
 		getGJSON(body, "error.message"),
 		getGJSON(body, "message"),
@@ -867,8 +867,8 @@ func parseOAuthProviderError(body string) (providerErr string, providerDesc stri
 	if err != nil {
 		return "", ""
 	}
-	providerErr = firstNonEmpty(values.Get("error"), values.Get("code"))
-	providerDesc = firstNonEmpty(values.Get("error_description"), values.Get("error_message"), values.Get("message"))
+	providerErr = coalesce(values.Get("error"), values.Get("code"))
+	providerDesc = coalesce(values.Get("error_description"), values.Get("error_message"), values.Get("message"))
 	return providerErr, providerDesc
 }
 
@@ -1027,7 +1027,7 @@ func clearCookie(c *gin.Context, name string, secure bool) {
 	})
 }
 
-func clearOAuthBindAccessTokenCookie(c *gin.Context, secure bool) {
+func clearBindCookie(c *gin.Context, secure bool) {
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     oauthBindAccessTokenCookieName,
 		Value:    "",
@@ -1039,7 +1039,7 @@ func clearOAuthBindAccessTokenCookie(c *gin.Context, secure bool) {
 	})
 }
 
-func setOAuthBindAccessTokenCookie(c *gin.Context, token string, secure bool) {
+func setBindCookie(c *gin.Context, token string, secure bool) {
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     oauthBindAccessTokenCookieName,
 		Value:    url.QueryEscape(strings.TrimSpace(token)),
@@ -1110,7 +1110,7 @@ func linuxDoSyntheticEmail(subject string) string {
 	return "linuxdo-" + subject + service.LinuxDoConnectSyntheticEmailDomain
 }
 
-func normalizeOAuthIntent(raw string) string {
+func sanitizeOAuthIntent(raw string) string {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
 	case "", oauthIntentLogin:
 		return oauthIntentLogin
@@ -1126,7 +1126,7 @@ func (h *AuthHandler) buildOAuthBindUserCookieFromContext(c *gin.Context) (strin
 	if err != nil || userID == nil || *userID <= 0 {
 		return "", infraerrors.Unauthorized("UNAUTHORIZED", "authentication required")
 	}
-	return buildOAuthBindUserCookieValue(*userID, h.oauthBindCookieSecret())
+	return encodeBindCookie(*userID, h.oauthBindCookieSecret())
 }
 
 func (h *AuthHandler) PrepareOAuthBindAccessTokenCookie(c *gin.Context) {
@@ -1144,7 +1144,7 @@ func (h *AuthHandler) PrepareOAuthBindAccessTokenCookie(c *gin.Context) {
 		return
 	}
 
-	setOAuthBindAccessTokenCookie(c, token, isRequestHTTPS(c))
+	setBindCookie(c, token, isRequestHTTPS(c))
 	c.Status(http.StatusNoContent)
 	c.Writer.WriteHeaderNow()
 }
@@ -1158,7 +1158,7 @@ func (h *AuthHandler) resolveOAuthBindTargetUserID(c *gin.Context) (*int64, erro
 	}
 
 	ck, err := c.Request.Cookie(oauthBindAccessTokenCookieName)
-	clearOAuthBindAccessTokenCookie(c, isRequestHTTPS(c))
+	clearBindCookie(c, isRequestHTTPS(c))
 	if err != nil {
 		return nil, err
 	}
@@ -1190,7 +1190,7 @@ func (h *AuthHandler) readOAuthBindUserIDFromCookie(c *gin.Context, cookieName s
 	if err != nil {
 		return 0, err
 	}
-	return parseOAuthBindUserCookieValue(value, h.oauthBindCookieSecret())
+	return decodeOAuthBindUserCookieValue(value, h.oauthBindCookieSecret())
 }
 
 func (h *AuthHandler) oauthBindCookieSecret() string {
@@ -1200,7 +1200,7 @@ func (h *AuthHandler) oauthBindCookieSecret() string {
 	return strings.TrimSpace(h.cfg.JWT.Secret)
 }
 
-func buildOAuthBindUserCookieValue(userID int64, secret string) (string, error) {
+func encodeBindCookie(userID int64, secret string) (string, error) {
 	secret = strings.TrimSpace(secret)
 	if userID <= 0 || secret == "" {
 		return "", errors.New("invalid oauth bind cookie input")
@@ -1212,7 +1212,7 @@ func buildOAuthBindUserCookieValue(userID int64, secret string) (string, error) 
 	return payload + "." + signature, nil
 }
 
-func parseOAuthBindUserCookieValue(value string, secret string) (int64, error) {
+func decodeOAuthBindUserCookieValue(value string, secret string) (int64, error) {
 	secret = strings.TrimSpace(secret)
 	if secret == "" {
 		return 0, errors.New("missing oauth bind cookie secret")

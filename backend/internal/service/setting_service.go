@@ -550,7 +550,7 @@ func normalizeWeChatConnectStoredMode(openEnabled, mpEnabled, mobileEnabled bool
 }
 
 func mergeWeChatConnectCapabilitySettings(settings map[string]string, base config.WeChatConnectConfig, enabled bool, mode string) (bool, bool, bool) {
-	mode = normalizeWeChatConnectModeSetting(firstNonEmpty(mode, base.Mode))
+	mode = normalizeWeChatConnectModeSetting(coalesce(mode, base.Mode))
 	rawOpen, hasOpen := settings[SettingKeyWeChatConnectOpenEnabled]
 	rawMP, hasMP := settings[SettingKeyWeChatConnectMPEnabled]
 	rawMobile, hasMobile := settings[SettingKeyWeChatConnectMobileEnabled]
@@ -593,28 +593,28 @@ func (s *SettingService) effectiveWeChatConnectOAuthConfig(settings map[string]s
 		enabled = strings.TrimSpace(raw) == "true"
 	}
 
-	legacyAppID := strings.TrimSpace(firstNonEmpty(
+	legacyAppID := strings.TrimSpace(coalesce(
 		settings[SettingKeyWeChatConnectAppID],
 		base.AppID,
 		base.OpenAppID,
 		base.MPAppID,
 		base.MobileAppID,
 	))
-	legacyAppSecret := strings.TrimSpace(firstNonEmpty(
+	legacyAppSecret := strings.TrimSpace(coalesce(
 		settings[SettingKeyWeChatConnectAppSecret],
 		base.AppSecret,
 		base.OpenAppSecret,
 		base.MPAppSecret,
 		base.MobileAppSecret,
 	))
-	openAppID := strings.TrimSpace(firstNonEmpty(settings[SettingKeyWeChatConnectOpenAppID], base.OpenAppID, legacyAppID))
-	openAppSecret := strings.TrimSpace(firstNonEmpty(settings[SettingKeyWeChatConnectOpenAppSecret], base.OpenAppSecret, legacyAppSecret))
-	mpAppID := strings.TrimSpace(firstNonEmpty(settings[SettingKeyWeChatConnectMPAppID], base.MPAppID, legacyAppID))
-	mpAppSecret := strings.TrimSpace(firstNonEmpty(settings[SettingKeyWeChatConnectMPAppSecret], base.MPAppSecret, legacyAppSecret))
-	mobileAppID := strings.TrimSpace(firstNonEmpty(settings[SettingKeyWeChatConnectMobileAppID], base.MobileAppID, legacyAppID))
-	mobileAppSecret := strings.TrimSpace(firstNonEmpty(settings[SettingKeyWeChatConnectMobileAppSecret], base.MobileAppSecret, legacyAppSecret))
+	openAppID := strings.TrimSpace(coalesce(settings[SettingKeyWeChatConnectOpenAppID], base.OpenAppID, legacyAppID))
+	openAppSecret := strings.TrimSpace(coalesce(settings[SettingKeyWeChatConnectOpenAppSecret], base.OpenAppSecret, legacyAppSecret))
+	mpAppID := strings.TrimSpace(coalesce(settings[SettingKeyWeChatConnectMPAppID], base.MPAppID, legacyAppID))
+	mpAppSecret := strings.TrimSpace(coalesce(settings[SettingKeyWeChatConnectMPAppSecret], base.MPAppSecret, legacyAppSecret))
+	mobileAppID := strings.TrimSpace(coalesce(settings[SettingKeyWeChatConnectMobileAppID], base.MobileAppID, legacyAppID))
+	mobileAppSecret := strings.TrimSpace(coalesce(settings[SettingKeyWeChatConnectMobileAppSecret], base.MobileAppSecret, legacyAppSecret))
 
-	modeRaw := firstNonEmpty(settings[SettingKeyWeChatConnectMode], base.Mode)
+	modeRaw := coalesce(settings[SettingKeyWeChatConnectMode], base.Mode)
 	openEnabled, mpEnabled, mobileEnabled := mergeWeChatConnectCapabilitySettings(settings, base, enabled, modeRaw)
 	mode := normalizeWeChatConnectStoredMode(openEnabled, mpEnabled, mobileEnabled, modeRaw)
 
@@ -632,9 +632,9 @@ func (s *SettingService) effectiveWeChatConnectOAuthConfig(settings map[string]s
 		MPEnabled:           mpEnabled,
 		MobileEnabled:       mobileEnabled,
 		Mode:                mode,
-		Scopes:              normalizeWeChatConnectScopeSetting(firstNonEmpty(settings[SettingKeyWeChatConnectScopes], base.Scopes), mode),
-		RedirectURL:         strings.TrimSpace(firstNonEmpty(settings[SettingKeyWeChatConnectRedirectURL], base.RedirectURL)),
-		FrontendRedirectURL: strings.TrimSpace(firstNonEmpty(settings[SettingKeyWeChatConnectFrontendRedirectURL], base.FrontendRedirectURL, defaultWeChatConnectFrontend)),
+		Scopes:              normalizeWeChatConnectScopeSetting(coalesce(settings[SettingKeyWeChatConnectScopes], base.Scopes), mode),
+		RedirectURL:         strings.TrimSpace(coalesce(settings[SettingKeyWeChatConnectRedirectURL], base.RedirectURL)),
+		FrontendRedirectURL: strings.TrimSpace(coalesce(settings[SettingKeyWeChatConnectFrontendRedirectURL], base.FrontendRedirectURL, defaultWeChatConnectFrontend)),
 	}
 }
 
@@ -1390,18 +1390,18 @@ func (s *SettingService) effectiveEmailOAuthConfig(settings map[string]string, p
 		if raw, ok := settings[SettingKeyGitHubOAuthEnabled]; ok {
 			cfg.Enabled = raw == "true"
 		}
-		cfg.ClientID = firstNonEmpty(settings[SettingKeyGitHubOAuthClientID], cfg.ClientID)
-		cfg.ClientSecret = firstNonEmpty(settings[SettingKeyGitHubOAuthClientSecret], cfg.ClientSecret)
-		cfg.RedirectURL = firstNonEmpty(settings[SettingKeyGitHubOAuthRedirectURL], cfg.RedirectURL)
-		cfg.FrontendRedirectURL = firstNonEmpty(settings[SettingKeyGitHubOAuthFrontendRedirectURL], cfg.FrontendRedirectURL, defaultGitHubOAuthFrontend)
+		cfg.ClientID = coalesce(settings[SettingKeyGitHubOAuthClientID], cfg.ClientID)
+		cfg.ClientSecret = coalesce(settings[SettingKeyGitHubOAuthClientSecret], cfg.ClientSecret)
+		cfg.RedirectURL = coalesce(settings[SettingKeyGitHubOAuthRedirectURL], cfg.RedirectURL)
+		cfg.FrontendRedirectURL = coalesce(settings[SettingKeyGitHubOAuthFrontendRedirectURL], cfg.FrontendRedirectURL, defaultGitHubOAuthFrontend)
 	case "google":
 		if raw, ok := settings[SettingKeyGoogleOAuthEnabled]; ok {
 			cfg.Enabled = raw == "true"
 		}
-		cfg.ClientID = firstNonEmpty(settings[SettingKeyGoogleOAuthClientID], cfg.ClientID)
-		cfg.ClientSecret = firstNonEmpty(settings[SettingKeyGoogleOAuthClientSecret], cfg.ClientSecret)
-		cfg.RedirectURL = firstNonEmpty(settings[SettingKeyGoogleOAuthRedirectURL], cfg.RedirectURL)
-		cfg.FrontendRedirectURL = firstNonEmpty(settings[SettingKeyGoogleOAuthFrontendRedirectURL], cfg.FrontendRedirectURL, defaultGoogleOAuthFrontend)
+		cfg.ClientID = coalesce(settings[SettingKeyGoogleOAuthClientID], cfg.ClientID)
+		cfg.ClientSecret = coalesce(settings[SettingKeyGoogleOAuthClientSecret], cfg.ClientSecret)
+		cfg.RedirectURL = coalesce(settings[SettingKeyGoogleOAuthRedirectURL], cfg.RedirectURL)
+		cfg.FrontendRedirectURL = coalesce(settings[SettingKeyGoogleOAuthFrontendRedirectURL], cfg.FrontendRedirectURL, defaultGoogleOAuthFrontend)
 	}
 	return cfg
 }
@@ -1634,12 +1634,12 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	settings.PaymentVisibleMethodWxpaySource = wxpaySource
 	settings.WeChatConnectAppID = strings.TrimSpace(settings.WeChatConnectAppID)
 	settings.WeChatConnectAppSecret = strings.TrimSpace(settings.WeChatConnectAppSecret)
-	settings.WeChatConnectOpenAppID = strings.TrimSpace(firstNonEmpty(settings.WeChatConnectOpenAppID, settings.WeChatConnectAppID))
-	settings.WeChatConnectOpenAppSecret = strings.TrimSpace(firstNonEmpty(settings.WeChatConnectOpenAppSecret, settings.WeChatConnectAppSecret))
-	settings.WeChatConnectMPAppID = strings.TrimSpace(firstNonEmpty(settings.WeChatConnectMPAppID, settings.WeChatConnectAppID))
-	settings.WeChatConnectMPAppSecret = strings.TrimSpace(firstNonEmpty(settings.WeChatConnectMPAppSecret, settings.WeChatConnectAppSecret))
-	settings.WeChatConnectMobileAppID = strings.TrimSpace(firstNonEmpty(settings.WeChatConnectMobileAppID, settings.WeChatConnectAppID))
-	settings.WeChatConnectMobileAppSecret = strings.TrimSpace(firstNonEmpty(settings.WeChatConnectMobileAppSecret, settings.WeChatConnectAppSecret))
+	settings.WeChatConnectOpenAppID = strings.TrimSpace(coalesce(settings.WeChatConnectOpenAppID, settings.WeChatConnectAppID))
+	settings.WeChatConnectOpenAppSecret = strings.TrimSpace(coalesce(settings.WeChatConnectOpenAppSecret, settings.WeChatConnectAppSecret))
+	settings.WeChatConnectMPAppID = strings.TrimSpace(coalesce(settings.WeChatConnectMPAppID, settings.WeChatConnectAppID))
+	settings.WeChatConnectMPAppSecret = strings.TrimSpace(coalesce(settings.WeChatConnectMPAppSecret, settings.WeChatConnectAppSecret))
+	settings.WeChatConnectMobileAppID = strings.TrimSpace(coalesce(settings.WeChatConnectMobileAppID, settings.WeChatConnectAppID))
+	settings.WeChatConnectMobileAppSecret = strings.TrimSpace(coalesce(settings.WeChatConnectMobileAppSecret, settings.WeChatConnectAppSecret))
 	settings.WeChatConnectMode = normalizeWeChatConnectStoredMode(
 		settings.WeChatConnectOpenEnabled,
 		settings.WeChatConnectMPEnabled,
@@ -2619,7 +2619,7 @@ func (s *SettingService) ResolveAuthSourceGrantSettings(ctx context.Context, sig
 		return result, false, err
 	}
 
-	providerDefaults, ok := authSourceSignupSettings(defaults, signupSource)
+	providerDefaults, ok := signupSettingsForSource(defaults, signupSource)
 	if !ok {
 		return result, false, nil
 	}

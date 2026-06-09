@@ -31,7 +31,7 @@ func (s *PaymentService) getOrderProviderInstance(ctx context.Context, o *dbent.
 		return s.resolveSnapshotOrderProviderInstance(ctx, o, snapshot)
 	}
 
-	instIDStr := strings.TrimSpace(psStringValue(o.ProviderInstanceID))
+	instIDStr := strings.TrimSpace(psStringValueV2(o.ProviderInstanceID))
 	if instIDStr == "" {
 		return s.resolveUniqueLegacyOrderProviderInstance(ctx, o)
 	}
@@ -55,7 +55,7 @@ func (s *PaymentService) getRefundOrderProviderInstance(ctx context.Context, o *
 		return s.resolveSnapshotOrderProviderInstance(ctx, o, snapshot)
 	}
 
-	instIDStr := strings.TrimSpace(psStringValue(o.ProviderInstanceID))
+	instIDStr := strings.TrimSpace(psStringValueV2(o.ProviderInstanceID))
 	if instIDStr == "" {
 		return nil, nil
 	}
@@ -76,7 +76,7 @@ func (s *PaymentService) getRefundOrderProviderInstance(ctx context.Context, o *
 
 func (s *PaymentService) resolveUniqueLegacyOrderProviderInstance(ctx context.Context, o *dbent.PaymentOrder) (*dbent.PaymentProviderInstance, error) {
 	paymentType := payment.GetBasePaymentType(strings.TrimSpace(o.PaymentType))
-	providerKey := strings.TrimSpace(psStringValue(o.ProviderKey))
+	providerKey := strings.TrimSpace(psStringValueV2(o.ProviderKey))
 	if providerKey != "" {
 		instances, err := s.entClient.PaymentProviderInstance.Query().
 			Where(paymentproviderinstance.ProviderKeyEQ(providerKey)).
@@ -84,7 +84,7 @@ func (s *PaymentService) resolveUniqueLegacyOrderProviderInstance(ctx context.Co
 		if err != nil {
 			return nil, err
 		}
-		matched := psFilterLegacyOrderProviderInstances(paymentType, instances)
+		matched := psFilterLegacyOrderProviderInstancesV2(paymentType, instances)
 		if len(matched) == 1 {
 			return matched[0], nil
 		}
@@ -101,14 +101,14 @@ func (s *PaymentService) resolveUniqueLegacyOrderProviderInstance(ctx context.Co
 		return nil, err
 	}
 
-	matched := psFilterLegacyOrderProviderInstances(paymentType, instances)
+	matched := psFilterLegacyOrderProviderInstancesV2(paymentType, instances)
 	if len(matched) == 1 {
 		return matched[0], nil
 	}
 	return nil, nil
 }
 
-func psFilterLegacyOrderProviderInstances(orderPaymentType string, instances []*dbent.PaymentProviderInstance) []*dbent.PaymentProviderInstance {
+func psFilterLegacyOrderProviderInstancesV2(orderPaymentType string, instances []*dbent.PaymentProviderInstance) []*dbent.PaymentProviderInstance {
 	if len(instances) == 0 {
 		return nil
 	}
@@ -117,14 +117,14 @@ func psFilterLegacyOrderProviderInstances(orderPaymentType string, instances []*
 	}
 	var matched []*dbent.PaymentProviderInstance
 	for _, inst := range instances {
-		if psLegacyOrderMatchesInstance(orderPaymentType, inst) {
+		if psLegacyOrderMatchesInstanceV2(orderPaymentType, inst) {
 			matched = append(matched, inst)
 		}
 	}
 	return matched
 }
 
-func psLegacyOrderMatchesInstance(orderPaymentType string, inst *dbent.PaymentProviderInstance) bool {
+func psLegacyOrderMatchesInstanceV2(orderPaymentType string, inst *dbent.PaymentProviderInstance) bool {
 	if inst == nil {
 		return false
 	}
@@ -227,7 +227,7 @@ func (s *PaymentService) PrepareRefund(ctx context.Context, oid int64, amt float
 		amt = o.Amount
 	}
 	orderCurrency := PaymentOrderCurrency(o)
-	if amt-o.Amount > paymentAmountToleranceForCurrency(orderCurrency) {
+	if amt-o.Amount > paymentAmountToleranceForCurrencyV2(orderCurrency) {
 		return nil, nil, infraerrors.BadRequest("REFUND_AMOUNT_EXCEEDED", "refund amount exceeds recharge")
 	}
 	ga := calculateGatewayRefundAmount(o.Amount, o.PayAmount, amt, orderCurrency)
@@ -343,20 +343,20 @@ func (s *PaymentService) gwRefund(ctx context.Context, p *RefundPlan) error {
 	resp, err := prov.Refund(ctx, payment.RefundRequest{
 		TradeNo: p.Order.PaymentTradeNo,
 		OrderID: p.Order.OutTradeNo,
-		Amount:  formatGatewayRefundAmount(p.GatewayAmount, p.Order),
+		Amount:  renderGatewayRefundAmount(p.GatewayAmount, p.Order),
 		Reason:  p.Reason,
 	})
 	if err != nil {
 		return err
 	}
-	return validateRefundProviderResponse(resp)
+	return verifyRefundProviderResponse(resp)
 }
 
-func formatGatewayRefundAmount(amount float64, order *dbent.PaymentOrder) string {
+func renderGatewayRefundAmount(amount float64, order *dbent.PaymentOrder) string {
 	return payment.FormatAmountForCurrency(amount, PaymentOrderCurrency(order))
 }
 
-func validateRefundProviderResponse(resp *payment.RefundResponse) error {
+func verifyRefundProviderResponse(resp *payment.RefundResponse) error {
 	if resp == nil {
 		return fmt.Errorf("payment refund response missing")
 	}

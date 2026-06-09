@@ -229,7 +229,7 @@ func TestOpsWSHelpers(t *testing.T) {
 // service.OpenAIFastTierAny ("all")，避免落盘时 "" 与 "all" 双语义。
 func TestOpenAIFastPolicySettingsFromDTO_NormalizesServiceTier(t *testing.T) {
 	t.Run("nil input returns nil", func(t *testing.T) {
-		require.Nil(t, openaiFastPolicySettingsFromDTO(nil))
+		require.Nil(t, fastPolicyFromDTO(nil))
 	})
 
 	t.Run("empty service_tier becomes 'all'", func(t *testing.T) {
@@ -240,7 +240,7 @@ func TestOpenAIFastPolicySettingsFromDTO_NormalizesServiceTier(t *testing.T) {
 				Scope:       "all",
 			}},
 		}
-		out := openaiFastPolicySettingsFromDTO(in)
+		out := fastPolicyFromDTO(in)
 		require.NotNil(t, out)
 		require.Len(t, out.Rules, 1)
 		require.Equal(t, service.OpenAIFastTierAny, out.Rules[0].ServiceTier)
@@ -255,7 +255,7 @@ func TestOpenAIFastPolicySettingsFromDTO_NormalizesServiceTier(t *testing.T) {
 				Scope:       "all",
 			}},
 		}
-		out := openaiFastPolicySettingsFromDTO(in)
+		out := fastPolicyFromDTO(in)
 		require.Equal(t, service.OpenAIFastTierAny, out.Rules[0].ServiceTier)
 	})
 
@@ -267,7 +267,7 @@ func TestOpenAIFastPolicySettingsFromDTO_NormalizesServiceTier(t *testing.T) {
 				Scope:       "all",
 			}},
 		}
-		out := openaiFastPolicySettingsFromDTO(in)
+		out := fastPolicyFromDTO(in)
 		require.Equal(t, service.OpenAIFastTierPriority, out.Rules[0].ServiceTier)
 	})
 
@@ -279,7 +279,7 @@ func TestOpenAIFastPolicySettingsFromDTO_NormalizesServiceTier(t *testing.T) {
 				{ServiceTier: "all", Action: "pass", Scope: "apikey"},
 			},
 		}
-		out := openaiFastPolicySettingsFromDTO(in)
+		out := fastPolicyFromDTO(in)
 		require.Len(t, out.Rules, 3)
 		require.Equal(t, service.OpenAIFastTierPriority, out.Rules[0].ServiceTier)
 		require.Equal(t, service.OpenAIFastTierFlex, out.Rules[1].ServiceTier)

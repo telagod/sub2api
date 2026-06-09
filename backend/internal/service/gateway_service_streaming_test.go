@@ -55,7 +55,7 @@ func TestGatewayService_StreamingReusesScannerBufferAndStillParsesUsage(t *testi
 
 func TestDetachUpstreamContextIgnoresClientCancel(t *testing.T) {
 	parent, cancel := context.WithCancel(context.WithValue(context.Background(), upstreamContextTestKey("test-key"), "test-value"))
-	upstreamCtx, release := detachUpstreamContext(parent)
+	upstreamCtx, release := decoupleUpstreamContext(parent)
 	defer release()
 
 	cancel()

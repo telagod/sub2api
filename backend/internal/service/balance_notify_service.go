@@ -362,7 +362,7 @@ func (s *BalanceNotifyService) sendBalanceLowEmails(recipients []string, userID 
 				RecipientName:  displayName,
 				UserID:         userID,
 				SourceType:     "balance_low",
-				SourceID:       firstNonEmpty(strconv.FormatInt(userID, 10), userEmail),
+				SourceID:       coalesce(strconv.FormatInt(userID, 10), userEmail),
 				ReminderKey:    time.Now().UTC().Format("2006-01-02"),
 				Variables: map[string]string{
 					"current_balance": fmt.Sprintf("%.2f", balance),
@@ -414,7 +414,7 @@ func (s *BalanceNotifyService) sendQuotaAlertEmails(adminEmails []string, accoun
 			err := s.notificationEmailService.Send(ctx, NotificationEmailSendInput{
 				Event:          NotificationEmailEventAccountQuotaAlert,
 				RecipientEmail: to,
-				RecipientName:  emailRecipientName(to),
+				RecipientName:  emailRecipientNameV2(to),
 				SourceType:     "account_quota",
 				SourceID:       fmt.Sprintf("%d-%s", accountID, dim.name),
 				ReminderKey:    time.Now().UTC().Format("2006-01-02"),

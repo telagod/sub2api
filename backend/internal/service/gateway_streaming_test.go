@@ -301,7 +301,7 @@ func TestHandleStreamingResponse_StreamReadErrorAfterOutput_PassesThrough(t *tes
 }
 
 // 默认 (*net.OpError).Error() 会拼接 Source/Addr 字段，泄露内部 IP/端口与上游
-// 服务器地址。sanitizeStreamError 必须剥离这些信息，避免基础设施拓扑通过
+// 服务器地址。sanitizeStreamErrorV2 必须剥离这些信息，避免基础设施拓扑通过
 // failover ResponseBody 或 SSE error 帧返回给客户端。
 func TestSanitizeStreamError_StripsNetworkAddresses(t *testing.T) {
 	src, err := net.ResolveTCPAddr("tcp", "10.0.0.1:54321")
@@ -321,7 +321,7 @@ func TestSanitizeStreamError_StripsNetworkAddresses(t *testing.T) {
 	require.Contains(t, raw.Error(), "10.0.0.1")
 	require.Contains(t, raw.Error(), "52.1.2.3")
 
-	got := sanitizeStreamError(raw)
+	got := sanitizeStreamErrorV2(raw)
 	require.NotContains(t, got, "10.0.0.1", "不得泄露内部源 IP")
 	require.NotContains(t, got, "54321", "不得泄露源端口")
 	require.NotContains(t, got, "52.1.2.3", "不得泄露上游目标 IP")
@@ -347,7 +347,7 @@ func TestSanitizeStreamError_KnownErrors(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.want, sanitizeStreamError(tc.err))
+			require.Equal(t, tc.want, sanitizeStreamErrorV2(tc.err))
 		})
 	}
 }

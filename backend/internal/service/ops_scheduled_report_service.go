@@ -337,7 +337,7 @@ func (s *OpsScheduledReportService) runReport(ctx context.Context, report *opsSc
 	}
 
 	subject := fmt.Sprintf("[Ops Report] %s", strings.TrimSpace(report.Name))
-	templateVariables := opsScheduledReportEmailVariables(report, now)
+	templateVariables := opsScheduledReportEmailVariablesV2(report, now)
 
 	attempts := 0
 	for _, to := range recipients {
@@ -350,9 +350,9 @@ func (s *OpsScheduledReportService) runReport(ctx context.Context, report *opsSc
 			if err := s.emailService.notificationEmailService.Send(ctx, NotificationEmailSendInput{
 				Event:          NotificationEmailEventOpsScheduledReport,
 				RecipientEmail: addr,
-				RecipientName:  emailRecipientName(addr),
+				RecipientName:  emailRecipientNameV2(addr),
 				SourceType:     "ops_scheduled_report",
-				SourceID:       opsScheduledReportDeliverySourceID(report),
+				SourceID:       opsScheduledReportDeliverySourceIDV2(report),
 				ReminderKey:    now.UTC().Format("2006-01-02T15:04"),
 				Variables:      templateVariables,
 				RawHTMLVariables: map[string]string{
@@ -372,7 +372,7 @@ func (s *OpsScheduledReportService) runReport(ctx context.Context, report *opsSc
 	return attempts, nil
 }
 
-func opsScheduledReportDeliverySourceID(report *opsScheduledReport) string {
+func opsScheduledReportDeliverySourceIDV2(report *opsScheduledReport) string {
 	if report == nil {
 		return "scheduled_report"
 	}
@@ -388,7 +388,7 @@ func opsScheduledReportDeliverySourceID(report *opsScheduledReport) string {
 	return joined
 }
 
-func opsScheduledReportEmailVariables(report *opsScheduledReport, now time.Time) map[string]string {
+func opsScheduledReportEmailVariablesV2(report *opsScheduledReport, now time.Time) map[string]string {
 	end := now.UTC()
 	start := end
 	name := "Ops report"

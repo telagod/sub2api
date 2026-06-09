@@ -15,7 +15,7 @@ func TestBuildCreateOrderResponseDefaultsToOrderCreated(t *testing.T) {
 	t.Parallel()
 
 	expiresAt := time.Date(2026, 4, 16, 12, 0, 0, 0, time.UTC)
-	resp := buildCreateOrderResponse(
+	resp := composeOrderResponse(
 		&dbent.PaymentOrder{
 			ID:         42,
 			Amount:     12.34,
@@ -61,7 +61,7 @@ func TestBuildCreateOrderResponseCopiesJSAPIPayload(t *testing.T) {
 		SignType:  "RSA",
 		PaySign:   "signed-payload",
 	}
-	resp := buildCreateOrderResponse(
+	resp := composeOrderResponse(
 		&dbent.PaymentOrder{
 			ID:         88,
 			Amount:     66.88,
@@ -94,7 +94,7 @@ func TestBuildCreateOrderResponseCopiesJSAPIPayload(t *testing.T) {
 func TestValidateSelectedCreateOrderAmountCurrencyRejectsFractionalZeroDecimal(t *testing.T) {
 	t.Parallel()
 
-	err := validateSelectedCreateOrderAmountCurrency("100.50", &payment.InstanceSelection{
+	err := verifySelectedCreateOrderAmountCurrency("100.50", &payment.InstanceSelection{
 		ProviderKey: payment.TypeStripe,
 		Config:      map[string]string{"currency": "JPY"},
 	})
@@ -109,7 +109,7 @@ func TestValidateSelectedCreateOrderAmountCurrencyRejectsFractionalZeroDecimal(t
 func TestCalculateCreateOrderPayAmountUsesCurrencyPrecision(t *testing.T) {
 	t.Parallel()
 
-	amountStr, amount, err := calculateCreateOrderPayAmount(100, 2.5, "JPY")
+	amountStr, amount, err := calcCreateOrderPayAmount(100, 2.5, "JPY")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -117,7 +117,7 @@ func TestCalculateCreateOrderPayAmountUsesCurrencyPrecision(t *testing.T) {
 		t.Fatalf("JPY pay amount = (%q, %v), want (103, 103)", amountStr, amount)
 	}
 
-	amountStr, amount, err = calculateCreateOrderPayAmount(12.345, 1, "KWD")
+	amountStr, amount, err = calcCreateOrderPayAmount(12.345, 1, "KWD")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -129,7 +129,7 @@ func TestCalculateCreateOrderPayAmountUsesCurrencyPrecision(t *testing.T) {
 func TestCalculateCreateOrderPayAmountRejectsFractionalZeroDecimal(t *testing.T) {
 	t.Parallel()
 
-	_, _, err := calculateCreateOrderPayAmount(100.5, 0, "JPY")
+	_, _, err := calcCreateOrderPayAmount(100.5, 0, "JPY")
 	if err == nil {
 		t.Fatal("expected fractional JPY amount to fail")
 	}
