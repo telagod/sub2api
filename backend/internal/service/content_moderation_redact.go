@@ -17,21 +17,21 @@ var contentModerationSecretPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b`),
 }
 
-func redactContentModerationSecrets(text string) string {
-	text = strings.TrimSpace(text)
-	if text == "" {
+func redactContentModerationSecrets(input string) string {
+	trimmed := strings.TrimSpace(input)
+	if trimmed == "" {
 		return ""
 	}
-	out := text
-	for idx, pattern := range contentModerationSecretPatterns {
-		switch idx {
+	result := trimmed
+	for i, pat := range contentModerationSecretPatterns {
+		switch i {
 		case 1:
-			out = pattern.ReplaceAllString(out, `${1}${2}[已脱敏]`)
+			result = pat.ReplaceAllString(result, `${1}${2}[REDACTED]`)
 		case 2:
-			out = pattern.ReplaceAllString(out, `${1}[已脱敏]`)
+			result = pat.ReplaceAllString(result, `${1}[REDACTED]`)
 		default:
-			out = pattern.ReplaceAllString(out, `[已脱敏]`)
+			result = pat.ReplaceAllString(result, `[REDACTED]`)
 		}
 	}
-	return out
+	return result
 }

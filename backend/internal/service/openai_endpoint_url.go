@@ -5,74 +5,78 @@ import (
 	"strings"
 )
 
-func buildOpenAIEndpointURL(base string, endpoint string) string {
-	normalized := strings.TrimRight(strings.TrimSpace(base), "/")
-	endpoint = "/" + strings.TrimLeft(strings.TrimSpace(endpoint), "/")
-	relative := strings.TrimPrefix(endpoint, "/v1")
-	if strings.HasSuffix(normalized, endpoint) || strings.HasSuffix(normalized, relative) {
-		return normalized
+func buildOpenAIEndpointURL(baseURL string, ep string) string {
+	trimmedBase := strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	ep = "/" + strings.TrimLeft(strings.TrimSpace(ep), "/")
+	withoutVersion := strings.TrimPrefix(ep, "/v1")
+	if strings.HasSuffix(trimmedBase, ep) || strings.HasSuffix(trimmedBase, withoutVersion) {
+		return trimmedBase
 	}
-	if openAIBaseURLHasVersionSuffix(normalized) {
-		return normalized + relative
+	if openAIBaseURLHasVersionSuffix(trimmedBase) {
+		return trimmedBase + withoutVersion
 	}
-	return normalized + endpoint
+	return trimmedBase + ep
 }
 
-func openAIBaseURLHasVersionSuffix(raw string) bool {
-	trimmed := strings.TrimSpace(raw)
-	if trimmed == "" {
+func openAIBaseURLHasVersionSuffix(rawURL string) bool {
+	cleaned := strings.TrimSpace(rawURL)
+	if cleaned == "" {
 		return false
 	}
 
-	pathValue := ""
-	if parsed, err := url.Parse(trimmed); err == nil && parsed.Scheme != "" && parsed.Host != "" {
-		pathValue = parsed.Path
-	} else if slash := strings.Index(trimmed, "/"); slash >= 0 {
-		pathValue = trimmed[slash:]
+	urlPath := ""
+	parsed, parseErr := url.Parse(cleaned)
+	if parseErr == nil && parsed.Scheme != "" && parsed.Host != "" {
+		urlPath = parsed.Path
+	} else {
+		slashPos := strings.Index(cleaned, "/")
+		if slashPos >= 0 {
+			urlPath = cleaned[slashPos:]
+		}
 	}
 
-	pathValue = strings.TrimRight(pathValue, "/")
-	if pathValue == "" {
+	urlPath = strings.TrimRight(urlPath, "/")
+	if urlPath == "" {
 		return false
 	}
-	lastSlash := strings.LastIndex(pathValue, "/")
-	segment := pathValue
-	if lastSlash >= 0 {
-		segment = pathValue[lastSlash+1:]
+	lastSep := strings.LastIndex(urlPath, "/")
+	tail := urlPath
+	if lastSep >= 0 {
+		tail = urlPath[lastSep+1:]
 	}
-	return isOpenAIAPIVersionSegment(segment)
+	return isOpenAIAPIVersionSegment(tail)
 }
 
-func isOpenAIAPIVersionSegment(segment string) bool {
-	s := strings.ToLower(strings.TrimSpace(segment))
-	if len(s) < 2 || s[0] != 'v' || !isASCIIDigit(s[1]) {
+func isOpenAIAPIVersionSegment(seg string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(seg))
+	if len(normalized) < 2 || normalized[0] != 'v' || !isASCIIDigit(normalized[1]) {
 		return false
 	}
 
-	i := 1
-	for i < len(s) && isASCIIDigit(s[i]) {
-		i++
+	pos := 1
+	for pos < len(normalized) && isASCIIDigit(normalized[pos]) {
+		pos++
 	}
-	if i == len(s) {
+	if pos == len(normalized) {
 		return true
 	}
-	if s[i] == '.' {
-		i++
-		if i == len(s) || !isASCIIDigit(s[i]) {
+	if normalized[pos] == '.' {
+		pos++
+		if pos == len(normalized) || !isASCIIDigit(normalized[pos]) {
 			return false
 		}
-		for i < len(s) && isASCIIDigit(s[i]) {
-			i++
+		for pos < len(normalized) && isASCIIDigit(normalized[pos]) {
+			pos++
 		}
-		return i == len(s)
+		return pos == len(normalized)
 	}
 
-	suffix := s[i:]
-	return strings.HasPrefix(suffix, "alpha") ||
-		strings.HasPrefix(suffix, "beta") ||
-		strings.HasPrefix(suffix, "preview")
+	rest := normalized[pos:]
+	return strings.HasPrefix(rest, "alpha") ||
+		strings.HasPrefix(rest, "beta") ||
+		strings.HasPrefix(rest, "preview")
 }
 
-func isASCIIDigit(b byte) bool {
-	return b >= '0' && b <= '9'
+func isASCIIDigit(ch byte) bool {
+	return ch >= '0' && ch <= '9'
 }

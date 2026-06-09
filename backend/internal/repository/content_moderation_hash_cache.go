@@ -18,54 +18,54 @@ func NewContentModerationHashCache(rdb *redis.Client) service.ContentModerationH
 	return &contentModerationHashCache{rdb: rdb}
 }
 
-func (c *contentModerationHashCache) RecordFlaggedInputHash(ctx context.Context, inputHash string) error {
-	inputHash = strings.TrimSpace(inputHash)
-	if c == nil || c.rdb == nil || inputHash == "" {
+func (repo *contentModerationHashCache) RecordFlaggedInputHash(ctx context.Context, hash string) error {
+	hash = strings.TrimSpace(hash)
+	if repo == nil || repo.rdb == nil || hash == "" {
 		return nil
 	}
-	return c.rdb.SAdd(ctx, contentModerationFlaggedHashSetKey, inputHash).Err()
+	return repo.rdb.SAdd(ctx, contentModerationFlaggedHashSetKey, hash).Err()
 }
 
-func (c *contentModerationHashCache) HasFlaggedInputHash(ctx context.Context, inputHash string) (bool, error) {
-	inputHash = strings.TrimSpace(inputHash)
-	if c == nil || c.rdb == nil || inputHash == "" {
+func (repo *contentModerationHashCache) HasFlaggedInputHash(ctx context.Context, hash string) (bool, error) {
+	hash = strings.TrimSpace(hash)
+	if repo == nil || repo.rdb == nil || hash == "" {
 		return false, nil
 	}
-	return c.rdb.SIsMember(ctx, contentModerationFlaggedHashSetKey, inputHash).Result()
+	return repo.rdb.SIsMember(ctx, contentModerationFlaggedHashSetKey, hash).Result()
 }
 
-func (c *contentModerationHashCache) DeleteFlaggedInputHash(ctx context.Context, inputHash string) (bool, error) {
-	inputHash = strings.TrimSpace(inputHash)
-	if c == nil || c.rdb == nil || inputHash == "" {
+func (repo *contentModerationHashCache) DeleteFlaggedInputHash(ctx context.Context, hash string) (bool, error) {
+	hash = strings.TrimSpace(hash)
+	if repo == nil || repo.rdb == nil || hash == "" {
 		return false, nil
 	}
-	deleted, err := c.rdb.SRem(ctx, contentModerationFlaggedHashSetKey, inputHash).Result()
-	if err != nil {
-		return false, err
+	removed, removeErr := repo.rdb.SRem(ctx, contentModerationFlaggedHashSetKey, hash).Result()
+	if removeErr != nil {
+		return false, removeErr
 	}
-	return deleted > 0, nil
+	return removed > 0, nil
 }
 
-func (c *contentModerationHashCache) ClearFlaggedInputHashes(ctx context.Context) (int64, error) {
-	if c == nil || c.rdb == nil {
+func (repo *contentModerationHashCache) ClearFlaggedInputHashes(ctx context.Context) (int64, error) {
+	if repo == nil || repo.rdb == nil {
 		return 0, nil
 	}
-	deleted, err := c.rdb.SCard(ctx, contentModerationFlaggedHashSetKey).Result()
-	if err != nil {
-		return 0, err
+	total, countErr := repo.rdb.SCard(ctx, contentModerationFlaggedHashSetKey).Result()
+	if countErr != nil {
+		return 0, countErr
 	}
-	if deleted == 0 {
+	if total == 0 {
 		return 0, nil
 	}
-	if err := c.rdb.Del(ctx, contentModerationFlaggedHashSetKey).Err(); err != nil {
-		return 0, err
+	if delErr := repo.rdb.Del(ctx, contentModerationFlaggedHashSetKey).Err(); delErr != nil {
+		return 0, delErr
 	}
-	return deleted, nil
+	return total, nil
 }
 
-func (c *contentModerationHashCache) CountFlaggedInputHashes(ctx context.Context) (int64, error) {
-	if c == nil || c.rdb == nil {
+func (repo *contentModerationHashCache) CountFlaggedInputHashes(ctx context.Context) (int64, error) {
+	if repo == nil || repo.rdb == nil {
 		return 0, nil
 	}
-	return c.rdb.SCard(ctx, contentModerationFlaggedHashSetKey).Result()
+	return repo.rdb.SCard(ctx, contentModerationFlaggedHashSetKey).Result()
 }

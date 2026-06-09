@@ -2,8 +2,8 @@ package service
 
 import "context"
 
-// HTTPUpstreamProfile marks HTTP upstream requests that need provider-specific
-// transport policy.
+// HTTPUpstreamProfile tags HTTP upstream requests requiring provider-specific
+// transport behaviour.
 type HTTPUpstreamProfile string
 
 const (
@@ -13,7 +13,7 @@ const (
 
 type httpUpstreamProfileContextKey struct{}
 
-// WithHTTPUpstreamProfile injects an upstream transport profile into ctx.
+// WithHTTPUpstreamProfile stores an upstream transport profile in ctx.
 func WithHTTPUpstreamProfile(ctx context.Context, profile HTTPUpstreamProfile) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
@@ -24,19 +24,14 @@ func WithHTTPUpstreamProfile(ctx context.Context, profile HTTPUpstreamProfile) c
 	return context.WithValue(ctx, httpUpstreamProfileContextKey{}, profile)
 }
 
-// HTTPUpstreamProfileFromContext resolves the upstream transport profile from ctx.
+// HTTPUpstreamProfileFromContext retrieves the upstream transport profile from ctx.
 func HTTPUpstreamProfileFromContext(ctx context.Context) HTTPUpstreamProfile {
 	if ctx == nil {
 		return HTTPUpstreamProfileDefault
 	}
-	profile, ok := ctx.Value(httpUpstreamProfileContextKey{}).(HTTPUpstreamProfile)
-	if !ok {
+	val, ok := ctx.Value(httpUpstreamProfileContextKey{}).(HTTPUpstreamProfile)
+	if !ok || val != HTTPUpstreamProfileOpenAI {
 		return HTTPUpstreamProfileDefault
 	}
-	switch profile {
-	case HTTPUpstreamProfileOpenAI:
-		return profile
-	default:
-		return HTTPUpstreamProfileDefault
-	}
+	return val
 }

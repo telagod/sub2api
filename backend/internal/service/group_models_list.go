@@ -2,31 +2,34 @@ package service
 
 import "strings"
 
-func normalizeGroupModelsListConfig(cfg GroupModelsListConfig) GroupModelsListConfig {
-	out := GroupModelsListConfig{Enabled: cfg.Enabled}
-	if len(cfg.Models) == 0 {
-		return out
+func normalizeGroupModelsListConfig(input GroupModelsListConfig) GroupModelsListConfig {
+	result := GroupModelsListConfig{Enabled: input.Enabled}
+	if len(input.Models) == 0 {
+		return result
 	}
 
-	seen := make(map[string]struct{}, len(cfg.Models))
-	out.Models = make([]string, 0, len(cfg.Models))
-	for _, model := range cfg.Models {
-		model = strings.TrimSpace(model)
-		if model == "" {
+	dedup := make(map[string]struct{}, len(input.Models))
+	filtered := make([]string, 0, len(input.Models))
+	for _, m := range input.Models {
+		name := strings.TrimSpace(m)
+		if name == "" {
 			continue
 		}
-		if _, ok := seen[model]; ok {
+		if _, dup := dedup[name]; dup {
 			continue
 		}
-		seen[model] = struct{}{}
-		out.Models = append(out.Models, model)
+		dedup[name] = struct{}{}
+		filtered = append(filtered, name)
 	}
-	if len(out.Models) == 0 {
-		out.Models = nil
+	if len(filtered) > 0 {
+		result.Models = filtered
 	}
-	return out
+	return result
 }
 
 func (g *Group) CustomModelsListEnabled() bool {
-	return g != nil && g.ModelsListConfig.Enabled && len(g.ModelsListConfig.Models) > 0
+	if g == nil {
+		return false
+	}
+	return g.ModelsListConfig.Enabled && len(g.ModelsListConfig.Models) > 0
 }

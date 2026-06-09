@@ -7,64 +7,64 @@ import (
 )
 
 type openAISSEDataAccumulator struct {
-	lines []string
+	buf []string
 }
 
-func (a *openAISSEDataAccumulator) AddLine(line string, fn func([]byte)) {
-	if fn == nil {
+func (acc *openAISSEDataAccumulator) AddLine(raw string, emit func([]byte)) {
+	if emit == nil {
 		return
 	}
-	trimmedLine := strings.TrimRight(line, "\r\n")
-	if data, ok := extractOpenAISSEDataLine(trimmedLine); ok {
-		a.lines = append(a.lines, data)
+	stripped := strings.TrimRight(raw, "\r\n")
+	if payload, ok := extractOpenAISSEDataLine(stripped); ok {
+		acc.buf = append(acc.buf, payload)
 		return
 	}
-	if strings.TrimSpace(trimmedLine) == "" {
-		a.Flush(fn)
-	}
-}
-
-func (a *openAISSEDataAccumulator) Flush(fn func([]byte)) {
-	if fn == nil || len(a.lines) == 0 {
-		return
-	}
-	emitOpenAISSEDataPayloads(a.lines, fn)
-	a.lines = a.lines[:0]
-}
-
-func forEachOpenAISSEDataPayload(body string, fn func([]byte)) {
-	if fn == nil || strings.TrimSpace(body) == "" {
-		return
-	}
-	var acc openAISSEDataAccumulator
-	for _, line := range strings.Split(body, "\n") {
-		acc.AddLine(line, fn)
-	}
-	acc.Flush(fn)
-}
-
-func emitOpenAISSEDataPayloads(lines []string, fn func([]byte)) {
-	if fn == nil || len(lines) == 0 {
-		return
-	}
-	if len(lines) == 1 {
-		emitOpenAISSEDataPayload(lines[0], fn)
-		return
-	}
-	joined := strings.Join(lines, "\n")
-	if gjson.Valid(joined) {
-		emitOpenAISSEDataPayload(joined, fn)
-		return
-	}
-	for _, line := range lines {
-		emitOpenAISSEDataPayload(line, fn)
+	if strings.TrimSpace(stripped) == "" {
+		acc.Flush(emit)
 	}
 }
 
-func emitOpenAISSEDataPayload(data string, fn func([]byte)) {
-	data = strings.TrimSpace(data)
-	if data == "" || data == "[DONE]" {
+func (acc *openAISSEDataAccumulator) Flush(emit func([]byte)) {
+	if emit == nil || len(acc.buf) == 0 {
 		return
 	}
-	fn([]byte(data))
+	dispatchSSEPayloads(acc.buf, emit)
+	acc.buf = acc.buf[:0]
+}
+
+func forEachOpenAISSEDataPayload(body string, emit func([]byte)) {
+	if emit == nil || strings.TrimSpace(body) == "" {
+		return
+	}
+	var collector openAISSEDataAccumulator
+	for _, ln := range strings.Split(body, "\n") {
+		collector.AddLine(ln, emit)
+	}
+	collector.Flush(emit)
+}
+
+func dispatchSSEPayloads(parts []string, emit func([]byte)) {
+	if emit == nil || len(parts) == 0 {
+		return
+	}
+	if len(parts) == 1 {
+		sendSSEPayload(parts[0], emit)
+		return
+	}
+	combined := strings.Join(parts, "\n")
+	if gjson.Valid(combined) {
+		sendSSEPayload(combined, emit)
+		return
+	}
+	for _, p := range parts {
+		sendSSEPayload(p, emit)
+	}
+}
+
+func sendSSEPayload(data string, emit func([]byte)) {
+	trimmed := strings.TrimSpace(data)
+	if trimmed == "" || trimmed == "[DONE]" {
+		return
+	}
+	emit([]byte(trimmed))
 }

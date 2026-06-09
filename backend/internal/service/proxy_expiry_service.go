@@ -7,7 +7,8 @@ import (
 	"time"
 )
 
-// ProxyExpiryService 周期扫描到期代理并把绑定账号改投备用/直连。
+// ProxyExpiryService periodically scans for expired proxies and re-routes
+// bound accounts to fallback or direct connections.
 type ProxyExpiryService struct {
 	proxyRepo ProxyRepository
 	interval  time.Duration
@@ -20,44 +21,44 @@ func NewProxyExpiryService(proxyRepo ProxyRepository, interval time.Duration) *P
 	return &ProxyExpiryService{proxyRepo: proxyRepo, interval: interval, stopCh: make(chan struct{})}
 }
 
-func (s *ProxyExpiryService) Start() {
-	if s == nil || s.proxyRepo == nil || s.interval <= 0 {
+func (svc *ProxyExpiryService) Start() {
+	if svc == nil || svc.proxyRepo == nil || svc.interval <= 0 {
 		return
 	}
-	s.wg.Add(1)
+	svc.wg.Add(1)
 	go func() {
-		defer s.wg.Done()
-		ticker := time.NewTicker(s.interval)
-		defer ticker.Stop()
-		s.runOnce()
+		defer svc.wg.Done()
+		tick := time.NewTicker(svc.interval)
+		defer tick.Stop()
+		svc.sweep()
 		for {
 			select {
-			case <-ticker.C:
-				s.runOnce()
-			case <-s.stopCh:
+			case <-tick.C:
+				svc.sweep()
+			case <-svc.stopCh:
 				return
 			}
 		}
 	}()
 }
 
-func (s *ProxyExpiryService) Stop() {
-	if s == nil {
+func (svc *ProxyExpiryService) Stop() {
+	if svc == nil {
 		return
 	}
-	s.stopOnce.Do(func() { close(s.stopCh) })
-	s.wg.Wait()
+	svc.stopOnce.Do(func() { close(svc.stopCh) })
+	svc.wg.Wait()
 }
 
-func (s *ProxyExpiryService) runOnce() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (svc *ProxyExpiryService) sweep() {
+	deadline, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	changed, err := s.proxyRepo.SweepExpiredProxies(ctx, time.Now())
-	if err != nil {
-		log.Printf("[ProxyExpiry] sweep expired proxies failed: %v", err)
+	affected, sweepErr := svc.proxyRepo.SweepExpiredProxies(deadline, time.Now())
+	if sweepErr != nil {
+		log.Printf("[ProxyExpiry] failed to sweep expired proxies: %v", sweepErr)
 		return
 	}
-	if changed > 0 {
-		log.Printf("[ProxyExpiry] re-routed %d accounts off expired proxies", changed)
+	if affected > 0 {
+		log.Printf("[ProxyExpiry] migrated %d accounts away from expired proxies", affected)
 	}
 }

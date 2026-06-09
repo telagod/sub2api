@@ -7,38 +7,42 @@ import (
 
 var upstreamModelNotFoundKeywords = []string{"model not found", "unknown model", "not found"}
 
-func isUpstreamModelNotFoundError(statusCode int, body []byte) bool {
-	if statusCode != http.StatusNotFound {
+func isUpstreamModelNotFoundError(code int, body []byte) bool {
+	if code != http.StatusNotFound {
 		return false
 	}
-	normalized := normalizeModelNotFoundBody(body)
-	if normalized == "" || !strings.Contains(normalized, "model") {
+	norm := sanitizeModelErrorBody(body)
+	if norm == "" {
 		return false
 	}
-	return containsModelNotFoundKeyword(normalized)
+	if !strings.Contains(norm, "model") {
+		return false
+	}
+	return matchesModelNotFoundKeyword(norm)
 }
 
-func isModelNotFoundError(statusCode int, body []byte) bool {
-	return isUpstreamModelNotFoundError(statusCode, body) || statusCode == http.StatusNotFound
+func isModelNotFoundError(code int, body []byte) bool {
+	if code == http.StatusNotFound {
+		return true
+	}
+	return isUpstreamModelNotFoundError(code, body)
 }
 
-func containsModelNotFoundKeyword(normalizedBody string) bool {
-	if normalizedBody == "" {
-		return false
-	}
-	for _, keyword := range upstreamModelNotFoundKeywords {
-		if strings.Contains(normalizedBody, keyword) {
+func matchesModelNotFoundKeyword(normalized string) bool {
+	for _, kw := range upstreamModelNotFoundKeywords {
+		if strings.Contains(normalized, kw) {
 			return true
 		}
 	}
 	return false
 }
 
-func normalizeModelNotFoundBody(body []byte) string {
-	if len(body) == 0 {
+func sanitizeModelErrorBody(raw []byte) string {
+	if len(raw) == 0 {
 		return ""
 	}
-	normalized := strings.ToLower(string(body))
-	normalized = strings.NewReplacer("_", " ", "-", " ", "\n", " ", "\r", " ", "\t", " ").Replace(normalized)
-	return strings.Join(strings.Fields(normalized), " ")
+	lower := strings.ToLower(string(raw))
+	replacer := strings.NewReplacer("_", " ", "-", " ", "\n", " ", "\r", " ", "\t", " ")
+	cleaned := replacer.Replace(lower)
+	return strings.Join(strings.Fields(cleaned), " ")
 }

@@ -4,39 +4,39 @@ import "strings"
 
 const featureKeyCodexImageGenerationBridge = "codex_image_generation_bridge"
 
-func boolOverridePtr(v bool) *bool {
-	return &v
+func boolOverridePtr(val bool) *bool {
+	return &val
 }
 
-func boolOverrideFromMap(values map[string]any, keys ...string) *bool {
-	if values == nil {
+func boolOverrideFromMap(m map[string]any, lookupKeys ...string) *bool {
+	if m == nil {
 		return nil
 	}
-	for _, key := range keys {
-		if v, ok := values[key].(bool); ok {
-			return boolOverridePtr(v)
+	for _, k := range lookupKeys {
+		if b, ok := m[k].(bool); ok {
+			return boolOverridePtr(b)
 		}
 	}
 	return nil
 }
 
-func platformBoolOverride(values map[string]any, key string, platform string) *bool {
-	if values == nil {
+func platformBoolOverride(m map[string]any, field string, plat string) *bool {
+	if m == nil {
 		return nil
 	}
-	if v, ok := values[key].(bool); ok {
-		return boolOverridePtr(v)
+	if b, ok := m[field].(bool); ok {
+		return boolOverridePtr(b)
 	}
-	raw, ok := values[key].(map[string]any)
+	nested, ok := m[field].(map[string]any)
 	if !ok {
 		return nil
 	}
-	platform = strings.TrimSpace(platform)
-	if platform == "" {
+	plat = strings.TrimSpace(plat)
+	if plat == "" {
 		return nil
 	}
-	if v, ok := raw[platform].(bool); ok {
-		return boolOverridePtr(v)
+	if b, ok := nested[plat].(bool); ok {
+		return boolOverridePtr(b)
 	}
 	return nil
 }
@@ -56,9 +56,9 @@ func (a *Account) CodexImageGenerationBridgeOverride() *bool {
 	if a == nil || a.Platform != PlatformOpenAI || a.Extra == nil {
 		return nil
 	}
-	if override := boolOverrideFromMap(a.Extra, featureKeyCodexImageGenerationBridge, "codex_image_generation_bridge_enabled"); override != nil {
-		return override
+	if result := boolOverrideFromMap(a.Extra, featureKeyCodexImageGenerationBridge, "codex_image_generation_bridge_enabled"); result != nil {
+		return result
 	}
-	openaiConfig, _ := a.Extra[PlatformOpenAI].(map[string]any)
-	return boolOverrideFromMap(openaiConfig, featureKeyCodexImageGenerationBridge, "codex_image_generation_bridge_enabled")
+	providerCfg, _ := a.Extra[PlatformOpenAI].(map[string]any)
+	return boolOverrideFromMap(providerCfg, featureKeyCodexImageGenerationBridge, "codex_image_generation_bridge_enabled")
 }

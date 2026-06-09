@@ -11,15 +11,15 @@ import (
 const openAI403CounterPrefix = "openai_403_count:account:"
 
 var openAI403CounterIncrScript = redis.NewScript(`
-	local key = KEYS[1]
-	local ttl = tonumber(ARGV[1])
+	local k = KEYS[1]
+	local expiry = tonumber(ARGV[1])
 
-	local count = redis.call('INCR', key)
-	if count == 1 then
-		redis.call('EXPIRE', key, ttl)
+	local n = redis.call('INCR', k)
+	if n == 1 then
+		redis.call('EXPIRE', k, expiry)
 	end
 
-	return count
+	return n
 `)
 
 type openAI403CounterCache struct {
@@ -30,22 +30,22 @@ func NewOpenAI403CounterCache(rdb *redis.Client) service.OpenAI403CounterCache {
 	return &openAI403CounterCache{rdb: rdb}
 }
 
-func (c *openAI403CounterCache) IncrementOpenAI403Count(ctx context.Context, accountID int64, windowMinutes int) (int64, error) {
-	key := fmt.Sprintf("%s%d", openAI403CounterPrefix, accountID)
+func (cc *openAI403CounterCache) IncrementOpenAI403Count(ctx context.Context, accountID int64, windowMinutes int) (int64, error) {
+	redisKey := fmt.Sprintf("%s%d", openAI403CounterPrefix, accountID)
 
-	ttlSeconds := windowMinutes * 60
-	if ttlSeconds < 60 {
-		ttlSeconds = 60
+	ttlSec := windowMinutes * 60
+	if ttlSec < 60 {
+		ttlSec = 60
 	}
 
-	result, err := openAI403CounterIncrScript.Run(ctx, c.rdb, []string{key}, ttlSeconds).Int64()
-	if err != nil {
-		return 0, fmt.Errorf("increment openai 403 count: %w", err)
+	count, execErr := openAI403CounterIncrScript.Run(ctx, cc.rdb, []string{redisKey}, ttlSec).Int64()
+	if execErr != nil {
+		return 0, fmt.Errorf("failed to increment 403 counter: %w", execErr)
 	}
-	return result, nil
+	return count, nil
 }
 
-func (c *openAI403CounterCache) ResetOpenAI403Count(ctx context.Context, accountID int64) error {
-	key := fmt.Sprintf("%s%d", openAI403CounterPrefix, accountID)
-	return c.rdb.Del(ctx, key).Err()
+func (cc *openAI403CounterCache) ResetOpenAI403Count(ctx context.Context, accountID int64) error {
+	redisKey := fmt.Sprintf("%s%d", openAI403CounterPrefix, accountID)
+	return cc.rdb.Del(ctx, redisKey).Err()
 }

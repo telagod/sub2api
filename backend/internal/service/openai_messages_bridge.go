@@ -10,48 +10,57 @@ import (
 
 const openAICompatMessagesBridgeContextKey = "openai_compat_messages_bridge"
 
-func isOpenAICompatMessagesBridgeBody(body []byte) bool {
-	if len(body) == 0 {
+func isOpenAICompatMessagesBridgeBody(payload []byte) bool {
+	if len(payload) == 0 {
 		return false
 	}
-	if bytes.Contains(body, []byte(openAICompatClaudeCodeTodoGuardMarker)) {
+	if bytes.Contains(payload, []byte(openAICompatClaudeCodeTodoGuardMarker)) {
 		return true
 	}
-	return isOpenAICompatMessagesBridgePromptCacheKey(gjson.GetBytes(body, "prompt_cache_key").String())
+	cacheKey := gjson.GetBytes(payload, "prompt_cache_key").String()
+	return isOpenAICompatMessagesBridgePromptCacheKey(cacheKey)
 }
 
-func isOpenAICompatMessagesBridgeRequestBody(reqBody map[string]any) bool {
-	if reqBody == nil {
+func isOpenAICompatMessagesBridgeRequestBody(reqPayload map[string]any) bool {
+	if reqPayload == nil {
 		return false
 	}
-	if input, ok := reqBody["input"].([]any); ok && inputContainsText(input, openAICompatClaudeCodeTodoGuardMarker) {
+	if items, ok := reqPayload["input"].([]any); ok && inputContainsText(items, openAICompatClaudeCodeTodoGuardMarker) {
 		return true
 	}
-	return isOpenAICompatMessagesBridgePromptCacheKey(firstNonEmptyString(reqBody["prompt_cache_key"]))
+	rawKey := firstNonEmptyString(reqPayload["prompt_cache_key"])
+	return isOpenAICompatMessagesBridgePromptCacheKey(rawKey)
 }
 
-func isOpenAICompatMessagesBridgePromptCacheKey(key string) bool {
-	key = strings.TrimSpace(key)
-	return strings.HasPrefix(key, "anthropic-metadata-") ||
-		strings.HasPrefix(key, "anthropic-cache-") ||
-		strings.HasPrefix(key, "anthropic-digest-")
+func isOpenAICompatMessagesBridgePromptCacheKey(val string) bool {
+	trimmed := strings.TrimSpace(val)
+	switch {
+	case strings.HasPrefix(trimmed, "anthropic-metadata-"):
+		return true
+	case strings.HasPrefix(trimmed, "anthropic-cache-"):
+		return true
+	case strings.HasPrefix(trimmed, "anthropic-digest-"):
+		return true
+	default:
+		return false
+	}
 }
 
-func setOpenAICompatMessagesBridgeContext(c *gin.Context, enabled bool) {
-	if c == nil || !enabled {
+func setOpenAICompatMessagesBridgeContext(ctx *gin.Context, flag bool) {
+	if ctx == nil || !flag {
 		return
 	}
-	c.Set(openAICompatMessagesBridgeContextKey, true)
+	ctx.Set(openAICompatMessagesBridgeContextKey, true)
 }
 
-func isOpenAICompatMessagesBridgeContext(c *gin.Context) bool {
-	if c == nil {
+func isOpenAICompatMessagesBridgeContext(ctx *gin.Context) bool {
+	if ctx == nil {
 		return false
 	}
-	value, ok := c.Get(openAICompatMessagesBridgeContextKey)
-	if !ok {
+	raw, exists := ctx.Get(openAICompatMessagesBridgeContextKey)
+	if !exists {
 		return false
 	}
-	enabled, ok := value.(bool)
-	return ok && enabled
+	b, ok := raw.(bool)
+	return ok && b
 }

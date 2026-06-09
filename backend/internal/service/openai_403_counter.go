@@ -2,10 +2,10 @@ package service
 
 import "context"
 
-// OpenAI403CounterCache 追踪 OpenAI 账号连续 403 失败次数。
+// OpenAI403CounterCache tracks consecutive 403 failures per OpenAI account.
 type OpenAI403CounterCache interface {
-	// IncrementOpenAI403Count 原子递增 403 计数并返回当前值。
+	// IncrementOpenAI403Count atomically increments the 403 counter and returns the updated count.
 	IncrementOpenAI403Count(ctx context.Context, accountID int64, windowMinutes int) (int64, error)
-	// ResetOpenAI403Count 成功后清零计数器。
+	// ResetOpenAI403Count clears the counter after a successful request.
 	ResetOpenAI403Count(ctx context.Context, accountID int64) error
 }

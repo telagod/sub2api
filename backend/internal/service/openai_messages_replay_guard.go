@@ -13,78 +13,76 @@ func applyAnthropicCompatFullReplayGuard(req *apicompat.AnthropicRequest) bool {
 		return false
 	}
 
-	start := len(req.Messages) - openAICompatAnthropicReplayMaxTailMessages
-	start = expandAnthropicCompatTrimBoundary(req.Messages, start)
-	if start <= 0 {
+	cutoff := len(req.Messages) - openAICompatAnthropicReplayMaxTailMessages
+	cutoff = expandAnthropicCompatTrimBoundary(req.Messages, cutoff)
+	if cutoff <= 0 {
 		return false
 	}
 
-	req.Messages = append([]apicompat.AnthropicMessage(nil), req.Messages[start:]...)
+	trimmed := make([]apicompat.AnthropicMessage, len(req.Messages)-cutoff)
+	copy(trimmed, req.Messages[cutoff:])
+	req.Messages = trimmed
 	return true
 }
 
-func expandAnthropicCompatTrimBoundary(messages []apicompat.AnthropicMessage, start int) int {
-	if start <= 0 || start >= len(messages) {
-		return start
+func expandAnthropicCompatTrimBoundary(msgs []apicompat.AnthropicMessage, boundary int) int {
+	if boundary <= 0 || boundary >= len(msgs) {
+		return boundary
 	}
 
-	toolUseIndex := make(map[string]int)
-	toolResultIndex := make(map[string]int)
-	for i, msg := range messages {
-		uses, results := anthropicCompatMessageToolIDs(msg)
-		for _, id := range uses {
-			if _, exists := toolUseIndex[id]; !exists {
-				toolUseIndex[id] = i
+	usePositions := make(map[string]int)
+	resultPositions := make(map[string]int)
+	for idx, m := range msgs {
+		toolUses, toolResults := anthropicCompatMessageToolIDs(m)
+		for _, tid := range toolUses {
+			if _, found := usePositions[tid]; !found {
+				usePositions[tid] = idx
 			}
 		}
-		for _, id := range results {
-			if _, exists := toolResultIndex[id]; !exists {
-				toolResultIndex[id] = i
+		for _, tid := range toolResults {
+			if _, found := resultPositions[tid]; !found {
+				resultPositions[tid] = idx
 			}
 		}
 	}
 
 	for {
-		next := start
-		for i := start; i < len(messages); i++ {
-			uses, results := anthropicCompatMessageToolIDs(messages[i])
-			for _, id := range results {
-				if useIdx, ok := toolUseIndex[id]; ok && useIdx < next {
-					next = useIdx
+		expanded := boundary
+		for pos := boundary; pos < len(msgs); pos++ {
+			tUses, tResults := anthropicCompatMessageToolIDs(msgs[pos])
+			for _, tid := range tResults {
+				if uPos, ok := usePositions[tid]; ok && uPos < expanded {
+					expanded = uPos
 				}
 			}
-			for _, id := range uses {
-				if resultIdx, ok := toolResultIndex[id]; ok && resultIdx < next {
-					next = resultIdx
+			for _, tid := range tUses {
+				if rPos, ok := resultPositions[tid]; ok && rPos < expanded {
+					expanded = rPos
 				}
 			}
 		}
-		if next == start {
-			return start
+		if expanded == boundary {
+			break
 		}
-		start = next
+		boundary = expanded
 	}
+	return boundary
 }
 
-func anthropicCompatMessageToolIDs(msg apicompat.AnthropicMessage) ([]string, []string) {
-	var blocks []apicompat.AnthropicContentBlock
-	if err := json.Unmarshal(msg.Content, &blocks); err != nil {
+func anthropicCompatMessageToolIDs(m apicompat.AnthropicMessage) ([]string, []string) {
+	var contentBlocks []apicompat.AnthropicContentBlock
+	if unmarshalErr := json.Unmarshal(m.Content, &contentBlocks); unmarshalErr != nil {
 		return nil, nil
 	}
 
-	uses := make([]string, 0, 1)
-	results := make([]string, 0, 1)
-	for _, block := range blocks {
-		switch block.Type {
-		case "tool_use":
-			if block.ID != "" {
-				uses = append(uses, block.ID)
-			}
-		case "tool_result":
-			if block.ToolUseID != "" {
-				results = append(results, block.ToolUseID)
-			}
+	toolUseIDs := make([]string, 0, 1)
+	toolResultIDs := make([]string, 0, 1)
+	for _, blk := range contentBlocks {
+		if blk.Type == "tool_use" && blk.ID != "" {
+			toolUseIDs = append(toolUseIDs, blk.ID)
+		} else if blk.Type == "tool_result" && blk.ToolUseID != "" {
+			toolResultIDs = append(toolResultIDs, blk.ToolUseID)
 		}
 	}
-	return uses, results
+	return toolUseIDs, toolResultIDs
 }

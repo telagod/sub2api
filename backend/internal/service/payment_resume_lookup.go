@@ -10,56 +10,61 @@ import (
 )
 
 func (s *PaymentService) GetPublicOrderByResumeToken(ctx context.Context, token string) (*dbent.PaymentOrder, error) {
-	claims, err := s.paymentResume().ParseToken(strings.TrimSpace(token))
-	if err != nil {
-		return nil, err
+	parsed, parseErr := s.paymentResume().ParseToken(strings.TrimSpace(token))
+	if parseErr != nil {
+		return nil, parseErr
 	}
 
-	order, err := s.entClient.PaymentOrder.Get(ctx, claims.OrderID)
-	if err != nil {
-		if dbent.IsNotFound(err) {
-			return nil, infraerrors.NotFound("NOT_FOUND", "order not found")
+	record, fetchErr := s.entClient.PaymentOrder.Get(ctx, parsed.OrderID)
+	if fetchErr != nil {
+		if dbent.IsNotFound(fetchErr) {
+			return nil, infraerrors.NotFound("NOT_FOUND", "payment order does not exist")
 		}
-		return nil, fmt.Errorf("get order by resume token: %w", err)
+		return nil, fmt.Errorf("fetching order via resume token: %w", fetchErr)
 	}
-	if claims.UserID > 0 && order.UserID != claims.UserID {
-		return nil, invalidResumeTokenMatchError()
+
+	if parsed.UserID > 0 && record.UserID != parsed.UserID {
+		return nil, resumeTokenMismatchErr()
 	}
-	snapshot := psOrderProviderSnapshot(order)
-	orderProviderInstanceID := strings.TrimSpace(psStringValueV2(order.ProviderInstanceID))
-	orderProviderKey := strings.TrimSpace(psStringValueV2(order.ProviderKey))
-	if snapshot != nil {
-		if snapshot.ProviderInstanceID != "" {
-			orderProviderInstanceID = snapshot.ProviderInstanceID
+
+	providerSnap := psOrderProviderSnapshot(record)
+	instanceID := strings.TrimSpace(psStringValueV2(record.ProviderInstanceID))
+	provKey := strings.TrimSpace(psStringValueV2(record.ProviderKey))
+
+	if providerSnap != nil {
+		if providerSnap.ProviderInstanceID != "" {
+			instanceID = providerSnap.ProviderInstanceID
 		}
-		if snapshot.ProviderKey != "" {
-			orderProviderKey = snapshot.ProviderKey
+		if providerSnap.ProviderKey != "" {
+			provKey = providerSnap.ProviderKey
 		}
 	}
-	if claims.ProviderInstanceID != "" && orderProviderInstanceID != claims.ProviderInstanceID {
-		return nil, invalidResumeTokenMatchError()
+
+	if parsed.ProviderInstanceID != "" && instanceID != parsed.ProviderInstanceID {
+		return nil, resumeTokenMismatchErr()
 	}
-	if claims.ProviderKey != "" && !strings.EqualFold(orderProviderKey, claims.ProviderKey) {
-		return nil, invalidResumeTokenMatchError()
+	if parsed.ProviderKey != "" && !strings.EqualFold(provKey, parsed.ProviderKey) {
+		return nil, resumeTokenMismatchErr()
 	}
-	if claims.PaymentType != "" && NormalizeVisibleMethod(order.PaymentType) != NormalizeVisibleMethod(claims.PaymentType) {
-		return nil, invalidResumeTokenMatchError()
+	if parsed.PaymentType != "" && NormalizeVisibleMethod(record.PaymentType) != NormalizeVisibleMethod(parsed.PaymentType) {
+		return nil, resumeTokenMismatchErr()
 	}
-	if order.Status == OrderStatusPending || order.Status == OrderStatusExpired {
-		result := s.reconcilePaid(ctx, order)
-		if result == checkPaidResultAlreadyPaid {
-			order, err = s.entClient.PaymentOrder.Get(ctx, order.ID)
-			if err != nil {
-				return nil, fmt.Errorf("reload order by resume token: %w", err)
+
+	if record.Status == OrderStatusPending || record.Status == OrderStatusExpired {
+		outcome := s.reconcilePaid(ctx, record)
+		if outcome == checkPaidResultAlreadyPaid {
+			record, fetchErr = s.entClient.PaymentOrder.Get(ctx, record.ID)
+			if fetchErr != nil {
+				return nil, fmt.Errorf("reloading order after reconciliation: %w", fetchErr)
 			}
 		}
 	}
 
-	return order, nil
+	return record, nil
 }
 
-func invalidResumeTokenMatchError() error {
-	return infraerrors.BadRequest("INVALID_RESUME_TOKEN", "resume token does not match the payment order")
+func resumeTokenMismatchErr() error {
+	return infraerrors.BadRequest("INVALID_RESUME_TOKEN", "token does not correspond to the payment order")
 }
 
 func (s *PaymentService) ParseWeChatPaymentResumeToken(token string) (*WeChatPaymentResumeClaims, error) {
