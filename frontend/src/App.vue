@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView, useRouter, useRoute } from 'vue-router'
-import { onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, onErrorCaptured, watch } from 'vue'
 import Toast from '@/components/common/Toast.vue'
 import NavigationProgress from '@/components/common/NavigationProgress.vue'
 import { resolveDocumentTitle } from '@/router/title'
@@ -91,6 +91,18 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 
+const routeError = ref(false)
+
+onErrorCaptured((err) => {
+  console.error('Route component error:', err)
+  routeError.value = true
+  return false
+})
+
+watch(() => route.path, () => {
+  routeError.value = false
+})
+
 onMounted(async () => {
   // Check if setup is needed
   try {
@@ -113,9 +125,17 @@ onMounted(async () => {
 
 <template>
   <NavigationProgress />
-  <RouterView v-slot="{ Component, route }">
-    <transition name="page" mode="out-in">
-      <component :is="Component" :key="route.path" />
+  <div v-if="routeError" class="flex items-center justify-center min-h-screen">
+    <div class="text-center space-y-4">
+      <p class="text-muted-foreground">Page failed to load</p>
+      <button class="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm" @click="routeError = false; $router.go(0)">
+        Reload
+      </button>
+    </div>
+  </div>
+  <RouterView v-else v-slot="{ Component, route: viewRoute }">
+    <transition name="page">
+      <component v-if="Component" :is="Component" :key="viewRoute.path" />
     </transition>
   </RouterView>
   <Toast />

@@ -664,25 +664,14 @@
 }
 
 /* ============ 页面过渡（流畅层）============ */
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
+.page-enter-active {
+  transition: opacity 0.15s ease;
 }
 .page-enter-from {
   opacity: 0;
-  transform: translateY(6px);
-}
-.page-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
 }
 @media (prefers-reduced-motion: reduce) {
-  .page-enter-active,
-  .page-leave-active {
+  .page-enter-active {
     transition: none;
-  }
-  .page-enter-from,
-  .page-leave-to {
-    transform: none;
   }
 }
