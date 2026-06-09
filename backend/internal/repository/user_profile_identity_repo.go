@@ -80,10 +80,11 @@ func (r *CreateAuthIdentityResult) IdentityRef() AuthIdentityKey {
 	if r == nil || r.Identity == nil {
 		return AuthIdentityKey{}
 	}
+	ident := r.Identity
 	return AuthIdentityKey{
-		ProviderType:    r.Identity.ProviderType,
-		ProviderKey:     r.Identity.ProviderKey,
-		ProviderSubject: r.Identity.ProviderSubject,
+		ProviderType:    ident.ProviderType,
+		ProviderKey:     ident.ProviderKey,
+		ProviderSubject: ident.ProviderSubject,
 	}
 }
 
@@ -91,12 +92,13 @@ func (r *CreateAuthIdentityResult) ChannelRef() *AuthIdentityChannelKey {
 	if r == nil || r.Channel == nil {
 		return nil
 	}
+	ch := r.Channel
 	return &AuthIdentityChannelKey{
-		ProviderType:   r.Channel.ProviderType,
-		ProviderKey:    r.Channel.ProviderKey,
-		Channel:        r.Channel.Channel,
-		ChannelAppID:   r.Channel.ChannelAppID,
-		ChannelSubject: r.Channel.ChannelSubject,
+		ProviderType:   ch.ProviderType,
+		ProviderKey:    ch.ProviderKey,
+		Channel:        ch.Channel,
+		ChannelAppID:   ch.ChannelAppID,
+		ChannelSubject: ch.ChannelSubject,
 	}
 }
 
@@ -124,7 +126,9 @@ type sqlQueryExecutor interface {
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }
 
-var repositoryScopedKeyLocks = newScopedKeyLockRegistry()
+// repositoryScopedKeyLocks is the global in-process keyed lock registry
+// used to serialize identity operations.
+var repositoryScopedKeyLocks = createKeyedLockPool()
 
 type scopedKeyLockRegistry struct {
 	mu    sync.Mutex
@@ -136,99 +140,111 @@ type scopedKeyLockEntry struct {
 	refs int
 }
 
-func newScopedKeyLockRegistry() *scopedKeyLockRegistry {
+func createKeyedLockPool() *scopedKeyLockRegistry {
 	return &scopedKeyLockRegistry{
 		locks: make(map[string]*scopedKeyLockEntry),
 	}
 }
 
-func (r *scopedKeyLockRegistry) lock(keys ...string) func() {
-	normalized := normalizeLockKeys(keys...)
-	if len(normalized) == 0 {
+// lock acquires in-process locks on the given keys in sorted order.
+// Returns an unlock function that must be called to release all held locks.
+func (reg *scopedKeyLockRegistry) lock(keys ...string) func() {
+	sortedKeys := deduplicateAndSortKeys(keys...)
+	if len(sortedKeys) == 0 {
 		return func() {}
 	}
 
-	entries := make([]*scopedKeyLockEntry, 0, len(normalized))
-	r.mu.Lock()
-	for _, key := range normalized {
-		entry := r.locks[key]
-		if entry == nil {
-			entry = &scopedKeyLockEntry{}
-			r.locks[key] = entry
+	acquired := make([]*scopedKeyLockEntry, 0, len(sortedKeys))
+	reg.mu.Lock()
+	for _, k := range sortedKeys {
+		ent := reg.locks[k]
+		if ent == nil {
+			ent = &scopedKeyLockEntry{}
+			reg.locks[k] = ent
 		}
-		entry.refs++
-		entries = append(entries, entry)
+		ent.refs++
+		acquired = append(acquired, ent)
 	}
-	r.mu.Unlock()
+	reg.mu.Unlock()
 
-	for _, entry := range entries {
-		entry.mu.Lock()
+	for _, ent := range acquired {
+		ent.mu.Lock()
 	}
 
 	return func() {
-		for i := len(entries) - 1; i >= 0; i-- {
-			entries[i].mu.Unlock()
+		// Unlock in reverse order to avoid potential deadlocks.
+		for idx := len(acquired) - 1; idx >= 0; idx-- {
+			acquired[idx].mu.Unlock()
 		}
 
-		r.mu.Lock()
-		defer r.mu.Unlock()
-		for idx, key := range normalized {
-			entry := entries[idx]
-			entry.refs--
-			if entry.refs == 0 {
-				delete(r.locks, key)
+		reg.mu.Lock()
+		defer reg.mu.Unlock()
+		for pos, k := range sortedKeys {
+			ent := acquired[pos]
+			ent.refs--
+			if ent.refs == 0 {
+				delete(reg.locks, k)
 			}
 		}
 	}
 }
 
-func normalizeLockKeys(keys ...string) []string {
+// deduplicateAndSortKeys trims, deduplicates, and sorts the provided lock keys.
+func deduplicateAndSortKeys(keys ...string) []string {
 	if len(keys) == 0 {
 		return nil
 	}
 
-	deduped := make(map[string]struct{}, len(keys))
-	for _, key := range keys {
-		trimmed := strings.TrimSpace(key)
-		if trimmed == "" {
+	seen := make(map[string]struct{}, len(keys))
+	for _, k := range keys {
+		stripped := strings.TrimSpace(k)
+		if stripped == "" {
 			continue
 		}
-		deduped[trimmed] = struct{}{}
+		seen[stripped] = struct{}{}
 	}
-	if len(deduped) == 0 {
+	if len(seen) == 0 {
 		return nil
 	}
 
-	normalized := make([]string, 0, len(deduped))
-	for key := range deduped {
-		normalized = append(normalized, key)
+	sorted := make([]string, 0, len(seen))
+	for k := range seen {
+		sorted = append(sorted, k)
 	}
-	sort.Strings(normalized)
-	return normalized
+	sort.Strings(sorted)
+	return sorted
 }
 
+// normalizeLockKeys is an alias kept for callers outside this file.
+func normalizeLockKeys(keys ...string) []string {
+	return deduplicateAndSortKeys(keys...)
+}
+
+// advisoryLockHash computes a 64-bit FNV-1a hash suitable for Postgres advisory locks.
 func advisoryLockHash(key string) int64 {
-	hasher := fnv.New64a()
-	_, _ = hasher.Write([]byte(key))
-	return int64(hasher.Sum64())
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(key))
+	return int64(h.Sum64())
 }
 
+// lockRepositoryScopedKeys acquires both in-process and Postgres advisory locks
+// for the given keys. Returns a release function and any error.
 func lockRepositoryScopedKeys(ctx context.Context, client *dbent.Client, exec sqlQueryExecutor, keys ...string) (func(), error) {
-	release := repositoryScopedKeyLocks.lock(keys...)
-	normalized := normalizeLockKeys(keys...)
-	if len(normalized) == 0 || client == nil || exec == nil || client.Driver().Dialect() != dialect.Postgres {
-		return release, nil
+	releaseFn := repositoryScopedKeyLocks.lock(keys...)
+	sortedKeys := deduplicateAndSortKeys(keys...)
+	if len(sortedKeys) == 0 || client == nil || exec == nil || client.Driver().Dialect() != dialect.Postgres {
+		return releaseFn, nil
 	}
 
-	for _, key := range normalized {
-		rows, err := exec.QueryContext(ctx, "SELECT pg_advisory_xact_lock($1)", advisoryLockHash(key))
-		if err != nil {
-			release()
-			return nil, err
+	for _, k := range sortedKeys {
+		pgRows, pgErr := exec.QueryContext(ctx, "SELECT pg_advisory_xact_lock($1)", advisoryLockHash(k))
+		if pgErr != nil {
+			releaseFn()
+			return nil, pgErr
 		}
-		_ = rows.Close()
+		_ = pgRows.Close()
 	}
-	return release, nil
+	return releaseFn, nil
 }
 
 func (r *userRepository) WithUserProfileIdentityTx(ctx context.Context, fn func(txCtx context.Context) error) error {
@@ -236,61 +252,62 @@ func (r *userRepository) WithUserProfileIdentityTx(ctx context.Context, fn func(
 		return fn(ctx)
 	}
 
-	tx, err := r.client.Tx(ctx)
-	if err != nil {
-		return err
+	txHandle, txErr := r.client.Tx(ctx)
+	if txErr != nil {
+		return txErr
 	}
-	defer func() { _ = tx.Rollback() }()
+	defer func() { _ = txHandle.Rollback() }()
 
-	txCtx := dbent.NewTxContext(ctx, tx)
-	if err := fn(txCtx); err != nil {
-		return err
+	txCtx := dbent.NewTxContext(ctx, txHandle)
+	if execErr := fn(txCtx); execErr != nil {
+		return execErr
 	}
-	return tx.Commit()
+	return txHandle.Commit()
 }
 
 func (r *userRepository) CreateAuthIdentity(ctx context.Context, input CreateAuthIdentityInput) (*CreateAuthIdentityResult, error) {
-	if err := validateAuthIdentityChannelProviderMatch(input.Canonical, input.Channel); err != nil {
-		return nil, err
+	if validErr := ensureChannelProviderConsistency(input.Canonical, input.Channel); validErr != nil {
+		return nil, validErr
 	}
 
-	client := clientFromContext(ctx, r.client)
+	dbClient := clientFromContext(ctx, r.client)
 
-	create := client.AuthIdentity.Create().
+	builder := dbClient.AuthIdentity.Create().
 		SetUserID(input.UserID).
 		SetProviderType(strings.TrimSpace(input.Canonical.ProviderType)).
 		SetProviderKey(strings.TrimSpace(input.Canonical.ProviderKey)).
 		SetProviderSubject(strings.TrimSpace(input.Canonical.ProviderSubject)).
-		SetMetadata(copyMetadata(input.Metadata)).
+		SetMetadata(duplicateMetadataMap(input.Metadata)).
 		SetNillableIssuer(input.Issuer).
 		SetNillableVerifiedAt(input.VerifiedAt)
 
-	identity, err := create.Save(ctx)
-	if err != nil {
-		return nil, err
+	savedIdentity, saveErr := builder.Save(ctx)
+	if saveErr != nil {
+		return nil, saveErr
 	}
 
-	var channel *dbent.AuthIdentityChannel
+	var savedChannel *dbent.AuthIdentityChannel
 	if input.Channel != nil {
-		channel, err = client.AuthIdentityChannel.Create().
-			SetIdentityID(identity.ID).
+		var chErr error
+		savedChannel, chErr = dbClient.AuthIdentityChannel.Create().
+			SetIdentityID(savedIdentity.ID).
 			SetProviderType(strings.TrimSpace(input.Channel.ProviderType)).
 			SetProviderKey(strings.TrimSpace(input.Channel.ProviderKey)).
 			SetChannel(strings.TrimSpace(input.Channel.Channel)).
 			SetChannelAppID(strings.TrimSpace(input.Channel.ChannelAppID)).
 			SetChannelSubject(strings.TrimSpace(input.Channel.ChannelSubject)).
-			SetMetadata(copyMetadata(input.ChannelMetadata)).
+			SetMetadata(duplicateMetadataMap(input.ChannelMetadata)).
 			Save(ctx)
-		if err != nil {
-			return nil, err
+		if chErr != nil {
+			return nil, chErr
 		}
 	}
 
-	return &CreateAuthIdentityResult{Identity: identity, Channel: channel}, nil
+	return &CreateAuthIdentityResult{Identity: savedIdentity, Channel: savedChannel}, nil
 }
 
 func (r *userRepository) GetUserByCanonicalIdentity(ctx context.Context, key AuthIdentityKey) (*UserAuthIdentityLookup, error) {
-	identity, err := clientFromContext(ctx, r.client).AuthIdentity.Query().
+	found, findErr := clientFromContext(ctx, r.client).AuthIdentity.Query().
 		Where(
 			authidentity.ProviderTypeEQ(strings.TrimSpace(key.ProviderType)),
 			authidentity.ProviderKeyEQ(strings.TrimSpace(key.ProviderKey)),
@@ -298,18 +315,18 @@ func (r *userRepository) GetUserByCanonicalIdentity(ctx context.Context, key Aut
 		).
 		WithUser().
 		Only(ctx)
-	if err != nil {
-		return nil, err
+	if findErr != nil {
+		return nil, findErr
 	}
 
 	return &UserAuthIdentityLookup{
-		User:     identity.Edges.User,
-		Identity: identity,
+		User:     found.Edges.User,
+		Identity: found,
 	}, nil
 }
 
 func (r *userRepository) GetUserByChannelIdentity(ctx context.Context, key AuthIdentityChannelKey) (*UserAuthIdentityLookup, error) {
-	channel, err := clientFromContext(ctx, r.client).AuthIdentityChannel.Query().
+	chResult, chErr := clientFromContext(ctx, r.client).AuthIdentityChannel.Query().
 		Where(
 			authidentitychannel.ProviderTypeEQ(strings.TrimSpace(key.ProviderType)),
 			authidentitychannel.ProviderKeyEQ(strings.TrimSpace(key.ProviderKey)),
@@ -321,308 +338,367 @@ func (r *userRepository) GetUserByChannelIdentity(ctx context.Context, key AuthI
 			q.WithUser()
 		}).
 		Only(ctx)
-	if err != nil {
-		return nil, err
+	if chErr != nil {
+		return nil, chErr
 	}
 
 	return &UserAuthIdentityLookup{
-		User:     channel.Edges.Identity.Edges.User,
-		Identity: channel.Edges.Identity,
-		Channel:  channel,
+		User:     chResult.Edges.Identity.Edges.User,
+		Identity: chResult.Edges.Identity,
+		Channel:  chResult,
 	}, nil
 }
 
 func (r *userRepository) ListUserAuthIdentities(ctx context.Context, userID int64) ([]service.UserAuthIdentityRecord, error) {
-	identities, err := clientFromContext(ctx, r.client).AuthIdentity.Query().
+	rows, queryErr := clientFromContext(ctx, r.client).AuthIdentity.Query().
 		Where(authidentity.UserIDEQ(userID)).
 		All(ctx)
-	if err != nil {
-		return nil, err
+	if queryErr != nil {
+		return nil, queryErr
 	}
 
-	records := make([]service.UserAuthIdentityRecord, 0, len(identities))
-	for _, identity := range identities {
-		if identity == nil {
+	result := make([]service.UserAuthIdentityRecord, 0, len(rows))
+	for idx := 0; idx < len(rows); idx++ {
+		row := rows[idx]
+		if row == nil {
 			continue
 		}
-		records = append(records, service.UserAuthIdentityRecord{
-			ProviderType:    strings.TrimSpace(identity.ProviderType),
-			ProviderKey:     strings.TrimSpace(identity.ProviderKey),
-			ProviderSubject: strings.TrimSpace(identity.ProviderSubject),
-			VerifiedAt:      identity.VerifiedAt,
-			Issuer:          identity.Issuer,
-			Metadata:        copyMetadata(identity.Metadata),
-			CreatedAt:       identity.CreatedAt,
-			UpdatedAt:       identity.UpdatedAt,
+		result = append(result, service.UserAuthIdentityRecord{
+			ProviderType:    strings.TrimSpace(row.ProviderType),
+			ProviderKey:     strings.TrimSpace(row.ProviderKey),
+			ProviderSubject: strings.TrimSpace(row.ProviderSubject),
+			VerifiedAt:      row.VerifiedAt,
+			Issuer:          row.Issuer,
+			Metadata:        duplicateMetadataMap(row.Metadata),
+			CreatedAt:       row.CreatedAt,
+			UpdatedAt:       row.UpdatedAt,
 		})
 	}
 
-	return records, nil
+	return result, nil
 }
 
 func (r *userRepository) UnbindUserAuthProvider(ctx context.Context, userID int64, provider string) error {
-	provider = strings.ToLower(strings.TrimSpace(provider))
-	if provider == "" || provider == "email" {
+	normalizedProvider := strings.ToLower(strings.TrimSpace(provider))
+	if normalizedProvider == "" || normalizedProvider == "email" {
 		return service.ErrIdentityProviderInvalid
 	}
 
 	return r.WithUserProfileIdentityTx(ctx, func(txCtx context.Context) error {
-		client := clientFromContext(txCtx, r.client)
-		identityIDs, err := client.AuthIdentity.Query().
+		dbClient := clientFromContext(txCtx, r.client)
+		matchedIDs, lookupErr := dbClient.AuthIdentity.Query().
 			Where(
 				authidentity.UserIDEQ(userID),
-				authidentity.ProviderTypeEQ(provider),
+				authidentity.ProviderTypeEQ(normalizedProvider),
 			).
 			IDs(txCtx)
-		if err != nil {
-			return err
+		if lookupErr != nil {
+			return lookupErr
 		}
-		if len(identityIDs) == 0 {
+		if len(matchedIDs) == 0 {
 			return nil
 		}
 
-		if _, err := client.IdentityAdoptionDecision.Update().
-			Where(identityadoptiondecision.IdentityIDIn(identityIDs...)).
+		// Clear adoption decision references before deleting identity rows.
+		if _, clearErr := dbClient.IdentityAdoptionDecision.Update().
+			Where(identityadoptiondecision.IdentityIDIn(matchedIDs...)).
 			ClearIdentityID().
-			Save(txCtx); err != nil {
-			return err
+			Save(txCtx); clearErr != nil {
+			return clearErr
 		}
-		if _, err := client.AuthIdentityChannel.Delete().
-			Where(authidentitychannel.IdentityIDIn(identityIDs...)).
-			Exec(txCtx); err != nil {
-			return err
+		// Delete associated channel rows.
+		if _, delChErr := dbClient.AuthIdentityChannel.Delete().
+			Where(authidentitychannel.IdentityIDIn(matchedIDs...)).
+			Exec(txCtx); delChErr != nil {
+			return delChErr
 		}
-		_, err = client.AuthIdentity.Delete().
+		// Finally remove the identity rows themselves.
+		_, delErr := dbClient.AuthIdentity.Delete().
 			Where(
 				authidentity.UserIDEQ(userID),
-				authidentity.ProviderTypeEQ(provider),
+				authidentity.ProviderTypeEQ(normalizedProvider),
 			).
 			Exec(txCtx)
-		return err
+		return delErr
 	})
 }
 
 func (r *userRepository) BindAuthIdentityToUser(ctx context.Context, input BindAuthIdentityInput) (*CreateAuthIdentityResult, error) {
-	if err := validateAuthIdentityChannelProviderMatch(input.Canonical, input.Channel); err != nil {
-		return nil, err
+	if validErr := ensureChannelProviderConsistency(input.Canonical, input.Channel); validErr != nil {
+		return nil, validErr
 	}
 
-	var result *CreateAuthIdentityResult
-	err := r.WithUserProfileIdentityTx(ctx, func(txCtx context.Context) error {
-		client := clientFromContext(txCtx, r.client)
-		canonical := input.Canonical
+	var outcome *CreateAuthIdentityResult
+	txErr := r.WithUserProfileIdentityTx(ctx, func(txCtx context.Context) error {
+		dbClient := clientFromContext(txCtx, r.client)
+		canon := input.Canonical
 
-		identityRecords, err := client.AuthIdentity.Query().
+		// Find existing identities that could match (including compatible provider keys).
+		existingRecords, qErr := dbClient.AuthIdentity.Query().
 			Where(
-				authidentity.ProviderTypeEQ(strings.TrimSpace(canonical.ProviderType)),
-				authidentity.ProviderKeyIn(compatibleIdentityProviderKeys(canonical.ProviderType, canonical.ProviderKey)...),
-				authidentity.ProviderSubjectEQ(strings.TrimSpace(canonical.ProviderSubject)),
+				authidentity.ProviderTypeEQ(strings.TrimSpace(canon.ProviderType)),
+				authidentity.ProviderKeyIn(expandCompatibleProviderKeys(canon.ProviderType, canon.ProviderKey)...),
+				authidentity.ProviderSubjectEQ(strings.TrimSpace(canon.ProviderSubject)),
 			).
 			All(txCtx)
-		if err != nil {
-			return err
+		if qErr != nil {
+			return qErr
 		}
-		identity := selectOwnedCompatibleIdentity(identityRecords, input.UserID)
-		if identity == nil && hasCompatibleIdentityConflict(identityRecords, input.UserID) {
+		ownedIdent := pickOwnedIdentity(existingRecords, input.UserID)
+		if ownedIdent == nil && detectIdentityOwnerConflict(existingRecords, input.UserID) {
 			return ErrAuthIdentityOwnershipConflict
 		}
-		if identity == nil {
-			identity, err = client.AuthIdentity.Create().
+
+		if ownedIdent == nil {
+			// No existing identity for this user; create one.
+			var createErr error
+			ownedIdent, createErr = dbClient.AuthIdentity.Create().
 				SetUserID(input.UserID).
-				SetProviderType(strings.TrimSpace(canonical.ProviderType)).
-				SetProviderKey(strings.TrimSpace(canonical.ProviderKey)).
-				SetProviderSubject(strings.TrimSpace(canonical.ProviderSubject)).
-				SetMetadata(copyMetadata(input.Metadata)).
+				SetProviderType(strings.TrimSpace(canon.ProviderType)).
+				SetProviderKey(strings.TrimSpace(canon.ProviderKey)).
+				SetProviderSubject(strings.TrimSpace(canon.ProviderSubject)).
+				SetMetadata(duplicateMetadataMap(input.Metadata)).
 				SetNillableIssuer(input.Issuer).
 				SetNillableVerifiedAt(input.VerifiedAt).
 				Save(txCtx)
-			if err != nil {
-				return err
+			if createErr != nil {
+				return createErr
 			}
 		} else {
-			targetProviderKey := canonicalizeCompatibleIdentityProviderKey(canonical.ProviderType, identity.ProviderKey, canonical.ProviderKey)
-			update := client.AuthIdentity.UpdateOneID(identity.ID)
-			if targetProviderKey != "" && !strings.EqualFold(targetProviderKey, identity.ProviderKey) {
-				update = update.SetProviderKey(targetProviderKey)
+			// Update the existing identity with latest metadata.
+			resolvedKey := resolveCanonicalProviderKey(canon.ProviderType, ownedIdent.ProviderKey, canon.ProviderKey)
+			updater := dbClient.AuthIdentity.UpdateOneID(ownedIdent.ID)
+			if resolvedKey != "" && !strings.EqualFold(resolvedKey, ownedIdent.ProviderKey) {
+				updater = updater.SetProviderKey(resolvedKey)
 			}
 			if input.Metadata != nil {
-				update = update.SetMetadata(copyMetadata(input.Metadata))
+				updater = updater.SetMetadata(duplicateMetadataMap(input.Metadata))
 			}
 			if input.Issuer != nil {
-				update = update.SetIssuer(strings.TrimSpace(*input.Issuer))
+				updater = updater.SetIssuer(strings.TrimSpace(*input.Issuer))
 			}
 			if input.VerifiedAt != nil {
-				update = update.SetVerifiedAt(*input.VerifiedAt)
+				updater = updater.SetVerifiedAt(*input.VerifiedAt)
 			}
-			identity, err = update.Save(txCtx)
-			if err != nil {
-				return err
+			var updErr error
+			ownedIdent, updErr = updater.Save(txCtx)
+			if updErr != nil {
+				return updErr
 			}
 		}
 
-		var channel *dbent.AuthIdentityChannel
+		var boundChannel *dbent.AuthIdentityChannel
 		if input.Channel != nil {
-			channelRecords, err := client.AuthIdentityChannel.Query().
+			chRecords, chQueryErr := dbClient.AuthIdentityChannel.Query().
 				Where(
 					authidentitychannel.ProviderTypeEQ(strings.TrimSpace(input.Channel.ProviderType)),
-					authidentitychannel.ProviderKeyIn(compatibleIdentityProviderKeys(input.Channel.ProviderType, input.Channel.ProviderKey)...),
+					authidentitychannel.ProviderKeyIn(expandCompatibleProviderKeys(input.Channel.ProviderType, input.Channel.ProviderKey)...),
 					authidentitychannel.ChannelEQ(strings.TrimSpace(input.Channel.Channel)),
 					authidentitychannel.ChannelAppIDEQ(strings.TrimSpace(input.Channel.ChannelAppID)),
 					authidentitychannel.ChannelSubjectEQ(strings.TrimSpace(input.Channel.ChannelSubject)),
 				).
 				WithIdentity().
 				All(txCtx)
-			if err != nil {
-				return err
+			if chQueryErr != nil {
+				return chQueryErr
 			}
-			channel = selectOwnedCompatibleChannel(channelRecords, input.UserID)
-			if channel == nil && hasCompatibleChannelConflict(channelRecords, input.UserID) {
+			boundChannel = pickOwnedChannel(chRecords, input.UserID)
+			if boundChannel == nil && detectChannelOwnerConflict(chRecords, input.UserID) {
 				return ErrAuthIdentityChannelOwnershipConflict
 			}
-			if channel == nil {
-				channel, err = client.AuthIdentityChannel.Create().
-					SetIdentityID(identity.ID).
+			if boundChannel == nil {
+				var chCreateErr error
+				boundChannel, chCreateErr = dbClient.AuthIdentityChannel.Create().
+					SetIdentityID(ownedIdent.ID).
 					SetProviderType(strings.TrimSpace(input.Channel.ProviderType)).
 					SetProviderKey(strings.TrimSpace(input.Channel.ProviderKey)).
 					SetChannel(strings.TrimSpace(input.Channel.Channel)).
 					SetChannelAppID(strings.TrimSpace(input.Channel.ChannelAppID)).
 					SetChannelSubject(strings.TrimSpace(input.Channel.ChannelSubject)).
-					SetMetadata(copyMetadata(input.ChannelMetadata)).
+					SetMetadata(duplicateMetadataMap(input.ChannelMetadata)).
 					Save(txCtx)
-				if err != nil {
-					return err
+				if chCreateErr != nil {
+					return chCreateErr
 				}
 			} else {
-				targetProviderKey := canonicalizeCompatibleIdentityProviderKey(input.Channel.ProviderType, channel.ProviderKey, input.Channel.ProviderKey)
-				update := client.AuthIdentityChannel.UpdateOneID(channel.ID).
-					SetIdentityID(identity.ID)
-				if targetProviderKey != "" && !strings.EqualFold(targetProviderKey, channel.ProviderKey) {
-					update = update.SetProviderKey(targetProviderKey)
+				resolvedChKey := resolveCanonicalProviderKey(input.Channel.ProviderType, boundChannel.ProviderKey, input.Channel.ProviderKey)
+				chUpdater := dbClient.AuthIdentityChannel.UpdateOneID(boundChannel.ID).
+					SetIdentityID(ownedIdent.ID)
+				if resolvedChKey != "" && !strings.EqualFold(resolvedChKey, boundChannel.ProviderKey) {
+					chUpdater = chUpdater.SetProviderKey(resolvedChKey)
 				}
 				if input.ChannelMetadata != nil {
-					update = update.SetMetadata(copyMetadata(input.ChannelMetadata))
+					chUpdater = chUpdater.SetMetadata(duplicateMetadataMap(input.ChannelMetadata))
 				}
-				channel, err = update.Save(txCtx)
-				if err != nil {
-					return err
+				var chUpdErr error
+				boundChannel, chUpdErr = chUpdater.Save(txCtx)
+				if chUpdErr != nil {
+					return chUpdErr
 				}
 			}
 		}
 
-		result = &CreateAuthIdentityResult{Identity: identity, Channel: channel}
+		outcome = &CreateAuthIdentityResult{Identity: ownedIdent, Channel: boundChannel}
 		return nil
 	})
-	if err != nil {
-		return nil, err
+	if txErr != nil {
+		return nil, txErr
 	}
-	return result, nil
+	return outcome, nil
 }
 
+// expandCompatibleProviderKeys returns the set of provider keys that should
+// be considered equivalent when matching identities. For WeChat, the legacy
+// "wechat" key and the canonical "wechat-main" key are interchangeable.
+func expandCompatibleProviderKeys(providerType, providerKey string) []string {
+	pt := strings.TrimSpace(strings.ToLower(providerType))
+	pk := strings.TrimSpace(providerKey)
+	if pk == "" {
+		return []string{pk}
+	}
+	if pt != "wechat" {
+		return []string{pk}
+	}
+	candidates := []string{pk}
+	if !strings.EqualFold(pk, "wechat-main") {
+		candidates = append(candidates, "wechat-main")
+	}
+	if !strings.EqualFold(pk, "wechat") {
+		candidates = append(candidates, "wechat")
+	}
+	return candidates
+}
+
+// compatibleIdentityProviderKeys is kept as a package-level alias for callers.
 func compatibleIdentityProviderKeys(providerType, providerKey string) []string {
-	providerType = strings.TrimSpace(strings.ToLower(providerType))
-	providerKey = strings.TrimSpace(providerKey)
-	if providerKey == "" {
-		return []string{providerKey}
-	}
-	if providerType != "wechat" {
-		return []string{providerKey}
-	}
-	keys := []string{providerKey}
-	if !strings.EqualFold(providerKey, "wechat-main") {
-		keys = append(keys, "wechat-main")
-	}
-	if !strings.EqualFold(providerKey, "wechat") {
-		keys = append(keys, "wechat")
-	}
-	return keys
+	return expandCompatibleProviderKeys(providerType, providerKey)
 }
 
-func canonicalizeCompatibleIdentityProviderKey(providerType, existingKey, requestedKey string) string {
-	providerType = strings.TrimSpace(strings.ToLower(providerType))
-	existingKey = strings.TrimSpace(existingKey)
-	requestedKey = strings.TrimSpace(requestedKey)
-	if providerType != "wechat" {
-		if requestedKey != "" {
-			return requestedKey
+// resolveCanonicalProviderKey decides which provider key should be stored,
+// preferring "wechat-main" over "wechat" for the wechat provider type.
+func resolveCanonicalProviderKey(providerType, currentKey, incomingKey string) string {
+	pt := strings.TrimSpace(strings.ToLower(providerType))
+	curr := strings.TrimSpace(currentKey)
+	incoming := strings.TrimSpace(incomingKey)
+	if pt != "wechat" {
+		if incoming != "" {
+			return incoming
 		}
-		return existingKey
+		return curr
 	}
-	if strings.EqualFold(existingKey, "wechat") || strings.EqualFold(existingKey, "wechat-main") || strings.EqualFold(requestedKey, "wechat-main") {
+	if strings.EqualFold(curr, "wechat") || strings.EqualFold(curr, "wechat-main") || strings.EqualFold(incoming, "wechat-main") {
 		return "wechat-main"
 	}
-	if requestedKey != "" {
-		return requestedKey
+	if incoming != "" {
+		return incoming
 	}
-	return existingKey
+	return curr
 }
 
-func compatibleIdentityProviderKeyRank(providerType, providerKey string) int {
-	providerType = strings.TrimSpace(strings.ToLower(providerType))
-	providerKey = strings.TrimSpace(providerKey)
-	if providerType != "wechat" {
+// canonicalizeCompatibleIdentityProviderKey is kept as a package-level alias for callers.
+func canonicalizeCompatibleIdentityProviderKey(providerType, existingKey, requestedKey string) string {
+	return resolveCanonicalProviderKey(providerType, existingKey, requestedKey)
+}
+
+// providerKeyPriority returns a sort-order rank for a provider key. Lower is better.
+func providerKeyPriority(providerType, providerKey string) int {
+	pt := strings.TrimSpace(strings.ToLower(providerType))
+	pk := strings.TrimSpace(providerKey)
+	if pt != "wechat" {
 		return 0
 	}
 	switch {
-	case strings.EqualFold(providerKey, "wechat-main"):
+	case strings.EqualFold(pk, "wechat-main"):
 		return 0
-	case strings.EqualFold(providerKey, "wechat"):
+	case strings.EqualFold(pk, "wechat"):
 		return 2
 	default:
 		return 1
 	}
 }
 
+// compatibleIdentityProviderKeyRank is kept as a package-level alias.
+func compatibleIdentityProviderKeyRank(providerType, providerKey string) int {
+	return providerKeyPriority(providerType, providerKey)
+}
+
+// pickOwnedIdentity selects the best-ranked identity owned by the given user.
+func pickOwnedIdentity(records []*dbent.AuthIdentity, ownerID int64) *dbent.AuthIdentity {
+	var best *dbent.AuthIdentity
+	for _, rec := range records {
+		if rec.UserID != ownerID {
+			continue
+		}
+		if best == nil || providerKeyPriority(rec.ProviderType, rec.ProviderKey) < providerKeyPriority(best.ProviderType, best.ProviderKey) {
+			best = rec
+		}
+	}
+	return best
+}
+
+// selectOwnedCompatibleIdentity is kept as a package-level alias.
 func selectOwnedCompatibleIdentity(records []*dbent.AuthIdentity, userID int64) *dbent.AuthIdentity {
-	var selected *dbent.AuthIdentity
-	for _, record := range records {
-		if record.UserID != userID {
-			continue
-		}
-		if selected == nil || compatibleIdentityProviderKeyRank(record.ProviderType, record.ProviderKey) < compatibleIdentityProviderKeyRank(selected.ProviderType, selected.ProviderKey) {
-			selected = record
-		}
-	}
-	return selected
+	return pickOwnedIdentity(records, userID)
 }
 
+// detectIdentityOwnerConflict returns true if any record belongs to a different user.
+func detectIdentityOwnerConflict(records []*dbent.AuthIdentity, ownerID int64) bool {
+	for _, rec := range records {
+		if rec.UserID != ownerID {
+			return true
+		}
+	}
+	return false
+}
+
+// hasCompatibleIdentityConflict is kept as a package-level alias.
 func hasCompatibleIdentityConflict(records []*dbent.AuthIdentity, userID int64) bool {
-	for _, record := range records {
-		if record.UserID != userID {
-			return true
-		}
-	}
-	return false
+	return detectIdentityOwnerConflict(records, userID)
 }
 
-func selectOwnedCompatibleChannel(records []*dbent.AuthIdentityChannel, userID int64) *dbent.AuthIdentityChannel {
-	var selected *dbent.AuthIdentityChannel
-	for _, record := range records {
-		if record.Edges.Identity == nil || record.Edges.Identity.UserID != userID {
+// pickOwnedChannel selects the best-ranked channel whose parent identity
+// is owned by the given user.
+func pickOwnedChannel(records []*dbent.AuthIdentityChannel, ownerID int64) *dbent.AuthIdentityChannel {
+	var best *dbent.AuthIdentityChannel
+	for _, rec := range records {
+		if rec.Edges.Identity == nil || rec.Edges.Identity.UserID != ownerID {
 			continue
 		}
-		if selected == nil || compatibleIdentityProviderKeyRank(record.ProviderType, record.ProviderKey) < compatibleIdentityProviderKeyRank(selected.ProviderType, selected.ProviderKey) {
-			selected = record
+		if best == nil || providerKeyPriority(rec.ProviderType, rec.ProviderKey) < providerKeyPriority(best.ProviderType, best.ProviderKey) {
+			best = rec
 		}
 	}
-	return selected
+	return best
 }
 
-func hasCompatibleChannelConflict(records []*dbent.AuthIdentityChannel, userID int64) bool {
-	for _, record := range records {
-		if record.Edges.Identity != nil && record.Edges.Identity.UserID != userID {
+// selectOwnedCompatibleChannel is kept as a package-level alias.
+func selectOwnedCompatibleChannel(records []*dbent.AuthIdentityChannel, userID int64) *dbent.AuthIdentityChannel {
+	return pickOwnedChannel(records, userID)
+}
+
+// detectChannelOwnerConflict returns true if any channel record belongs to
+// a different user (via its parent identity edge).
+func detectChannelOwnerConflict(records []*dbent.AuthIdentityChannel, ownerID int64) bool {
+	for _, rec := range records {
+		if rec.Edges.Identity != nil && rec.Edges.Identity.UserID != ownerID {
 			return true
 		}
 	}
 	return false
+}
+
+// hasCompatibleChannelConflict is kept as a package-level alias.
+func hasCompatibleChannelConflict(records []*dbent.AuthIdentityChannel, userID int64) bool {
+	return detectChannelOwnerConflict(records, userID)
 }
 
 func (r *userRepository) RecordProviderGrant(ctx context.Context, input ProviderGrantRecordInput) (bool, error) {
-	exec := txAwareSQLExecutor(ctx, r.sql, r.client)
-	if exec == nil {
-		return false, fmt.Errorf("sql executor is not configured")
+	sqlExec := resolveTransactionAwareExecutor(ctx, r.sql, r.client)
+	if sqlExec == nil {
+		return false, fmt.Errorf("no SQL executor available for provider grant recording")
 	}
 
-	result, err := exec.ExecContext(ctx, `
+	res, execErr := sqlExec.ExecContext(ctx, `
 INSERT INTO user_provider_default_grants (user_id, provider_type, grant_reason)
 VALUES ($1, $2, $3)
 ON CONFLICT (user_id, provider_type, grant_reason) DO NOTHING`,
@@ -630,33 +706,35 @@ ON CONFLICT (user_id, provider_type, grant_reason) DO NOTHING`,
 		strings.TrimSpace(input.ProviderType),
 		string(input.GrantReason),
 	)
-	if err != nil {
-		return false, err
+	if execErr != nil {
+		return false, execErr
 	}
-	affected, err := result.RowsAffected()
-	if err != nil {
-		return false, err
+	rowsChanged, affErr := res.RowsAffected()
+	if affErr != nil {
+		return false, affErr
 	}
-	return affected > 0, nil
+	return rowsChanged > 0, nil
 }
 
 func (r *userRepository) UpsertIdentityAdoptionDecision(ctx context.Context, input IdentityAdoptionDecisionInput) (*dbent.IdentityAdoptionDecision, error) {
-	var result *dbent.IdentityAdoptionDecision
-	err := r.WithUserProfileIdentityTx(ctx, func(txCtx context.Context) error {
-		client := clientFromContext(txCtx, r.client)
-		releaseLocks, err := lockRepositoryScopedKeys(
+	var decision *dbent.IdentityAdoptionDecision
+	txErr := r.WithUserProfileIdentityTx(ctx, func(txCtx context.Context) error {
+		dbClient := clientFromContext(txCtx, r.client)
+		unlock, lockErr := lockRepositoryScopedKeys(
 			txCtx,
-			client,
-			txAwareSQLExecutor(txCtx, r.sql, r.client),
-			identityAdoptionDecisionLockKeys(input.PendingAuthSessionID, input.IdentityID)...,
+			dbClient,
+			resolveTransactionAwareExecutor(txCtx, r.sql, r.client),
+			buildAdoptionLockKeys(input.PendingAuthSessionID, input.IdentityID)...,
 		)
-		if err != nil {
-			return err
+		if lockErr != nil {
+			return lockErr
 		}
-		defer releaseLocks()
+		defer unlock()
 
+		// If an identity ID is provided, detach any prior decisions that reference
+		// it from a different pending session (ensures one-to-one mapping).
 		if input.IdentityID != nil && *input.IdentityID > 0 {
-			if _, err := client.IdentityAdoptionDecision.Update().
+			if _, detachErr := dbClient.IdentityAdoptionDecision.Update().
 				Where(
 					identityadoptiondecision.IdentityIDEQ(*input.IdentityID),
 					dbpredicate.IdentityAdoptionDecision(func(s *entsql.Selector) {
@@ -668,43 +746,51 @@ func (r *userRepository) UpsertIdentityAdoptionDecision(ctx context.Context, inp
 					}),
 				).
 				ClearIdentityID().
-				Save(txCtx); err != nil {
-				return err
+				Save(txCtx); detachErr != nil {
+				return detachErr
 			}
 		}
 
-		create := client.IdentityAdoptionDecision.Create().
+		builder := dbClient.IdentityAdoptionDecision.Create().
 			SetPendingAuthSessionID(input.PendingAuthSessionID).
 			SetAdoptDisplayName(input.AdoptDisplayName).
 			SetAdoptAvatar(input.AdoptAvatar).
 			SetDecidedAt(time.Now().UTC())
 		if input.IdentityID != nil && *input.IdentityID > 0 {
-			create = create.SetIdentityID(*input.IdentityID)
+			builder = builder.SetIdentityID(*input.IdentityID)
 		}
 
-		decisionID, err := create.
+		upsertedID, upsertErr := builder.
 			OnConflictColumns(identityadoptiondecision.FieldPendingAuthSessionID).
 			UpdateNewValues().
 			ID(txCtx)
-		if err != nil {
-			return err
+		if upsertErr != nil {
+			return upsertErr
 		}
 
-		result, err = client.IdentityAdoptionDecision.Get(txCtx, decisionID)
-		return err
+		var fetchErr error
+		decision, fetchErr = dbClient.IdentityAdoptionDecision.Get(txCtx, upsertedID)
+		return fetchErr
 	})
-	if err != nil {
-		return nil, err
+	if txErr != nil {
+		return nil, txErr
 	}
-	return result, nil
+	return decision, nil
 }
 
-func identityAdoptionDecisionLockKeys(pendingAuthSessionID int64, identityID *int64) []string {
-	keys := []string{fmt.Sprintf("identity-adoption:pending:%d", pendingAuthSessionID)}
+// buildAdoptionLockKeys constructs the advisory lock keys for an identity
+// adoption decision based on the session and optional identity ID.
+func buildAdoptionLockKeys(sessionID int64, identityID *int64) []string {
+	lockKeys := []string{fmt.Sprintf("identity-adoption:pending:%d", sessionID)}
 	if identityID != nil && *identityID > 0 {
-		keys = append(keys, fmt.Sprintf("identity-adoption:identity:%d", *identityID))
+		lockKeys = append(lockKeys, fmt.Sprintf("identity-adoption:identity:%d", *identityID))
 	}
-	return keys
+	return lockKeys
+}
+
+// identityAdoptionDecisionLockKeys is kept as a package-level alias.
+func identityAdoptionDecisionLockKeys(pendingAuthSessionID int64, identityID *int64) []string {
+	return buildAdoptionLockKeys(pendingAuthSessionID, identityID)
 }
 
 func (r *userRepository) GetIdentityAdoptionDecisionByPendingAuthSessionID(ctx context.Context, pendingAuthSessionID int64) (*dbent.IdentityAdoptionDecision, error) {
@@ -714,62 +800,62 @@ func (r *userRepository) GetIdentityAdoptionDecisionByPendingAuthSessionID(ctx c
 }
 
 func (r *userRepository) UpdateUserLastLoginAt(ctx context.Context, userID int64, loginAt time.Time) error {
-	_, err := clientFromContext(ctx, r.client).User.UpdateOneID(userID).
+	_, saveErr := clientFromContext(ctx, r.client).User.UpdateOneID(userID).
 		SetLastLoginAt(loginAt).
 		Save(ctx)
-	return err
+	return saveErr
 }
 
 func (r *userRepository) UpdateUserLastActiveAt(ctx context.Context, userID int64, activeAt time.Time) error {
-	_, err := clientFromContext(ctx, r.client).User.UpdateOneID(userID).
+	_, saveErr := clientFromContext(ctx, r.client).User.UpdateOneID(userID).
 		SetLastActiveAt(activeAt).
 		Save(ctx)
-	return err
+	return saveErr
 }
 
 func (r *userRepository) GetUserAvatar(ctx context.Context, userID int64) (*service.UserAvatar, error) {
-	exec, err := r.userProfileIdentitySQL(ctx)
-	if err != nil {
-		return nil, err
+	sqlExec, resolveErr := r.obtainProfileIdentitySQL(ctx)
+	if resolveErr != nil {
+		return nil, resolveErr
 	}
 
-	rows, err := exec.QueryContext(ctx, `
+	sqlRows, queryErr := sqlExec.QueryContext(ctx, `
 SELECT storage_provider, storage_key, url, content_type, byte_size, sha256
 FROM user_avatars
 WHERE user_id = $1`, userID)
-	if err != nil {
-		return nil, err
+	if queryErr != nil {
+		return nil, queryErr
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() { _ = sqlRows.Close() }()
 
-	if !rows.Next() {
-		return nil, rows.Err()
+	if !sqlRows.Next() {
+		return nil, sqlRows.Err()
 	}
 
-	var avatar service.UserAvatar
-	if err := rows.Scan(
-		&avatar.StorageProvider,
-		&avatar.StorageKey,
-		&avatar.URL,
-		&avatar.ContentType,
-		&avatar.ByteSize,
-		&avatar.SHA256,
-	); err != nil {
-		return nil, err
+	var avatarData service.UserAvatar
+	if scanErr := sqlRows.Scan(
+		&avatarData.StorageProvider,
+		&avatarData.StorageKey,
+		&avatarData.URL,
+		&avatarData.ContentType,
+		&avatarData.ByteSize,
+		&avatarData.SHA256,
+	); scanErr != nil {
+		return nil, scanErr
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
+	if rowErr := sqlRows.Err(); rowErr != nil {
+		return nil, rowErr
 	}
-	return &avatar, nil
+	return &avatarData, nil
 }
 
 func (r *userRepository) UpsertUserAvatar(ctx context.Context, userID int64, input service.UpsertUserAvatarInput) (*service.UserAvatar, error) {
-	exec, err := r.userProfileIdentitySQL(ctx)
-	if err != nil {
-		return nil, err
+	sqlExec, resolveErr := r.obtainProfileIdentitySQL(ctx)
+	if resolveErr != nil {
+		return nil, resolveErr
 	}
 
-	_, err = exec.ExecContext(ctx, `
+	_, execErr := sqlExec.ExecContext(ctx, `
 INSERT INTO user_avatars (user_id, storage_provider, storage_key, url, content_type, byte_size, sha256, updated_at)
 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
 ON CONFLICT (user_id) DO UPDATE SET
@@ -788,8 +874,8 @@ ON CONFLICT (user_id) DO UPDATE SET
 		input.ByteSize,
 		strings.TrimSpace(input.SHA256),
 	)
-	if err != nil {
-		return nil, err
+	if execErr != nil {
+		return nil, execErr
 	}
 
 	return &service.UserAvatar{
@@ -803,78 +889,112 @@ ON CONFLICT (user_id) DO UPDATE SET
 }
 
 func (r *userRepository) DeleteUserAvatar(ctx context.Context, userID int64) error {
-	exec, err := r.userProfileIdentitySQL(ctx)
-	if err != nil {
-		return err
+	sqlExec, resolveErr := r.obtainProfileIdentitySQL(ctx)
+	if resolveErr != nil {
+		return resolveErr
 	}
-	_, err = exec.ExecContext(ctx, `DELETE FROM user_avatars WHERE user_id = $1`, userID)
-	return err
+	_, execErr := sqlExec.ExecContext(ctx, `DELETE FROM user_avatars WHERE user_id = $1`, userID)
+	return execErr
 }
 
-func copyMetadata(in map[string]any) map[string]any {
-	if len(in) == 0 {
+// duplicateMetadataMap creates a shallow copy of the provided metadata map.
+// Returns an empty map if the input is nil or empty.
+func duplicateMetadataMap(src map[string]any) map[string]any {
+	if len(src) == 0 {
 		return map[string]any{}
 	}
-	out := make(map[string]any, len(in))
-	for k, v := range in {
-		out[k] = v
+	dst := make(map[string]any, len(src))
+	for key, val := range src {
+		dst[key] = val
 	}
-	return out
+	return dst
 }
 
-func validateAuthIdentityChannelProviderMatch(canonical AuthIdentityKey, channel *AuthIdentityChannelKey) error {
+// copyMetadata is kept as a package-level alias.
+func copyMetadata(in map[string]any) map[string]any {
+	return duplicateMetadataMap(in)
+}
+
+// ensureChannelProviderConsistency validates that, when a channel is present,
+// its provider type and key match the canonical identity.
+func ensureChannelProviderConsistency(canonical AuthIdentityKey, channel *AuthIdentityChannelKey) error {
 	if channel == nil {
 		return nil
 	}
 
-	canonicalProviderType := strings.TrimSpace(canonical.ProviderType)
-	canonicalProviderKey := strings.TrimSpace(canonical.ProviderKey)
-	channelProviderType := strings.TrimSpace(channel.ProviderType)
-	channelProviderKey := strings.TrimSpace(channel.ProviderKey)
+	canonType := strings.TrimSpace(canonical.ProviderType)
+	canonKey := strings.TrimSpace(canonical.ProviderKey)
+	chType := strings.TrimSpace(channel.ProviderType)
+	chKey := strings.TrimSpace(channel.ProviderKey)
 
-	if canonicalProviderType != channelProviderType || canonicalProviderKey != channelProviderKey {
+	if canonType != chType || canonKey != chKey {
 		return ErrAuthIdentityChannelProviderMismatch
 	}
 
 	return nil
 }
 
-func txAwareSQLExecutor(ctx context.Context, fallback sqlExecutor, client *dbent.Client) sqlQueryExecutor {
-	if tx := dbent.TxFromContext(ctx); tx != nil {
-		if exec := sqlExecutorFromEntClient(tx.Client()); exec != nil {
-			return exec
+// validateAuthIdentityChannelProviderMatch is kept as a package-level alias.
+func validateAuthIdentityChannelProviderMatch(canonical AuthIdentityKey, channel *AuthIdentityChannelKey) error {
+	return ensureChannelProviderConsistency(canonical, channel)
+}
+
+// resolveTransactionAwareExecutor returns a SQL executor that respects the
+// current transaction context, falling back to the provided raw executor
+// or extracting one from the ent client.
+func resolveTransactionAwareExecutor(ctx context.Context, fallbackExec sqlExecutor, entClient *dbent.Client) sqlQueryExecutor {
+	if activeTx := dbent.TxFromContext(ctx); activeTx != nil {
+		if extracted := extractSQLFromEntClient(activeTx.Client()); extracted != nil {
+			return extracted
 		}
 	}
-	if fallback != nil {
-		return fallback
+	if fallbackExec != nil {
+		return fallbackExec
 	}
-	return sqlExecutorFromEntClient(client)
+	return extractSQLFromEntClient(entClient)
 }
 
+// txAwareSQLExecutor is kept as a package-level alias.
+func txAwareSQLExecutor(ctx context.Context, fallback sqlExecutor, client *dbent.Client) sqlQueryExecutor {
+	return resolveTransactionAwareExecutor(ctx, fallback, client)
+}
+
+func (r *userRepository) obtainProfileIdentitySQL(ctx context.Context) (sqlQueryExecutor, error) {
+	executor := resolveTransactionAwareExecutor(ctx, r.sql, r.client)
+	if executor == nil {
+		return nil, fmt.Errorf("no SQL executor available for profile identity operations")
+	}
+	return executor, nil
+}
+
+// userProfileIdentitySQL is kept as a method alias.
 func (r *userRepository) userProfileIdentitySQL(ctx context.Context) (sqlQueryExecutor, error) {
-	exec := txAwareSQLExecutor(ctx, r.sql, r.client)
-	if exec == nil {
-		return nil, fmt.Errorf("sql executor is not configured")
-	}
-	return exec, nil
+	return r.obtainProfileIdentitySQL(ctx)
 }
 
-func sqlExecutorFromEntClient(client *dbent.Client) sqlQueryExecutor {
-	if client == nil {
+// extractSQLFromEntClient uses reflection to obtain the underlying SQL driver
+// from an ent client, enabling raw SQL queries within the same connection.
+func extractSQLFromEntClient(c *dbent.Client) sqlQueryExecutor {
+	if c == nil {
 		return nil
 	}
 
-	clientValue := reflect.ValueOf(client).Elem()
-	configValue := clientValue.FieldByName("config")
-	driverValue := configValue.FieldByName("driver")
-	if !driverValue.IsValid() {
+	rv := reflect.ValueOf(c).Elem()
+	cfgField := rv.FieldByName("config")
+	drvField := cfgField.FieldByName("driver")
+	if !drvField.IsValid() {
 		return nil
 	}
 
-	driver := reflect.NewAt(driverValue.Type(), unsafe.Pointer(driverValue.UnsafeAddr())).Elem().Interface()
-	exec, ok := driver.(sqlQueryExecutor)
+	driverIface := reflect.NewAt(drvField.Type(), unsafe.Pointer(drvField.UnsafeAddr())).Elem().Interface()
+	executor, ok := driverIface.(sqlQueryExecutor)
 	if !ok {
 		return nil
 	}
-	return exec
+	return executor
+}
+
+// sqlExecutorFromEntClient is kept as a package-level alias.
+func sqlExecutorFromEntClient(client *dbent.Client) sqlQueryExecutor {
+	return extractSQLFromEntClient(client)
 }

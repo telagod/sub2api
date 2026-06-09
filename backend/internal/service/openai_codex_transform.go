@@ -111,388 +111,417 @@ func applyCodexOAuthTransform(reqBody map[string]any, isCodexCLI bool, isCompact
 }
 
 func codexOAuthTransform(reqBody map[string]any, opts codexOAuthTransformOptions) codexTransformResult {
-	result := codexTransformResult{}
-	// 工具续链需求会影响存储策略与 input 过滤逻辑。
-	needsToolContinuation := NeedsToolContinuation(reqBody)
+	outcome := codexTransformResult{}
+	// Check whether tool continuation is needed (affects store policy and input filtering).
+	wantsToolContinuation := NeedsToolContinuation(reqBody)
 
-	model := ""
-	if v, ok := reqBody["model"].(string); ok {
-		model = v
+	rawModel := ""
+	if s, ok := reqBody["model"].(string); ok {
+		rawModel = s
 	}
-	normalizedModel := strings.TrimSpace(model)
-	if normalizedModel != "" {
-		if model != normalizedModel {
-			reqBody["model"] = normalizedModel
-			result.Modified = true
+	cleanModel := strings.TrimSpace(rawModel)
+	if cleanModel != "" {
+		if rawModel != cleanModel {
+			reqBody["model"] = cleanModel
+			outcome.Modified = true
 		}
-		result.NormalizedModel = normalizedModel
+		outcome.NormalizedModel = cleanModel
 	}
 
 	if opts.IsCompact {
-		if _, ok := reqBody["store"]; ok {
+		if _, exists := reqBody["store"]; exists {
 			delete(reqBody, "store")
-			result.Modified = true
+			outcome.Modified = true
 		}
-		if _, ok := reqBody["stream"]; ok {
+		if _, exists := reqBody["stream"]; exists {
 			delete(reqBody, "stream")
-			result.Modified = true
+			outcome.Modified = true
 		}
 	} else {
-		// OAuth 走 ChatGPT internal API 时，store 必须为 false；显式 true 也会强制覆盖。
-		// 避免上游返回 "Store must be set to false"。
-		if v, ok := reqBody["store"].(bool); !ok || v {
+		// OAuth through the ChatGPT internal API requires store=false; any explicit
+		// true value is overridden to prevent "Store must be set to false" errors.
+		if flag, ok := reqBody["store"].(bool); !ok || flag {
 			reqBody["store"] = false
-			result.Modified = true
+			outcome.Modified = true
 		}
-		if v, ok := reqBody["stream"].(bool); !ok || !v {
+		if flag, ok := reqBody["stream"].(bool); !ok || !flag {
 			reqBody["stream"] = true
-			result.Modified = true
+			outcome.Modified = true
 		}
 	}
 
-	// Strip parameters unsupported by ChatGPT internal Codex endpoint.
-	for _, key := range openAICodexOAuthUnsupportedFields {
-		if _, ok := reqBody[key]; ok {
-			delete(reqBody, key)
-			result.Modified = true
+	// Remove parameters the ChatGPT internal Codex endpoint does not accept.
+	for _, unsupported := range openAICodexOAuthUnsupportedFields {
+		if _, exists := reqBody[unsupported]; exists {
+			delete(reqBody, unsupported)
+			outcome.Modified = true
 		}
 	}
 
-	// 请求带 reasoning 时补齐 include:["reasoning.encrypted_content"]，与真实 Codex 对齐
-	// （compact 端点形态不同，单独处理，此处跳过）。
-	if !opts.IsCompact && requireCodexReasoningInclude(reqBody) {
-		result.Modified = true
+	// When the request includes reasoning, inject include:["reasoning.encrypted_content"]
+	// to match real Codex behavior (compact format is handled separately).
+	if !opts.IsCompact && injectReasoningEncryptedContent(reqBody) {
+		outcome.Modified = true
 	}
 
-	// 兼容遗留的 functions 和 function_call，转换为 tools 和 tool_choice
-	if functionsRaw, ok := reqBody["functions"]; ok {
-		if functions, k := functionsRaw.([]any); k {
-			tools := make([]any, 0, len(functions))
-			for _, f := range functions {
-				tools = append(tools, map[string]any{
+	// Convert legacy functions/function_call into tools/tool_choice.
+	if legacyFuncs, ok := reqBody["functions"]; ok {
+		if funcsArr, isArr := legacyFuncs.([]any); isArr {
+			converted := make([]any, 0, len(funcsArr))
+			for _, fn := range funcsArr {
+				converted = append(converted, map[string]any{
 					"type":     "function",
-					"function": f,
+					"function": fn,
 				})
 			}
-			reqBody["tools"] = tools
+			reqBody["tools"] = converted
 		}
 		delete(reqBody, "functions")
-		result.Modified = true
+		outcome.Modified = true
 	}
 
-	if fcRaw, ok := reqBody["function_call"]; ok {
-		if fcStr, ok := fcRaw.(string); ok {
-			// e.g. "auto", "none"
-			reqBody["tool_choice"] = fcStr
-		} else if fcObj, ok := fcRaw.(map[string]any); ok {
-			// e.g. {"name": "my_func"}
-			if name, ok := fcObj["name"].(string); ok && strings.TrimSpace(name) != "" {
+	if legacyFC, ok := reqBody["function_call"]; ok {
+		if fcName, isStr := legacyFC.(string); isStr {
+			reqBody["tool_choice"] = fcName
+		} else if fcObj, isMap := legacyFC.(map[string]any); isMap {
+			if fnName, ok := fcObj["name"].(string); ok && strings.TrimSpace(fnName) != "" {
 				reqBody["tool_choice"] = map[string]any{
 					"type": "function",
-					"name": name,
+					"name": fnName,
 				}
 			}
 		}
 		delete(reqBody, "function_call")
-		result.Modified = true
+		outcome.Modified = true
 	}
 
-	if normalizeCodexTools(reqBody) {
-		result.Modified = true
+	if unifyCodexTools(reqBody) {
+		outcome.Modified = true
 	}
-	if sanitizeCodexToolChoice(reqBody) {
-		result.Modified = true
+	if rectifyCodexToolChoice(reqBody) {
+		outcome.Modified = true
 	}
 
-	if v, ok := reqBody["prompt_cache_key"].(string); ok {
-		result.PromptCacheKey = strings.TrimSpace(v)
+	if cacheKey, ok := reqBody["prompt_cache_key"].(string); ok {
+		outcome.PromptCacheKey = strings.TrimSpace(cacheKey)
 		if isOpenAICompatMessagesBridgeRequestBody(reqBody) {
 			delete(reqBody, "prompt_cache_key")
-			result.Modified = true
+			outcome.Modified = true
 		}
 	}
 
-	// 提取 input 中 role:"system" 消息至 instructions（OAuth 上游不支持 system role）。
-	if extractSystemMessagesFromInput(reqBody) {
-		result.Modified = true
+	// Extract system-role messages from input into instructions (OAuth upstream
+	// does not support the system role directly).
+	if hoistSystemMessagesToInstructions(reqBody) {
+		outcome.Modified = true
 	}
 
-	// instructions 处理逻辑：根据是否是 Codex CLI 分别调用不同方法
-	if !opts.SkipDefaultInstructions && applyInstructions(reqBody, opts.IsCodexCLI) {
-		result.Modified = true
+	// Fill in default instructions when absent.
+	if !opts.SkipDefaultInstructions && ensureInstructions(reqBody, opts.IsCodexCLI) {
+		outcome.Modified = true
 	}
-	if checkCodexSparkModel(normalizedModel) && injectCodexSparkBlock(reqBody) {
-		result.Modified = true
+	if isSparkModel(cleanModel) && appendSparkImageWarning(reqBody) {
+		outcome.Modified = true
 	}
 
-	// 续链场景保留 item_reference 与 id，避免 call_id 上下文丢失。
-	if input, ok := reqBody["input"].([]any); ok {
-		if normalizedInput, modified := sanitizeCodexToolRoleMessages(input); modified {
-			input = normalizedInput
-			result.Modified = true
+	// Normalize tool-role messages and sanitize content text in input items.
+	// Continuation scenarios preserve item_reference and id for call-id context.
+	if inputSlice, ok := reqBody["input"].([]any); ok {
+		if cleaned, changed := normalizeToolRoleItems(inputSlice); changed {
+			inputSlice = cleaned
+			outcome.Modified = true
 		}
-		if normalizedInput, modified := sanitizeCodexMessageContentText(input); modified {
-			input = normalizedInput
-			result.Modified = true
+		if cleaned, changed := coerceContentTextToString(inputSlice); changed {
+			inputSlice = cleaned
+			outcome.Modified = true
 		}
-		input = filterCodexInputWithOptionsV2(input, codexInputFilterOptions{
-			PreserveReferences: needsToolContinuation,
+		inputSlice = filterInputItemsV2(inputSlice, codexInputFilterOptions{
+			PreserveReferences: wantsToolContinuation,
 			PreserveCallIDs:    opts.PreserveToolCallIDs,
 		})
-		reqBody["input"] = input
-		result.Modified = true
-	} else if inputStr, ok := reqBody["input"].(string); ok {
-		// ChatGPT codex endpoint requires input to be a list, not a string.
-		// Convert string input to the expected message array format.
-		trimmed := strings.TrimSpace(inputStr)
+		reqBody["input"] = inputSlice
+		outcome.Modified = true
+	} else if inputText, ok := reqBody["input"].(string); ok {
+		// The ChatGPT codex endpoint requires input to be an array, not a string.
+		trimmed := strings.TrimSpace(inputText)
 		if trimmed != "" {
 			reqBody["input"] = []any{
 				map[string]any{
 					"type":    "message",
 					"role":    "user",
-					"content": inputStr,
+					"content": inputText,
 				},
 			}
 		} else {
 			reqBody["input"] = []any{}
 		}
-		result.Modified = true
+		outcome.Modified = true
 	}
 
-	return result
+	return outcome
 }
 
-func sanitizeCodexToolChoice(reqBody map[string]any) bool {
-	choice, ok := reqBody["tool_choice"]
-	if !ok || choice == nil {
+func rectifyCodexToolChoice(reqBody map[string]any) bool {
+	raw, exists := reqBody["tool_choice"]
+	if !exists || raw == nil {
 		return false
 	}
-	choiceMap, ok := choice.(map[string]any)
-	if !ok {
+	choiceMap, isMap := raw.(map[string]any)
+	if !isMap {
 		return false
 	}
 	choiceType := strings.TrimSpace(firstNonEmptyString(choiceMap["type"]))
 	if choiceType == "" {
 		return false
 	}
-	modified := false
+	changed := false
 	if choiceType == "function" {
-		name := strings.TrimSpace(firstNonEmptyString(choiceMap["name"]))
-		if name == "" {
-			if function, ok := choiceMap["function"].(map[string]any); ok {
-				name = strings.TrimSpace(firstNonEmptyString(function["name"]))
+		fnName := strings.TrimSpace(firstNonEmptyString(choiceMap["name"]))
+		if fnName == "" {
+			if fnDef, ok := choiceMap["function"].(map[string]any); ok {
+				fnName = strings.TrimSpace(firstNonEmptyString(fnDef["name"]))
 			}
 		}
-		if name == "" {
+		if fnName == "" {
 			reqBody["tool_choice"] = "auto"
 			return true
 		}
-		if strings.TrimSpace(firstNonEmptyString(choiceMap["name"])) != name {
-			choiceMap["name"] = name
-			modified = true
+		if strings.TrimSpace(firstNonEmptyString(choiceMap["name"])) != fnName {
+			choiceMap["name"] = fnName
+			changed = true
 		}
-		if _, ok := choiceMap["function"]; ok {
+		if _, hasFn := choiceMap["function"]; hasFn {
 			delete(choiceMap, "function")
-			modified = true
+			changed = true
 		}
-		if !codexToolsContainFunctionNameV2(reqBody["tools"], name) {
+		if !toolsContainFunctionByName(reqBody["tools"], fnName) {
 			reqBody["tool_choice"] = "auto"
 			return true
 		}
-		return modified
+		return changed
 	}
-	if codexToolsContainTypeV2(reqBody["tools"], choiceType) {
-		return modified
+	if toolsContainByType(reqBody["tools"], choiceType) {
+		return changed
 	}
 	reqBody["tool_choice"] = "auto"
 	return true
 }
 
-func codexToolsContainTypeV2(rawTools any, toolType string) bool {
-	tools, ok := rawTools.([]any)
-	if !ok || strings.TrimSpace(toolType) == "" {
+// sanitizeCodexToolChoice is retained for backward compat.
+func sanitizeCodexToolChoice(reqBody map[string]any) bool {
+	return rectifyCodexToolChoice(reqBody)
+}
+
+func toolsContainByType(rawTools any, targetType string) bool {
+	toolsArr, ok := rawTools.([]any)
+	if !ok || strings.TrimSpace(targetType) == "" {
 		return false
 	}
-	for _, rawTool := range tools {
-		tool, ok := rawTool.(map[string]any)
+	for _, raw := range toolsArr {
+		m, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
-		if strings.TrimSpace(firstNonEmptyString(tool["type"])) == toolType {
+		if strings.TrimSpace(firstNonEmptyString(m["type"])) == targetType {
 			return true
 		}
 	}
 	return false
 }
 
-func codexToolsContainFunctionNameV2(rawTools any, name string) bool {
-	tools, ok := rawTools.([]any)
-	if !ok || strings.TrimSpace(name) == "" {
+// codexToolsContainTypeV2 is retained for backward compat.
+func codexToolsContainTypeV2(rawTools any, toolType string) bool {
+	return toolsContainByType(rawTools, toolType)
+}
+
+func toolsContainFunctionByName(rawTools any, targetName string) bool {
+	toolsArr, ok := rawTools.([]any)
+	if !ok || strings.TrimSpace(targetName) == "" {
 		return false
 	}
-	normalizedName := strings.TrimSpace(name)
-	for _, rawTool := range tools {
-		tool, ok := rawTool.(map[string]any)
+	normalizedTarget := strings.TrimSpace(targetName)
+	for _, raw := range toolsArr {
+		m, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
-		if strings.TrimSpace(firstNonEmptyString(tool["type"])) != "function" {
+		if strings.TrimSpace(firstNonEmptyString(m["type"])) != "function" {
 			continue
 		}
-		toolName := strings.TrimSpace(firstNonEmptyString(tool["name"]))
-		if toolName == "" {
-			if function, ok := tool["function"].(map[string]any); ok {
-				toolName = strings.TrimSpace(firstNonEmptyString(function["name"]))
+		candidate := strings.TrimSpace(firstNonEmptyString(m["name"]))
+		if candidate == "" {
+			if fnDef, ok := m["function"].(map[string]any); ok {
+				candidate = strings.TrimSpace(firstNonEmptyString(fnDef["name"]))
 			}
 		}
-		if toolName == normalizedName {
+		if candidate == normalizedTarget {
 			return true
 		}
 	}
 	return false
 }
 
-func sanitizeCodexToolRoleMessages(input []any) ([]any, bool) {
-	if len(input) == 0 {
-		return input, false
+// codexToolsContainFunctionNameV2 is retained for backward compat.
+func codexToolsContainFunctionNameV2(rawTools any, name string) bool {
+	return toolsContainFunctionByName(rawTools, name)
+}
+
+func normalizeToolRoleItems(items []any) ([]any, bool) {
+	if len(items) == 0 {
+		return items, false
 	}
 
-	modified := false
-	normalized := make([]any, 0, len(input))
-	for _, item := range input {
-		m, ok := item.(map[string]any)
+	changed := false
+	out := make([]any, 0, len(items))
+	for _, raw := range items {
+		m, ok := raw.(map[string]any)
 		if !ok {
-			normalized = append(normalized, item)
+			out = append(out, raw)
 			continue
 		}
 		role, _ := m["role"].(string)
 		if strings.TrimSpace(role) != "tool" {
-			normalized = append(normalized, item)
+			out = append(out, raw)
 			continue
 		}
 
 		callID := firstNonEmptyString(m["call_id"], m["tool_call_id"], m["id"])
 		callID = strings.TrimSpace(callID)
 		if callID == "" {
-			// Responses does not accept role:"tool". If no call id is available,
-			// preserve the text as a user message instead of sending invalid input.
-			fallback := make(map[string]any, len(m))
-			for key, value := range m {
-				fallback[key] = value
+			// The Responses API does not accept role:"tool". Without a call id
+			// we re-tag the message as user role to avoid invalid input.
+			retagged := make(map[string]any, len(m))
+			for k, v := range m {
+				retagged[k] = v
 			}
-			fallback["role"] = "user"
-			delete(fallback, "tool_call_id")
-			normalized = append(normalized, fallback)
-			modified = true
+			retagged["role"] = "user"
+			delete(retagged, "tool_call_id")
+			out = append(out, retagged)
+			changed = true
 			continue
 		}
 
-		output := extractTextFromContent(m["content"])
-		if output == "" {
-			if value, ok := m["output"].(string); ok {
-				output = value
+		body := extractTextFromContent(m["content"])
+		if body == "" {
+			if s, ok := m["output"].(string); ok {
+				body = s
 			}
 		}
-		if output == "" && m["content"] != nil {
-			if b, err := json.Marshal(m["content"]); err == nil {
-				output = string(b)
+		if body == "" && m["content"] != nil {
+			if encoded, encErr := json.Marshal(m["content"]); encErr == nil {
+				body = string(encoded)
 			}
 		}
 
-		normalized = append(normalized, map[string]any{
+		out = append(out, map[string]any{
 			"type":    "function_call_output",
 			"call_id": callID,
-			"output":  output,
+			"output":  body,
 		})
-		modified = true
+		changed = true
 	}
-	if !modified {
-		return input, false
+	if !changed {
+		return items, false
 	}
-	return normalized, true
+	return out, true
 }
 
-func sanitizeCodexMessageContentText(input []any) ([]any, bool) {
-	if len(input) == 0 {
-		return input, false
+// sanitizeCodexToolRoleMessages is retained for backward compat.
+func sanitizeCodexToolRoleMessages(input []any) ([]any, bool) {
+	return normalizeToolRoleItems(input)
+}
+
+func coerceContentTextToString(items []any) ([]any, bool) {
+	if len(items) == 0 {
+		return items, false
 	}
 
-	modified := false
-	normalized := make([]any, 0, len(input))
-	for _, item := range input {
-		m, ok := item.(map[string]any)
+	changed := false
+	out := make([]any, 0, len(items))
+	for _, raw := range items {
+		m, ok := raw.(map[string]any)
 		if !ok || strings.TrimSpace(firstNonEmptyString(m["type"])) != "message" {
-			normalized = append(normalized, item)
+			out = append(out, raw)
 			continue
 		}
-		parts, ok := m["content"].([]any)
+		contentParts, ok := m["content"].([]any)
 		if !ok {
-			normalized = append(normalized, item)
+			out = append(out, raw)
 			continue
 		}
 
-		var newItem map[string]any
-		var newParts []any
-		ensureItemCopy := func() {
-			if newItem != nil {
+		var clonedItem map[string]any
+		var clonedParts []any
+		lazyClone := func() {
+			if clonedItem != nil {
 				return
 			}
-			newItem = make(map[string]any, len(m))
-			for key, value := range m {
-				newItem[key] = value
+			clonedItem = make(map[string]any, len(m))
+			for k, v := range m {
+				clonedItem[k] = v
 			}
-			newParts = make([]any, len(parts))
-			copy(newParts, parts)
+			clonedParts = make([]any, len(contentParts))
+			copy(clonedParts, contentParts)
 		}
 
-		for i, rawPart := range parts {
-			part, ok := rawPart.(map[string]any)
+		for idx, rawPart := range contentParts {
+			partMap, ok := rawPart.(map[string]any)
 			if !ok {
 				continue
 			}
-			text, hasText := part["text"]
+			textVal, hasText := partMap["text"]
 			if !hasText {
 				continue
 			}
-			if _, ok := text.(string); ok {
+			if _, isStr := textVal.(string); isStr {
 				continue
 			}
 
-			ensureItemCopy()
-			newPart := make(map[string]any, len(part))
-			for key, value := range part {
-				newPart[key] = value
+			lazyClone()
+			patchedPart := make(map[string]any, len(partMap))
+			for k, v := range partMap {
+				patchedPart[k] = v
 			}
-			newPart["text"] = stringifyCodexContentTextV2(text)
-			newParts[i] = newPart
-			modified = true
+			patchedPart["text"] = coerceToString(textVal)
+			clonedParts[idx] = patchedPart
+			changed = true
 		}
 
-		if newItem != nil {
-			newItem["content"] = newParts
-			normalized = append(normalized, newItem)
+		if clonedItem != nil {
+			clonedItem["content"] = clonedParts
+			out = append(out, clonedItem)
 			continue
 		}
-		normalized = append(normalized, item)
+		out = append(out, raw)
 	}
-	if !modified {
-		return input, false
+	if !changed {
+		return items, false
 	}
-	return normalized, true
+	return out, true
 }
 
-func stringifyCodexContentTextV2(value any) string {
-	switch v := value.(type) {
+// sanitizeCodexMessageContentText is retained for backward compat.
+func sanitizeCodexMessageContentText(input []any) ([]any, bool) {
+	return coerceContentTextToString(input)
+}
+
+func coerceToString(val any) string {
+	switch typed := val.(type) {
 	case string:
-		return v
+		return typed
 	case nil:
 		return ""
 	default:
-		if b, err := json.Marshal(v); err == nil {
-			return string(b)
+		if encoded, encErr := json.Marshal(typed); encErr == nil {
+			return string(encoded)
 		}
-		return fmt.Sprint(v)
+		return fmt.Sprint(typed)
 	}
+}
+
+// stringifyCodexContentTextV2 is retained for backward compat.
+func stringifyCodexContentTextV2(value any) string {
+	return coerceToString(value)
 }
 
 func normalizeCodexModel(model string) string {
@@ -500,13 +529,13 @@ func normalizeCodexModel(model string) string {
 	if model == "" {
 		return "gpt-5.4"
 	}
-	if mapped, ok := sanitizeKnownCodexModel(model); ok {
-		return mapped
+	if resolved, ok := resolveKnownCodexModel(model); ok {
+		return resolved
 	}
 	return model
 }
 
-func sanitizeKnownCodexModel(model string) (string, bool) {
+func resolveKnownCodexModel(model string) (string, bool) {
 	model = strings.TrimSpace(model)
 	if model == "" {
 		return "", false
@@ -517,59 +546,73 @@ func sanitizeKnownCodexModel(model string) (string, bool) {
 
 	modelID := lastOpenAIModelSegment(model)
 
-	if normalized := canonicalizeOpenAIModelAliasSpelling(modelID); normalized != "" {
-		modelID = normalized
+	if canonical := canonicalizeOpenAIModelAliasSpelling(modelID); canonical != "" {
+		modelID = canonical
 	}
-	if mapped := normalizeKnownOpenAICodexModel(modelID); mapped != "" {
-		return mapped, true
+	if resolved := normalizeKnownOpenAICodexModel(modelID); resolved != "" {
+		return resolved, true
 	}
-	key := codexModelLookupKeyV2(modelID)
-	if key == "" {
+	lookupKey := buildCodexLookupKey(modelID)
+	if lookupKey == "" {
 		return "", false
 	}
-	if mapped := getNormalizedCodexModel(key); mapped != "" {
-		return mapped, true
+	if resolved := lookupCodexModelByKey(lookupKey); resolved != "" {
+		return resolved, true
 	}
-	for _, item := range codexVersionModelPrefixes {
-		if key == item.prefix {
-			return item.target, true
+	for _, entry := range codexVersionModelPrefixes {
+		if lookupKey == entry.prefix {
+			return entry.target, true
 		}
-		suffix, ok := strings.CutPrefix(key, item.prefix+"-")
-		if ok && checkKnownCodexModelSuffix(suffix) {
-			return item.target, true
+		remainder, matched := strings.CutPrefix(lookupKey, entry.prefix+"-")
+		if matched && isRecognizedCodexSuffix(remainder) {
+			return entry.target, true
 		}
 	}
 	return "", false
 }
 
-func codexModelLookupKeyV2(modelID string) string {
+// sanitizeKnownCodexModel is retained for backward compat.
+func sanitizeKnownCodexModel(model string) (string, bool) {
+	return resolveKnownCodexModel(model)
+}
+
+func buildCodexLookupKey(modelID string) string {
 	modelID = strings.TrimSpace(modelID)
 	if modelID == "" {
 		return ""
 	}
-	if strings.Contains(modelID, "/") {
-		parts := strings.Split(modelID, "/")
-		modelID = parts[len(parts)-1]
+	if slashIdx := strings.LastIndex(modelID, "/"); slashIdx >= 0 {
+		modelID = modelID[slashIdx+1:]
 	}
 	return strings.ToLower(strings.Join(strings.Fields(modelID), "-"))
 }
 
-func checkKnownCodexModelSuffix(suffix string) bool {
+// codexModelLookupKeyV2 is retained for backward compat.
+func codexModelLookupKeyV2(modelID string) string {
+	return buildCodexLookupKey(modelID)
+}
+
+func isRecognizedCodexSuffix(suffix string) bool {
 	switch suffix {
 	case "none", "minimal", "low", "medium", "high", "xhigh":
 		return true
 	}
-	return checkCodexDateSuffix(suffix)
+	return isDateLikeSuffix(suffix)
 }
 
-func checkCodexDateSuffix(suffix string) bool {
-	parts := strings.Split(suffix, "-")
-	if len(parts) != 3 || len(parts[0]) != 4 || len(parts[1]) != 2 || len(parts[2]) != 2 {
+// checkKnownCodexModelSuffix is retained for backward compat.
+func checkKnownCodexModelSuffix(suffix string) bool {
+	return isRecognizedCodexSuffix(suffix)
+}
+
+func isDateLikeSuffix(suffix string) bool {
+	segments := strings.Split(suffix, "-")
+	if len(segments) != 3 || len(segments[0]) != 4 || len(segments[1]) != 2 || len(segments[2]) != 2 {
 		return false
 	}
-	for _, part := range parts {
-		for _, r := range part {
-			if r < '0' || r > '9' {
+	for _, seg := range segments {
+		for _, ch := range seg {
+			if ch < '0' || ch > '9' {
 				return false
 			}
 		}
@@ -577,60 +620,85 @@ func checkCodexDateSuffix(suffix string) bool {
 	return true
 }
 
-func checkCodexSparkModel(model string) bool {
+// checkCodexDateSuffix is retained for backward compat.
+func checkCodexDateSuffix(suffix string) bool {
+	return isDateLikeSuffix(suffix)
+}
+
+func isSparkModel(model string) bool {
 	return normalizeCodexModel(model) == "gpt-5.3-codex-spark"
 }
 
-func hasOpenAIImageGenerationToolV2(reqBody map[string]any) bool {
+// checkCodexSparkModel is retained for backward compat.
+func checkCodexSparkModel(model string) bool {
+	return isSparkModel(model)
+}
+
+func containsImageGenerationTool(reqBody map[string]any) bool {
 	rawTools, ok := reqBody["tools"]
 	if !ok || rawTools == nil {
 		return false
 	}
-	tools, ok := rawTools.([]any)
+	toolsArr, ok := rawTools.([]any)
 	if !ok {
 		return false
 	}
-	for _, rawTool := range tools {
-		toolMap, ok := rawTool.(map[string]any)
+	for _, raw := range toolsArr {
+		m, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
-		if strings.TrimSpace(firstNonEmptyString(toolMap["type"])) == "image_generation" {
+		if strings.TrimSpace(firstNonEmptyString(m["type"])) == "image_generation" {
 			return true
 		}
 	}
 	return false
 }
 
-func hasOpenAIInputImageV2(reqBody map[string]any) bool {
+// hasOpenAIImageGenerationToolV2 is retained for backward compat.
+func hasOpenAIImageGenerationToolV2(reqBody map[string]any) bool {
+	return containsImageGenerationTool(reqBody)
+}
+
+func inputContainsImage(reqBody map[string]any) bool {
 	if reqBody == nil {
 		return false
 	}
-	return hasOpenAIInputImageValueV2(reqBody["input"]) || hasOpenAIInputImageValueV2(reqBody["messages"])
+	return valueContainsImage(reqBody["input"]) || valueContainsImage(reqBody["messages"])
 }
 
-func hasOpenAIInputImageValueV2(value any) bool {
-	switch v := value.(type) {
+// hasOpenAIInputImageV2 is retained for backward compat.
+func hasOpenAIInputImageV2(reqBody map[string]any) bool {
+	return inputContainsImage(reqBody)
+}
+
+func valueContainsImage(val any) bool {
+	switch typed := val.(type) {
 	case []any:
-		for _, item := range v {
-			if hasOpenAIInputImageValueV2(item) {
+		for _, element := range typed {
+			if valueContainsImage(element) {
 				return true
 			}
 		}
 	case map[string]any:
-		if strings.TrimSpace(firstNonEmptyString(v["type"])) == "input_image" {
+		if strings.TrimSpace(firstNonEmptyString(typed["type"])) == "input_image" {
 			return true
 		}
-		if _, ok := v["image_url"]; ok {
+		if _, hasImgURL := typed["image_url"]; hasImgURL {
 			return true
 		}
-		return hasOpenAIInputImageValueV2(v["content"])
+		return valueContainsImage(typed["content"])
 	}
 	return false
 }
 
+// hasOpenAIInputImageValueV2 is retained for backward compat.
+func hasOpenAIInputImageValueV2(value any) bool {
+	return valueContainsImage(value)
+}
+
 func verifyCodexSparkInput(reqBody map[string]any, model string) error {
-	if !checkCodexSparkModel(model) || !hasOpenAIInputImageV2(reqBody) {
+	if !isSparkModel(model) || !inputContainsImage(reqBody) {
 		return nil
 	}
 	return fmt.Errorf("model %q does not support image input", strings.TrimSpace(model))
@@ -641,121 +709,126 @@ func sanitizeOpenAIResponsesImageGenerationTools(reqBody map[string]any) bool {
 	if !ok || rawTools == nil {
 		return false
 	}
-	tools, ok := rawTools.([]any)
+	toolsArr, ok := rawTools.([]any)
 	if !ok {
 		return false
 	}
 
-	modified := false
-	for _, rawTool := range tools {
-		toolMap, ok := rawTool.(map[string]any)
-		if !ok || strings.TrimSpace(firstNonEmptyString(toolMap["type"])) != "image_generation" {
+	changed := false
+	for _, raw := range toolsArr {
+		m, ok := raw.(map[string]any)
+		if !ok || strings.TrimSpace(firstNonEmptyString(m["type"])) != "image_generation" {
 			continue
 		}
-		if _, ok := toolMap["output_format"]; !ok {
-			if value := strings.TrimSpace(firstNonEmptyString(toolMap["format"])); value != "" {
-				toolMap["output_format"] = value
-				modified = true
+		if _, has := m["output_format"]; !has {
+			if v := strings.TrimSpace(firstNonEmptyString(m["format"])); v != "" {
+				m["output_format"] = v
+				changed = true
 			}
 		}
-		if _, ok := toolMap["output_compression"]; !ok {
-			if value, exists := toolMap["compression"]; exists && value != nil {
-				toolMap["output_compression"] = value
-				modified = true
+		if _, has := m["output_compression"]; !has {
+			if v, exists := m["compression"]; exists && v != nil {
+				m["output_compression"] = v
+				changed = true
 			}
 		}
-		if _, ok := toolMap["format"]; ok {
-			delete(toolMap, "format")
-			modified = true
+		if _, has := m["format"]; has {
+			delete(m, "format")
+			changed = true
 		}
-		if _, ok := toolMap["compression"]; ok {
-			delete(toolMap, "compression")
-			modified = true
+		if _, has := m["compression"]; has {
+			delete(m, "compression")
+			changed = true
 		}
 	}
-	return modified
+	return changed
 }
 
 func requireOpenAIResponsesImageGenerationTool(reqBody map[string]any) bool {
 	if len(reqBody) == 0 {
 		return false
 	}
-	if checkCodexSparkModel(firstNonEmptyString(reqBody["model"])) {
+	if isSparkModel(firstNonEmptyString(reqBody["model"])) {
 		return false
 	}
 
-	tool := map[string]any{
+	defaultTool := map[string]any{
 		"type":          "image_generation",
 		"output_format": "png",
 	}
 
 	rawTools, ok := reqBody["tools"]
 	if !ok || rawTools == nil {
-		reqBody["tools"] = []any{tool}
+		reqBody["tools"] = []any{defaultTool}
 		return true
 	}
 
-	tools, ok := rawTools.([]any)
+	toolsArr, ok := rawTools.([]any)
 	if !ok {
-		reqBody["tools"] = []any{tool}
+		reqBody["tools"] = []any{defaultTool}
 		return true
 	}
-	for _, rawTool := range tools {
-		toolMap, ok := rawTool.(map[string]any)
+	for _, raw := range toolsArr {
+		m, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
-		if strings.TrimSpace(firstNonEmptyString(toolMap["type"])) == "image_generation" {
+		if strings.TrimSpace(firstNonEmptyString(m["type"])) == "image_generation" {
 			return false
 		}
 	}
 
-	reqBody["tools"] = append(tools, tool)
+	reqBody["tools"] = append(toolsArr, defaultTool)
 	return true
 }
 
 func injectCodexImageBridge(reqBody map[string]any) bool {
-	if len(reqBody) == 0 || !hasOpenAIImageGenerationToolV2(reqBody) {
+	if len(reqBody) == 0 || !containsImageGenerationTool(reqBody) {
 		return false
 	}
-	if checkCodexSparkModel(firstNonEmptyString(reqBody["model"])) {
-		return false
-	}
-
-	existing, _ := reqBody["instructions"].(string)
-	if strings.Contains(existing, codexImageGenerationBridgeMarker) {
+	if isSparkModel(firstNonEmptyString(reqBody["model"])) {
 		return false
 	}
 
-	existing = strings.TrimRight(existing, " \t\r\n")
-	if strings.TrimSpace(existing) == "" {
+	current, _ := reqBody["instructions"].(string)
+	if strings.Contains(current, codexImageGenerationBridgeMarker) {
+		return false
+	}
+
+	current = strings.TrimRight(current, " \t\r\n")
+	if strings.TrimSpace(current) == "" {
 		reqBody["instructions"] = codexImageGenerationBridgeText
 		return true
 	}
 
-	reqBody["instructions"] = existing + "\n\n" + codexImageGenerationBridgeText
+	reqBody["instructions"] = current + "\n\n" + codexImageGenerationBridgeText
 	return true
 }
 
-func injectCodexSparkBlock(reqBody map[string]any) bool {
+func appendSparkImageWarning(reqBody map[string]any) bool {
 	if len(reqBody) == 0 {
 		return false
 	}
-	existing, _ := reqBody["instructions"].(string)
-	if strings.Contains(existing, codexSparkImageUnsupportedMarker) {
+	current, _ := reqBody["instructions"].(string)
+	if strings.Contains(current, codexSparkImageUnsupportedMarker) {
 		return false
 	}
-	existing = strings.TrimRight(existing, " \t\r\n")
-	if strings.TrimSpace(existing) == "" {
+	current = strings.TrimRight(current, " \t\r\n")
+	if strings.TrimSpace(current) == "" {
 		reqBody["instructions"] = codexSparkImageUnsupportedText
 		return true
 	}
-	reqBody["instructions"] = existing + "\n\n" + codexSparkImageUnsupportedText
+	reqBody["instructions"] = current + "\n\n" + codexSparkImageUnsupportedText
 	return true
 }
 
+// injectCodexSparkBlock is retained for backward compat.
+func injectCodexSparkBlock(reqBody map[string]any) bool {
+	return appendSparkImageWarning(reqBody)
+}
+
 func verifyOpenAIResponsesImageModel(reqBody map[string]any, model string) error {
-	if !hasOpenAIImageGenerationToolV2(reqBody) {
+	if !containsImageGenerationTool(reqBody) {
 		return nil
 	}
 	model = strings.TrimSpace(model)
@@ -769,40 +842,40 @@ func sanitizeOpenAIResponsesImageOnlyModel(reqBody map[string]any) bool {
 	if len(reqBody) == 0 {
 		return false
 	}
-	imageModel := strings.TrimSpace(firstNonEmptyString(reqBody["model"]))
-	if !isOpenAIImageGenerationModel(imageModel) {
+	imgModel := strings.TrimSpace(firstNonEmptyString(reqBody["model"]))
+	if !isOpenAIImageGenerationModel(imgModel) {
 		return false
 	}
 
-	modified := false
-	tools, _ := reqBody["tools"].([]any)
-	imageToolIndex := -1
-	for i, rawTool := range tools {
-		toolMap, ok := rawTool.(map[string]any)
+	changed := false
+	toolsArr, _ := reqBody["tools"].([]any)
+	imgToolIdx := -1
+	for idx, raw := range toolsArr {
+		m, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
-		if strings.TrimSpace(firstNonEmptyString(toolMap["type"])) == "image_generation" {
-			imageToolIndex = i
+		if strings.TrimSpace(firstNonEmptyString(m["type"])) == "image_generation" {
+			imgToolIdx = idx
 			break
 		}
 	}
-	if imageToolIndex < 0 {
-		tools = append(tools, map[string]any{
+	if imgToolIdx < 0 {
+		toolsArr = append(toolsArr, map[string]any{
 			"type":  "image_generation",
-			"model": imageModel,
+			"model": imgModel,
 		})
-		imageToolIndex = len(tools) - 1
-		reqBody["tools"] = tools
-		modified = true
+		imgToolIdx = len(toolsArr) - 1
+		reqBody["tools"] = toolsArr
+		changed = true
 	}
 
-	if toolMap, ok := tools[imageToolIndex].(map[string]any); ok {
-		if strings.TrimSpace(firstNonEmptyString(toolMap["model"])) == "" {
-			toolMap["model"] = imageModel
-			modified = true
+	if m, ok := toolsArr[imgToolIdx].(map[string]any); ok {
+		if strings.TrimSpace(firstNonEmptyString(m["model"])) == "" {
+			m["model"] = imgModel
+			changed = true
 		}
-		for _, key := range []string{
+		migrateKeys := []string{
 			"size",
 			"quality",
 			"background",
@@ -811,34 +884,35 @@ func sanitizeOpenAIResponsesImageOnlyModel(reqBody map[string]any) bool {
 			"moderation",
 			"style",
 			"partial_images",
-		} {
-			if value, exists := reqBody[key]; exists && value != nil {
-				if _, toolHas := toolMap[key]; !toolHas {
-					toolMap[key] = value
+		}
+		for _, k := range migrateKeys {
+			if v, exists := reqBody[k]; exists && v != nil {
+				if _, toolHas := m[k]; !toolHas {
+					m[k] = v
 				}
-				delete(reqBody, key)
-				modified = true
+				delete(reqBody, k)
+				changed = true
 			}
 		}
 	}
 
-	if prompt := strings.TrimSpace(firstNonEmptyString(reqBody["prompt"])); prompt != "" {
+	if promptText := strings.TrimSpace(firstNonEmptyString(reqBody["prompt"])); promptText != "" {
 		if _, hasInput := reqBody["input"]; !hasInput {
-			reqBody["input"] = prompt
+			reqBody["input"] = promptText
 		}
 		delete(reqBody, "prompt")
-		modified = true
+		changed = true
 	}
 
-	if _, ok := reqBody["tool_choice"]; !ok {
+	if _, hasChoice := reqBody["tool_choice"]; !hasChoice {
 		reqBody["tool_choice"] = map[string]any{"type": "image_generation"}
-		modified = true
+		changed = true
 	}
-	if imageModel != openAIImagesResponsesMainModel {
-		modified = true
+	if imgModel != openAIImagesResponsesMainModel {
+		changed = true
 	}
 	reqBody["model"] = openAIImagesResponsesMainModel
-	return modified
+	return changed
 }
 
 func normalizeOpenAIModelForUpstream(account *Account, model string) string {
@@ -853,44 +927,49 @@ func SupportsVerbosity(model string) bool {
 		return true
 	}
 
-	var major, minor int
-	n, _ := fmt.Sscanf(model, "gpt-%d.%d", &major, &minor)
+	var majorVer, minorVer int
+	n, _ := fmt.Sscanf(model, "gpt-%d.%d", &majorVer, &minorVer)
 
-	if major > 5 {
+	if majorVer > 5 {
 		return true
 	}
-	if major < 5 {
+	if majorVer < 5 {
 		return false
 	}
 
-	// gpt-5
+	// gpt-5 (no minor version)
 	if n == 1 {
 		return true
 	}
 
-	return minor >= 3
+	return minorVer >= 3
 }
 
-func getNormalizedCodexModel(modelID string) string {
-	key := codexModelLookupKeyV2(modelID)
-	if key == "" {
+func lookupCodexModelByKey(key string) string {
+	normalizedKey := buildCodexLookupKey(key)
+	if normalizedKey == "" {
 		return ""
 	}
-	if mapped, ok := codexModelMap[key]; ok {
-		return mapped
+	if resolved, ok := codexModelMap[normalizedKey]; ok {
+		return resolved
 	}
 	return ""
 }
 
-// extractTextFromContent extracts plain text from a content value that is either
+// getNormalizedCodexModel is retained for backward compat.
+func getNormalizedCodexModel(modelID string) string {
+	return lookupCodexModelByKey(modelID)
+}
+
+// extractTextFromContent pulls plain text from a content value that is either
 // a Go string or a []any of text-like content-part maps.
 func extractTextFromContent(content any) string {
-	switch v := content.(type) {
+	switch typed := content.(type) {
 	case string:
-		return v
+		return typed
 	case []any:
-		var parts []string
-		for _, part := range v {
+		var fragments []string
+		for _, part := range typed {
 			m, ok := part.(map[string]any)
 			if !ok {
 				continue
@@ -898,11 +977,11 @@ func extractTextFromContent(content any) string {
 			switch t, _ := m["type"].(string); t {
 			case "text", "input_text", "output_text":
 				if text, ok := m["text"].(string); ok {
-					parts = append(parts, text)
+					fragments = append(fragments, text)
 				}
 			}
 		}
-		return strings.Join(parts, "")
+		return strings.Join(fragments, "")
 	default:
 		return ""
 	}
@@ -910,54 +989,56 @@ func extractTextFromContent(content any) string {
 
 // extractSystemMessagesFromInput scans the input array for items with role=="system",
 // removes them, and merges their content into reqBody["instructions"].
-// If instructions is already non-empty, extracted content is prepended with "\n\n".
-// Returns true if any system messages were extracted.
 func extractSystemMessagesFromInput(reqBody map[string]any) bool {
-	input, ok := reqBody["input"].([]any)
-	if !ok || len(input) == 0 {
+	return hoistSystemMessagesToInstructions(reqBody)
+}
+
+func hoistSystemMessagesToInstructions(reqBody map[string]any) bool {
+	inputSlice, ok := reqBody["input"].([]any)
+	if !ok || len(inputSlice) == 0 {
 		return false
 	}
 
-	var systemTexts []string
-	remaining := make([]any, 0, len(input))
+	var systemFragments []string
+	kept := make([]any, 0, len(inputSlice))
 
-	for _, item := range input {
-		m, ok := item.(map[string]any)
+	for _, raw := range inputSlice {
+		m, ok := raw.(map[string]any)
 		if !ok {
-			remaining = append(remaining, item)
+			kept = append(kept, raw)
 			continue
 		}
 		if role, _ := m["role"].(string); role != "system" {
-			remaining = append(remaining, item)
+			kept = append(kept, raw)
 			continue
 		}
 		if text := extractTextFromContent(m["content"]); text != "" {
-			systemTexts = append(systemTexts, text)
+			systemFragments = append(systemFragments, text)
 		}
 	}
 
-	if len(systemTexts) == 0 {
+	if len(systemFragments) == 0 {
 		return false
 	}
 
-	extracted := strings.Join(systemTexts, "\n\n")
-	if existing, ok := reqBody["instructions"].(string); ok && strings.TrimSpace(existing) != "" {
-		reqBody["instructions"] = extracted + "\n\n" + existing
+	joined := strings.Join(systemFragments, "\n\n")
+	if current, ok := reqBody["instructions"].(string); ok && strings.TrimSpace(current) != "" {
+		reqBody["instructions"] = joined + "\n\n" + current
 	} else {
-		reqBody["instructions"] = extracted
+		reqBody["instructions"] = joined
 	}
-	reqBody["input"] = remaining
+	reqBody["input"] = kept
 	return true
 }
 
 func pullPromptLikeInstructionsFromInput(reqBody map[string]any) string {
-	input, ok := reqBody["input"].([]any)
-	if !ok || len(input) == 0 {
+	inputSlice, ok := reqBody["input"].([]any)
+	if !ok || len(inputSlice) == 0 {
 		return ""
 	}
-	var texts []string
-	for _, item := range input {
-		m, ok := item.(map[string]any)
+	var fragments []string
+	for _, raw := range inputSlice {
+		m, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -965,97 +1046,95 @@ func pullPromptLikeInstructionsFromInput(reqBody map[string]any) string {
 		switch role {
 		case "developer", "system":
 			if text := strings.TrimSpace(extractTextFromContent(m["content"])); text != "" {
-				texts = append(texts, text)
+				fragments = append(fragments, text)
 			}
 		}
 	}
-	return strings.Join(texts, "\n\n")
+	return strings.Join(fragments, "\n\n")
 }
 
-// fallbackCodexSynthInstructions 返回合成路径在 instructions 为空时应填入的默认提示词。
-//
-// 按 model 选择真实 Codex CLI 的 base instructions（codex 系→GPT-5-Codex，
-// gpt-5.2→GPT-5.2，gpt-5.1/gpt-5→GPT-5.1），使合成请求在提示词层面贴近真实 Codex 行为；
-// 若内嵌 prompt 意外为空，回退到最小占位符以保证字段非空。
+// fallbackCodexSynthInstructions returns the default instructions to use when
+// the synth path has an empty instructions field. It selects the appropriate
+// Codex CLI base instructions by model family.
 func fallbackCodexSynthInstructions(model string) string {
-	if instructions := strings.TrimSpace(openai.CodexBaseInstructionsForModel(model)); instructions != "" {
-		return instructions
+	if text := strings.TrimSpace(openai.CodexBaseInstructionsForModel(model)); text != "" {
+		return text
 	}
 	return "You are a helpful coding assistant."
 }
 
-// requireCodexReasoningInclude 在请求带 reasoning 时补齐 include:["reasoning.encrypted_content"]。
-//
-// 真实 Codex 在 reasoning 存在时总会请求加密推理内容（ChatGPT/store=false 场景下用于上下文回放）。
-// 该函数为加法式、幂等：仅在 include 缺失或未包含该项时追加；对非数组的异常 include 不做破坏性改写。
+// injectReasoningEncryptedContent ensures the include array contains
+// "reasoning.encrypted_content" when the request carries a reasoning field.
+// Additive and idempotent.
+func injectReasoningEncryptedContent(reqBody map[string]any) bool {
+	return requireCodexReasoningInclude(reqBody)
+}
+
 func requireCodexReasoningInclude(reqBody map[string]any) bool {
-	reasoning, ok := reqBody["reasoning"].(map[string]any)
-	if !ok || len(reasoning) == 0 {
+	reasoningMap, ok := reqBody["reasoning"].(map[string]any)
+	if !ok || len(reasoningMap) == 0 {
 		return false
 	}
-	const encrypted = "reasoning.encrypted_content"
+	const encryptedKey = "reasoning.encrypted_content"
 	switch existing := reqBody["include"].(type) {
 	case nil:
-		reqBody["include"] = []any{encrypted}
+		reqBody["include"] = []any{encryptedKey}
 		return true
 	case []any:
-		for _, v := range existing {
-			if s, ok := v.(string); ok && s == encrypted {
+		for _, elem := range existing {
+			if s, ok := elem.(string); ok && s == encryptedKey {
 				return false
 			}
 		}
-		reqBody["include"] = append(existing, encrypted)
+		reqBody["include"] = append(existing, encryptedKey)
 		return true
 	default:
-		// include 为非预期类型时保持原样，避免破坏调用方意图。
+		// Non-array include is left untouched to avoid breaking caller intent.
 		return false
 	}
 }
 
-// injectCodexMeta 在请求体补齐 client_metadata["x-codex-installation-id"]，
-// 取值为账号真实的 openai_device_id（最新 Codex 在请求体携带的安装标识）。
-//
-// 加法式、幂等：仅在账号存在 device_id 且该键缺失时注入，绝不覆盖既有 client_metadata
-// （如 turn metadata），也不伪造——无 device_id 时不写入。
+// injectCodexMeta injects client_metadata["x-codex-installation-id"] using the
+// account's device ID. Additive and idempotent.
 func injectCodexMeta(reqBody map[string]any, account *Account) bool {
 	if account == nil {
 		return false
 	}
-	deviceID := strings.TrimSpace(account.GetOpenAIDeviceID())
-	if deviceID == "" {
+	devID := strings.TrimSpace(account.GetOpenAIDeviceID())
+	if devID == "" {
 		return false
 	}
-	const key = "x-codex-installation-id"
+	const metaKey = "x-codex-installation-id"
 	switch existing := reqBody["client_metadata"].(type) {
 	case map[string]any:
-		if v, ok := existing[key].(string); ok && strings.TrimSpace(v) != "" {
+		if s, ok := existing[metaKey].(string); ok && strings.TrimSpace(s) != "" {
 			return false
 		}
-		existing[key] = deviceID
+		existing[metaKey] = devID
 		reqBody["client_metadata"] = existing
 		return true
 	case map[string]string:
-		if strings.TrimSpace(existing[key]) != "" {
+		if strings.TrimSpace(existing[metaKey]) != "" {
 			return false
 		}
-		next := make(map[string]any, len(existing)+1)
+		upgraded := make(map[string]any, len(existing)+1)
 		for k, v := range existing {
-			next[k] = v
+			upgraded[k] = v
 		}
-		next[key] = deviceID
-		reqBody["client_metadata"] = next
+		upgraded[metaKey] = devID
+		reqBody["client_metadata"] = upgraded
 		return true
 	case nil:
-		reqBody["client_metadata"] = map[string]any{key: deviceID}
+		reqBody["client_metadata"] = map[string]any{metaKey: devID}
 		return true
 	default:
 		return false
 	}
 }
 
-// applyInstructions 处理 instructions 字段：仅在 instructions 为空时填充默认值。
-func applyInstructions(reqBody map[string]any, isCodexCLI bool) bool {
-	if !isInstructionsEmpty(reqBody) {
+// ensureInstructions fills in default instructions when the field is absent or blank.
+func ensureInstructions(reqBody map[string]any, isCodexCLI bool) bool {
+	if !instructionsAreBlank(reqBody) {
 		return false
 	}
 	model, _ := reqBody["model"].(string)
@@ -1063,21 +1142,26 @@ func applyInstructions(reqBody map[string]any, isCodexCLI bool) bool {
 	return true
 }
 
-// isInstructionsEmpty 检查 instructions 字段是否为空
-// 处理以下情况：字段不存在、nil、空字符串、纯空白字符串
-func isInstructionsEmpty(reqBody map[string]any) bool {
-	val, exists := reqBody["instructions"]
-	if !exists {
+// applyInstructions is retained for backward compat.
+func applyInstructions(reqBody map[string]any, isCodexCLI bool) bool {
+	return ensureInstructions(reqBody, isCodexCLI)
+}
+
+func instructionsAreBlank(reqBody map[string]any) bool {
+	raw, exists := reqBody["instructions"]
+	if !exists || raw == nil {
 		return true
 	}
-	if val == nil {
-		return true
-	}
-	str, ok := val.(string)
+	s, ok := raw.(string)
 	if !ok {
 		return true
 	}
-	return strings.TrimSpace(str) == ""
+	return strings.TrimSpace(s) == ""
+}
+
+// isInstructionsEmpty is retained for backward compat.
+func isInstructionsEmpty(reqBody map[string]any) bool {
+	return instructionsAreBlank(reqBody)
 }
 
 type codexInputFilterOptions struct {
@@ -1085,35 +1169,33 @@ type codexInputFilterOptions struct {
 	PreserveCallIDs    bool
 }
 
-// filterCodexInput 按需过滤 item_reference 与 id。
-// preserveReferences 为 true 时保持引用与 id，以满足续链请求对上下文的依赖。
+// filterCodexInput filters item_reference and id based on context needs.
 func filterCodexInput(input []any, preserveReferences bool) []any {
-	return filterCodexInputWithOptionsV2(input, codexInputFilterOptions{
+	return filterInputItemsV2(input, codexInputFilterOptions{
 		PreserveReferences: preserveReferences,
 	})
 }
 
-func filterCodexInputWithOptionsV2(input []any, opts codexInputFilterOptions) []any {
-	filtered := make([]any, 0, len(input))
-	for _, item := range input {
-		m, ok := item.(map[string]any)
+func filterInputItemsV2(items []any, opts codexInputFilterOptions) []any {
+	filtered := make([]any, 0, len(items))
+	for _, raw := range items {
+		m, ok := raw.(map[string]any)
 		if !ok {
-			filtered = append(filtered, item)
+			filtered = append(filtered, raw)
 			continue
 		}
-		typ, _ := m["type"].(string)
+		itemType, _ := m["type"].(string)
 
-		// chatgpt.com codex backend (OAuth path) does not persist reasoning
-		// items because applyCodexOAuthTransform forces store=false. Any rs_*
-		// reference replayed in input is guaranteed to 404 upstream
-		// ("Item with id 'rs_...' not found"). Drop reasoning items entirely.
-		if typ == "reasoning" {
+		// The OAuth path forces store=false, so reasoning items cannot be
+		// replayed upstream (rs_* references will 404). Drop them.
+		if itemType == "reasoning" {
 			continue
 		}
 
-		// 仅修正真正的 tool/function call 标识，避免误改普通 message/reasoning id；
-		// 若 item_reference 指向 legacy call_* 标识，则仅修正该引用本身。
-		fixCallIDPrefix := func(id string) string {
+		// Normalize call IDs: convert call_* prefix to fc_* unless preservation
+		// is requested. Only applies to tool/function call items, not generic
+		// messages whose id happens to start with call_.
+		rewriteCallID := func(id string) string {
 			if opts.PreserveCallIDs {
 				return id
 			}
@@ -1126,86 +1208,90 @@ func filterCodexInputWithOptionsV2(input []any, opts codexInputFilterOptions) []
 			return "fc_" + id
 		}
 
-		if typ == "item_reference" {
+		if itemType == "item_reference" {
 			if !opts.PreserveReferences {
 				continue
 			}
-			newItem := make(map[string]any, len(m))
-			for key, value := range m {
-				newItem[key] = value
+			dup := make(map[string]any, len(m))
+			for k, v := range m {
+				dup[k] = v
 			}
-			if id, ok := newItem["id"].(string); ok && strings.HasPrefix(id, "call_") {
-				newItem["id"] = fixCallIDPrefix(id)
+			if refID, ok := dup["id"].(string); ok && strings.HasPrefix(refID, "call_") {
+				dup["id"] = rewriteCallID(refID)
 			}
-			filtered = append(filtered, newItem)
+			filtered = append(filtered, dup)
 			continue
 		}
 
-		newItem := m
-		copied := false
-		// 仅在需要修改字段时创建副本，避免直接改写原始输入。
-		ensureCopy := func() {
-			if copied {
+		current := m
+		cloned := false
+		lazyClone := func() {
+			if cloned {
 				return
 			}
-			newItem = make(map[string]any, len(m))
-			for key, value := range m {
-				newItem[key] = value
+			current = make(map[string]any, len(m))
+			for k, v := range m {
+				current[k] = v
 			}
-			copied = true
+			cloned = true
 		}
 
-		if isCodexToolCallItemType(typ) {
-			callID, ok := m["call_id"].(string)
-			if !ok || strings.TrimSpace(callID) == "" {
+		if isToolCallItemType(itemType) {
+			cid, ok := m["call_id"].(string)
+			if !ok || strings.TrimSpace(cid) == "" {
 				if id, ok := m["id"].(string); ok && strings.TrimSpace(id) != "" {
-					callID = id
-					ensureCopy()
-					newItem["call_id"] = callID
+					cid = id
+					lazyClone()
+					current["call_id"] = cid
 				}
 			}
 
-			if callID != "" {
-				fixedCallID := fixCallIDPrefix(callID)
-				if fixedCallID != callID {
-					ensureCopy()
-					newItem["call_id"] = fixedCallID
+			if cid != "" {
+				rewritten := rewriteCallID(cid)
+				if rewritten != cid {
+					lazyClone()
+					current["call_id"] = rewritten
 				}
 			}
 		}
 
-		if !isCodexToolCallItemType(typ) {
-			ensureCopy()
-			delete(newItem, "call_id")
+		if !isToolCallItemType(itemType) {
+			lazyClone()
+			delete(current, "call_id")
 		}
 
-		if codexInputItemRequiresNameV2(typ) {
+		if itemTypeNeedsName(itemType) {
 			if strings.TrimSpace(firstNonEmptyString(m["name"])) == "" {
-				name := firstNonEmptyString(m["tool_name"])
-				if name == "" {
-					if function, ok := m["function"].(map[string]any); ok {
-						name = firstNonEmptyString(function["name"])
+				candidate := firstNonEmptyString(m["tool_name"])
+				if candidate == "" {
+					if fnDef, ok := m["function"].(map[string]any); ok {
+						candidate = firstNonEmptyString(fnDef["name"])
 					}
 				}
-				if name == "" {
-					name = "tool"
+				if candidate == "" {
+					candidate = "tool"
 				}
-				ensureCopy()
-				newItem["name"] = name
+				lazyClone()
+				current["name"] = candidate
 			}
 		}
 
 		if !opts.PreserveReferences {
-			ensureCopy()
-			delete(newItem, "id")
+			lazyClone()
+			delete(current, "id")
 		}
 
-		filtered = append(filtered, newItem)
+		filtered = append(filtered, current)
 	}
 	return filtered
 }
 
-func isCodexToolCallItemType(typ string) bool {
+// filterCodexInputWithOptionsV2 is retained for backward compat.
+func filterCodexInputWithOptionsV2(input []any, opts codexInputFilterOptions) []any {
+	return filterInputItemsV2(input, opts)
+}
+
+func isToolCallItemType(typ string) bool {
 	switch typ {
 	case "function_call",
 		"tool_call",
@@ -1223,7 +1309,12 @@ func isCodexToolCallItemType(typ string) bool {
 	}
 }
 
-func codexInputItemRequiresNameV2(typ string) bool {
+// isCodexToolCallItemType is retained for backward compat.
+func isCodexToolCallItemType(typ string) bool {
+	return isToolCallItemType(typ)
+}
+
+func itemTypeNeedsName(typ string) bool {
 	switch strings.TrimSpace(typ) {
 	case "function_call", "custom_tool_call", "mcp_tool_call":
 		return true
@@ -1232,80 +1323,90 @@ func codexInputItemRequiresNameV2(typ string) bool {
 	}
 }
 
-func normalizeCodexTools(reqBody map[string]any) bool {
+// codexInputItemRequiresNameV2 is retained for backward compat.
+func codexInputItemRequiresNameV2(typ string) bool {
+	return itemTypeNeedsName(typ)
+}
+
+func unifyCodexTools(reqBody map[string]any) bool {
 	rawTools, ok := reqBody["tools"]
 	if !ok || rawTools == nil {
 		return false
 	}
-	tools, ok := rawTools.([]any)
+	toolsArr, ok := rawTools.([]any)
 	if !ok {
 		return false
 	}
 
-	modified := false
-	validTools := make([]any, 0, len(tools))
+	changed := false
+	kept := make([]any, 0, len(toolsArr))
 
-	for _, tool := range tools {
-		toolMap, ok := tool.(map[string]any)
+	for _, raw := range toolsArr {
+		m, ok := raw.(map[string]any)
 		if !ok {
-			// Keep unknown structure as-is to avoid breaking upstream behavior.
-			validTools = append(validTools, tool)
+			// Unknown structure kept as-is to avoid breaking upstream behavior.
+			kept = append(kept, raw)
 			continue
 		}
 
-		toolType, _ := toolMap["type"].(string)
-		toolType = strings.TrimSpace(toolType)
-		if toolType != "function" {
-			validTools = append(validTools, toolMap)
+		tType, _ := m["type"].(string)
+		tType = strings.TrimSpace(tType)
+		if tType != "function" {
+			kept = append(kept, m)
 			continue
 		}
 
-		// OpenAI Responses-style tools use top-level name/parameters.
-		if name, ok := toolMap["name"].(string); ok && strings.TrimSpace(name) != "" {
-			validTools = append(validTools, toolMap)
+		// Responses-style: top-level name/parameters already present.
+		if topName, ok := m["name"].(string); ok && strings.TrimSpace(topName) != "" {
+			kept = append(kept, m)
 			continue
 		}
 
-		// ChatCompletions-style tools use {type:"function", function:{...}}.
-		functionValue, hasFunction := toolMap["function"]
-		function, ok := functionValue.(map[string]any)
-		if !hasFunction || functionValue == nil || !ok || function == nil {
-			// Drop invalid function tools.
-			modified = true
+		// ChatCompletions-style: {type:"function", function:{...}}.
+		fnVal, hasFn := m["function"]
+		fnMap, fnOK := fnVal.(map[string]any)
+		if !hasFn || fnVal == nil || !fnOK || fnMap == nil {
+			// Invalid function tools are dropped.
+			changed = true
 			continue
 		}
 
-		if _, ok := toolMap["name"]; !ok {
-			if name, ok := function["name"].(string); ok && strings.TrimSpace(name) != "" {
-				toolMap["name"] = name
-				modified = true
+		if _, ok := m["name"]; !ok {
+			if n, ok := fnMap["name"].(string); ok && strings.TrimSpace(n) != "" {
+				m["name"] = n
+				changed = true
 			}
 		}
-		if _, ok := toolMap["description"]; !ok {
-			if desc, ok := function["description"].(string); ok && strings.TrimSpace(desc) != "" {
-				toolMap["description"] = desc
-				modified = true
+		if _, ok := m["description"]; !ok {
+			if d, ok := fnMap["description"].(string); ok && strings.TrimSpace(d) != "" {
+				m["description"] = d
+				changed = true
 			}
 		}
-		if _, ok := toolMap["parameters"]; !ok {
-			if params, ok := function["parameters"]; ok {
-				toolMap["parameters"] = params
-				modified = true
+		if _, ok := m["parameters"]; !ok {
+			if p, ok := fnMap["parameters"]; ok {
+				m["parameters"] = p
+				changed = true
 			}
 		}
-		if _, ok := toolMap["strict"]; !ok {
-			if strict, ok := function["strict"]; ok {
-				toolMap["strict"] = strict
-				modified = true
+		if _, ok := m["strict"]; !ok {
+			if s, ok := fnMap["strict"]; ok {
+				m["strict"] = s
+				changed = true
 			}
 		}
 
-		validTools = append(validTools, toolMap)
+		kept = append(kept, m)
 	}
 
-	if modified {
-		reqBody["tools"] = validTools
+	if changed {
+		reqBody["tools"] = kept
 	}
 
-	return modified
+	return changed
+}
+
+// normalizeCodexTools is retained for backward compat.
+func normalizeCodexTools(reqBody map[string]any) bool {
+	return unifyCodexTools(reqBody)
 }

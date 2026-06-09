@@ -110,172 +110,172 @@ type codexAccountIndex struct {
 }
 
 func (h *AccountHandler) ImportCodexSession(c *gin.Context) {
-	var req CodexSessionImportRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request: "+err.Error())
+	var payload CodexSessionImportRequest
+	if bindErr := c.ShouldBindJSON(&payload); bindErr != nil {
+		response.BadRequest(c, "Invalid request: "+bindErr.Error())
 		return
 	}
-	if req.Concurrency != nil && *req.Concurrency < 0 {
-		response.BadRequest(c, "concurrency must be >= 0")
+	if payload.Concurrency != nil && *payload.Concurrency < 0 {
+		response.BadRequest(c, "concurrency must be non-negative")
 		return
 	}
-	if req.Priority != nil && *req.Priority < 0 {
-		response.BadRequest(c, "priority must be >= 0")
+	if payload.Priority != nil && *payload.Priority < 0 {
+		response.BadRequest(c, "priority must be non-negative")
 		return
 	}
-	if req.RateMultiplier != nil && *req.RateMultiplier < 0 {
-		response.BadRequest(c, "rate_multiplier must be >= 0")
+	if payload.RateMultiplier != nil && *payload.RateMultiplier < 0 {
+		response.BadRequest(c, "rate_multiplier must be non-negative")
 		return
 	}
-	if req.LoadFactor != nil && *req.LoadFactor > 10000 {
-		response.BadRequest(c, "load_factor must be <= 10000")
-		return
-	}
-
-	entries, err := parseCodexSessionImportEntries(req)
-	if err != nil {
-		response.BadRequest(c, err.Error())
-		return
-	}
-	if len(entries) == 0 {
-		response.BadRequest(c, "请输入 accessToken 或 Codex session JSON")
+	if payload.LoadFactor != nil && *payload.LoadFactor > 10000 {
+		response.BadRequest(c, "load_factor must not exceed 10000")
 		return
 	}
 
-	executeAdminIdempotentJSON(c, "admin.accounts.import_codex_session", req, service.DefaultWriteIdempotencyTTL(), func(ctx context.Context) (any, error) {
-		return h.importCodexSessions(ctx, req, entries)
+	importEntries, parseErr := collectImportEntries(payload)
+	if parseErr != nil {
+		response.BadRequest(c, parseErr.Error())
+		return
+	}
+	if len(importEntries) == 0 {
+		response.BadRequest(c, "Please provide an accessToken or Codex session JSON")
+		return
+	}
+
+	executeAdminIdempotentJSON(c, "admin.accounts.import_codex_session", payload, service.DefaultWriteIdempotencyTTL(), func(ctx context.Context) (any, error) {
+		return h.executeCodexImport(ctx, payload, importEntries)
 	})
 }
 
-func (h *AccountHandler) importCodexSessions(ctx context.Context, req CodexSessionImportRequest, entries []codexImportEntry) (CodexSessionImportResult, error) {
-	result := CodexSessionImportResult{
+func (h *AccountHandler) executeCodexImport(ctx context.Context, payload CodexSessionImportRequest, entries []codexImportEntry) (CodexSessionImportResult, error) {
+	report := CodexSessionImportResult{
 		Total: len(entries),
 		Items: make([]CodexSessionImportItem, 0, len(entries)),
 	}
 
-	existingAccounts, err := h.listAccountsFiltered(ctx, service.PlatformOpenAI, service.AccountTypeOAuth, "", "", 0, "", "created_at", "desc")
-	if err != nil {
-		return result, err
+	existingAccounts, listErr := h.listAccountsFiltered(ctx, service.PlatformOpenAI, service.AccountTypeOAuth, "", "", 0, "", "created_at", "desc")
+	if listErr != nil {
+		return report, listErr
 	}
-	index := buildCodexAccountIndex(existingAccounts)
+	idx := newAccountIndex(existingAccounts)
 
-	updateExisting := true
-	if req.UpdateExisting != nil {
-		updateExisting = *req.UpdateExisting
+	allowUpdate := true
+	if payload.UpdateExisting != nil {
+		allowUpdate = *payload.UpdateExisting
 	}
-	concurrency := 3
-	if req.Concurrency != nil {
-		concurrency = *req.Concurrency
+	concurrencyVal := 3
+	if payload.Concurrency != nil {
+		concurrencyVal = *payload.Concurrency
 	}
-	priority := 50
-	if req.Priority != nil {
-		priority = *req.Priority
+	priorityVal := 50
+	if payload.Priority != nil {
+		priorityVal = *payload.Priority
 	}
-	credentialExtras := sanitizeCodexImportCredentialExtras(req.CredentialExtras)
-	skipDefaultGroupBind := false
-	if req.SkipDefaultGroupBind != nil {
-		skipDefaultGroupBind = *req.SkipDefaultGroupBind
+	cleanedExtras := filterProtectedCredentialKeys(payload.CredentialExtras)
+	skipDefaultGroup := false
+	if payload.SkipDefaultGroupBind != nil {
+		skipDefaultGroup = *payload.SkipDefaultGroupBind
 	}
-	skipMixedChannelCheck := req.ConfirmMixedChannelRisk != nil && *req.ConfirmMixedChannelRisk
+	bypassMixedCheck := payload.ConfirmMixedChannelRisk != nil && *payload.ConfirmMixedChannelRisk
 
-	seenIdentity := map[string]int{}
+	visitedIdentity := map[string]int{}
 	for _, entry := range entries {
-		item, err := normalizeCodexImportEntry(entry)
-		if err != nil {
-			result.Failed++
-			result.Items = append(result.Items, CodexSessionImportItem{
+		normalized, normErr := normalizeImportEntry(entry)
+		if normErr != nil {
+			report.Failed++
+			report.Items = append(report.Items, CodexSessionImportItem{
 				Index:   entry.Index,
 				Action:  "failed",
-				Message: err.Error(),
+				Message: normErr.Error(),
 			})
-			result.Errors = append(result.Errors, CodexSessionImportMessage{
+			report.Errors = append(report.Errors, CodexSessionImportMessage{
 				Index:   entry.Index,
-				Message: err.Error(),
+				Message: normErr.Error(),
 			})
 			continue
 		}
-		accountName := buildCodexCreateAccountName(req.Name, item, entry.Index, len(entries))
-		effectiveExpiresAt, credentialExpiresAt, autoPauseOnExpired, expiryWarnings, expiryErr := resolveCodexImportExpiry(req, item)
+		displayName := deriveAccountDisplayName(payload.Name, normalized, entry.Index, len(entries))
+		effectiveExpiry, credExpiry, autoPauseFlag, expiryWarns, expiryErr := computeImportExpiry(payload, normalized)
 		if expiryErr != nil {
-			result.Failed++
-			result.Items = append(result.Items, CodexSessionImportItem{
+			report.Failed++
+			report.Items = append(report.Items, CodexSessionImportItem{
 				Index:   entry.Index,
-				Name:    accountName,
+				Name:    displayName,
 				Action:  "failed",
 				Message: expiryErr.Error(),
 			})
-			result.Errors = append(result.Errors, CodexSessionImportMessage{
+			report.Errors = append(report.Errors, CodexSessionImportMessage{
 				Index:   entry.Index,
-				Name:    accountName,
+				Name:    displayName,
 				Message: expiryErr.Error(),
 			})
 			continue
 		}
-		item.WarningTexts = append(item.WarningTexts, expiryWarnings...)
-		if credentialExpiresAt != nil {
-			item.Credentials["expires_at"] = credentialExpiresAt.Format(time.RFC3339)
+		normalized.WarningTexts = append(normalized.WarningTexts, expiryWarns...)
+		if credExpiry != nil {
+			normalized.Credentials["expires_at"] = credExpiry.Format(time.RFC3339)
 		}
-		credentials := mergeCodexImportMap(item.Credentials, credentialExtras)
-		extra := mergeCodexImportMap(req.Extra, item.Extra)
-		for _, warning := range item.WarningTexts {
-			result.Warnings = append(result.Warnings, CodexSessionImportMessage{
+		mergedCreds := combineMaps(normalized.Credentials, cleanedExtras)
+		mergedExtra := combineMaps(payload.Extra, normalized.Extra)
+		for _, warnText := range normalized.WarningTexts {
+			report.Warnings = append(report.Warnings, CodexSessionImportMessage{
 				Index:   entry.Index,
-				Name:    accountName,
-				Message: warning,
+				Name:    displayName,
+				Message: warnText,
 			})
 		}
 
-		if duplicateIndex, ok := firstSeenCodexIdentity(seenIdentity, item.IdentityKeys); ok {
-			message := fmt.Sprintf("与第 %d 条导入项重复，已跳过", duplicateIndex)
-			result.Skipped++
-			result.Items = append(result.Items, CodexSessionImportItem{
+		if dupIdx, isDup := findFirstSeenIdentity(visitedIdentity, normalized.IdentityKeys); isDup {
+			dupMsg := fmt.Sprintf("Duplicate of import entry #%d, skipped", dupIdx)
+			report.Skipped++
+			report.Items = append(report.Items, CodexSessionImportItem{
 				Index:   entry.Index,
-				Name:    accountName,
+				Name:    displayName,
 				Action:  "skipped",
-				Message: message,
+				Message: dupMsg,
 			})
-			result.Warnings = append(result.Warnings, CodexSessionImportMessage{
+			report.Warnings = append(report.Warnings, CodexSessionImportMessage{
 				Index:   entry.Index,
-				Name:    accountName,
-				Message: message,
+				Name:    displayName,
+				Message: dupMsg,
 			})
 			continue
 		}
-		markCodexIdentitySeen(seenIdentity, item.IdentityKeys, entry.Index)
+		recordSeenIdentity(visitedIdentity, normalized.IdentityKeys, entry.Index)
 
-		if existing := index.Find(item.IdentityKeys); existing != nil && updateExisting {
-			mergedCredentials := mergeCodexImportCredentials(existing.Credentials, credentials, item)
-			mergedExtra := mergeCodexImportMap(existing.Extra, extra)
-			updateInput := &service.UpdateAccountInput{
-				Credentials:        mergedCredentials,
-				Extra:              mergedExtra,
-				Concurrency:        req.Concurrency,
-				Priority:           req.Priority,
-				RateMultiplier:     req.RateMultiplier,
-				LoadFactor:         req.LoadFactor,
-				ExpiresAt:          effectiveExpiresAt,
-				AutoPauseOnExpired: autoPauseOnExpired,
+		if existing := idx.Find(normalized.IdentityKeys); existing != nil && allowUpdate {
+			merged := mergeAccountCredentials(existing.Credentials, mergedCreds, normalized)
+			mergedEx := combineMaps(existing.Extra, mergedExtra)
+			updateReq := &service.UpdateAccountInput{
+				Credentials:        merged,
+				Extra:              mergedEx,
+				Concurrency:        payload.Concurrency,
+				Priority:           payload.Priority,
+				RateMultiplier:     payload.RateMultiplier,
+				LoadFactor:         payload.LoadFactor,
+				ExpiresAt:          effectiveExpiry,
+				AutoPauseOnExpired: autoPauseFlag,
 			}
-			if req.ProxyID != nil {
-				updateInput.ProxyID = req.ProxyID
+			if payload.ProxyID != nil {
+				updateReq.ProxyID = payload.ProxyID
 			}
-			if len(req.GroupIDs) > 0 {
-				groupIDs := append([]int64(nil), req.GroupIDs...)
-				updateInput.GroupIDs = &groupIDs
-				updateInput.SkipMixedChannelCheck = skipMixedChannelCheck
+			if len(payload.GroupIDs) > 0 {
+				gids := append([]int64(nil), payload.GroupIDs...)
+				updateReq.GroupIDs = &gids
+				updateReq.SkipMixedChannelCheck = bypassMixedCheck
 			}
-			updated, updateErr := h.adminService.UpdateAccount(ctx, existing.ID, updateInput)
+			updated, updateErr := h.adminService.UpdateAccount(ctx, existing.ID, updateReq)
 			if updateErr != nil {
-				result.Failed++
-				result.Items = append(result.Items, CodexSessionImportItem{
+				report.Failed++
+				report.Items = append(report.Items, CodexSessionImportItem{
 					Index:   entry.Index,
-					Name:    accountName,
+					Name:    displayName,
 					Action:  "failed",
 					Message: updateErr.Error(),
 				})
-				result.Errors = append(result.Errors, CodexSessionImportMessage{
+				report.Errors = append(report.Errors, CodexSessionImportMessage{
 					Index:   entry.Index,
-					Name:    accountName,
+					Name:    displayName,
 					Message: updateErr.Error(),
 				})
 				continue
@@ -283,216 +283,246 @@ func (h *AccountHandler) importCodexSessions(ctx context.Context, req CodexSessi
 			if h.tokenCacheInvalidator != nil && updated != nil {
 				_ = h.tokenCacheInvalidator.InvalidateToken(ctx, updated)
 			}
-			result.Updated++
-			accountID := existing.ID
+			report.Updated++
+			aid := existing.ID
 			if updated != nil {
-				accountID = updated.ID
-				index.Add(*updated)
+				aid = updated.ID
+				idx.Add(*updated)
 			}
-			result.Items = append(result.Items, CodexSessionImportItem{
+			report.Items = append(report.Items, CodexSessionImportItem{
 				Index:     entry.Index,
-				Name:      accountName,
+				Name:      displayName,
 				Action:    "updated",
-				AccountID: accountID,
+				AccountID: aid,
 			})
 			continue
 		}
 
-		account, createErr := h.adminService.CreateAccount(ctx, &service.CreateAccountInput{
-			Name:                  accountName,
-			Notes:                 req.Notes,
+		created, createErr := h.adminService.CreateAccount(ctx, &service.CreateAccountInput{
+			Name:                  displayName,
+			Notes:                 payload.Notes,
 			Platform:              service.PlatformOpenAI,
 			Type:                  service.AccountTypeOAuth,
-			Credentials:           credentials,
-			Extra:                 extra,
-			ProxyID:               req.ProxyID,
-			Concurrency:           concurrency,
-			Priority:              priority,
-			RateMultiplier:        req.RateMultiplier,
-			LoadFactor:            req.LoadFactor,
-			GroupIDs:              req.GroupIDs,
-			ExpiresAt:             effectiveExpiresAt,
-			AutoPauseOnExpired:    autoPauseOnExpired,
-			SkipDefaultGroupBind:  skipDefaultGroupBind,
-			SkipMixedChannelCheck: skipMixedChannelCheck,
+			Credentials:           mergedCreds,
+			Extra:                 mergedExtra,
+			ProxyID:               payload.ProxyID,
+			Concurrency:           concurrencyVal,
+			Priority:              priorityVal,
+			RateMultiplier:        payload.RateMultiplier,
+			LoadFactor:            payload.LoadFactor,
+			GroupIDs:              payload.GroupIDs,
+			ExpiresAt:             effectiveExpiry,
+			AutoPauseOnExpired:    autoPauseFlag,
+			SkipDefaultGroupBind:  skipDefaultGroup,
+			SkipMixedChannelCheck: bypassMixedCheck,
 		})
 		if createErr != nil {
-			result.Failed++
-			result.Items = append(result.Items, CodexSessionImportItem{
+			report.Failed++
+			report.Items = append(report.Items, CodexSessionImportItem{
 				Index:   entry.Index,
-				Name:    accountName,
+				Name:    displayName,
 				Action:  "failed",
 				Message: createErr.Error(),
 			})
-			result.Errors = append(result.Errors, CodexSessionImportMessage{
+			report.Errors = append(report.Errors, CodexSessionImportMessage{
 				Index:   entry.Index,
-				Name:    accountName,
+				Name:    displayName,
 				Message: createErr.Error(),
 			})
 			continue
 		}
-		if account != nil {
-			index.Add(*account)
+		if created != nil {
+			idx.Add(*created)
 		}
-		result.Created++
-		accountID := int64(0)
-		if account != nil {
-			accountID = account.ID
+		report.Created++
+		aid := int64(0)
+		if created != nil {
+			aid = created.ID
 		}
-		result.Items = append(result.Items, CodexSessionImportItem{
+		report.Items = append(report.Items, CodexSessionImportItem{
 			Index:     entry.Index,
-			Name:      accountName,
+			Name:      displayName,
 			Action:    "created",
-			AccountID: accountID,
+			AccountID: aid,
 		})
 	}
 
-	return result, nil
+	return report, nil
 }
 
-func parseCodexSessionImportEntries(req CodexSessionImportRequest) ([]codexImportEntry, error) {
-	contents := make([]string, 0, 1+len(req.Contents))
-	if strings.TrimSpace(req.Content) != "" {
-		contents = append(contents, req.Content)
+// importCodexSessions is retained for backward compat.
+func (h *AccountHandler) importCodexSessions(ctx context.Context, req CodexSessionImportRequest, entries []codexImportEntry) (CodexSessionImportResult, error) {
+	return h.executeCodexImport(ctx, req, entries)
+}
+
+func collectImportEntries(payload CodexSessionImportRequest) ([]codexImportEntry, error) {
+	rawContents := make([]string, 0, 1+len(payload.Contents))
+	if strings.TrimSpace(payload.Content) != "" {
+		rawContents = append(rawContents, payload.Content)
 	}
-	for _, content := range req.Contents {
-		if strings.TrimSpace(content) != "" {
-			contents = append(contents, content)
+	for _, c := range payload.Contents {
+		if strings.TrimSpace(c) != "" {
+			rawContents = append(rawContents, c)
 		}
 	}
 
-	var entries []codexImportEntry
-	for _, content := range contents {
-		values, err := parseCodexSessionImportContent(content)
-		if err != nil {
-			return nil, err
+	var result []codexImportEntry
+	for _, raw := range rawContents {
+		parsed, parseErr := parseImportContent(raw)
+		if parseErr != nil {
+			return nil, parseErr
 		}
-		for _, value := range values {
-			entries = append(entries, codexImportEntry{
-				Index: len(entries) + 1,
-				Value: value,
+		for _, val := range parsed {
+			result = append(result, codexImportEntry{
+				Index: len(result) + 1,
+				Value: val,
 			})
 		}
 	}
-	return entries, nil
+	return result, nil
 }
 
-func parseCodexSessionImportContent(content string) ([]any, error) {
-	trimmed := strings.TrimSpace(content)
+// parseCodexSessionImportEntries is retained for backward compat.
+func parseCodexSessionImportEntries(req CodexSessionImportRequest) ([]codexImportEntry, error) {
+	return collectImportEntries(req)
+}
+
+func parseImportContent(raw string) ([]any, error) {
+	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
 		return nil, nil
 	}
 
-	if looksLikeJSON(trimmed) {
-		values, err := decodeCodexJSONStream(trimmed)
-		if err != nil {
+	if startsWithJSON(trimmed) {
+		decoded, decErr := decodeJSONStream(trimmed)
+		if decErr != nil {
 			if strings.Contains(trimmed, "\n") {
-				if lineValues, lineErr := parseCodexSessionImportLines(trimmed); lineErr == nil {
-					return lineValues, nil
+				if lineVals, lineErr := parseImportByLines(trimmed); lineErr == nil {
+					return lineVals, nil
 				}
 			}
-			return nil, fmt.Errorf("JSON 解析失败: %w", err)
+			return nil, fmt.Errorf("JSON parse error: %w", decErr)
 		}
-		return flattenCodexImportValues(values), nil
+		return flattenImportValues(decoded), nil
 	}
 
-	return parseCodexSessionImportLines(trimmed)
+	return parseImportByLines(trimmed)
 }
 
-func parseCodexSessionImportLines(content string) ([]any, error) {
-	values := make([]any, 0)
-	for _, line := range strings.Split(content, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
+// parseCodexSessionImportContent is retained for backward compat.
+func parseCodexSessionImportContent(content string) ([]any, error) {
+	return parseImportContent(content)
+}
+
+func parseImportByLines(raw string) ([]any, error) {
+	collected := make([]any, 0)
+	for _, ln := range strings.Split(raw, "\n") {
+		ln = strings.TrimSpace(ln)
+		if ln == "" {
 			continue
 		}
-		if looksLikeJSON(line) {
-			lineValues, err := decodeCodexJSONStream(line)
-			if err != nil {
-				return nil, fmt.Errorf("第 %d 行 JSON 解析失败: %w", len(values)+1, err)
+		if startsWithJSON(ln) {
+			decoded, decErr := decodeJSONStream(ln)
+			if decErr != nil {
+				return nil, fmt.Errorf("JSON parse error at entry %d: %w", len(collected)+1, decErr)
 			}
-			values = append(values, flattenCodexImportValues(lineValues)...)
+			collected = append(collected, flattenImportValues(decoded)...)
 			continue
 		}
-		values = append(values, line)
+		collected = append(collected, ln)
 	}
-	return values, nil
+	return collected, nil
 }
 
-func decodeCodexJSONStream(content string) ([]any, error) {
-	decoder := json.NewDecoder(strings.NewReader(content))
-	decoder.UseNumber()
-	values := make([]any, 0, 1)
+// parseCodexSessionImportLines is retained for backward compat.
+func parseCodexSessionImportLines(content string) ([]any, error) {
+	return parseImportByLines(content)
+}
+
+func decodeJSONStream(raw string) ([]any, error) {
+	dec := json.NewDecoder(strings.NewReader(raw))
+	dec.UseNumber()
+	vals := make([]any, 0, 1)
 	for {
-		var value any
-		err := decoder.Decode(&value)
-		if errors.Is(err, io.EOF) {
+		var val any
+		decErr := dec.Decode(&val)
+		if errors.Is(decErr, io.EOF) {
 			break
 		}
-		if err != nil {
-			return nil, err
+		if decErr != nil {
+			return nil, decErr
 		}
-		values = append(values, value)
+		vals = append(vals, val)
 	}
-	if len(values) == 0 {
-		return nil, errors.New("空 JSON 内容")
+	if len(vals) == 0 {
+		return nil, errors.New("empty JSON content")
 	}
-	return values, nil
+	return vals, nil
 }
 
-func flattenCodexImportValues(values []any) []any {
-	out := make([]any, 0, len(values))
-	var appendValue func(any)
-	appendValue = func(value any) {
-		if arr, ok := value.([]any); ok {
-			for _, item := range arr {
-				appendValue(item)
+// decodeCodexJSONStream is retained for backward compat.
+func decodeCodexJSONStream(content string) ([]any, error) {
+	return decodeJSONStream(content)
+}
+
+func flattenImportValues(vals []any) []any {
+	flat := make([]any, 0, len(vals))
+	var recurse func(any)
+	recurse = func(v any) {
+		if arr, ok := v.([]any); ok {
+			for _, elem := range arr {
+				recurse(elem)
 			}
 			return
 		}
-		out = append(out, value)
+		flat = append(flat, v)
 	}
-	for _, value := range values {
-		appendValue(value)
+	for _, v := range vals {
+		recurse(v)
 	}
-	return out
+	return flat
 }
 
-func normalizeCodexImportEntry(entry codexImportEntry) (*codexImportAccount, error) {
-	now := time.Now().UTC()
-	item := &codexImportAccount{
+// flattenCodexImportValues is retained for backward compat.
+func flattenCodexImportValues(values []any) []any {
+	return flattenImportValues(values)
+}
+
+func normalizeImportEntry(entry codexImportEntry) (*codexImportAccount, error) {
+	ts := time.Now().UTC()
+	acct := &codexImportAccount{
 		Credentials: map[string]any{},
 		Extra: map[string]any{
 			"import_source": "codex_session",
-			"imported_at":   now.Format(time.RFC3339),
+			"imported_at":   ts.Format(time.RFC3339),
 		},
 	}
 
 	switch raw := entry.Value.(type) {
 	case string:
-		item.AccessToken = strings.TrimSpace(raw)
+		acct.AccessToken = strings.TrimSpace(raw)
 	case map[string]any:
-		item.AccessToken = firstCodexString(raw,
+		acct.AccessToken = extractNestedString(raw,
 			[]string{"tokens", "access_token"},
 			[]string{"tokens", "accessToken"},
 			[]string{"access_token"},
 			[]string{"accessToken"},
 			[]string{"token"},
 		)
-		item.RefreshToken = firstCodexString(raw,
+		acct.RefreshToken = extractNestedString(raw,
 			[]string{"tokens", "refresh_token"},
 			[]string{"tokens", "refreshToken"},
 			[]string{"refresh_token"},
 			[]string{"refreshToken"},
 		)
-		item.IDToken = firstCodexString(raw,
+		acct.IDToken = extractNestedString(raw,
 			[]string{"tokens", "id_token"},
 			[]string{"tokens", "idToken"},
 			[]string{"id_token"},
 			[]string{"idToken"},
 		)
-		item.Email = firstCodexString(raw, []string{"email"}, []string{"user", "email"})
-		item.AccountID = firstCodexString(raw,
+		acct.Email = extractNestedString(raw, []string{"email"}, []string{"user", "email"})
+		acct.AccountID = extractNestedString(raw,
 			[]string{"chatgpt_account_id"},
 			[]string{"chatgptAccountId"},
 			[]string{"account_id"},
@@ -501,177 +531,191 @@ func normalizeCodexImportEntry(entry codexImportEntry) (*codexImportAccount, err
 			[]string{"account", "account_id"},
 			[]string{"account", "chatgpt_account_id"},
 		)
-		item.UserID = firstCodexString(raw,
+		acct.UserID = extractNestedString(raw,
 			[]string{"chatgpt_user_id"},
 			[]string{"chatgptUserId"},
 			[]string{"user_id"},
 			[]string{"userId"},
 			[]string{"user", "id"},
 		)
-		item.PlanType = firstCodexString(raw,
+		acct.PlanType = extractNestedString(raw,
 			[]string{"plan_type"},
 			[]string{"planType"},
 			[]string{"account", "plan_type"},
 			[]string{"account", "planType"},
 		)
-		item.Organization = firstCodexString(raw,
+		acct.Organization = extractNestedString(raw,
 			[]string{"organization_id"},
 			[]string{"organizationId"},
 			[]string{"org_id"},
 			[]string{"orgId"},
 		)
-		item.Name = firstCodexString(raw, []string{"name"}, []string{"user", "name"})
-		authProvider := firstCodexString(raw, []string{"auth_provider"}, []string{"authProvider"})
-		if authProvider != "" {
-			item.Extra["auth_provider"] = authProvider
+		acct.Name = extractNestedString(raw, []string{"name"}, []string{"user", "name"})
+		if provider := extractNestedString(raw, []string{"auth_provider"}, []string{"authProvider"}); provider != "" {
+			acct.Extra["auth_provider"] = provider
 		}
-		if sessionToken := firstCodexString(raw, []string{"session_token"}, []string{"sessionToken"}); sessionToken != "" {
-			item.Extra["session_token_present"] = true
-			item.WarningTexts = append(item.WarningTexts, "sessionToken 已忽略，不会作为 OAuth refresh_token 存储")
+		if sessToken := extractNestedString(raw, []string{"session_token"}, []string{"sessionToken"}); sessToken != "" {
+			acct.Extra["session_token_present"] = true
+			acct.WarningTexts = append(acct.WarningTexts, "sessionToken was ignored and will not be stored as an OAuth refresh_token")
 		}
-		if sessionExpiresAt, ok := codexTimeAt(raw, []string{"expires"}); ok {
-			item.Extra["session_expires_at"] = sessionExpiresAt.Format(time.RFC3339)
+		if sessionExp, ok := resolveTimeAtPath(raw, []string{"expires"}); ok {
+			acct.Extra["session_expires_at"] = sessionExp.Format(time.RFC3339)
 		}
-		if tokenExpiresAt, ok := firstCodexTime(raw,
+		if tokenExp, ok := resolveFirstTime(raw,
 			[]string{"tokens", "expires_at"},
 			[]string{"tokens", "expiresAt"},
 			[]string{"expires_at"},
 			[]string{"expiresAt"},
 		); ok {
-			if tokenExpiresAt.Unix() <= now.Unix()-codexImportClockSkewSeconds {
-				return nil, fmt.Errorf("access_token 已过期: %s", tokenExpiresAt.Format(time.RFC3339))
+			if tokenExp.Unix() <= ts.Unix()-codexImportClockSkewSeconds {
+				return nil, fmt.Errorf("access_token has expired: %s", tokenExp.Format(time.RFC3339))
 			}
-			item.TokenExpiresAt = &tokenExpiresAt
-			item.Credentials["expires_at"] = tokenExpiresAt.Format(time.RFC3339)
+			acct.TokenExpiresAt = &tokenExp
+			acct.Credentials["expires_at"] = tokenExp.Format(time.RFC3339)
 		}
-		copyCodexExtraString(raw, item.Extra, "user_image", []string{"user", "image"})
-		copyCodexExtraString(raw, item.Extra, "user_picture", []string{"user", "picture"})
-		copyCodexExtraString(raw, item.Extra, "account_structure", []string{"account", "structure"})
-		copyCodexExtraString(raw, item.Extra, "account_residency_region", []string{"account", "residencyRegion"})
-		copyCodexExtraString(raw, item.Extra, "compute_residency", []string{"account", "computeResidency"})
+		copyExtraString(raw, acct.Extra, "user_image", []string{"user", "image"})
+		copyExtraString(raw, acct.Extra, "user_picture", []string{"user", "picture"})
+		copyExtraString(raw, acct.Extra, "account_structure", []string{"account", "structure"})
+		copyExtraString(raw, acct.Extra, "account_residency_region", []string{"account", "residencyRegion"})
+		copyExtraString(raw, acct.Extra, "compute_residency", []string{"account", "computeResidency"})
 	default:
-		return nil, fmt.Errorf("第 %d 条格式不支持", entry.Index)
+		return nil, fmt.Errorf("unsupported format for entry #%d", entry.Index)
 	}
 
-	if item.AccessToken == "" {
-		return nil, errors.New("缺少 accessToken/access_token")
+	if acct.AccessToken == "" {
+		return nil, errors.New("missing accessToken or access_token field")
 	}
-	item.Credentials["access_token"] = item.AccessToken
-	if item.RefreshToken != "" {
-		item.Credentials["refresh_token"] = item.RefreshToken
-		item.Credentials["client_id"] = openai.ClientID
+	acct.Credentials["access_token"] = acct.AccessToken
+	if acct.RefreshToken != "" {
+		acct.Credentials["refresh_token"] = acct.RefreshToken
+		acct.Credentials["client_id"] = openai.ClientID
 	}
-	if item.IDToken != "" {
-		item.Credentials["id_token"] = item.IDToken
-		_ = enrichCodexImportAccountFromJWT(item, item.IDToken, false, now)
+	if acct.IDToken != "" {
+		acct.Credentials["id_token"] = acct.IDToken
+		_ = enrichFromJWT(acct, acct.IDToken, false, ts)
 	}
-	if err := enrichCodexImportAccountFromJWT(item, item.AccessToken, true, now); err != nil {
-		return nil, err
+	if enrichErr := enrichFromJWT(acct, acct.AccessToken, true, ts); enrichErr != nil {
+		return nil, enrichErr
 	}
-	if _, ok := item.Credentials["expires_at"]; !ok {
-		item.WarningTexts = append(item.WarningTexts, "无法从 accessToken 解析过期时间，导入后需自行确认令牌有效性")
+	if _, ok := acct.Credentials["expires_at"]; !ok {
+		acct.WarningTexts = append(acct.WarningTexts, "Unable to parse token expiry from accessToken; verify validity manually after import")
 	}
-	if item.RefreshToken == "" {
-		item.WarningTexts = append(item.WarningTexts, "未包含 refresh_token，accessToken 过期后无法自动续期")
+	if acct.RefreshToken == "" {
+		acct.WarningTexts = append(acct.WarningTexts, "No refresh_token provided; automatic token renewal will not work after expiry")
 	}
 
-	setCodexCredentialIfNotEmpty(item.Credentials, "email", item.Email)
-	setCodexCredentialIfNotEmpty(item.Credentials, "chatgpt_account_id", item.AccountID)
-	setCodexCredentialIfNotEmpty(item.Credentials, "chatgpt_user_id", item.UserID)
-	setCodexCredentialIfNotEmpty(item.Credentials, "organization_id", item.Organization)
-	setCodexCredentialIfNotEmpty(item.Credentials, "plan_type", item.PlanType)
+	setCredentialIfPresent(acct.Credentials, "email", acct.Email)
+	setCredentialIfPresent(acct.Credentials, "chatgpt_account_id", acct.AccountID)
+	setCredentialIfPresent(acct.Credentials, "chatgpt_user_id", acct.UserID)
+	setCredentialIfPresent(acct.Credentials, "organization_id", acct.Organization)
+	setCredentialIfPresent(acct.Credentials, "plan_type", acct.PlanType)
 
-	fingerprint := codexTokenFingerprint(item.AccessToken)
-	item.Extra["access_token_sha256"] = fingerprint
-	item.IdentityKeys = buildCodexIdentityKeys(item.AccountID, item.UserID, item.Email, item.AccessToken)
-	item.Name = buildCodexImportAccountName(item, entry.Index)
+	fp := computeTokenFingerprint(acct.AccessToken)
+	acct.Extra["access_token_sha256"] = fp
+	acct.IdentityKeys = assembleIdentityKeys(acct.AccountID, acct.UserID, acct.Email, acct.AccessToken)
+	acct.Name = deriveImportAccountName(acct, entry.Index)
 
-	return item, nil
+	return acct, nil
 }
 
-func enrichCodexImportAccountFromJWT(item *codexImportAccount, token string, validateExpiry bool, now time.Time) error {
-	claims, err := decodeCodexJWTClaims(token)
-	if err != nil {
-		if validateExpiry {
-			item.WarningTexts = append(item.WarningTexts, "accessToken 不是可解析 JWT，无法校验过期时间和账号身份")
+// normalizeCodexImportEntry is retained for backward compat.
+func normalizeCodexImportEntry(entry codexImportEntry) (*codexImportAccount, error) {
+	return normalizeImportEntry(entry)
+}
+
+func enrichFromJWT(acct *codexImportAccount, token string, checkExpiry bool, now time.Time) error {
+	claims, decErr := decodeJWTPayload(token)
+	if decErr != nil {
+		if checkExpiry {
+			acct.WarningTexts = append(acct.WarningTexts, "accessToken is not a parseable JWT; cannot verify expiry or account identity")
 		}
 		return nil
 	}
-	if validateExpiry && claims.Exp > 0 {
+	if checkExpiry && claims.Exp > 0 {
 		if now.Unix() > claims.Exp+codexImportClockSkewSeconds {
-			return fmt.Errorf("access_token 已过期: %s", time.Unix(claims.Exp, 0).UTC().Format(time.RFC3339))
+			return fmt.Errorf("access_token has expired: %s", time.Unix(claims.Exp, 0).UTC().Format(time.RFC3339))
 		}
-		expiresAt := time.Unix(claims.Exp, 0).UTC()
-		item.TokenExpiresAt = &expiresAt
-		item.Credentials["expires_at"] = expiresAt.Format(time.RFC3339)
+		exp := time.Unix(claims.Exp, 0).UTC()
+		acct.TokenExpiresAt = &exp
+		acct.Credentials["expires_at"] = exp.Format(time.RFC3339)
 	}
-	if item.Email == "" {
-		item.Email = strings.TrimSpace(claims.Email)
+	if acct.Email == "" {
+		acct.Email = strings.TrimSpace(claims.Email)
 	}
 	if claims.OpenAIAuth == nil {
-		if item.UserID == "" {
-			item.UserID = strings.TrimSpace(claims.Sub)
+		if acct.UserID == "" {
+			acct.UserID = strings.TrimSpace(claims.Sub)
 		}
 		return nil
 	}
-	if item.AccountID == "" {
-		item.AccountID = strings.TrimSpace(claims.OpenAIAuth.ChatGPTAccountID)
+	if acct.AccountID == "" {
+		acct.AccountID = strings.TrimSpace(claims.OpenAIAuth.ChatGPTAccountID)
 	}
-	if item.UserID == "" {
-		item.UserID = strings.TrimSpace(claims.OpenAIAuth.ChatGPTUserID)
+	if acct.UserID == "" {
+		acct.UserID = strings.TrimSpace(claims.OpenAIAuth.ChatGPTUserID)
 	}
-	if item.UserID == "" {
-		item.UserID = strings.TrimSpace(claims.OpenAIAuth.UserID)
+	if acct.UserID == "" {
+		acct.UserID = strings.TrimSpace(claims.OpenAIAuth.UserID)
 	}
-	if item.PlanType == "" {
-		item.PlanType = strings.TrimSpace(claims.OpenAIAuth.ChatGPTPlanType)
+	if acct.PlanType == "" {
+		acct.PlanType = strings.TrimSpace(claims.OpenAIAuth.ChatGPTPlanType)
 	}
-	if item.Organization == "" {
-		item.Organization = strings.TrimSpace(claims.OpenAIAuth.POID)
+	if acct.Organization == "" {
+		acct.Organization = strings.TrimSpace(claims.OpenAIAuth.POID)
 	}
-	if item.Organization == "" {
+	if acct.Organization == "" {
 		for _, org := range claims.OpenAIAuth.Organizations {
 			if org.IsDefault {
-				item.Organization = org.ID
+				acct.Organization = org.ID
 				break
 			}
 		}
 	}
-	if item.Organization == "" && len(claims.OpenAIAuth.Organizations) > 0 {
-		item.Organization = claims.OpenAIAuth.Organizations[0].ID
+	if acct.Organization == "" && len(claims.OpenAIAuth.Organizations) > 0 {
+		acct.Organization = claims.OpenAIAuth.Organizations[0].ID
 	}
-	if item.UserID == "" {
-		item.UserID = strings.TrimSpace(claims.Sub)
+	if acct.UserID == "" {
+		acct.UserID = strings.TrimSpace(claims.Sub)
 	}
 	return nil
 }
 
-func decodeCodexJWTClaims(token string) (*codexJWTClaims, error) {
-	parts := strings.Split(token, ".")
-	if len(parts) != 3 {
-		return nil, fmt.Errorf("invalid JWT format")
+// enrichCodexImportAccountFromJWT is retained for backward compat.
+func enrichCodexImportAccountFromJWT(item *codexImportAccount, token string, validateExpiry bool, now time.Time) error {
+	return enrichFromJWT(item, token, validateExpiry, now)
+}
+
+func decodeJWTPayload(token string) (*codexJWTClaims, error) {
+	segments := strings.Split(token, ".")
+	if len(segments) != 3 {
+		return nil, fmt.Errorf("token does not have three JWT segments")
 	}
-	payload, err := decodeCodexJWTSegment(parts[1])
-	if err != nil {
-		return nil, err
+	decoded, decErr := decodeBase64Segment(segments[1])
+	if decErr != nil {
+		return nil, decErr
 	}
 	var claims codexJWTClaims
-	if err := json.Unmarshal(payload, &claims); err != nil {
-		return nil, err
+	if unmarshalErr := json.Unmarshal(decoded, &claims); unmarshalErr != nil {
+		return nil, unmarshalErr
 	}
 	return &claims, nil
 }
 
-func decodeCodexJWTSegment(segment string) ([]byte, error) {
-	if decoded, err := base64.RawURLEncoding.DecodeString(segment); err == nil {
+// decodeCodexJWTClaims is retained for backward compat.
+func decodeCodexJWTClaims(token string) (*codexJWTClaims, error) {
+	return decodeJWTPayload(token)
+}
+
+func decodeBase64Segment(seg string) ([]byte, error) {
+	if decoded, err := base64.RawURLEncoding.DecodeString(seg); err == nil {
 		return decoded, nil
 	}
-	if decoded, err := base64.RawStdEncoding.DecodeString(segment); err == nil {
+	if decoded, err := base64.RawStdEncoding.DecodeString(seg); err == nil {
 		return decoded, nil
 	}
-	padded := segment
-	if rem := len(padded) % 4; rem > 0 {
-		padded += strings.Repeat("=", 4-rem)
+	padded := seg
+	if remainder := len(padded) % 4; remainder > 0 {
+		padded += strings.Repeat("=", 4-remainder)
 	}
 	if decoded, err := base64.URLEncoding.DecodeString(padded); err == nil {
 		return decoded, nil
@@ -679,101 +723,127 @@ func decodeCodexJWTSegment(segment string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(padded)
 }
 
+// decodeCodexJWTSegment is retained for backward compat.
+func decodeCodexJWTSegment(segment string) ([]byte, error) {
+	return decodeBase64Segment(segment)
+}
+
+func deriveImportAccountName(acct *codexImportAccount, index int) string {
+	candidates := []string{acct.Name, acct.Email, acct.AccountID, acct.UserID}
+	for _, c := range candidates {
+		c = strings.TrimSpace(c)
+		if c != "" {
+			return c
+		}
+	}
+	return fmt.Sprintf("Codex Import Account %d", index)
+}
+
+// buildCodexImportAccountName is retained for backward compat.
 func buildCodexImportAccountName(item *codexImportAccount, index int) string {
-	for _, candidate := range []string{item.Name, item.Email, item.AccountID, item.UserID} {
-		candidate = strings.TrimSpace(candidate)
-		if candidate != "" {
-			return candidate
-		}
-	}
-	return fmt.Sprintf("Codex 导入账号 %d", index)
+	return deriveImportAccountName(item, index)
 }
 
+func deriveAccountDisplayName(baseName string, acct *codexImportAccount, index, totalCount int) string {
+	baseName = strings.TrimSpace(baseName)
+	if baseName == "" {
+		if acct == nil {
+			return fmt.Sprintf("Codex Import Account %d", index)
+		}
+		return acct.Name
+	}
+	if totalCount > 1 {
+		return fmt.Sprintf("%s #%d", baseName, index)
+	}
+	return baseName
+}
+
+// buildCodexCreateAccountName is retained for backward compat.
 func buildCodexCreateAccountName(base string, item *codexImportAccount, index, total int) string {
-	base = strings.TrimSpace(base)
-	if base == "" {
-		if item == nil {
-			return fmt.Sprintf("Codex 导入账号 %d", index)
-		}
-		return item.Name
-	}
-	if total > 1 {
-		return fmt.Sprintf("%s #%d", base, index)
-	}
-	return base
+	return deriveAccountDisplayName(base, item, index, total)
 }
 
-func resolveCodexImportExpiry(req CodexSessionImportRequest, item *codexImportAccount) (*int64, *time.Time, *bool, []string, error) {
-	if item == nil {
-		return nil, nil, nil, nil, errors.New("导入项为空")
+func computeImportExpiry(payload CodexSessionImportRequest, acct *codexImportAccount) (*int64, *time.Time, *bool, []string, error) {
+	if acct == nil {
+		return nil, nil, nil, nil, errors.New("import entry is nil")
 	}
 
-	var requestExpiresAt *time.Time
-	if req.ExpiresAt != nil && *req.ExpiresAt > 0 {
-		t := time.Unix(*req.ExpiresAt, 0).UTC()
-		requestExpiresAt = &t
+	var requestExpiry *time.Time
+	if payload.ExpiresAt != nil && *payload.ExpiresAt > 0 {
+		t := time.Unix(*payload.ExpiresAt, 0).UTC()
+		requestExpiry = &t
 	}
 
-	var accountExpiresAt *time.Time
-	var credentialExpiresAt *time.Time
+	var accountExpiry *time.Time
+	var credExpiry *time.Time
 	warnings := make([]string, 0, 2)
-	if item.RefreshToken == "" {
-		if item.TokenExpiresAt != nil {
-			tokenExpiresAt := item.TokenExpiresAt.UTC()
-			accountExpiresAt = &tokenExpiresAt
-			credentialExpiresAt = &tokenExpiresAt
+	if acct.RefreshToken == "" {
+		if acct.TokenExpiresAt != nil {
+			exp := acct.TokenExpiresAt.UTC()
+			accountExpiry = &exp
+			credExpiry = &exp
 		}
-		if requestExpiresAt != nil {
-			accountExpiresAt = earlierCodexTime(accountExpiresAt, requestExpiresAt)
-			credentialExpiresAt = earlierCodexTime(credentialExpiresAt, requestExpiresAt)
+		if requestExpiry != nil {
+			accountExpiry = pickEarlierTime(accountExpiry, requestExpiry)
+			credExpiry = pickEarlierTime(credExpiry, requestExpiry)
 		}
-		if accountExpiresAt == nil {
-			return nil, nil, nil, nil, errors.New("未包含 refresh_token，且无法解析 accessToken 过期时间；请在第一步设置过期时间后再导入")
+		if accountExpiry == nil {
+			return nil, nil, nil, nil, errors.New("no refresh_token and unable to determine token expiry; set an explicit expiry before importing")
 		}
-		if accountExpiresAt.Unix() <= time.Now().UTC().Unix()-codexImportClockSkewSeconds {
-			return nil, nil, nil, nil, fmt.Errorf("过期时间已过期: %s", accountExpiresAt.Format(time.RFC3339))
+		if accountExpiry.Unix() <= time.Now().UTC().Unix()-codexImportClockSkewSeconds {
+			return nil, nil, nil, nil, fmt.Errorf("expiry has already passed: %s", accountExpiry.Format(time.RFC3339))
 		}
-		warnings = append(warnings, "未包含 refresh_token，已按 accessToken/账号过期时间设置自动停止调度")
-		if req.AutoPauseOnExpired != nil && !*req.AutoPauseOnExpired {
-			warnings = append(warnings, "未包含 refresh_token，已强制开启过期自动暂停")
+		warnings = append(warnings, "No refresh_token present; auto-pause will be enabled at token/account expiry")
+		if payload.AutoPauseOnExpired != nil && !*payload.AutoPauseOnExpired {
+			warnings = append(warnings, "No refresh_token present; auto-pause on expiry has been force-enabled")
 		}
-		autoPause := true
-		expiresAtUnix := accountExpiresAt.Unix()
-		return &expiresAtUnix, credentialExpiresAt, &autoPause, warnings, nil
+		enablePause := true
+		expiryEpoch := accountExpiry.Unix()
+		return &expiryEpoch, credExpiry, &enablePause, warnings, nil
 	}
 
-	if requestExpiresAt != nil {
-		accountExpiresAt = requestExpiresAt
+	if requestExpiry != nil {
+		accountExpiry = requestExpiry
 	}
-	if item.TokenExpiresAt != nil {
-		tokenExpiresAt := item.TokenExpiresAt.UTC()
-		credentialExpiresAt = &tokenExpiresAt
+	if acct.TokenExpiresAt != nil {
+		exp := acct.TokenExpiresAt.UTC()
+		credExpiry = &exp
 	}
-	var expiresAtUnix *int64
-	if accountExpiresAt != nil {
-		v := accountExpiresAt.Unix()
-		expiresAtUnix = &v
+	var expiryEpoch *int64
+	if accountExpiry != nil {
+		v := accountExpiry.Unix()
+		expiryEpoch = &v
 	}
-	return expiresAtUnix, credentialExpiresAt, req.AutoPauseOnExpired, warnings, nil
+	return expiryEpoch, credExpiry, payload.AutoPauseOnExpired, warnings, nil
 }
 
-func earlierCodexTime(current, candidate *time.Time) *time.Time {
-	if candidate == nil {
-		return current
+// resolveCodexImportExpiry is retained for backward compat.
+func resolveCodexImportExpiry(req CodexSessionImportRequest, item *codexImportAccount) (*int64, *time.Time, *bool, []string, error) {
+	return computeImportExpiry(req, item)
+}
+
+func pickEarlierTime(a, b *time.Time) *time.Time {
+	if b == nil {
+		return a
 	}
-	if current == nil || candidate.Before(*current) {
-		t := candidate.UTC()
+	if a == nil || b.Before(*a) {
+		t := b.UTC()
 		return &t
 	}
-	t := current.UTC()
+	t := a.UTC()
 	return &t
 }
 
-func sanitizeCodexImportCredentialExtras(input map[string]any) map[string]any {
+// earlierCodexTime is retained for backward compat.
+func earlierCodexTime(current, candidate *time.Time) *time.Time {
+	return pickEarlierTime(current, candidate)
+}
+
+func filterProtectedCredentialKeys(input map[string]any) map[string]any {
 	if len(input) == 0 {
 		return nil
 	}
-	protected := map[string]struct{}{
+	reserved := map[string]struct{}{
 		"access_token":       {},
 		"refresh_token":      {},
 		"id_token":           {},
@@ -785,24 +855,29 @@ func sanitizeCodexImportCredentialExtras(input map[string]any) map[string]any {
 		"plan_type":          {},
 		"client_id":          {},
 	}
-	out := make(map[string]any, len(input))
-	for key, value := range input {
-		normalizedKey := strings.TrimSpace(key)
-		if normalizedKey == "" {
+	filtered := make(map[string]any, len(input))
+	for k, v := range input {
+		cleaned := strings.TrimSpace(k)
+		if cleaned == "" {
 			continue
 		}
-		if _, ok := protected[strings.ToLower(normalizedKey)]; ok {
+		if _, isReserved := reserved[strings.ToLower(cleaned)]; isReserved {
 			continue
 		}
-		out[normalizedKey] = value
+		filtered[cleaned] = v
 	}
-	if len(out) == 0 {
+	if len(filtered) == 0 {
 		return nil
 	}
-	return out
+	return filtered
 }
 
-func buildCodexIdentityKeys(accountID, userID, email, accessToken string) []string {
+// sanitizeCodexImportCredentialExtras is retained for backward compat.
+func sanitizeCodexImportCredentialExtras(input map[string]any) map[string]any {
+	return filterProtectedCredentialKeys(input)
+}
+
+func assembleIdentityKeys(accountID, userID, email, accessToken string) []string {
 	keys := make([]string, 0, 4)
 	accountID = strings.TrimSpace(accountID)
 	userID = strings.TrimSpace(userID)
@@ -818,107 +893,147 @@ func buildCodexIdentityKeys(accountID, userID, email, accessToken string) []stri
 		}
 	}
 	if accessToken = strings.TrimSpace(accessToken); accessToken != "" {
-		keys = append(keys, "access:"+codexTokenFingerprint(accessToken))
+		keys = append(keys, "access:"+computeTokenFingerprint(accessToken))
 	}
 	return keys
 }
 
-func buildCodexAccountIndex(accounts []service.Account) *codexAccountIndex {
-	index := &codexAccountIndex{accountsByKey: map[string]service.Account{}}
-	for _, account := range accounts {
-		index.Add(account)
-	}
-	return index
+// buildCodexIdentityKeys is retained for backward compat.
+func buildCodexIdentityKeys(accountID, userID, email, accessToken string) []string {
+	return assembleIdentityKeys(accountID, userID, email, accessToken)
 }
 
-func (i *codexAccountIndex) Add(account service.Account) {
-	if i == nil {
+func newAccountIndex(accounts []service.Account) *codexAccountIndex {
+	idx := &codexAccountIndex{accountsByKey: map[string]service.Account{}}
+	for _, a := range accounts {
+		idx.Add(a)
+	}
+	return idx
+}
+
+// buildCodexAccountIndex is retained for backward compat.
+func buildCodexAccountIndex(accounts []service.Account) *codexAccountIndex {
+	return newAccountIndex(accounts)
+}
+
+func (ci *codexAccountIndex) Add(account service.Account) {
+	if ci == nil {
 		return
 	}
-	if i.accountsByKey == nil {
-		i.accountsByKey = map[string]service.Account{}
+	if ci.accountsByKey == nil {
+		ci.accountsByKey = map[string]service.Account{}
 	}
-	keys := buildCodexIdentityKeys(
-		codexCredentialString(account.Credentials, "chatgpt_account_id"),
-		codexCredentialString(account.Credentials, "chatgpt_user_id"),
-		codexCredentialString(account.Credentials, "email"),
-		codexCredentialString(account.Credentials, "access_token"),
+	keys := assembleIdentityKeys(
+		credentialStr(account.Credentials, "chatgpt_account_id"),
+		credentialStr(account.Credentials, "chatgpt_user_id"),
+		credentialStr(account.Credentials, "email"),
+		credentialStr(account.Credentials, "access_token"),
 	)
-	for _, key := range keys {
-		i.accountsByKey[key] = account
+	for _, k := range keys {
+		ci.accountsByKey[k] = account
 	}
 }
 
-func (i *codexAccountIndex) Find(keys []string) *service.Account {
-	if i == nil {
+func (ci *codexAccountIndex) Find(keys []string) *service.Account {
+	if ci == nil {
 		return nil
 	}
-	for _, key := range keys {
-		if account, ok := i.accountsByKey[key]; ok {
-			return &account
+	for _, k := range keys {
+		if acct, exists := ci.accountsByKey[k]; exists {
+			return &acct
 		}
 	}
 	return nil
 }
 
-func firstSeenCodexIdentity(seen map[string]int, keys []string) (int, bool) {
-	for _, key := range keys {
-		if index, ok := seen[key]; ok {
-			return index, true
+func findFirstSeenIdentity(visited map[string]int, keys []string) (int, bool) {
+	for _, k := range keys {
+		if idx, exists := visited[k]; exists {
+			return idx, true
 		}
 	}
 	return 0, false
 }
 
+// firstSeenCodexIdentity is retained for backward compat.
+func firstSeenCodexIdentity(seen map[string]int, keys []string) (int, bool) {
+	return findFirstSeenIdentity(seen, keys)
+}
+
+func recordSeenIdentity(visited map[string]int, keys []string, index int) {
+	for _, k := range keys {
+		visited[k] = index
+	}
+}
+
+// markCodexIdentitySeen is retained for backward compat.
 func markCodexIdentitySeen(seen map[string]int, keys []string, index int) {
-	for _, key := range keys {
-		seen[key] = index
-	}
+	recordSeenIdentity(seen, keys, index)
 }
 
+func combineMaps(base, overlay map[string]any) map[string]any {
+	merged := make(map[string]any, len(base)+len(overlay))
+	for k, v := range base {
+		merged[k] = v
+	}
+	for k, v := range overlay {
+		merged[k] = v
+	}
+	return merged
+}
+
+// mergeCodexImportMap is retained for backward compat.
 func mergeCodexImportMap(existing, incoming map[string]any) map[string]any {
-	out := make(map[string]any, len(existing)+len(incoming))
-	for k, v := range existing {
-		out[k] = v
-	}
-	for k, v := range incoming {
-		out[k] = v
-	}
-	return out
+	return combineMaps(existing, incoming)
 }
 
+func mergeAccountCredentials(existing, incoming map[string]any, acct *codexImportAccount) map[string]any {
+	merged := combineMaps(existing, incoming)
+	if acct == nil {
+		return merged
+	}
+	if strings.TrimSpace(acct.RefreshToken) == "" {
+		delete(merged, "refresh_token")
+		delete(merged, "client_id")
+	}
+	if strings.TrimSpace(acct.IDToken) == "" {
+		delete(merged, "id_token")
+	}
+	return merged
+}
+
+// mergeCodexImportCredentials is retained for backward compat.
 func mergeCodexImportCredentials(existing, incoming map[string]any, item *codexImportAccount) map[string]any {
-	out := mergeCodexImportMap(existing, incoming)
-	if item == nil {
-		return out
-	}
-	if strings.TrimSpace(item.RefreshToken) == "" {
-		delete(out, "refresh_token")
-		delete(out, "client_id")
-	}
-	if strings.TrimSpace(item.IDToken) == "" {
-		delete(out, "id_token")
-	}
-	return out
+	return mergeAccountCredentials(existing, incoming, item)
 }
 
-func codexCredentialString(credentials map[string]any, key string) string {
-	if credentials == nil {
+func credentialStr(creds map[string]any, key string) string {
+	if creds == nil {
 		return ""
 	}
-	return codexStringValue(credentials[key])
+	return anyToString(creds[key])
 }
 
+// codexCredentialString is retained for backward compat.
+func codexCredentialString(credentials map[string]any, key string) string {
+	return credentialStr(credentials, key)
+}
+
+func computeTokenFingerprint(token string) string {
+	digest := sha256.Sum256([]byte(strings.TrimSpace(token)))
+	return hex.EncodeToString(digest[:])
+}
+
+// codexTokenFingerprint is retained for backward compat.
 func codexTokenFingerprint(token string) string {
-	sum := sha256.Sum256([]byte(strings.TrimSpace(token)))
-	return hex.EncodeToString(sum[:])
+	return computeTokenFingerprint(token)
 }
 
-func looksLikeJSON(content string) bool {
-	if content == "" {
+func startsWithJSON(raw string) bool {
+	if raw == "" {
 		return false
 	}
-	switch content[0] {
+	switch raw[0] {
 	case '{', '[':
 		return true
 	default:
@@ -926,118 +1041,168 @@ func looksLikeJSON(content string) bool {
 	}
 }
 
-func firstCodexString(obj map[string]any, paths ...[]string) string {
+// looksLikeJSON is retained for backward compat.
+func looksLikeJSON(content string) bool {
+	return startsWithJSON(content)
+}
+
+func extractNestedString(obj map[string]any, paths ...[]string) string {
 	for _, path := range paths {
-		if value, ok := codexPathValue(obj, path); ok {
-			if str := codexStringValue(value); str != "" {
-				return str
+		if val, ok := walkPath(obj, path); ok {
+			if s := anyToString(val); s != "" {
+				return s
 			}
 		}
 	}
 	return ""
 }
 
-func copyCodexExtraString(obj map[string]any, extra map[string]any, key string, path []string) {
-	value := firstCodexString(obj, path)
-	if value != "" {
-		extra[key] = value
+// firstCodexString is retained for backward compat.
+func firstCodexString(obj map[string]any, paths ...[]string) string {
+	return extractNestedString(obj, paths...)
+}
+
+func copyExtraString(obj map[string]any, extra map[string]any, key string, path []string) {
+	val := extractNestedString(obj, path)
+	if val != "" {
+		extra[key] = val
 	}
 }
 
-func firstCodexTime(obj map[string]any, paths ...[]string) (time.Time, bool) {
+// copyCodexExtraString is retained for backward compat.
+func copyCodexExtraString(obj map[string]any, extra map[string]any, key string, path []string) {
+	copyExtraString(obj, extra, key, path)
+}
+
+func resolveFirstTime(obj map[string]any, paths ...[]string) (time.Time, bool) {
 	for _, path := range paths {
-		if value, ok := codexTimeAt(obj, path); ok {
-			return value, true
+		if t, ok := resolveTimeAtPath(obj, path); ok {
+			return t, true
 		}
 	}
 	return time.Time{}, false
 }
 
-func codexTimeAt(obj map[string]any, path []string) (time.Time, bool) {
-	value, ok := codexPathValue(obj, path)
+// firstCodexTime is retained for backward compat.
+func firstCodexTime(obj map[string]any, paths ...[]string) (time.Time, bool) {
+	return resolveFirstTime(obj, paths...)
+}
+
+func resolveTimeAtPath(obj map[string]any, path []string) (time.Time, bool) {
+	val, ok := walkPath(obj, path)
 	if !ok {
 		return time.Time{}, false
 	}
-	return parseCodexTimeValue(value)
+	return interpretTimeValue(val)
 }
 
-func codexPathValue(obj map[string]any, path []string) (any, bool) {
-	var current any = obj
-	for _, key := range path {
-		currentObj, ok := current.(map[string]any)
+// codexTimeAt is retained for backward compat.
+func codexTimeAt(obj map[string]any, path []string) (time.Time, bool) {
+	return resolveTimeAtPath(obj, path)
+}
+
+func walkPath(obj map[string]any, path []string) (any, bool) {
+	var cursor any = obj
+	for _, segment := range path {
+		m, ok := cursor.(map[string]any)
 		if !ok {
 			return nil, false
 		}
-		value, ok := currentObj[key]
-		if !ok {
+		val, exists := m[segment]
+		if !exists {
 			return nil, false
 		}
-		current = value
+		cursor = val
 	}
-	return current, true
+	return cursor, true
 }
 
-func codexStringValue(value any) string {
-	switch v := value.(type) {
+// codexPathValue is retained for backward compat.
+func codexPathValue(obj map[string]any, path []string) (any, bool) {
+	return walkPath(obj, path)
+}
+
+func anyToString(val any) string {
+	switch typed := val.(type) {
 	case string:
-		return strings.TrimSpace(v)
+		return strings.TrimSpace(typed)
 	case json.Number:
-		return strings.TrimSpace(v.String())
+		return strings.TrimSpace(typed.String())
 	case float64:
-		return strings.TrimSpace(strconv.FormatFloat(v, 'f', -1, 64))
+		return strings.TrimSpace(strconv.FormatFloat(typed, 'f', -1, 64))
 	case float32:
-		return strings.TrimSpace(strconv.FormatFloat(float64(v), 'f', -1, 32))
+		return strings.TrimSpace(strconv.FormatFloat(float64(typed), 'f', -1, 32))
 	case int:
-		return strconv.Itoa(v)
+		return strconv.Itoa(typed)
 	case int64:
-		return strconv.FormatInt(v, 10)
+		return strconv.FormatInt(typed, 10)
 	case int32:
-		return strconv.FormatInt(int64(v), 10)
+		return strconv.FormatInt(int64(typed), 10)
 	default:
 		return ""
 	}
 }
 
-func setCodexCredentialIfNotEmpty(credentials map[string]any, key, value string) {
-	value = strings.TrimSpace(value)
-	if value != "" {
-		credentials[key] = value
+// codexStringValue is retained for backward compat.
+func codexStringValue(value any) string {
+	return anyToString(value)
+}
+
+func setCredentialIfPresent(creds map[string]any, key, val string) {
+	val = strings.TrimSpace(val)
+	if val != "" {
+		creds[key] = val
 	}
 }
 
-func parseCodexTimeValue(value any) (time.Time, bool) {
-	switch v := value.(type) {
+// setCodexCredentialIfNotEmpty is retained for backward compat.
+func setCodexCredentialIfNotEmpty(credentials map[string]any, key, value string) {
+	setCredentialIfPresent(credentials, key, value)
+}
+
+func interpretTimeValue(val any) (time.Time, bool) {
+	switch typed := val.(type) {
 	case string:
-		v = strings.TrimSpace(v)
-		if v == "" {
+		typed = strings.TrimSpace(typed)
+		if typed == "" {
 			return time.Time{}, false
 		}
-		if parsed, err := time.Parse(time.RFC3339Nano, v); err == nil {
+		if parsed, parseErr := time.Parse(time.RFC3339Nano, typed); parseErr == nil {
 			return parsed.UTC(), true
 		}
-		if n, err := strconv.ParseInt(v, 10, 64); err == nil {
-			return codexUnixTime(n), true
+		if epoch, parseErr := strconv.ParseInt(typed, 10, 64); parseErr == nil {
+			return normalizeEpoch(epoch), true
 		}
 	case json.Number:
-		if n, err := v.Int64(); err == nil {
-			return codexUnixTime(n), true
+		if epoch, err := typed.Int64(); err == nil {
+			return normalizeEpoch(epoch), true
 		}
-		if f, err := v.Float64(); err == nil {
-			return codexUnixTime(int64(f)), true
+		if flt, err := typed.Float64(); err == nil {
+			return normalizeEpoch(int64(flt)), true
 		}
 	case float64:
-		return codexUnixTime(int64(v)), true
+		return normalizeEpoch(int64(typed)), true
 	case int:
-		return codexUnixTime(int64(v)), true
+		return normalizeEpoch(int64(typed)), true
 	case int64:
-		return codexUnixTime(v), true
+		return normalizeEpoch(typed), true
 	}
 	return time.Time{}, false
 }
 
-func codexUnixTime(value int64) time.Time {
-	if value > 1_000_000_000_000 {
-		return time.UnixMilli(value).UTC()
+// parseCodexTimeValue is retained for backward compat.
+func parseCodexTimeValue(value any) (time.Time, bool) {
+	return interpretTimeValue(value)
+}
+
+func normalizeEpoch(val int64) time.Time {
+	if val > 1_000_000_000_000 {
+		return time.UnixMilli(val).UTC()
 	}
-	return time.Unix(value, 0).UTC()
+	return time.Unix(val, 0).UTC()
+}
+
+// codexUnixTime is retained for backward compat.
+func codexUnixTime(value int64) time.Time {
+	return normalizeEpoch(value)
 }

@@ -36,6 +36,7 @@ var (
 	vertexAnthropicAlreadyDatedIDPattern = regexp.MustCompile(`^.+@[0-9]{8}$`)
 )
 
+// vertexServiceAccountKey holds the parsed fields from a GCP service account JSON.
 type vertexServiceAccountKey struct {
 	Type         string `json:"type"`
 	ProjectID    string `json:"project_id"`
@@ -45,6 +46,7 @@ type vertexServiceAccountKey struct {
 	TokenURI     string `json:"token_uri"`
 }
 
+// vertexTokenResponse is the JSON structure returned by the Google OAuth2 token endpoint.
 type vertexTokenResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
@@ -61,12 +63,12 @@ func (a *Account) VertexProjectID() string {
 	if a == nil {
 		return ""
 	}
-	if v := strings.TrimSpace(a.GetCredential("project_id")); v != "" {
-		return v
+	if proj := strings.TrimSpace(a.GetCredential("project_id")); proj != "" {
+		return proj
 	}
-	key, err := parseVertexServiceAccountKey(a)
-	if err == nil {
-		return strings.TrimSpace(key.ProjectID)
+	parsed, parseErr := decodeServiceAccountKey(a)
+	if parseErr == nil {
+		return strings.TrimSpace(parsed.ProjectID)
 	}
 	return ""
 }
@@ -76,210 +78,216 @@ func (a *Account) VertexLocation(model string) string {
 		return vertexDefaultLocation
 	}
 	if model != "" && a.Credentials != nil {
-		if raw, ok := a.Credentials["vertex_model_locations"].(map[string]any); ok {
-			if loc, ok := raw[model].(string); ok && strings.TrimSpace(loc) != "" {
-				return strings.TrimSpace(loc)
+		if locMap, ok := a.Credentials["vertex_model_locations"].(map[string]any); ok {
+			if regionStr, ok := locMap[model].(string); ok && strings.TrimSpace(regionStr) != "" {
+				return strings.TrimSpace(regionStr)
 			}
 		}
 	}
-	if v := strings.TrimSpace(a.GetCredential("location")); v != "" {
-		return v
+	if loc := strings.TrimSpace(a.GetCredential("location")); loc != "" {
+		return loc
 	}
-	if v := strings.TrimSpace(a.GetCredential("vertex_location")); v != "" {
-		return v
+	if loc := strings.TrimSpace(a.GetCredential("vertex_location")); loc != "" {
+		return loc
 	}
 	return vertexDefaultLocation
 }
 
-func parseVertexServiceAccountKey(account *Account) (*vertexServiceAccountKey, error) {
-	if account == nil || account.Credentials == nil {
-		return nil, errors.New("service account credentials not configured")
+// decodeServiceAccountKey extracts and parses the service account JSON from an account's credentials.
+func decodeServiceAccountKey(acct *Account) (*vertexServiceAccountKey, error) {
+	if acct == nil || acct.Credentials == nil {
+		return nil, errors.New("service account credentials are not configured")
 	}
 
-	if raw := strings.TrimSpace(account.GetCredential("service_account_json")); raw != "" {
-		return parseVertexServiceAccountJSON([]byte(raw))
+	if blob := strings.TrimSpace(acct.GetCredential("service_account_json")); blob != "" {
+		return unmarshalServiceAccountJSON([]byte(blob))
 	}
-	if raw := strings.TrimSpace(account.GetCredential("service_account")); raw != "" {
-		return parseVertexServiceAccountJSON([]byte(raw))
+	if blob := strings.TrimSpace(acct.GetCredential("service_account")); blob != "" {
+		return unmarshalServiceAccountJSON([]byte(blob))
 	}
-	if nested, ok := account.Credentials["service_account_json"].(map[string]any); ok {
-		b, _ := json.Marshal(nested)
-		return parseVertexServiceAccountJSON(b)
+	if nested, ok := acct.Credentials["service_account_json"].(map[string]any); ok {
+		encoded, _ := json.Marshal(nested)
+		return unmarshalServiceAccountJSON(encoded)
 	}
-	if nested, ok := account.Credentials["service_account"].(map[string]any); ok {
-		b, _ := json.Marshal(nested)
-		return parseVertexServiceAccountJSON(b)
+	if nested, ok := acct.Credentials["service_account"].(map[string]any); ok {
+		encoded, _ := json.Marshal(nested)
+		return unmarshalServiceAccountJSON(encoded)
 	}
-	return nil, errors.New("service_account_json not found in credentials")
+	return nil, errors.New("service_account_json field not found in credentials")
 }
 
-func parseVertexServiceAccountJSON(raw []byte) (*vertexServiceAccountKey, error) {
-	var key vertexServiceAccountKey
-	if err := json.Unmarshal(raw, &key); err != nil {
-		return nil, fmt.Errorf("invalid service account json: %w", err)
+// unmarshalServiceAccountJSON parses and validates a raw service account JSON blob.
+func unmarshalServiceAccountJSON(blob []byte) (*vertexServiceAccountKey, error) {
+	var saKey vertexServiceAccountKey
+	if decodeErr := json.Unmarshal(blob, &saKey); decodeErr != nil {
+		return nil, fmt.Errorf("malformed service account JSON: %w", decodeErr)
 	}
-	if strings.TrimSpace(key.ClientEmail) == "" {
-		return nil, errors.New("service account json missing client_email")
+	if strings.TrimSpace(saKey.ClientEmail) == "" {
+		return nil, errors.New("service account JSON is missing client_email")
 	}
-	if strings.TrimSpace(key.PrivateKey) == "" {
-		return nil, errors.New("service account json missing private_key")
+	if strings.TrimSpace(saKey.PrivateKey) == "" {
+		return nil, errors.New("service account JSON is missing private_key")
 	}
-	if strings.TrimSpace(key.ProjectID) == "" {
-		return nil, errors.New("service account json missing project_id")
+	if strings.TrimSpace(saKey.ProjectID) == "" {
+		return nil, errors.New("service account JSON is missing project_id")
 	}
 	// Always use the well-known Google token endpoint to prevent SSRF via crafted token_uri.
-	key.TokenURI = vertexDefaultTokenURL
-	return &key, nil
+	saKey.TokenURI = vertexDefaultTokenURL
+	return &saKey, nil
 }
 
-func vertexServiceAccountCacheKey(account *Account, key *vertexServiceAccountKey) string {
+// computeServiceAccountCacheKey builds a cache key for a service account's access token.
+func computeServiceAccountCacheKey(acct *Account, saKey *vertexServiceAccountKey) string {
 	fingerprint := ""
-	if key != nil {
-		sum := sha256.Sum256([]byte(key.ClientEmail + "\x00" + key.PrivateKeyID))
-		fingerprint = hex.EncodeToString(sum[:8])
+	if saKey != nil {
+		digest := sha256.Sum256([]byte(saKey.ClientEmail + "\x00" + saKey.PrivateKeyID))
+		fingerprint = hex.EncodeToString(digest[:8])
 	}
-	if fingerprint == "" && account != nil {
-		fingerprint = fmt.Sprintf("account:%d", account.ID)
+	if fingerprint == "" && acct != nil {
+		fingerprint = fmt.Sprintf("account:%d", acct.ID)
 	}
 	return "vertex:service_account:" + fingerprint
 }
 
 // getVertexServiceAccountAccessToken obtains an access token for a Vertex service account,
 // using the shared cache and distributed lock to avoid redundant exchanges.
-func getVertexServiceAccountAccessToken(ctx context.Context, cache GeminiTokenCache, account *Account) (string, error) {
-	key, err := parseVertexServiceAccountKey(account)
-	if err != nil {
-		return "", err
+func getVertexServiceAccountAccessToken(ctx context.Context, cache GeminiTokenCache, acct *Account) (string, error) {
+	saKey, parseErr := decodeServiceAccountKey(acct)
+	if parseErr != nil {
+		return "", parseErr
 	}
-	cacheKey := vertexServiceAccountCacheKey(account, key)
+	cacheID := computeServiceAccountCacheKey(acct, saKey)
 
 	if cache != nil {
-		if token, err := cache.GetAccessToken(ctx, cacheKey); err == nil && strings.TrimSpace(token) != "" {
-			return token, nil
+		if cachedToken, lookupErr := cache.GetAccessToken(ctx, cacheID); lookupErr == nil && strings.TrimSpace(cachedToken) != "" {
+			return cachedToken, nil
 		}
 	}
 
-	locked := false
+	acquired := false
 	if cache != nil {
 		var lockErr error
-		locked, lockErr = cache.AcquireRefreshLock(ctx, cacheKey, 30*time.Second)
-		if lockErr == nil && locked {
-			defer func() { _ = cache.ReleaseRefreshLock(ctx, cacheKey) }()
+		acquired, lockErr = cache.AcquireRefreshLock(ctx, cacheID, 30*time.Second)
+		if lockErr == nil && acquired {
+			defer func() { _ = cache.ReleaseRefreshLock(ctx, cacheID) }()
 		} else if lockErr != nil {
-			slog.Warn("vertex_service_account_token_lock_failed", "account_id", account.ID, "error", lockErr)
+			slog.Warn("vertex_service_account_token_lock_failed", "account_id", acct.ID, "error", lockErr)
 		} else {
 			time.Sleep(vertexLockWaitTime)
-			if token, err := cache.GetAccessToken(ctx, cacheKey); err == nil && strings.TrimSpace(token) != "" {
-				return token, nil
+			if cachedToken, lookupErr := cache.GetAccessToken(ctx, cacheID); lookupErr == nil && strings.TrimSpace(cachedToken) != "" {
+				return cachedToken, nil
 			}
 		}
 	}
 
-	accessToken, ttl, err := exchangeVertexServiceAccountToken(ctx, key, vertexServiceAccountProxyURL(account))
-	if err != nil {
-		return "", err
+	freshToken, ttl, exchangeErr := performTokenExchange(ctx, saKey, resolveServiceAccountProxy(acct))
+	if exchangeErr != nil {
+		return "", exchangeErr
 	}
 	if cache != nil {
-		_ = cache.SetAccessToken(ctx, cacheKey, accessToken, ttl)
+		_ = cache.SetAccessToken(ctx, cacheID, freshToken, ttl)
 	}
-	return accessToken, nil
+	return freshToken, nil
 }
 
-func vertexServiceAccountProxyURL(account *Account) string {
-	if account == nil || account.ProxyID == nil || account.Proxy == nil {
+// resolveServiceAccountProxy returns the proxy URL for a service account, if any.
+func resolveServiceAccountProxy(acct *Account) string {
+	if acct == nil || acct.ProxyID == nil || acct.Proxy == nil {
 		return ""
 	}
-	return account.Proxy.URL()
+	return acct.Proxy.URL()
 }
 
-func newVertexServiceAccountHTTPClient(proxyURL string) (*http.Client, error) {
-	proxyURL = strings.TrimSpace(proxyURL)
-	if proxyURL == "" {
+// buildProxiedHTTPClient creates an HTTP client optionally configured with a proxy.
+func buildProxiedHTTPClient(proxyAddr string) (*http.Client, error) {
+	proxyAddr = strings.TrimSpace(proxyAddr)
+	if proxyAddr == "" {
 		return &http.Client{Timeout: 15 * time.Second}, nil
 	}
 
-	_, parsedProxy, err := proxyurl.Parse(proxyURL)
-	if err != nil {
-		return nil, err
+	_, resolvedProxy, parseErr := proxyurl.Parse(proxyAddr)
+	if parseErr != nil {
+		return nil, parseErr
 	}
-	defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+	baseTransport, ok := http.DefaultTransport.(*http.Transport)
 	if !ok {
-		return nil, fmt.Errorf("unexpected default transport type %T", http.DefaultTransport)
+		return nil, fmt.Errorf("unexpected default transport type: %T", http.DefaultTransport)
 	}
-	transport := defaultTransport.Clone()
-	transport.Proxy = nil
-	if err := proxyutil.ConfigureTransportProxy(transport, parsedProxy); err != nil {
-		return nil, err
+	clonedTransport := baseTransport.Clone()
+	clonedTransport.Proxy = nil
+	if cfgErr := proxyutil.ConfigureTransportProxy(clonedTransport, resolvedProxy); cfgErr != nil {
+		return nil, cfgErr
 	}
-	return &http.Client{Timeout: 15 * time.Second, Transport: transport}, nil
+	return &http.Client{Timeout: 15 * time.Second, Transport: clonedTransport}, nil
 }
 
-func exchangeVertexServiceAccountToken(ctx context.Context, key *vertexServiceAccountKey, proxyURL string) (string, time.Duration, error) {
-	now := time.Now()
-	claims := jwt.MapClaims{
-		"iss":   key.ClientEmail,
+// performTokenExchange creates a signed JWT and exchanges it for an access token.
+func performTokenExchange(ctx context.Context, saKey *vertexServiceAccountKey, proxyAddr string) (string, time.Duration, error) {
+	currentTime := time.Now()
+	jwtClaims := jwt.MapClaims{
+		"iss":   saKey.ClientEmail,
 		"scope": vertexCloudPlatformScope,
-		"aud":   key.TokenURI,
-		"iat":   now.Unix(),
-		"exp":   now.Add(time.Hour).Unix(),
+		"aud":   saKey.TokenURI,
+		"iat":   currentTime.Unix(),
+		"exp":   currentTime.Add(time.Hour).Unix(),
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	if strings.TrimSpace(key.PrivateKeyID) != "" {
-		token.Header["kid"] = key.PrivateKeyID
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodRS256, jwtClaims)
+	if strings.TrimSpace(saKey.PrivateKeyID) != "" {
+		jwtToken.Header["kid"] = saKey.PrivateKeyID
 	}
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(key.PrivateKey))
-	if err != nil {
-		return "", 0, fmt.Errorf("parse service account private key: %w", err)
+	rsaKey, keyErr := jwt.ParseRSAPrivateKeyFromPEM([]byte(saKey.PrivateKey))
+	if keyErr != nil {
+		return "", 0, fmt.Errorf("failed to parse service account private key: %w", keyErr)
 	}
-	assertion, err := token.SignedString(privateKey)
-	if err != nil {
-		return "", 0, fmt.Errorf("sign service account assertion: %w", err)
+	signedAssertion, signErr := jwtToken.SignedString(rsaKey)
+	if signErr != nil {
+		return "", 0, fmt.Errorf("failed to sign service account JWT assertion: %w", signErr)
 	}
 
-	values := url.Values{}
-	values.Set("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
-	values.Set("assertion", assertion)
+	formData := url.Values{}
+	formData.Set("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
+	formData.Set("assertion", signedAssertion)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, key.TokenURI, strings.NewReader(values.Encode()))
-	if err != nil {
-		return "", 0, err
+	httpReq, reqErr := http.NewRequestWithContext(ctx, http.MethodPost, saKey.TokenURI, strings.NewReader(formData.Encode()))
+	if reqErr != nil {
+		return "", 0, reqErr
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	client, err := newVertexServiceAccountHTTPClient(proxyURL)
-	if err != nil {
-		return "", 0, fmt.Errorf("configure service account token proxy: %w", err)
+	httpClient, clientErr := buildProxiedHTTPClient(proxyAddr)
+	if clientErr != nil {
+		return "", 0, fmt.Errorf("failed to configure token exchange proxy: %w", clientErr)
 	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", 0, fmt.Errorf("service account token request failed: %w", err)
+	httpResp, doErr := httpClient.Do(httpReq)
+	if doErr != nil {
+		return "", 0, fmt.Errorf("token exchange request failed: %w", doErr)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() { _ = httpResp.Body.Close() }()
 
-	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	var parsed vertexTokenResponse
-	_ = json.Unmarshal(body, &parsed)
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		msg := strings.TrimSpace(parsed.ErrorDesc)
-		if msg == "" {
-			msg = strings.TrimSpace(parsed.Error)
+	respBytes, _ := io.ReadAll(io.LimitReader(httpResp.Body, 1<<20))
+	var tokenResp vertexTokenResponse
+	_ = json.Unmarshal(respBytes, &tokenResp)
+	if httpResp.StatusCode < 200 || httpResp.StatusCode >= 300 {
+		detail := strings.TrimSpace(tokenResp.ErrorDesc)
+		if detail == "" {
+			detail = strings.TrimSpace(tokenResp.Error)
 		}
-		if msg == "" {
-			msg = string(bytes.TrimSpace(body))
+		if detail == "" {
+			detail = string(bytes.TrimSpace(respBytes))
 		}
-		return "", 0, fmt.Errorf("service account token request returned %d: %s", resp.StatusCode, msg)
+		return "", 0, fmt.Errorf("token exchange returned HTTP %d: %s", httpResp.StatusCode, detail)
 	}
-	if strings.TrimSpace(parsed.AccessToken) == "" {
-		return "", 0, errors.New("service account token response missing access_token")
+	if strings.TrimSpace(tokenResp.AccessToken) == "" {
+		return "", 0, errors.New("token exchange response is missing the access_token field")
 	}
-	ttl := time.Duration(parsed.ExpiresIn) * time.Second
-	if ttl <= 0 {
-		ttl = time.Hour
+	tokenTTL := time.Duration(tokenResp.ExpiresIn) * time.Second
+	if tokenTTL <= 0 {
+		tokenTTL = time.Hour
 	}
-	if ttl > vertexServiceAccountCacheSkew {
-		ttl -= vertexServiceAccountCacheSkew
+	if tokenTTL > vertexServiceAccountCacheSkew {
+		tokenTTL -= vertexServiceAccountCacheSkew
 	}
-	return parsed.AccessToken, ttl, nil
+	return tokenResp.AccessToken, tokenTTL, nil
 }
 
 func buildVertexGeminiURL(projectID, location, model, action string, stream bool) (string, error) {
@@ -304,22 +312,22 @@ func buildVertexGeminiURL(projectID, location, model, action string, stream bool
 	default:
 		return "", fmt.Errorf("unsupported vertex gemini action: %s", action)
 	}
-	host := fmt.Sprintf("%s-aiplatform.googleapis.com", location)
+	hostname := fmt.Sprintf("%s-aiplatform.googleapis.com", location)
 	if location == "global" {
-		host = "aiplatform.googleapis.com"
+		hostname = "aiplatform.googleapis.com"
 	}
-	u := fmt.Sprintf(
+	endpoint := fmt.Sprintf(
 		"https://%s/v1/projects/%s/locations/%s/publishers/google/models/%s:%s",
-		host,
+		hostname,
 		url.PathEscape(projectID),
 		url.PathEscape(location),
 		url.PathEscape(model),
 		action,
 	)
 	if stream {
-		u += "?alt=sse"
+		endpoint += "?alt=sse"
 	}
-	return u, nil
+	return endpoint, nil
 }
 
 func buildVertexAnthropicURL(projectID, location, model string, stream bool) (string, error) {
@@ -338,22 +346,22 @@ func buildVertexAnthropicURL(projectID, location, model string, stream bool) (st
 	if model == "" {
 		return "", errors.New("vertex model is required")
 	}
-	action := "rawPredict"
+	verb := "rawPredict"
 	if stream {
-		action = "streamRawPredict"
+		verb = "streamRawPredict"
 	}
-	host := fmt.Sprintf("%s-aiplatform.googleapis.com", location)
+	hostname := fmt.Sprintf("%s-aiplatform.googleapis.com", location)
 	if location == "global" {
-		host = "aiplatform.googleapis.com"
+		hostname = "aiplatform.googleapis.com"
 	}
 	escapedModel := strings.ReplaceAll(url.PathEscape(model), "%40", "@")
 	return fmt.Sprintf(
 		"https://%s/v1/projects/%s/locations/%s/publishers/anthropic/models/%s:%s",
-		host,
+		hostname,
 		url.PathEscape(projectID),
 		url.PathEscape(location),
 		escapedModel,
-		action,
+		verb,
 	), nil
 }
 
@@ -362,18 +370,30 @@ func normalizeVertexAnthropicModelID(model string) string {
 	if model == "" || vertexAnthropicAlreadyDatedIDPattern.MatchString(model) {
 		return model
 	}
-	if m := vertexAnthropicDatedModelIDPattern.FindStringSubmatch(model); len(m) == 3 {
-		return m[1] + "@" + m[2]
+	if groups := vertexAnthropicDatedModelIDPattern.FindStringSubmatch(model); len(groups) == 3 {
+		return groups[1] + "@" + groups[2]
 	}
 	return model
 }
 
+// parseVertexServiceAccountKey is a package-internal alias retained for callers
+// outside this file (e.g. gemini_token_provider.go).
+func parseVertexServiceAccountKey(acct *Account) (*vertexServiceAccountKey, error) {
+	return decodeServiceAccountKey(acct)
+}
+
+// vertexServiceAccountCacheKey is a package-internal alias retained for callers
+// outside this file (e.g. gemini_token_provider.go).
+func vertexServiceAccountCacheKey(acct *Account, saKey *vertexServiceAccountKey) string {
+	return computeServiceAccountCacheKey(acct, saKey)
+}
+
 func buildVertexAnthropicRequestBody(body []byte) ([]byte, error) {
-	var payload map[string]any
-	if err := json.Unmarshal(body, &payload); err != nil {
-		return nil, fmt.Errorf("parse anthropic vertex request body: %w", err)
+	var fields map[string]any
+	if decErr := json.Unmarshal(body, &fields); decErr != nil {
+		return nil, fmt.Errorf("failed to parse anthropic vertex request body: %w", decErr)
 	}
-	delete(payload, "model")
-	payload["anthropic_version"] = vertexAnthropicVersion
-	return json.Marshal(payload)
+	delete(fields, "model")
+	fields["anthropic_version"] = vertexAnthropicVersion
+	return json.Marshal(fields)
 }

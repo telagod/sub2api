@@ -119,39 +119,39 @@ type notificationEmailOfficialTemplate struct {
 	HTML    string
 }
 
-type notificationEmailTemplateError struct {
+type notifTemplateValidationError struct {
 	Err error
 }
 
-func (e notificationEmailTemplateError) Error() string {
+func (e notifTemplateValidationError) Error() string {
 	return e.Err.Error()
 }
 
-func (e notificationEmailTemplateError) Unwrap() error {
+func (e notifTemplateValidationError) Unwrap() error {
 	return e.Err
 }
 
-type notificationEmailConfigError struct {
+type notifConfigurationError struct {
 	Err error
 }
 
-func (e notificationEmailConfigError) Error() string {
+func (e notifConfigurationError) Error() string {
 	return e.Err.Error()
 }
 
-func (e notificationEmailConfigError) Unwrap() error {
+func (e notifConfigurationError) Unwrap() error {
 	return e.Err
 }
 
-type notificationEmailDeliveryError struct {
+type notifTransportError struct {
 	Err error
 }
 
-func (e notificationEmailDeliveryError) Error() string {
+func (e notifTransportError) Error() string {
 	return e.Err.Error()
 }
 
-func (e notificationEmailDeliveryError) Unwrap() error {
+func (e notifTransportError) Unwrap() error {
 	return e.Err
 }
 
@@ -162,59 +162,59 @@ type notificationEmailUnsubscribeClaims struct {
 }
 
 func NewNotificationEmailService(settingRepo SettingRepository, emailService *EmailService) *NotificationEmailService {
-	svc := &NotificationEmailService{settingRepo: settingRepo, emailService: emailService}
+	inst := &NotificationEmailService{settingRepo: settingRepo, emailService: emailService}
 	if emailService != nil {
-		emailService.SetNotificationEmailService(svc)
+		emailService.SetNotificationEmailService(inst)
 	}
-	return svc
+	return inst
 }
 
-func notificationEmailTemplateErr(err error) error {
-	if err == nil {
+func wrapNotifTemplateError(cause error) error {
+	if cause == nil {
 		return nil
 	}
-	return notificationEmailTemplateError{Err: err}
+	return notifTemplateValidationError{Err: cause}
 }
 
-func notificationEmailConfigErr(err error) error {
-	if err == nil {
+func wrapNotifConfigError(cause error) error {
+	if cause == nil {
 		return nil
 	}
-	return notificationEmailConfigError{Err: err}
+	return notifConfigurationError{Err: cause}
 }
 
-func notificationEmailDeliveryErr(err error) error {
-	if err == nil {
+func wrapNotifTransportError(cause error) error {
+	if cause == nil {
 		return nil
 	}
-	return notificationEmailDeliveryError{Err: err}
+	return notifTransportError{Err: cause}
 }
 
 func shouldFallbackNotificationEmail(err error) bool {
 	if err == nil {
 		return false
 	}
-	var templateErr notificationEmailTemplateError
+	var templateErr notifTemplateValidationError
 	if errors.As(err, &templateErr) {
 		return true
 	}
-	var configErr notificationEmailConfigError
+	var configErr notifConfigurationError
 	return errors.As(err, &configErr)
 }
 
 func isNotificationEmailDeliveryError(err error) bool {
-	var deliveryErr notificationEmailDeliveryError
-	return errors.As(err, &deliveryErr)
+	var xportErr notifTransportError
+	return errors.As(err, &xportErr)
 }
 
 func (s *NotificationEmailService) ListEventInfos() []NotificationEmailEventInfo {
-	infos := make([]NotificationEmailEventInfo, 0, len(notificationEmailEventDefinitions))
-	for _, event := range notificationEmailEventOrder {
-		info := notificationEmailEventDefinitions[event]
+	out := make([]NotificationEmailEventInfo, 0, len(notificationEmailEventDefinitions))
+	for _, key := range notificationEmailEventOrder {
+		info := notificationEmailEventDefinitions[key]
 		info.Placeholders = append([]string(nil), info.Placeholders...)
-		infos = append(infos, info)
+		out = append(out, info)
 	}
-	return infos
+	return out
 }
 
 func (s *NotificationEmailService) SupportedLocales() []string {
@@ -222,169 +222,169 @@ func (s *NotificationEmailService) SupportedLocales() []string {
 }
 
 func (s *NotificationEmailService) ListTemplates(ctx context.Context) ([]NotificationEmailTemplate, error) {
-	items := make([]NotificationEmailTemplate, 0, len(notificationEmailEventOrder)*len(notificationEmailLocales))
-	for _, event := range notificationEmailEventOrder {
-		for _, locale := range notificationEmailLocales {
-			tmpl, err := s.GetTemplate(ctx, event, locale)
-			if err != nil {
-				return nil, err
+	allTemplates := make([]NotificationEmailTemplate, 0, len(notificationEmailEventOrder)*len(notificationEmailLocales))
+	for _, evKey := range notificationEmailEventOrder {
+		for _, lang := range notificationEmailLocales {
+			tpl, readErr := s.GetTemplate(ctx, evKey, lang)
+			if readErr != nil {
+				return nil, readErr
 			}
-			items = append(items, tmpl)
+			allTemplates = append(allTemplates, tpl)
 		}
 	}
-	return items, nil
+	return allTemplates, nil
 }
 
 func (s *NotificationEmailService) GetTemplate(ctx context.Context, event, locale string) (NotificationEmailTemplate, error) {
-	info, normalizedEvent, err := s.eventInfo(event)
-	if err != nil {
-		return NotificationEmailTemplate{}, err
+	evDef, normalizedEvent, lookupErr := s.lookupEventDef(event)
+	if lookupErr != nil {
+		return NotificationEmailTemplate{}, lookupErr
 	}
-	normalizedLocale := normalizeNotificationLocale(locale)
-	official, ok := notificationEmailOfficialTemplates[normalizedEvent][normalizedLocale]
-	if !ok {
-		return NotificationEmailTemplate{}, fmt.Errorf("official template not found for %s/%s", normalizedEvent, normalizedLocale)
+	normalizedLocale := normalizeNotifLocale(locale)
+	stock, exists := notificationEmailOfficialTemplates[normalizedEvent][normalizedLocale]
+	if !exists {
+		return NotificationEmailTemplate{}, fmt.Errorf("no built-in template for event=%s locale=%s", normalizedEvent, normalizedLocale)
 	}
 
-	tmpl := NotificationEmailTemplate{
+	tpl := NotificationEmailTemplate{
 		Event:        normalizedEvent,
 		Locale:       normalizedLocale,
-		Subject:      official.Subject,
-		HTML:         official.HTML,
-		Placeholders: append([]string(nil), info.Placeholders...),
+		Subject:      stock.Subject,
+		HTML:         stock.HTML,
+		Placeholders: append([]string(nil), evDef.Placeholders...),
 	}
 
-	raw, err := s.settingRepo.GetValue(ctx, notificationEmailTemplateKey(normalizedEvent, normalizedLocale))
-	if err != nil {
-		if errors.Is(err, ErrSettingNotFound) {
-			return tmpl, nil
+	rawJSON, readErr := s.settingRepo.GetValue(ctx, notifTemplateStorageKey(normalizedEvent, normalizedLocale))
+	if readErr != nil {
+		if errors.Is(readErr, ErrSettingNotFound) {
+			return tpl, nil
 		}
-		return NotificationEmailTemplate{}, err
+		return NotificationEmailTemplate{}, readErr
 	}
-	if strings.TrimSpace(raw) == "" {
-		return tmpl, nil
+	if strings.TrimSpace(rawJSON) == "" {
+		return tpl, nil
 	}
 
-	var stored notificationEmailStoredTemplate
-	if err := json.Unmarshal([]byte(raw), &stored); err != nil {
-		return NotificationEmailTemplate{}, fmt.Errorf("decode email template override: %w", err)
+	var custom notificationEmailStoredTemplate
+	if unmarshalErr := json.Unmarshal([]byte(rawJSON), &custom); unmarshalErr != nil {
+		return NotificationEmailTemplate{}, fmt.Errorf("corrupted custom email template JSON: %w", unmarshalErr)
 	}
-	if err := validateNotificationEmailTemplate(normalizedEvent, stored.Subject, stored.HTML); err != nil {
-		return NotificationEmailTemplate{}, err
+	if valErr := validateNotifTemplateFields(normalizedEvent, custom.Subject, custom.HTML); valErr != nil {
+		return NotificationEmailTemplate{}, valErr
 	}
-	tmpl.Subject = stored.Subject
-	tmpl.HTML = stored.HTML
-	tmpl.IsCustom = true
-	updatedAt := stored.UpdatedAt
-	tmpl.UpdatedAt = &updatedAt
-	return tmpl, nil
+	tpl.Subject = custom.Subject
+	tpl.HTML = custom.HTML
+	tpl.IsCustom = true
+	updatedCopy := custom.UpdatedAt
+	tpl.UpdatedAt = &updatedCopy
+	return tpl, nil
 }
 
-func (s *NotificationEmailService) UpdateTemplate(ctx context.Context, event, locale, subject, htmlBody string) (NotificationEmailTemplate, error) {
-	_, normalizedEvent, err := s.eventInfo(event)
-	if err != nil {
-		return NotificationEmailTemplate{}, err
+func (s *NotificationEmailService) UpdateTemplate(ctx context.Context, event, locale, subject, htmlContent string) (NotificationEmailTemplate, error) {
+	_, normalizedEvent, lookupErr := s.lookupEventDef(event)
+	if lookupErr != nil {
+		return NotificationEmailTemplate{}, lookupErr
 	}
-	normalizedLocale := normalizeNotificationLocale(locale)
-	if err := validateNotificationEmailTemplate(normalizedEvent, subject, htmlBody); err != nil {
-		return NotificationEmailTemplate{}, err
+	normalizedLocale := normalizeNotifLocale(locale)
+	if valErr := validateNotifTemplateFields(normalizedEvent, subject, htmlContent); valErr != nil {
+		return NotificationEmailTemplate{}, valErr
 	}
 	stored := notificationEmailStoredTemplate{
 		Subject:   strings.TrimSpace(subject),
-		HTML:      htmlBody,
+		HTML:      htmlContent,
 		UpdatedAt: time.Now().UTC(),
 	}
-	payload, err := json.Marshal(stored)
-	if err != nil {
-		return NotificationEmailTemplate{}, err
+	blob, marshalErr := json.Marshal(stored)
+	if marshalErr != nil {
+		return NotificationEmailTemplate{}, marshalErr
 	}
-	if err := s.settingRepo.Set(ctx, notificationEmailTemplateKey(normalizedEvent, normalizedLocale), string(payload)); err != nil {
-		return NotificationEmailTemplate{}, err
+	if persistErr := s.settingRepo.Set(ctx, notifTemplateStorageKey(normalizedEvent, normalizedLocale), string(blob)); persistErr != nil {
+		return NotificationEmailTemplate{}, persistErr
 	}
 	return s.GetTemplate(ctx, normalizedEvent, normalizedLocale)
 }
 
 func (s *NotificationEmailService) RestoreOfficialTemplate(ctx context.Context, event, locale string) (NotificationEmailTemplate, error) {
-	_, normalizedEvent, err := s.eventInfo(event)
-	if err != nil {
-		return NotificationEmailTemplate{}, err
+	_, normalizedEvent, lookupErr := s.lookupEventDef(event)
+	if lookupErr != nil {
+		return NotificationEmailTemplate{}, lookupErr
 	}
-	normalizedLocale := normalizeNotificationLocale(locale)
-	if err := s.settingRepo.Delete(ctx, notificationEmailTemplateKey(normalizedEvent, normalizedLocale)); err != nil && !errors.Is(err, ErrSettingNotFound) {
-		return NotificationEmailTemplate{}, err
+	normalizedLocale := normalizeNotifLocale(locale)
+	if delErr := s.settingRepo.Delete(ctx, notifTemplateStorageKey(normalizedEvent, normalizedLocale)); delErr != nil && !errors.Is(delErr, ErrSettingNotFound) {
+		return NotificationEmailTemplate{}, delErr
 	}
 	return s.GetTemplate(ctx, normalizedEvent, normalizedLocale)
 }
 
 func (s *NotificationEmailService) PreviewTemplate(ctx context.Context, input NotificationEmailPreviewInput) (NotificationEmailPreview, error) {
-	_, normalizedEvent, err := s.eventInfo(input.Event)
-	if err != nil {
-		return NotificationEmailPreview{}, err
+	_, normalizedEvent, lookupErr := s.lookupEventDef(input.Event)
+	if lookupErr != nil {
+		return NotificationEmailPreview{}, lookupErr
 	}
-	normalizedLocale := normalizeNotificationLocale(input.Locale)
-	subject := input.Subject
-	htmlBody := input.HTML
-	if strings.TrimSpace(subject) == "" || strings.TrimSpace(htmlBody) == "" {
-		tmpl, err := s.GetTemplate(ctx, normalizedEvent, normalizedLocale)
-		if err != nil {
-			return NotificationEmailPreview{}, err
+	normalizedLocale := normalizeNotifLocale(input.Locale)
+	subj := input.Subject
+	body := input.HTML
+	if strings.TrimSpace(subj) == "" || strings.TrimSpace(body) == "" {
+		tpl, readErr := s.GetTemplate(ctx, normalizedEvent, normalizedLocale)
+		if readErr != nil {
+			return NotificationEmailPreview{}, readErr
 		}
-		if strings.TrimSpace(subject) == "" {
-			subject = tmpl.Subject
+		if strings.TrimSpace(subj) == "" {
+			subj = tpl.Subject
 		}
-		if strings.TrimSpace(htmlBody) == "" {
-			htmlBody = tmpl.HTML
+		if strings.TrimSpace(body) == "" {
+			body = tpl.HTML
 		}
 	}
-	if err := validateNotificationEmailTemplate(normalizedEvent, subject, htmlBody); err != nil {
-		return NotificationEmailPreview{}, err
+	if valErr := validateNotifTemplateFields(normalizedEvent, subj, body); valErr != nil {
+		return NotificationEmailPreview{}, valErr
 	}
-	variables := s.sampleVariables(ctx, normalizedEvent, normalizedLocale)
-	for key, value := range input.Variables {
-		variables[key] = value
+	vars := s.assembleSampleVars(ctx, normalizedEvent, normalizedLocale)
+	for k, v := range input.Variables {
+		vars[k] = v
 	}
-	return renderNotificationEmail(normalizedEvent, subject, htmlBody, variables, nil)
+	return renderNotifEmail(normalizedEvent, subj, body, vars, nil)
 }
 
 func (s *NotificationEmailService) Send(ctx context.Context, input NotificationEmailSendInput) error {
-	info, normalizedEvent, err := s.eventInfo(input.Event)
-	if err != nil {
-		return notificationEmailTemplateErr(err)
+	evDef, normalizedEvent, lookupErr := s.lookupEventDef(input.Event)
+	if lookupErr != nil {
+		return wrapNotifTemplateError(lookupErr)
 	}
-	recipient := strings.TrimSpace(input.RecipientEmail)
-	if recipient == "" {
+	recipientAddr := strings.TrimSpace(input.RecipientEmail)
+	if recipientAddr == "" {
 		return nil
 	}
-	if info.Optional {
-		unsubscribed, err := s.IsUnsubscribed(ctx, recipient, normalizedEvent)
-		if err != nil {
-			return err
+	if evDef.Optional {
+		suppressed, checkErr := s.IsUnsubscribed(ctx, recipientAddr, normalizedEvent)
+		if checkErr != nil {
+			return checkErr
 		}
-		if unsubscribed {
-			slog.Info("notification email suppressed by unsubscribe preference", "event", normalizedEvent, "recipient_hash", notificationEmailHash(recipient))
+		if suppressed {
+			slog.Info("notification email suppressed due to unsubscribe preference", "event", normalizedEvent, "recipient_hash", hashNotifEmail(recipientAddr))
 			return nil
 		}
 	}
 
-	locale := normalizeNotificationLocale(input.Locale)
+	lang := normalizeNotifLocale(input.Locale)
 	if strings.TrimSpace(input.Locale) == "" {
-		locale = s.ResolveRecipientLocale(ctx, input.UserID, recipient)
+		lang = s.ResolveRecipientLocale(ctx, input.UserID, recipientAddr)
 	}
-	tmpl, err := s.GetTemplate(ctx, normalizedEvent, locale)
-	if err != nil {
-		return notificationEmailTemplateErr(err)
+	tpl, readErr := s.GetTemplate(ctx, normalizedEvent, lang)
+	if readErr != nil {
+		return wrapNotifTemplateError(readErr)
 	}
-	variables := s.runtimeVariables(ctx, normalizedEvent, locale, input)
-	rendered, err := renderNotificationEmail(normalizedEvent, tmpl.Subject, tmpl.HTML, variables, input.RawHTMLVariables)
-	if err != nil {
-		return notificationEmailTemplateErr(err)
+	vars := s.assembleRuntimeVars(ctx, normalizedEvent, lang, input)
+	result, renderErr := renderNotifEmail(normalizedEvent, tpl.Subject, tpl.HTML, vars, input.RawHTMLVariables)
+	if renderErr != nil {
+		return wrapNotifTemplateError(renderErr)
 	}
 
-	deliveryKey := notificationEmailDeliveryKey(normalizedEvent, input.SourceType, input.SourceID, recipient, input.ReminderKey)
-	if deliveryKey != "" {
-		sent, err := s.deliveryExists(ctx, deliveryKey, legacyNotificationEmailDeliveryKey(normalizedEvent, input.SourceType, input.SourceID, recipient, input.ReminderKey))
-		if err != nil {
-			return err
+	dedupeKey := computeNotifDeliveryKey(normalizedEvent, input.SourceType, input.SourceID, recipientAddr, input.ReminderKey)
+	if dedupeKey != "" {
+		sent, checkErr := s.checkDeliveryRecord(ctx, dedupeKey, legacyNotifDeliveryKey(normalizedEvent, input.SourceType, input.SourceID, recipientAddr, input.ReminderKey))
+		if checkErr != nil {
+			return checkErr
 		}
 		if sent {
 			return nil
@@ -392,29 +392,29 @@ func (s *NotificationEmailService) Send(ctx context.Context, input NotificationE
 	}
 
 	if s.emailService == nil {
-		return notificationEmailConfigErr(errors.New("email service is not configured"))
+		return wrapNotifConfigError(errors.New("email delivery service not configured"))
 	}
-	if err := s.emailService.SendEmail(ctx, recipient, rendered.Subject, rendered.HTML); err != nil {
-		return notificationEmailDeliveryErr(err)
+	if deliverErr := s.emailService.SendEmail(ctx, recipientAddr, result.Subject, result.HTML); deliverErr != nil {
+		return wrapNotifTransportError(deliverErr)
 	}
-	if deliveryKey != "" {
-		if err := s.settingRepo.Set(ctx, deliveryKey, time.Now().UTC().Format(time.RFC3339Nano)); err != nil {
-			return err
+	if dedupeKey != "" {
+		if saveErr := s.settingRepo.Set(ctx, dedupeKey, time.Now().UTC().Format(time.RFC3339Nano)); saveErr != nil {
+			return saveErr
 		}
 	}
 	return nil
 }
 
 func (s *NotificationEmailService) RememberRecipientLocale(ctx context.Context, userID int64, email, acceptLanguage string) {
-	locale := normalizeNotificationLocale(acceptLanguage)
+	lang := normalizeNotifLocale(acceptLanguage)
 	if strings.TrimSpace(acceptLanguage) == "" || s == nil || s.settingRepo == nil {
 		return
 	}
 	if userID > 0 {
-		_ = s.settingRepo.Set(ctx, notificationEmailLocaleUserKeyPrefix+strconv.FormatInt(userID, 10), locale)
+		_ = s.settingRepo.Set(ctx, notificationEmailLocaleUserKeyPrefix+strconv.FormatInt(userID, 10), lang)
 	}
-	if emailHash := notificationEmailHash(email); emailHash != "" {
-		_ = s.settingRepo.Set(ctx, notificationEmailLocaleEmailKeyPrefix+emailHash, locale)
+	if digest := hashNotifEmail(email); digest != "" {
+		_ = s.settingRepo.Set(ctx, notificationEmailLocaleEmailKeyPrefix+digest, lang)
 	}
 }
 
@@ -423,105 +423,111 @@ func (s *NotificationEmailService) ResolveRecipientLocale(ctx context.Context, u
 		return notificationEmailDefaultLocale
 	}
 	if userID > 0 {
-		if locale, err := s.settingRepo.GetValue(ctx, notificationEmailLocaleUserKeyPrefix+strconv.FormatInt(userID, 10)); err == nil && strings.TrimSpace(locale) != "" {
-			return normalizeNotificationLocale(locale)
+		if saved, readErr := s.settingRepo.GetValue(ctx, notificationEmailLocaleUserKeyPrefix+strconv.FormatInt(userID, 10)); readErr == nil && strings.TrimSpace(saved) != "" {
+			return normalizeNotifLocale(saved)
 		}
 	}
-	if emailHash := notificationEmailHash(email); emailHash != "" {
-		if locale, err := s.settingRepo.GetValue(ctx, notificationEmailLocaleEmailKeyPrefix+emailHash); err == nil && strings.TrimSpace(locale) != "" {
-			return normalizeNotificationLocale(locale)
+	if digest := hashNotifEmail(email); digest != "" {
+		if saved, readErr := s.settingRepo.GetValue(ctx, notificationEmailLocaleEmailKeyPrefix+digest); readErr == nil && strings.TrimSpace(saved) != "" {
+			return normalizeNotifLocale(saved)
 		}
 	}
 	return notificationEmailDefaultLocale
 }
 
 func (s *NotificationEmailService) IsUnsubscribed(ctx context.Context, email, event string) (bool, error) {
-	info, normalizedEvent, err := s.eventInfo(event)
-	if err != nil {
-		return false, err
+	evDef, normalizedEvent, lookupErr := s.lookupEventDef(event)
+	if lookupErr != nil {
+		return false, lookupErr
 	}
-	if !info.Optional {
+	if !evDef.Optional {
 		return false, nil
 	}
-	for _, key := range []string{notificationEmailPreferenceKey(normalizedEvent, email), legacyNotificationEmailPreferenceKey(normalizedEvent, email)} {
-		if strings.TrimSpace(key) == "" {
+	keyCandidates := []string{
+		notifPreferenceStorageKey(normalizedEvent, email),
+		legacyNotifPreferenceKey(normalizedEvent, email),
+	}
+	for _, k := range keyCandidates {
+		if strings.TrimSpace(k) == "" {
 			continue
 		}
-		value, err := s.settingRepo.GetValue(ctx, key)
-		if err == nil {
-			return strings.EqualFold(strings.TrimSpace(value), "unsubscribed"), nil
+		val, readErr := s.settingRepo.GetValue(ctx, k)
+		if readErr == nil {
+			return strings.EqualFold(strings.TrimSpace(val), "unsubscribed"), nil
 		}
-		if !errors.Is(err, ErrSettingNotFound) {
-			return false, err
+		if !errors.Is(readErr, ErrSettingNotFound) {
+			return false, readErr
 		}
 	}
 	return false, nil
 }
 
 func (s *NotificationEmailService) Unsubscribe(ctx context.Context, token string) (NotificationEmailUnsubscribeResult, error) {
-	claims, err := s.parseUnsubscribeToken(ctx, token)
-	if err != nil {
-		return NotificationEmailUnsubscribeResult{}, err
+	claims, parseErr := s.validateUnsubToken(ctx, token)
+	if parseErr != nil {
+		return NotificationEmailUnsubscribeResult{}, parseErr
 	}
-	info, normalizedEvent, err := s.eventInfo(claims.Event)
-	if err != nil {
-		return NotificationEmailUnsubscribeResult{}, err
+	evDef, normalizedEvent, lookupErr := s.lookupEventDef(claims.Event)
+	if lookupErr != nil {
+		return NotificationEmailUnsubscribeResult{}, lookupErr
 	}
-	if !info.Optional {
-		return NotificationEmailUnsubscribeResult{}, fmt.Errorf("%s is transactional and cannot be unsubscribed", normalizedEvent)
+	if !evDef.Optional {
+		return NotificationEmailUnsubscribeResult{}, fmt.Errorf("event %s cannot be unsubscribed because it is mandatory", normalizedEvent)
 	}
-	if err := s.settingRepo.Set(ctx, notificationEmailPreferenceKey(normalizedEvent, claims.Email), "unsubscribed"); err != nil {
-		return NotificationEmailUnsubscribeResult{}, err
+	if saveErr := s.settingRepo.Set(ctx, notifPreferenceStorageKey(normalizedEvent, claims.Email), "unsubscribed"); saveErr != nil {
+		return NotificationEmailUnsubscribeResult{}, saveErr
 	}
 	return NotificationEmailUnsubscribeResult{Event: normalizedEvent, Email: claims.Email, Done: true}, nil
 }
 
-func (s *NotificationEmailService) eventInfo(event string) (NotificationEmailEventInfo, string, error) {
+// lookupEventDef resolves a notification event key and returns its definition
+// together with the canonical (lowercased, trimmed) key.
+func (s *NotificationEmailService) lookupEventDef(event string) (NotificationEmailEventInfo, string, error) {
 	normalized := strings.ToLower(strings.TrimSpace(event))
 	info, ok := notificationEmailEventDefinitions[normalized]
 	if !ok {
-		return NotificationEmailEventInfo{}, "", fmt.Errorf("unsupported email template event: %s", event)
+		return NotificationEmailEventInfo{}, "", fmt.Errorf("unrecognized notification email event: %s", event)
 	}
 	return info, normalized, nil
 }
 
-func (s *NotificationEmailService) sampleVariables(ctx context.Context, event, locale string) map[string]string {
-	info := notificationEmailEventDefinitions[event]
-	variables := make(map[string]string, len(info.Placeholders))
-	for key, value := range notificationEmailSampleVariables(locale) {
-		variables[key] = value
+func (s *NotificationEmailService) assembleSampleVars(ctx context.Context, event, locale string) map[string]string {
+	evDef := notificationEmailEventDefinitions[event]
+	vars := make(map[string]string, len(evDef.Placeholders))
+	for k, v := range notifSampleDataForLocale(locale) {
+		vars[k] = v
 	}
-	variables["site_name"] = s.siteName(ctx)
-	if variables["unsubscribe_url"] == "" && info.Optional {
-		variables["unsubscribe_url"] = "https://example.com/unsubscribe"
+	vars["site_name"] = s.fetchSiteName(ctx)
+	if vars["unsubscribe_url"] == "" && evDef.Optional {
+		vars["unsubscribe_url"] = "https://example.com/unsubscribe"
 	}
-	return variables
+	return vars
 }
 
-func (s *NotificationEmailService) runtimeVariables(ctx context.Context, event, locale string, input NotificationEmailSendInput) map[string]string {
-	variables := s.sampleVariables(ctx, event, locale)
-	for key, value := range input.Variables {
-		variables[key] = value
+func (s *NotificationEmailService) assembleRuntimeVars(ctx context.Context, event, locale string, input NotificationEmailSendInput) map[string]string {
+	vars := s.assembleSampleVars(ctx, event, locale)
+	for k, v := range input.Variables {
+		vars[k] = v
 	}
-	variables["site_name"] = s.siteName(ctx)
-	variables["recipient_email"] = input.RecipientEmail
+	vars["site_name"] = s.fetchSiteName(ctx)
+	vars["recipient_email"] = input.RecipientEmail
 	if strings.TrimSpace(input.RecipientName) != "" {
-		variables["recipient_name"] = input.RecipientName
+		vars["recipient_name"] = input.RecipientName
 	}
 	if notificationEmailEventDefinitions[event].Optional {
-		if unsubscribeURL, err := s.buildUnsubscribeURL(ctx, input.RecipientEmail, event); err == nil {
-			variables["unsubscribe_url"] = unsubscribeURL
+		if link, linkErr := s.buildUnsubLink(ctx, input.RecipientEmail, event); linkErr == nil {
+			vars["unsubscribe_url"] = link
 		}
 	}
-	return variables
+	return vars
 }
 
-func (s *NotificationEmailService) siteName(ctx context.Context) string {
+func (s *NotificationEmailService) fetchSiteName(ctx context.Context) string {
 	if s == nil || s.settingRepo == nil {
 		return defaultSiteName
 	}
-	name, err := s.settingRepo.GetValue(ctx, SettingKeySiteName)
-	if err != nil || strings.TrimSpace(name) == "" {
+	name, readErr := s.settingRepo.GetValue(ctx, SettingKeySiteName)
+	if readErr != nil || strings.TrimSpace(name) == "" {
 		return defaultSiteName
 	}
 	return strings.TrimSpace(name)
@@ -532,219 +538,223 @@ func (s *NotificationEmailService) baseURL(ctx context.Context) string {
 		return ""
 	}
 	for _, key := range []string{SettingKeyAPIBaseURL, SettingKeyFrontendURL} {
-		value, err := s.settingRepo.GetValue(ctx, key)
-		if err == nil && strings.TrimSpace(value) != "" {
-			return strings.TrimRight(strings.TrimSpace(value), "/")
+		val, readErr := s.settingRepo.GetValue(ctx, key)
+		if readErr == nil && strings.TrimSpace(val) != "" {
+			return strings.TrimRight(strings.TrimSpace(val), "/")
 		}
 	}
 	return ""
 }
 
-func (s *NotificationEmailService) buildUnsubscribeURL(ctx context.Context, email, event string) (string, error) {
-	token, err := s.createUnsubscribeToken(ctx, email, event)
-	if err != nil {
-		return "", err
+func (s *NotificationEmailService) buildUnsubLink(ctx context.Context, email, event string) (string, error) {
+	tok, signErr := s.issueUnsubToken(ctx, email, event)
+	if signErr != nil {
+		return "", signErr
 	}
-	path := "/api/v1/settings/email-unsubscribe?token=" + url.QueryEscape(token)
-	baseURL := s.baseURL(ctx)
-	if baseURL == "" {
+	path := "/api/v1/settings/email-unsubscribe?token=" + url.QueryEscape(tok)
+	base := s.baseURL(ctx)
+	if base == "" {
 		return path, nil
 	}
-	return baseURL + path, nil
+	return base + path, nil
 }
 
-func (s *NotificationEmailService) createUnsubscribeToken(ctx context.Context, email, event string) (string, error) {
-	secret, err := s.unsubscribeSecret(ctx)
-	if err != nil {
-		return "", err
+func (s *NotificationEmailService) issueUnsubToken(ctx context.Context, email, event string) (string, error) {
+	secret, keyErr := s.ensureUnsubSecret(ctx)
+	if keyErr != nil {
+		return "", keyErr
 	}
-	claims := notificationEmailUnsubscribeClaims{Email: strings.TrimSpace(email), Event: event, Exp: time.Now().Add(notificationEmailUnsubscribeTTL).Unix()}
-	payload, err := json.Marshal(claims)
-	if err != nil {
-		return "", err
+	payload := notificationEmailUnsubscribeClaims{
+		Email: strings.TrimSpace(email),
+		Event: event,
+		Exp:   time.Now().Add(notificationEmailUnsubscribeTTL).Unix(),
 	}
-	encodedPayload := base64.RawURLEncoding.EncodeToString(payload)
-	signature := signNotificationEmailToken(secret, encodedPayload)
-	return encodedPayload + "." + signature, nil
+	payloadJSON, marshalErr := json.Marshal(payload)
+	if marshalErr != nil {
+		return "", marshalErr
+	}
+	encoded := base64.RawURLEncoding.EncodeToString(payloadJSON)
+	signature := hmacNotifToken(secret, encoded)
+	return encoded + "." + signature, nil
 }
 
-func (s *NotificationEmailService) parseUnsubscribeToken(ctx context.Context, token string) (notificationEmailUnsubscribeClaims, error) {
-	parts := strings.Split(strings.TrimSpace(token), ".")
+func (s *NotificationEmailService) validateUnsubToken(ctx context.Context, rawToken string) (notificationEmailUnsubscribeClaims, error) {
+	parts := strings.Split(strings.TrimSpace(rawToken), ".")
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return notificationEmailUnsubscribeClaims{}, errors.New("invalid unsubscribe token")
+		return notificationEmailUnsubscribeClaims{}, errors.New("unsubscribe token has invalid format")
 	}
-	secret, err := s.unsubscribeSecret(ctx)
-	if err != nil {
-		return notificationEmailUnsubscribeClaims{}, err
+	secret, keyErr := s.ensureUnsubSecret(ctx)
+	if keyErr != nil {
+		return notificationEmailUnsubscribeClaims{}, keyErr
 	}
-	expected := signNotificationEmailToken(secret, parts[0])
+	expected := hmacNotifToken(secret, parts[0])
 	if !hmac.Equal([]byte(expected), []byte(parts[1])) {
-		return notificationEmailUnsubscribeClaims{}, errors.New("invalid unsubscribe token signature")
+		return notificationEmailUnsubscribeClaims{}, errors.New("unsubscribe token signature mismatch")
 	}
-	payload, err := base64.RawURLEncoding.DecodeString(parts[0])
-	if err != nil {
-		return notificationEmailUnsubscribeClaims{}, errors.New("invalid unsubscribe token payload")
+	decoded, decErr := base64.RawURLEncoding.DecodeString(parts[0])
+	if decErr != nil {
+		return notificationEmailUnsubscribeClaims{}, errors.New("unsubscribe token payload cannot be decoded")
 	}
 	var claims notificationEmailUnsubscribeClaims
-	if err := json.Unmarshal(payload, &claims); err != nil {
-		return notificationEmailUnsubscribeClaims{}, errors.New("invalid unsubscribe token payload")
+	if jsonErr := json.Unmarshal(decoded, &claims); jsonErr != nil {
+		return notificationEmailUnsubscribeClaims{}, errors.New("unsubscribe token payload cannot be decoded")
 	}
 	if strings.TrimSpace(claims.Email) == "" || strings.TrimSpace(claims.Event) == "" {
-		return notificationEmailUnsubscribeClaims{}, errors.New("invalid unsubscribe token claims")
+		return notificationEmailUnsubscribeClaims{}, errors.New("unsubscribe token lacks required fields")
 	}
 	if claims.Exp <= time.Now().Unix() {
-		return notificationEmailUnsubscribeClaims{}, errors.New("unsubscribe token expired")
+		return notificationEmailUnsubscribeClaims{}, errors.New("unsubscribe token is no longer valid")
 	}
 	return claims, nil
 }
 
-func (s *NotificationEmailService) unsubscribeSecret(ctx context.Context) (string, error) {
-	secret, err := s.settingRepo.GetValue(ctx, notificationEmailUnsubscribeSecretKey)
-	if err == nil && strings.TrimSpace(secret) != "" {
-		return strings.TrimSpace(secret), nil
+func (s *NotificationEmailService) ensureUnsubSecret(ctx context.Context) (string, error) {
+	saved, readErr := s.settingRepo.GetValue(ctx, notificationEmailUnsubscribeSecretKey)
+	if readErr == nil && strings.TrimSpace(saved) != "" {
+		return strings.TrimSpace(saved), nil
 	}
-	if err != nil && !errors.Is(err, ErrSettingNotFound) {
-		return "", err
+	if readErr != nil && !errors.Is(readErr, ErrSettingNotFound) {
+		return "", readErr
 	}
-	buf := make([]byte, 32)
-	if _, err := rand.Read(buf); err != nil {
-		return "", err
+	randomBytes := make([]byte, 32)
+	if _, randErr := rand.Read(randomBytes); randErr != nil {
+		return "", randErr
 	}
-	secret = base64.RawURLEncoding.EncodeToString(buf)
-	if err := s.settingRepo.Set(ctx, notificationEmailUnsubscribeSecretKey, secret); err != nil {
-		return "", err
+	generated := base64.RawURLEncoding.EncodeToString(randomBytes)
+	if persistErr := s.settingRepo.Set(ctx, notificationEmailUnsubscribeSecretKey, generated); persistErr != nil {
+		return "", persistErr
 	}
-	return secret, nil
+	return generated, nil
 }
 
-func (s *NotificationEmailService) deliveryExists(ctx context.Context, keys ...string) (bool, error) {
-	for _, key := range keys {
-		if strings.TrimSpace(key) == "" {
+func (s *NotificationEmailService) checkDeliveryRecord(ctx context.Context, keys ...string) (bool, error) {
+	for _, k := range keys {
+		if strings.TrimSpace(k) == "" {
 			continue
 		}
-		_, err := s.settingRepo.GetValue(ctx, key)
-		if err == nil {
+		_, readErr := s.settingRepo.GetValue(ctx, k)
+		if readErr == nil {
 			return true, nil
 		}
-		if !errors.Is(err, ErrSettingNotFound) {
-			return false, err
+		if !errors.Is(readErr, ErrSettingNotFound) {
+			return false, readErr
 		}
 	}
 	return false, nil
 }
 
-func validateNotificationEmailTemplate(event, subject, htmlBody string) error {
-	subject = strings.TrimSpace(subject)
-	if subject == "" {
-		return errors.New("email subject cannot be empty")
+func validateNotifTemplateFields(event, subjectLine, htmlBody string) error {
+	subj := strings.TrimSpace(subjectLine)
+	if subj == "" {
+		return errors.New("notification email subject cannot be blank")
 	}
-	if len([]rune(subject)) > notificationEmailMaxSubjectLength {
-		return fmt.Errorf("email subject cannot exceed %d characters", notificationEmailMaxSubjectLength)
+	if len([]rune(subj)) > notificationEmailMaxSubjectLength {
+		return fmt.Errorf("notification email subject exceeds the %d-character limit", notificationEmailMaxSubjectLength)
 	}
 	if strings.TrimSpace(htmlBody) == "" {
-		return errors.New("email html cannot be empty")
+		return errors.New("notification email body cannot be blank")
 	}
 	if len([]byte(htmlBody)) > notificationEmailMaxHTMLLength {
-		return fmt.Errorf("email html cannot exceed %d bytes", notificationEmailMaxHTMLLength)
+		return fmt.Errorf("notification email body exceeds the %d-byte limit", notificationEmailMaxHTMLLength)
 	}
-	allowed := notificationEmailAllowedPlaceholderSet(event)
-	for _, placeholder := range notificationEmailPlaceholdersIn(subject + "\n" + htmlBody) {
-		if _, ok := allowed[placeholder]; !ok {
-			return fmt.Errorf("unsupported placeholder {{%s}} for event %s", placeholder, event)
+	allowed := permittedPlaceholderSet(event)
+	for _, name := range collectPlaceholderNames(subjectLine + "\n" + htmlBody) {
+		if _, ok := allowed[name]; !ok {
+			return fmt.Errorf("placeholder {{%s}} is not valid for event %s", name, event)
 		}
 	}
 	return nil
 }
 
-func renderNotificationEmail(event, subject, htmlBody string, variables map[string]string, rawHTMLVariables map[string]string) (NotificationEmailPreview, error) {
-	if err := validateNotificationEmailTemplate(event, subject, htmlBody); err != nil {
-		return NotificationEmailPreview{}, err
+func renderNotifEmail(event, subjectLine, htmlBody string, vars map[string]string, rawHTMLVars map[string]string) (NotificationEmailPreview, error) {
+	if valErr := validateNotifTemplateFields(event, subjectLine, htmlBody); valErr != nil {
+		return NotificationEmailPreview{}, valErr
 	}
-	renderedSubject, err := renderNotificationEmailString(event, subject, variables, nil, false)
-	if err != nil {
-		return NotificationEmailPreview{}, err
+	renderedSubject, subjErr := substituteNotifPlaceholders(event, subjectLine, vars, nil, false)
+	if subjErr != nil {
+		return NotificationEmailPreview{}, subjErr
 	}
-	renderedHTML, err := renderNotificationEmailString(event, htmlBody, variables, rawHTMLVariables, true)
-	if err != nil {
-		return NotificationEmailPreview{}, err
+	renderedBody, bodyErr := substituteNotifPlaceholders(event, htmlBody, vars, rawHTMLVars, true)
+	if bodyErr != nil {
+		return NotificationEmailPreview{}, bodyErr
 	}
-	return NotificationEmailPreview{Subject: sanitizeEmailHeader(renderedSubject), HTML: renderedHTML}, nil
+	return NotificationEmailPreview{Subject: sanitizeEmailHeader(renderedSubject), HTML: renderedBody}, nil
 }
 
-func renderNotificationEmailString(event, raw string, variables map[string]string, rawHTMLVariables map[string]string, escapeHTML bool) (string, error) {
-	allowed := notificationEmailAllowedPlaceholderSet(event)
-	var renderErr error
-	rendered := notificationEmailPlaceholderPattern.ReplaceAllStringFunc(raw, func(match string) string {
-		if renderErr != nil {
+func substituteNotifPlaceholders(event, template string, vars map[string]string, rawHTMLVars map[string]string, escapeHTML bool) (string, error) {
+	allowed := permittedPlaceholderSet(event)
+	var substErr error
+	result := notificationEmailPlaceholderPattern.ReplaceAllStringFunc(template, func(match string) string {
+		if substErr != nil {
 			return ""
 		}
-		parts := notificationEmailPlaceholderPattern.FindStringSubmatch(match)
-		if len(parts) != 2 {
+		groups := notificationEmailPlaceholderPattern.FindStringSubmatch(match)
+		if len(groups) != 2 {
 			return ""
 		}
-		name := parts[1]
+		name := groups[1]
 		if _, ok := allowed[name]; !ok {
-			renderErr = fmt.Errorf("unsupported placeholder {{%s}} for event %s", name, event)
+			substErr = fmt.Errorf("placeholder {{%s}} is not valid for event %s", name, event)
 			return ""
 		}
-		value := variables[name]
-		if escapeHTML && notificationEmailRawHTMLAllowed(event, name) {
-			if rawHTMLVariables != nil {
-				if rawValue, ok := rawHTMLVariables[name]; ok {
-					return rawValue
+		val := vars[name]
+		if escapeHTML && isNotifRawHTMLVar(event, name) {
+			if rawHTMLVars != nil {
+				if rawVal, found := rawHTMLVars[name]; found {
+					return rawVal
 				}
 			}
 		}
-		if strings.HasSuffix(name, "_url") && !isSafeNotificationEmailURL(value) {
-			value = ""
+		if strings.HasSuffix(name, "_url") && !isAllowedNotifURL(val) {
+			val = ""
 		}
 		if escapeHTML {
-			return html.EscapeString(value)
+			return html.EscapeString(val)
 		}
-		return sanitizeEmailHeader(value)
+		return sanitizeEmailHeader(val)
 	})
-	if renderErr != nil {
-		return "", renderErr
+	if substErr != nil {
+		return "", substErr
 	}
-	return rendered, nil
+	return result, nil
 }
 
-func notificationEmailRawHTMLAllowed(event, placeholder string) bool {
-	return event == NotificationEmailEventOpsScheduledReport && placeholder == "report_html"
+func isNotifRawHTMLVar(event, name string) bool {
+	return event == NotificationEmailEventOpsScheduledReport && name == "report_html"
 }
 
-func notificationEmailAllowedPlaceholderSet(event string) map[string]struct{} {
-	info := notificationEmailEventDefinitions[event]
-	allowed := make(map[string]struct{}, len(info.Placeholders))
-	for _, placeholder := range info.Placeholders {
-		allowed[placeholder] = struct{}{}
+func permittedPlaceholderSet(event string) map[string]struct{} {
+	evDef := notificationEmailEventDefinitions[event]
+	set := make(map[string]struct{}, len(evDef.Placeholders))
+	for _, ph := range evDef.Placeholders {
+		set[ph] = struct{}{}
 	}
-	return allowed
+	return set
 }
 
-func notificationEmailPlaceholdersIn(raw string) []string {
-	matches := notificationEmailPlaceholderPattern.FindAllStringSubmatch(raw, -1)
+func collectPlaceholderNames(text string) []string {
+	matches := notificationEmailPlaceholderPattern.FindAllStringSubmatch(text, -1)
 	seen := make(map[string]struct{}, len(matches))
-	out := make([]string, 0, len(matches))
-	for _, match := range matches {
-		if len(match) != 2 {
+	names := make([]string, 0, len(matches))
+	for _, m := range matches {
+		if len(m) != 2 {
 			continue
 		}
-		if _, exists := seen[match[1]]; exists {
+		if _, dup := seen[m[1]]; dup {
 			continue
 		}
-		seen[match[1]] = struct{}{}
-		out = append(out, match[1])
+		seen[m[1]] = struct{}{}
+		names = append(names, m[1])
 	}
-	return out
+	return names
 }
 
-func normalizeNotificationLocale(raw string) string {
-	trimmed := strings.ToLower(strings.TrimSpace(raw))
-	if trimmed == "" {
+func normalizeNotifLocale(raw string) string {
+	lower := strings.ToLower(strings.TrimSpace(raw))
+	if lower == "" {
 		return notificationEmailDefaultLocale
 	}
-	for _, part := range strings.Split(trimmed, ",") {
+	for _, part := range strings.Split(lower, ",") {
 		tag := strings.TrimSpace(strings.Split(part, ";")[0])
 		if strings.HasPrefix(tag, "zh") || tag == "cn" {
 			return notificationEmailLocaleChinese
@@ -756,82 +766,89 @@ func normalizeNotificationLocale(raw string) string {
 	return notificationEmailDefaultLocale
 }
 
-func notificationEmailTemplateKey(event, locale string) string {
+func notifTemplateStorageKey(event, locale string) string {
 	return notificationEmailTemplateKeyPrefix + event + ":" + locale
 }
 
-func notificationEmailPreferenceKey(event, email string) string {
+func notifPreferenceStorageKey(event, email string) string {
 	if strings.TrimSpace(event) == "" || strings.TrimSpace(email) == "" {
 		return ""
 	}
-	identity := strings.TrimSpace(event) + "\x00" + strings.ToLower(strings.TrimSpace(email))
-	return notificationEmailPreferenceKeyPrefix + "v2:" + notificationEmailHash(identity)
+	combined := strings.TrimSpace(event) + "\x00" + strings.ToLower(strings.TrimSpace(email))
+	return notificationEmailPreferenceKeyPrefix + "v2:" + hashNotifEmail(combined)
 }
 
-func legacyNotificationEmailPreferenceKey(event, email string) string {
-	return notificationEmailPreferenceKeyPrefix + event + ":" + notificationEmailHash(email)
+func legacyNotifPreferenceKey(event, email string) string {
+	return notificationEmailPreferenceKeyPrefix + event + ":" + hashNotifEmail(email)
 }
 
-func notificationEmailDeliveryKey(event, sourceType, sourceID, recipient, reminderKey string) string {
-	if strings.TrimSpace(sourceType) == "" || strings.TrimSpace(sourceID) == "" || strings.TrimSpace(recipient) == "" {
+func computeNotifDeliveryKey(event, srcType, srcID, recipient, reminderKey string) string {
+	if strings.TrimSpace(srcType) == "" || strings.TrimSpace(srcID) == "" || strings.TrimSpace(recipient) == "" {
 		return ""
 	}
-	identity := strings.Join([]string{
+	combined := strings.Join([]string{
 		strings.ToLower(strings.TrimSpace(event)),
-		safeNotificationEmailKeyPart(sourceType),
-		safeNotificationEmailKeyPart(sourceID),
+		cleanNotifKeyPart(srcType),
+		cleanNotifKeyPart(srcID),
 		strings.ToLower(strings.TrimSpace(recipient)),
-		safeNotificationEmailKeyPart(reminderKey),
+		cleanNotifKeyPart(reminderKey),
 	}, "\x00")
-	return notificationEmailDeliveryKeyPrefix + "v2:" + notificationEmailHash(identity)
+	return notificationEmailDeliveryKeyPrefix + "v2:" + hashNotifEmail(combined)
 }
 
-func legacyNotificationEmailDeliveryKey(event, sourceType, sourceID, recipient, reminderKey string) string {
-	if strings.TrimSpace(sourceType) == "" || strings.TrimSpace(sourceID) == "" || strings.TrimSpace(recipient) == "" {
+func legacyNotifDeliveryKey(event, srcType, srcID, recipient, reminderKey string) string {
+	if strings.TrimSpace(srcType) == "" || strings.TrimSpace(srcID) == "" || strings.TrimSpace(recipient) == "" {
 		return ""
 	}
-	parts := []string{notificationEmailDeliveryKeyPrefix, event, ":", safeNotificationEmailKeyPart(sourceType), ":", safeNotificationEmailKeyPart(sourceID), ":", notificationEmailHash(recipient)}
+	parts := []string{notificationEmailDeliveryKeyPrefix, event, ":", cleanNotifKeyPart(srcType), ":", cleanNotifKeyPart(srcID), ":", hashNotifEmail(recipient)}
 	if strings.TrimSpace(reminderKey) != "" {
-		parts = append(parts, ":", safeNotificationEmailKeyPart(reminderKey))
+		parts = append(parts, ":", cleanNotifKeyPart(reminderKey))
 	}
 	return strings.Join(parts, "")
 }
 
-func notificationEmailHash(value string) string {
-	trimmed := strings.ToLower(strings.TrimSpace(value))
-	if trimmed == "" {
+func hashNotifEmail(input string) string {
+	lower := strings.ToLower(strings.TrimSpace(input))
+	if lower == "" {
 		return ""
 	}
-	sum := sha256.Sum256([]byte(trimmed))
-	return hex.EncodeToString(sum[:])
+	digest := sha256.Sum256([]byte(lower))
+	return hex.EncodeToString(digest[:])
 }
 
-func safeNotificationEmailKeyPart(value string) string {
-	value = strings.ToLower(strings.TrimSpace(value))
-	var builder strings.Builder
-	for _, r := range value {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '_' || r == '-' || r == '.' {
-			_, _ = builder.WriteRune(r)
-		} else {
-			_, _ = builder.WriteRune('_')
+// notificationEmailHash is a compatibility alias used by callers across
+// the service package (content_moderation, email_service, user_service).
+func notificationEmailHash(value string) string {
+	return hashNotifEmail(value)
+}
+
+func cleanNotifKeyPart(raw string) string {
+	raw = strings.ToLower(strings.TrimSpace(raw))
+	var sb strings.Builder
+	for _, r := range raw {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9', r == '_', r == '-', r == '.':
+			_, _ = sb.WriteRune(r)
+		default:
+			_, _ = sb.WriteRune('_')
 		}
 	}
-	return builder.String()
+	return sb.String()
 }
 
-func signNotificationEmailToken(secret, payload string) string {
-	mac := hmac.New(sha256.New, []byte(secret))
-	_, _ = mac.Write([]byte(payload))
+func hmacNotifToken(key, data string) string {
+	mac := hmac.New(sha256.New, []byte(key))
+	_, _ = mac.Write([]byte(data))
 	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
 }
 
-func isSafeNotificationEmailURL(raw string) bool {
+func isAllowedNotifURL(raw string) bool {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
 		return true
 	}
-	parsed, err := url.Parse(trimmed)
-	if err != nil {
+	parsed, parseErr := url.Parse(trimmed)
+	if parseErr != nil {
 		return false
 	}
 	if parsed.IsAbs() {
@@ -841,8 +858,8 @@ func isSafeNotificationEmailURL(raw string) bool {
 	return strings.HasPrefix(trimmed, "/")
 }
 
-func notificationEmailSampleVariables(locale string) map[string]string {
-	if normalizeNotificationLocale(locale) == notificationEmailLocaleChinese {
+func notifSampleDataForLocale(locale string) map[string]string {
+	if normalizeNotifLocale(locale) == notificationEmailLocaleChinese {
 		return map[string]string{
 			"site_name":           defaultSiteName,
 			"recipient_name":      "张三",
@@ -1059,7 +1076,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventAuthVerifyCode: {
 		notificationEmailDefaultLocale: {
 			Subject: "[{{site_name}}] Email verification code",
-			HTML: notificationEmailCard("#4f46e5", "Email verification code", `
+			HTML: assembleNotifCardHTML("#4f46e5", "Email verification code", `
 <p>Hello {{recipient_name}},</p>
 <p>Your verification code is:</p>
 <p style="font-size: 32px; font-weight: 700; letter-spacing: 8px; text-align: center;">{{verification_code}}</p>
@@ -1068,7 +1085,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[{{site_name}}] 邮箱验证码",
-			HTML: notificationEmailCard("#4f46e5", "邮箱验证码", `
+			HTML: assembleNotifCardHTML("#4f46e5", "邮箱验证码", `
 <p>{{recipient_name}}，您好：</p>
 <p>您的验证码是：</p>
 <p style="font-size: 32px; font-weight: 700; letter-spacing: 8px; text-align: center;">{{verification_code}}</p>
@@ -1079,7 +1096,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventAuthPasswordReset: {
 		notificationEmailDefaultLocale: {
 			Subject: "[{{site_name}}] Password reset request",
-			HTML: notificationEmailCard("#7c3aed", "Password reset", `
+			HTML: assembleNotifCardHTML("#7c3aed", "Password reset", `
 <p>Hello {{recipient_name}},</p>
 <p>We received a request to reset your password. Click the button below to set a new password.</p>
 <p><a class="button" href="{{reset_url}}">Reset password</a></p>
@@ -1089,7 +1106,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[{{site_name}}] 密码重置请求",
-			HTML: notificationEmailCard("#7c3aed", "密码重置", `
+			HTML: assembleNotifCardHTML("#7c3aed", "密码重置", `
 <p>{{recipient_name}}，您好：</p>
 <p>我们收到了您的密码重置请求，请点击下方按钮设置新密码。</p>
 <p><a class="button" href="{{reset_url}}">重置密码</a></p>
@@ -1101,7 +1118,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventNotificationEmailVerifyCode: {
 		notificationEmailDefaultLocale: {
 			Subject: "[{{site_name}}] Notification email verification code",
-			HTML: notificationEmailCard("#0ea5e9", "Notification email verification", `
+			HTML: assembleNotifCardHTML("#0ea5e9", "Notification email verification", `
 <p>Hello {{recipient_name}},</p>
 <p>You are adding this address as an extra notification email.</p>
 <p>Your verification code is:</p>
@@ -1111,7 +1128,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[{{site_name}}] 通知邮箱验证码",
-			HTML: notificationEmailCard("#0ea5e9", "通知邮箱验证", `
+			HTML: assembleNotifCardHTML("#0ea5e9", "通知邮箱验证", `
 <p>{{recipient_name}}，您好：</p>
 <p>您正在添加额外的通知邮箱，请输入以下验证码完成验证。</p>
 <p style="font-size: 32px; font-weight: 700; letter-spacing: 8px; text-align: center;">{{verification_code}}</p>
@@ -1122,7 +1139,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventSubscriptionPurchaseSuccess: {
 		notificationEmailDefaultLocale: {
 			Subject: "[{{site_name}}] Subscription purchase successful",
-			HTML: notificationEmailCard("#2563eb", "Subscription activated", `
+			HTML: assembleNotifCardHTML("#2563eb", "Subscription activated", `
 <p>Hello {{recipient_name}},</p>
 <p>Your subscription for <strong>{{subscription_group}}</strong> has been activated for <strong>{{subscription_days}}</strong> days.</p>
 <p>Expiry time: <strong>{{expiry_time}}</strong></p>
@@ -1130,7 +1147,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[{{site_name}}] 订阅购买成功",
-			HTML: notificationEmailCard("#2563eb", "订阅已开通", `
+			HTML: assembleNotifCardHTML("#2563eb", "订阅已开通", `
 <p>{{recipient_name}}，您好：</p>
 <p>您的 <strong>{{subscription_group}}</strong> 订阅已成功开通，有效期 <strong>{{subscription_days}}</strong> 天。</p>
 <p>到期时间：<strong>{{expiry_time}}</strong></p>
@@ -1140,7 +1157,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventSubscriptionExpiryReminder: {
 		notificationEmailDefaultLocale: {
 			Subject: "[{{site_name}}] Subscription expires in {{days_remaining}} day(s)",
-			HTML: notificationEmailCard("#f97316", "Subscription expiry reminder", `
+			HTML: assembleNotifCardHTML("#f97316", "Subscription expiry reminder", `
 <p>Hello {{recipient_name}},</p>
 <p>Your <strong>{{subscription_group}}</strong> subscription will expire in <strong>{{days_remaining}}</strong> day(s).</p>
 <p>Expiry time: <strong>{{expiry_time}}</strong></p>
@@ -1148,7 +1165,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[{{site_name}}] 订阅将在 {{days_remaining}} 天后到期",
-			HTML: notificationEmailCard("#f97316", "订阅到期提醒", `
+			HTML: assembleNotifCardHTML("#f97316", "订阅到期提醒", `
 <p>{{recipient_name}}，您好：</p>
 <p>您的 <strong>{{subscription_group}}</strong> 订阅将在 <strong>{{days_remaining}}</strong> 天后到期。</p>
 <p>到期时间：<strong>{{expiry_time}}</strong></p>
@@ -1158,7 +1175,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventBalanceLow: {
 		notificationEmailDefaultLocale: {
 			Subject: "[{{site_name}}] Low balance alert",
-			HTML: notificationEmailCard("#d97706", "Low balance alert", `
+			HTML: assembleNotifCardHTML("#d97706", "Low balance alert", `
 <p>Hello {{recipient_name}},</p>
 <p>Your current balance is <strong>${{current_balance}}</strong>, below the configured alert threshold of <strong>${{threshold}}</strong>.</p>
 <p>Please recharge in time to avoid service interruption.</p>
@@ -1167,7 +1184,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[{{site_name}}] 余额不足提醒",
-			HTML: notificationEmailCard("#d97706", "余额不足提醒", `
+			HTML: assembleNotifCardHTML("#d97706", "余额不足提醒", `
 <p>{{recipient_name}}，您好：</p>
 <p>您当前余额为 <strong>${{current_balance}}</strong>，已低于提醒阈值 <strong>${{threshold}}</strong>。</p>
 <p>请及时充值以免服务中断。</p>
@@ -1178,7 +1195,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventBalanceRechargeSuccess: {
 		notificationEmailDefaultLocale: {
 			Subject: "[{{site_name}}] Balance recharge successful",
-			HTML: notificationEmailCard("#16a34a", "Recharge successful", `
+			HTML: assembleNotifCardHTML("#16a34a", "Recharge successful", `
 <p>Hello {{recipient_name}},</p>
 <p>Your balance recharge of <strong>${{recharge_amount}}</strong> has been completed.</p>
 <p>Current balance: <strong>${{current_balance}}</strong></p>
@@ -1186,7 +1203,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[{{site_name}}] 余额充值成功",
-			HTML: notificationEmailCard("#16a34a", "余额充值成功", `
+			HTML: assembleNotifCardHTML("#16a34a", "余额充值成功", `
 <p>{{recipient_name}}，您好：</p>
 <p>您的余额充值 <strong>${{recharge_amount}}</strong> 已完成。</p>
 <p>当前余额：<strong>${{current_balance}}</strong></p>
@@ -1196,7 +1213,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventAccountQuotaAlert: {
 		notificationEmailDefaultLocale: {
 			Subject: "[{{site_name}}] Account quota alert - {{account_name}}",
-			HTML: notificationEmailCard("#dc2626", "Account quota alert", `
+			HTML: assembleNotifCardHTML("#dc2626", "Account quota alert", `
 <p>The upstream account <strong>{{account_name}}</strong> has crossed its configured quota alert threshold.</p>
 <table style="width:100%;border-collapse:collapse;">
   <tr><td>Account ID</td><td>{{account_id}}</td></tr>
@@ -1209,7 +1226,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[{{site_name}}] 账号限额告警 - {{account_name}}",
-			HTML: notificationEmailCard("#dc2626", "账号限额告警", `
+			HTML: assembleNotifCardHTML("#dc2626", "账号限额告警", `
 <p>上游账号 <strong>{{account_name}}</strong> 已触发配置的额度告警阈值。</p>
 <table style="width:100%;border-collapse:collapse;">
   <tr><td>账号 ID</td><td>{{account_id}}</td></tr>
@@ -1224,7 +1241,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventContentModerationViolation: {
 		notificationEmailDefaultLocale: {
 			Subject: "[{{site_name}}] Risk control notice",
-			HTML: notificationEmailCard("#ef4444", "Risk control notice", `
+			HTML: assembleNotifCardHTML("#ef4444", "Risk control notice", `
 <p>Hello {{recipient_name}},</p>
 <p>Your API request triggered the platform content moderation/risk-control policy.</p>
 <table style="width:100%;border-collapse:collapse;">
@@ -1237,7 +1254,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[{{site_name}}] 账户风控提醒",
-			HTML: notificationEmailCard("#ef4444", "账户风控提醒", `
+			HTML: assembleNotifCardHTML("#ef4444", "账户风控提醒", `
 <p>{{recipient_name}}，您好：</p>
 <p>您的 API 请求触发了平台内容审核/风控策略。</p>
 <table style="width:100%;border-collapse:collapse;">
@@ -1252,7 +1269,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventContentModerationDisabled: {
 		notificationEmailDefaultLocale: {
 			Subject: "[{{site_name}}] Account disabled by risk control",
-			HTML: notificationEmailCard("#b91c1c", "Account disabled", `
+			HTML: assembleNotifCardHTML("#b91c1c", "Account disabled", `
 <p>Hello {{recipient_name}},</p>
 <p>Your account has repeatedly triggered platform content moderation/risk-control rules and has been automatically disabled.</p>
 <table style="width:100%;border-collapse:collapse;">
@@ -1265,7 +1282,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[{{site_name}}] 账户已被禁用",
-			HTML: notificationEmailCard("#b91c1c", "账户已被禁用", `
+			HTML: assembleNotifCardHTML("#b91c1c", "账户已被禁用", `
 <p>{{recipient_name}}，您好：</p>
 <p>您的账户在统计周期内多次触发平台内容审核/风控规则，系统已自动禁用该账户。</p>
 <table style="width:100%;border-collapse:collapse;">
@@ -1280,7 +1297,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventOpsAlert: {
 		notificationEmailDefaultLocale: {
 			Subject: "[Ops Alert][{{severity}}] {{rule_name}}",
-			HTML: notificationEmailCard("#ea580c", "Ops alert", `
+			HTML: assembleNotifCardHTML("#ea580c", "Ops alert", `
 <p><strong>Rule</strong>: {{rule_name}}</p>
 <p><strong>Severity</strong>: {{severity}}</p>
 <p><strong>Status</strong>: {{alert_status}}</p>
@@ -1290,7 +1307,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[运维告警][{{severity}}] {{rule_name}}",
-			HTML: notificationEmailCard("#ea580c", "运维告警", `
+			HTML: assembleNotifCardHTML("#ea580c", "运维告警", `
 <p><strong>规则</strong>：{{rule_name}}</p>
 <p><strong>严重级别</strong>：{{severity}}</p>
 <p><strong>状态</strong>：{{alert_status}}</p>
@@ -1302,7 +1319,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	NotificationEmailEventOpsScheduledReport: {
 		notificationEmailDefaultLocale: {
 			Subject: "[Ops Report] {{report_name}}",
-			HTML: notificationEmailCard("#0891b2", "Ops report", `
+			HTML: assembleNotifCardHTML("#0891b2", "Ops report", `
 <p><strong>Report</strong>: {{report_name}}</p>
 <p><strong>Type</strong>: {{report_type}}</p>
 <p><strong>Range</strong>: {{report_start_time}} - {{report_end_time}}</p>
@@ -1310,7 +1327,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 		},
 		notificationEmailLocaleChinese: {
 			Subject: "[运维报表] {{report_name}}",
-			HTML: notificationEmailCard("#0891b2", "运维报表", `
+			HTML: assembleNotifCardHTML("#0891b2", "运维报表", `
 <p><strong>报表</strong>：{{report_name}}</p>
 <p><strong>类型</strong>：{{report_type}}</p>
 <p><strong>时间范围</strong>：{{report_start_time}} - {{report_end_time}}</p>
@@ -1319,7 +1336,7 @@ var notificationEmailOfficialTemplates = map[string]map[string]notificationEmail
 	},
 }
 
-func notificationEmailCard(accent, title, content string) string {
+func assembleNotifCardHTML(accentColor, heading, body string) string {
 	return `<!DOCTYPE html>
 <html>
 <head>
@@ -1328,18 +1345,18 @@ func notificationEmailCard(accent, title, content string) string {
   <style>
     body { margin: 0; padding: 24px; background: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #18181b; }
     .container { max-width: 640px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.10); }
-    .header { background: ` + accent + `; color: #ffffff; padding: 28px 32px; }
+    .header { background: ` + accentColor + `; color: #ffffff; padding: 28px 32px; }
     .header h1 { margin: 0; font-size: 24px; line-height: 1.25; }
     .content { padding: 32px; font-size: 15px; line-height: 1.7; }
-    .button { display: inline-block; margin-top: 12px; padding: 11px 18px; border-radius: 8px; background: ` + accent + `; color: #ffffff; text-decoration: none; font-weight: 600; }
+    .button { display: inline-block; margin-top: 12px; padding: 11px 18px; border-radius: 8px; background: ` + accentColor + `; color: #ffffff; text-decoration: none; font-weight: 600; }
     .muted { color: #71717a; font-size: 13px; }
     .footer { padding: 18px 32px; background: #fafafa; color: #a1a1aa; font-size: 12px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header"><h1>` + title + `</h1></div>
-    <div class="content">` + content + `</div>
+    <div class="header"><h1>` + heading + `</h1></div>
+    <div class="content">` + body + `</div>
     <div class="footer">This email was sent by {{site_name}}. Please do not reply directly.</div>
   </div>
 </body>

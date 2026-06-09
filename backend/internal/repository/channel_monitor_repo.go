@@ -14,40 +14,40 @@ import (
 	"github.com/lib/pq"
 )
 
-// channelMonitorRepository 实现 service.ChannelMonitorRepository。
+// channelMonitorRepository implements service.ChannelMonitorRepository.
 //
-// 选型说明：
-//   - CRUD 走 ent，复用项目的事务上下文支持
-//   - 聚合查询（latest per model / availability）走原生 SQL，避免 ent 在 GROUP BY 上
-//     的样板代码，并保证索引能被命中
+// Design notes:
+//   - Standard CRUD operations use ent for transactional context reuse.
+//   - Aggregate queries (latest per model, availability) use raw SQL to
+//     avoid ent's GROUP BY boilerplate and ensure proper index usage.
 type channelMonitorRepository struct {
 	client *dbent.Client
 	db     *sql.DB
 }
 
-// NewChannelMonitorRepository 创建仓储实例。
+// NewChannelMonitorRepository constructs a new repository instance.
 func NewChannelMonitorRepository(client *dbent.Client, db *sql.DB) service.ChannelMonitorRepository {
 	return &channelMonitorRepository{client: client, db: db}
 }
 
 // ---------- CRUD ----------
 
-func (r *channelMonitorRepository) Create(ctx context.Context, m *service.ChannelMonitor) error {
-	client := clientFromContext(ctx, r.client)
-	builder := client.ChannelMonitor.Create().
+func (repo *channelMonitorRepository) Create(ctx context.Context, m *service.ChannelMonitor) error {
+	dbClient := clientFromContext(ctx, repo.client)
+	builder := dbClient.ChannelMonitor.Create().
 		SetName(m.Name).
 		SetProvider(channelmonitor.Provider(m.Provider)).
-		SetAPIMode(defaultAPIModeRepo(m.APIMode)).
+		SetAPIMode(fallbackAPIMode(m.APIMode)).
 		SetEndpoint(m.Endpoint).
-		SetAPIKeyEncrypted(m.APIKey). // 调用方传入的已是密文
+		SetAPIKeyEncrypted(m.APIKey). // Caller passes pre-encrypted ciphertext.
 		SetPrimaryModel(m.PrimaryModel).
-		SetExtraModels(emptySliceIfNil(m.ExtraModels)).
+		SetExtraModels(coalesceStringSlice(m.ExtraModels)).
 		SetGroupName(m.GroupName).
 		SetEnabled(m.Enabled).
 		SetIntervalSeconds(m.IntervalSeconds).
 		SetCreatedBy(m.CreatedBy).
-		SetExtraHeaders(emptyHeadersIfNilRepo(m.ExtraHeaders)).
-		SetBodyOverrideMode(defaultBodyModeRepo(m.BodyOverrideMode))
+		SetExtraHeaders(coalesceHeadersMap(m.ExtraHeaders)).
+		SetBodyOverrideMode(fallbackBodyMode(m.BodyOverrideMode))
 	if m.TemplateID != nil {
 		builder = builder.SetTemplateID(*m.TemplateID)
 	}
@@ -55,41 +55,41 @@ func (r *channelMonitorRepository) Create(ctx context.Context, m *service.Channe
 		builder = builder.SetBodyOverride(m.BodyOverride)
 	}
 
-	created, err := builder.Save(ctx)
-	if err != nil {
-		return translatePersistenceError(err, service.ErrChannelMonitorNotFound, nil)
+	saved, saveErr := builder.Save(ctx)
+	if saveErr != nil {
+		return translatePersistenceError(saveErr, service.ErrChannelMonitorNotFound, nil)
 	}
-	m.ID = created.ID
-	m.CreatedAt = created.CreatedAt
-	m.UpdatedAt = created.UpdatedAt
+	m.ID = saved.ID
+	m.CreatedAt = saved.CreatedAt
+	m.UpdatedAt = saved.UpdatedAt
 	return nil
 }
 
-func (r *channelMonitorRepository) GetByID(ctx context.Context, id int64) (*service.ChannelMonitor, error) {
-	row, err := r.client.ChannelMonitor.Query().
+func (repo *channelMonitorRepository) GetByID(ctx context.Context, id int64) (*service.ChannelMonitor, error) {
+	entity, queryErr := repo.client.ChannelMonitor.Query().
 		Where(channelmonitor.IDEQ(id)).
 		Only(ctx)
-	if err != nil {
-		return nil, translatePersistenceError(err, service.ErrChannelMonitorNotFound, nil)
+	if queryErr != nil {
+		return nil, translatePersistenceError(queryErr, service.ErrChannelMonitorNotFound, nil)
 	}
-	return entToServiceMonitor(row), nil
+	return convertEntMonitorToService(entity), nil
 }
 
-func (r *channelMonitorRepository) Update(ctx context.Context, m *service.ChannelMonitor) error {
-	client := clientFromContext(ctx, r.client)
-	updater := client.ChannelMonitor.UpdateOneID(m.ID).
+func (repo *channelMonitorRepository) Update(ctx context.Context, m *service.ChannelMonitor) error {
+	dbClient := clientFromContext(ctx, repo.client)
+	updater := dbClient.ChannelMonitor.UpdateOneID(m.ID).
 		SetName(m.Name).
 		SetProvider(channelmonitor.Provider(m.Provider)).
-		SetAPIMode(defaultAPIModeRepo(m.APIMode)).
+		SetAPIMode(fallbackAPIMode(m.APIMode)).
 		SetEndpoint(m.Endpoint).
 		SetAPIKeyEncrypted(m.APIKey).
 		SetPrimaryModel(m.PrimaryModel).
-		SetExtraModels(emptySliceIfNil(m.ExtraModels)).
+		SetExtraModels(coalesceStringSlice(m.ExtraModels)).
 		SetGroupName(m.GroupName).
 		SetEnabled(m.Enabled).
 		SetIntervalSeconds(m.IntervalSeconds).
-		SetExtraHeaders(emptyHeadersIfNilRepo(m.ExtraHeaders)).
-		SetBodyOverrideMode(defaultBodyModeRepo(m.BodyOverrideMode))
+		SetExtraHeaders(coalesceHeadersMap(m.ExtraHeaders)).
+		SetBodyOverrideMode(fallbackBodyMode(m.BodyOverrideMode))
 	if m.TemplateID != nil {
 		updater = updater.SetTemplateID(*m.TemplateID)
 	} else {
@@ -101,211 +101,213 @@ func (r *channelMonitorRepository) Update(ctx context.Context, m *service.Channe
 		updater = updater.ClearBodyOverride()
 	}
 
-	updated, err := updater.Save(ctx)
-	if err != nil {
-		return translatePersistenceError(err, service.ErrChannelMonitorNotFound, nil)
+	saved, saveErr := updater.Save(ctx)
+	if saveErr != nil {
+		return translatePersistenceError(saveErr, service.ErrChannelMonitorNotFound, nil)
 	}
-	m.UpdatedAt = updated.UpdatedAt
+	m.UpdatedAt = saved.UpdatedAt
 	return nil
 }
 
-func (r *channelMonitorRepository) Delete(ctx context.Context, id int64) error {
-	client := clientFromContext(ctx, r.client)
-	if err := client.ChannelMonitor.DeleteOneID(id).Exec(ctx); err != nil {
-		return translatePersistenceError(err, service.ErrChannelMonitorNotFound, nil)
+func (repo *channelMonitorRepository) Delete(ctx context.Context, id int64) error {
+	dbClient := clientFromContext(ctx, repo.client)
+	if delErr := dbClient.ChannelMonitor.DeleteOneID(id).Exec(ctx); delErr != nil {
+		return translatePersistenceError(delErr, service.ErrChannelMonitorNotFound, nil)
 	}
 	return nil
 }
 
-func (r *channelMonitorRepository) List(ctx context.Context, params service.ChannelMonitorListParams) ([]*service.ChannelMonitor, int64, error) {
-	q := r.client.ChannelMonitor.Query()
+func (repo *channelMonitorRepository) List(ctx context.Context, params service.ChannelMonitorListParams) ([]*service.ChannelMonitor, int64, error) {
+	query := repo.client.ChannelMonitor.Query()
 	if params.Provider != "" {
-		q = q.Where(channelmonitor.ProviderEQ(channelmonitor.Provider(params.Provider)))
+		query = query.Where(channelmonitor.ProviderEQ(channelmonitor.Provider(params.Provider)))
 	}
 	if params.Enabled != nil {
-		q = q.Where(channelmonitor.EnabledEQ(*params.Enabled))
+		query = query.Where(channelmonitor.EnabledEQ(*params.Enabled))
 	}
-	if s := strings.TrimSpace(params.Search); s != "" {
-		q = q.Where(channelmonitor.Or(
-			channelmonitor.NameContainsFold(s),
-			channelmonitor.GroupNameContainsFold(s),
-			channelmonitor.PrimaryModelContainsFold(s),
+	if trimmed := strings.TrimSpace(params.Search); trimmed != "" {
+		query = query.Where(channelmonitor.Or(
+			channelmonitor.NameContainsFold(trimmed),
+			channelmonitor.GroupNameContainsFold(trimmed),
+			channelmonitor.PrimaryModelContainsFold(trimmed),
 		))
 	}
 
-	total, err := q.Count(ctx)
-	if err != nil {
-		return nil, 0, fmt.Errorf("count monitors: %w", err)
+	totalCount, countErr := query.Count(ctx)
+	if countErr != nil {
+		return nil, 0, fmt.Errorf("failed to count monitor records: %w", countErr)
 	}
 
-	pageSize := params.PageSize
-	if pageSize <= 0 {
-		pageSize = 20
+	perPage := params.PageSize
+	if perPage <= 0 {
+		perPage = 20
 	}
-	page := params.Page
-	if page <= 0 {
-		page = 1
+	currentPage := params.Page
+	if currentPage <= 0 {
+		currentPage = 1
 	}
 
-	rows, err := q.
+	entities, listErr := query.
 		Order(dbent.Desc(channelmonitor.FieldID)).
-		Offset((page - 1) * pageSize).
-		Limit(pageSize).
+		Offset((currentPage - 1) * perPage).
+		Limit(perPage).
 		All(ctx)
-	if err != nil {
-		return nil, 0, fmt.Errorf("list monitors: %w", err)
+	if listErr != nil {
+		return nil, 0, fmt.Errorf("failed to list monitor records: %w", listErr)
 	}
 
-	out := make([]*service.ChannelMonitor, 0, len(rows))
-	for _, row := range rows {
-		out = append(out, entToServiceMonitor(row))
+	monitors := make([]*service.ChannelMonitor, 0, len(entities))
+	for _, ent := range entities {
+		monitors = append(monitors, convertEntMonitorToService(ent))
 	}
-	return out, int64(total), nil
+	return monitors, int64(totalCount), nil
 }
 
-// ---------- 调度器辅助 ----------
+// ---------- Scheduler helpers ----------
 
-func (r *channelMonitorRepository) ListEnabled(ctx context.Context) ([]*service.ChannelMonitor, error) {
-	rows, err := r.client.ChannelMonitor.Query().
+func (repo *channelMonitorRepository) ListEnabled(ctx context.Context) ([]*service.ChannelMonitor, error) {
+	entities, queryErr := repo.client.ChannelMonitor.Query().
 		Where(channelmonitor.EnabledEQ(true)).
 		All(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("list enabled monitors: %w", err)
+	if queryErr != nil {
+		return nil, fmt.Errorf("failed to query enabled monitors: %w", queryErr)
 	}
-	out := make([]*service.ChannelMonitor, 0, len(rows))
-	for _, row := range rows {
-		out = append(out, entToServiceMonitor(row))
+	monitors := make([]*service.ChannelMonitor, 0, len(entities))
+	for _, ent := range entities {
+		monitors = append(monitors, convertEntMonitorToService(ent))
 	}
-	return out, nil
+	return monitors, nil
 }
 
-func (r *channelMonitorRepository) MarkChecked(ctx context.Context, id int64, checkedAt time.Time) error {
-	client := clientFromContext(ctx, r.client)
-	if err := client.ChannelMonitor.UpdateOneID(id).
+func (repo *channelMonitorRepository) MarkChecked(ctx context.Context, id int64, checkedAt time.Time) error {
+	dbClient := clientFromContext(ctx, repo.client)
+	if updErr := dbClient.ChannelMonitor.UpdateOneID(id).
 		SetLastCheckedAt(checkedAt).
-		Exec(ctx); err != nil {
-		return translatePersistenceError(err, service.ErrChannelMonitorNotFound, nil)
+		Exec(ctx); updErr != nil {
+		return translatePersistenceError(updErr, service.ErrChannelMonitorNotFound, nil)
 	}
 	return nil
 }
 
-func (r *channelMonitorRepository) InsertHistoryBatch(ctx context.Context, rows []*service.ChannelMonitorHistoryRow) error {
+func (repo *channelMonitorRepository) InsertHistoryBatch(ctx context.Context, rows []*service.ChannelMonitorHistoryRow) error {
 	if len(rows) == 0 {
 		return nil
 	}
-	client := clientFromContext(ctx, r.client)
-	bulk := make([]*dbent.ChannelMonitorHistoryCreate, 0, len(rows))
-	for _, row := range rows {
-		c := client.ChannelMonitorHistory.Create().
-			SetMonitorID(row.MonitorID).
-			SetModel(row.Model).
-			SetStatus(channelmonitorhistory.Status(row.Status)).
-			SetMessage(row.Message).
-			SetCheckedAt(row.CheckedAt)
-		if row.LatencyMs != nil {
-			c = c.SetLatencyMs(*row.LatencyMs)
+	dbClient := clientFromContext(ctx, repo.client)
+	creators := make([]*dbent.ChannelMonitorHistoryCreate, 0, len(rows))
+	for _, hr := range rows {
+		builder := dbClient.ChannelMonitorHistory.Create().
+			SetMonitorID(hr.MonitorID).
+			SetModel(hr.Model).
+			SetStatus(channelmonitorhistory.Status(hr.Status)).
+			SetMessage(hr.Message).
+			SetCheckedAt(hr.CheckedAt)
+		if hr.LatencyMs != nil {
+			builder = builder.SetLatencyMs(*hr.LatencyMs)
 		}
-		if row.PingLatencyMs != nil {
-			c = c.SetPingLatencyMs(*row.PingLatencyMs)
+		if hr.PingLatencyMs != nil {
+			builder = builder.SetPingLatencyMs(*hr.PingLatencyMs)
 		}
-		bulk = append(bulk, c)
+		creators = append(creators, builder)
 	}
-	if _, err := client.ChannelMonitorHistory.CreateBulk(bulk...).Save(ctx); err != nil {
-		return fmt.Errorf("insert history bulk: %w", err)
+	if _, bulkErr := dbClient.ChannelMonitorHistory.CreateBulk(creators...).Save(ctx); bulkErr != nil {
+		return fmt.Errorf("bulk insert of history records failed: %w", bulkErr)
 	}
 	return nil
 }
 
-// DeleteHistoryBefore 物理删 checked_at < before 的明细，分批 channelMonitorPruneBatchSize 行一批，
-// 避免单事务删除过多引起锁/WAL 压力。借助 (checked_at) 索引定位小批 id，再按 id 删。
-func (r *channelMonitorRepository) DeleteHistoryBefore(ctx context.Context, before time.Time) (int64, error) {
-	return deleteChannelMonitorBatched(ctx, r.db, channelMonitorPruneHistorySQL, before)
+// DeleteHistoryBefore removes history rows where checked_at < before in batches
+// to avoid prolonged lock contention and WAL pressure.
+func (repo *channelMonitorRepository) DeleteHistoryBefore(ctx context.Context, before time.Time) (int64, error) {
+	return pruneMonitorRowsBatched(ctx, repo.db, historyPruneSQL, before)
 }
 
-// ListHistory 按 checked_at 倒序返回某个监控的最近 N 条历史记录。
-// model 为空时不过滤；非空时只返回该模型的记录。
-func (r *channelMonitorRepository) ListHistory(ctx context.Context, monitorID int64, model string, limit int) ([]*service.ChannelMonitorHistoryEntry, error) {
-	q := r.client.ChannelMonitorHistory.Query().
+// ListHistory returns the most recent N history entries for a monitor, ordered
+// by checked_at descending. When model is non-empty, results are filtered to
+// that specific model only.
+func (repo *channelMonitorRepository) ListHistory(ctx context.Context, monitorID int64, model string, limit int) ([]*service.ChannelMonitorHistoryEntry, error) {
+	query := repo.client.ChannelMonitorHistory.Query().
 		Where(channelmonitorhistory.MonitorIDEQ(monitorID))
 	if strings.TrimSpace(model) != "" {
-		q = q.Where(channelmonitorhistory.ModelEQ(model))
+		query = query.Where(channelmonitorhistory.ModelEQ(model))
 	}
-	rows, err := q.
+	entities, queryErr := query.
 		Order(dbent.Desc(channelmonitorhistory.FieldCheckedAt)).
 		Limit(limit).
 		All(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("list history: %w", err)
+	if queryErr != nil {
+		return nil, fmt.Errorf("failed to retrieve history entries: %w", queryErr)
 	}
-	out := make([]*service.ChannelMonitorHistoryEntry, 0, len(rows))
-	for _, row := range rows {
-		entry := &service.ChannelMonitorHistoryEntry{
-			ID:            row.ID,
-			Model:         row.Model,
-			Status:        string(row.Status),
-			LatencyMs:     row.LatencyMs,
-			PingLatencyMs: row.PingLatencyMs,
-			Message:       row.Message,
-			CheckedAt:     row.CheckedAt,
-		}
-		out = append(out, entry)
+	entries := make([]*service.ChannelMonitorHistoryEntry, 0, len(entities))
+	for _, ent := range entities {
+		entries = append(entries, &service.ChannelMonitorHistoryEntry{
+			ID:            ent.ID,
+			Model:         ent.Model,
+			Status:        string(ent.Status),
+			LatencyMs:     ent.LatencyMs,
+			PingLatencyMs: ent.PingLatencyMs,
+			Message:       ent.Message,
+			CheckedAt:     ent.CheckedAt,
+		})
 	}
-	return out, nil
+	return entries, nil
 }
 
-// ---------- 用户视图聚合（原生 SQL） ----------
+// ---------- User-facing aggregation views (raw SQL) ----------
 
-// ListLatestPerModel 用 DISTINCT ON 取每个 (monitor_id, model) 的最近一条记录。
-// 借助 (monitor_id, model, checked_at DESC) 索引可走 Index Scan。
-func (r *channelMonitorRepository) ListLatestPerModel(ctx context.Context, monitorID int64) ([]*service.ChannelMonitorLatest, error) {
-	const q = `
+// ListLatestPerModel returns the most recent record for each model within a
+// single monitor, using Postgres DISTINCT ON for efficient index-only scans.
+func (repo *channelMonitorRepository) ListLatestPerModel(ctx context.Context, monitorID int64) ([]*service.ChannelMonitorLatest, error) {
+	const stmt = `
 		SELECT DISTINCT ON (model)
 		    model, status, latency_ms, ping_latency_ms, checked_at
 		FROM channel_monitor_histories
 		WHERE monitor_id = $1
 		ORDER BY model, checked_at DESC
 	`
-	rows, err := r.db.QueryContext(ctx, q, monitorID)
-	if err != nil {
-		return nil, fmt.Errorf("query latest per model: %w", err)
+	sqlRows, queryErr := repo.db.QueryContext(ctx, stmt, monitorID)
+	if queryErr != nil {
+		return nil, fmt.Errorf("latest-per-model query failed: %w", queryErr)
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() { _ = sqlRows.Close() }()
 
-	out := make([]*service.ChannelMonitorLatest, 0)
-	for rows.Next() {
-		l := &service.ChannelMonitorLatest{}
-		var latency, ping sql.NullInt64
-		if err := rows.Scan(&l.Model, &l.Status, &latency, &ping, &l.CheckedAt); err != nil {
-			return nil, fmt.Errorf("scan latest row: %w", err)
+	items := make([]*service.ChannelMonitorLatest, 0)
+	for sqlRows.Next() {
+		item := &service.ChannelMonitorLatest{}
+		var rawLatency, rawPing sql.NullInt64
+		if scanErr := sqlRows.Scan(&item.Model, &item.Status, &rawLatency, &rawPing, &item.CheckedAt); scanErr != nil {
+			return nil, fmt.Errorf("failed to scan latest-per-model row: %w", scanErr)
 		}
-		assignNullInt(&l.LatencyMs, latency)
-		assignNullInt(&l.PingLatencyMs, ping)
-		out = append(out, l)
+		unwrapNullableInt(&item.LatencyMs, rawLatency)
+		unwrapNullableInt(&item.PingLatencyMs, rawPing)
+		items = append(items, item)
 	}
-	return out, rows.Err()
+	return items, sqlRows.Err()
 }
 
-// assignNullInt 把 sql.NullInt64 解包到 *int 指针目标（valid 才分配新 int）。
-// 集中实现避免 latency / ping 两处重复 if latency.Valid { v := int(...) ... } 模板。
-func assignNullInt(dst **int, n sql.NullInt64) {
-	if !n.Valid {
+// unwrapNullableInt assigns the value from a sql.NullInt64 to a *int pointer
+// target, allocating only when the source is valid.
+func unwrapNullableInt(target **int, src sql.NullInt64) {
+	if !src.Valid {
 		return
 	}
-	v := int(n.Int64)
-	*dst = &v
+	val := int(src.Int64)
+	*target = &val
 }
 
-// ComputeAvailability 计算指定窗口内每个模型的可用率与平均延迟。
-// "可用" = status IN (operational, degraded)。
-//
-// 数据来源：明细表只保留 1 天；窗口前其余天数走聚合表。
-// 明细保留 30 天（monitorHistoryRetentionDays），窗口 <= 30 天时直接扫 histories，
-// 精度到秒，避免与聚合表 UNION 带来的 UTC 日切精度损失。
-func (r *channelMonitorRepository) ComputeAvailability(ctx context.Context, monitorID int64, windowDays int) ([]*service.ChannelMonitorAvailability, error) {
+// assignNullInt is kept as a package-level alias.
+func assignNullInt(dst **int, n sql.NullInt64) {
+	unwrapNullableInt(dst, n)
+}
+
+// ComputeAvailability calculates per-model availability percentage and average
+// latency within the specified time window.
+// "Available" is defined as status IN (operational, degraded).
+func (repo *channelMonitorRepository) ComputeAvailability(ctx context.Context, monitorID int64, windowDays int) ([]*service.ChannelMonitorAvailability, error) {
 	if windowDays <= 0 {
 		windowDays = 7
 	}
-	const q = `
+	const stmt = `
 		SELECT model,
 		       COUNT(*)                                                             AS total,
 		       COUNT(*) FILTER (WHERE status IN ('operational','degraded'))         AS ok,
@@ -317,105 +319,114 @@ func (r *channelMonitorRepository) ComputeAvailability(ctx context.Context, moni
 		  AND checked_at >= NOW() - ($2::int || ' days')::interval
 		GROUP BY model
 	`
-	rows, err := r.db.QueryContext(ctx, q, monitorID, windowDays)
-	if err != nil {
-		return nil, fmt.Errorf("query availability: %w", err)
+	sqlRows, queryErr := repo.db.QueryContext(ctx, stmt, monitorID, windowDays)
+	if queryErr != nil {
+		return nil, fmt.Errorf("availability computation query failed: %w", queryErr)
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() { _ = sqlRows.Close() }()
 
-	out := make([]*service.ChannelMonitorAvailability, 0)
-	for rows.Next() {
-		row, err := scanAvailabilityRow(rows, windowDays)
-		if err != nil {
-			return nil, err
+	results := make([]*service.ChannelMonitorAvailability, 0)
+	for sqlRows.Next() {
+		avail, scanErr := parseAvailabilityRow(sqlRows, windowDays)
+		if scanErr != nil {
+			return nil, scanErr
 		}
-		out = append(out, row)
+		results = append(results, avail)
 	}
-	return out, rows.Err()
+	return results, sqlRows.Err()
 }
 
-// scanAvailabilityRow 把单行 (model, total, ok, avg_latency) 扫描为 ChannelMonitorAvailability。
-// 仅服务于 ComputeAvailability（4 列）；批量版本因为多一列 monitor_id 直接 inline 调 finalizeAvailabilityRow。
+// parseAvailabilityRow scans a single (model, total, ok, avg_latency) row into
+// a ChannelMonitorAvailability struct. Used by the single-monitor variant.
+func parseAvailabilityRow(scanner interface{ Scan(...any) error }, windowDays int) (*service.ChannelMonitorAvailability, error) {
+	avail := &service.ChannelMonitorAvailability{WindowDays: windowDays}
+	var rawAvgLatency sql.NullFloat64
+	if scanErr := scanner.Scan(&avail.Model, &avail.TotalChecks, &avail.OperationalChecks, &rawAvgLatency); scanErr != nil {
+		return nil, fmt.Errorf("failed to scan availability row: %w", scanErr)
+	}
+	computeAvailabilityMetrics(avail, rawAvgLatency)
+	return avail, nil
+}
+
+// scanAvailabilityRow is kept as a package-level alias.
 func scanAvailabilityRow(rows interface{ Scan(...any) error }, windowDays int) (*service.ChannelMonitorAvailability, error) {
-	row := &service.ChannelMonitorAvailability{WindowDays: windowDays}
-	var avgLatency sql.NullFloat64
-	if err := rows.Scan(&row.Model, &row.TotalChecks, &row.OperationalChecks, &avgLatency); err != nil {
-		return nil, fmt.Errorf("scan availability row: %w", err)
-	}
-	finalizeAvailabilityRow(row, avgLatency)
-	return row, nil
+	return parseAvailabilityRow(rows, windowDays)
 }
 
-// finalizeAvailabilityRow 根据 OperationalChecks/TotalChecks 算出可用率，
-// 并把 sql.NullFloat64 的平均延迟解包为 *int。两处复用避免维护漂移。
+// computeAvailabilityMetrics derives the availability percentage and unpacks
+// the nullable average latency into the result struct.
+func computeAvailabilityMetrics(avail *service.ChannelMonitorAvailability, rawAvgLatency sql.NullFloat64) {
+	if avail.TotalChecks > 0 {
+		avail.AvailabilityPct = float64(avail.OperationalChecks) * 100.0 / float64(avail.TotalChecks)
+	}
+	if rawAvgLatency.Valid {
+		rounded := int(rawAvgLatency.Float64)
+		avail.AvgLatencyMs = &rounded
+	}
+}
+
+// finalizeAvailabilityRow is kept as a package-level alias.
 func finalizeAvailabilityRow(row *service.ChannelMonitorAvailability, avgLatency sql.NullFloat64) {
-	if row.TotalChecks > 0 {
-		row.AvailabilityPct = float64(row.OperationalChecks) * 100.0 / float64(row.TotalChecks)
-	}
-	if avgLatency.Valid {
-		v := int(avgLatency.Float64)
-		row.AvgLatencyMs = &v
-	}
+	computeAvailabilityMetrics(row, avgLatency)
 }
 
-// ListLatestForMonitorIDs 一次性查询多个监控的"每个 (monitor_id, model) 最近一条"记录。
-// 利用 PG 的 DISTINCT ON 特性，借助 (monitor_id, model, checked_at DESC) 索引可走 Index Scan。
-func (r *channelMonitorRepository) ListLatestForMonitorIDs(ctx context.Context, ids []int64) (map[int64][]*service.ChannelMonitorLatest, error) {
-	out := make(map[int64][]*service.ChannelMonitorLatest, len(ids))
+// ListLatestForMonitorIDs fetches the most recent record per (monitor_id, model)
+// for multiple monitors in a single query using DISTINCT ON.
+func (repo *channelMonitorRepository) ListLatestForMonitorIDs(ctx context.Context, ids []int64) (map[int64][]*service.ChannelMonitorLatest, error) {
+	resultMap := make(map[int64][]*service.ChannelMonitorLatest, len(ids))
 	if len(ids) == 0 {
-		return out, nil
+		return resultMap, nil
 	}
-	const q = `
+	const stmt = `
 		SELECT DISTINCT ON (monitor_id, model)
 		    monitor_id, model, status, latency_ms, ping_latency_ms, checked_at
 		FROM channel_monitor_histories
 		WHERE monitor_id = ANY($1)
 		ORDER BY monitor_id, model, checked_at DESC
 	`
-	rows, err := r.db.QueryContext(ctx, q, pq.Array(ids))
-	if err != nil {
-		return nil, fmt.Errorf("query latest batch: %w", err)
+	sqlRows, queryErr := repo.db.QueryContext(ctx, stmt, pq.Array(ids))
+	if queryErr != nil {
+		return nil, fmt.Errorf("batch latest query failed: %w", queryErr)
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() { _ = sqlRows.Close() }()
 
-	for rows.Next() {
-		var monitorID int64
-		l := &service.ChannelMonitorLatest{}
-		var latency, ping sql.NullInt64
-		if err := rows.Scan(&monitorID, &l.Model, &l.Status, &latency, &ping, &l.CheckedAt); err != nil {
-			return nil, fmt.Errorf("scan latest batch row: %w", err)
+	for sqlRows.Next() {
+		var mid int64
+		item := &service.ChannelMonitorLatest{}
+		var rawLatency, rawPing sql.NullInt64
+		if scanErr := sqlRows.Scan(&mid, &item.Model, &item.Status, &rawLatency, &rawPing, &item.CheckedAt); scanErr != nil {
+			return nil, fmt.Errorf("failed to scan batch latest row: %w", scanErr)
 		}
-		assignNullInt(&l.LatencyMs, latency)
-		assignNullInt(&l.PingLatencyMs, ping)
-		out[monitorID] = append(out[monitorID], l)
+		unwrapNullableInt(&item.LatencyMs, rawLatency)
+		unwrapNullableInt(&item.PingLatencyMs, rawPing)
+		resultMap[mid] = append(resultMap[mid], item)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
+	if iterErr := sqlRows.Err(); iterErr != nil {
+		return nil, iterErr
 	}
-	return out, nil
+	return resultMap, nil
 }
 
-// ListRecentHistoryForMonitors 为多个 monitor 批量取各自"指定模型"最近 N 条历史（按 checked_at DESC，最新在前）。
-// primaryModels[monitorID] 指定该监控要过滤的模型名；monitor 不在 primaryModels 中的记录不返回。
-// 通过 CTE + unnest(两个 int8/text 数组) 构造 (monitor_id, model) 白名单，
-// 再用 ROW_NUMBER() OVER (PARTITION BY monitor_id) 取各自前 N 条。
+// ListRecentHistoryForMonitors retrieves the most recent N history entries per
+// monitor, filtered by each monitor's primary model. Uses a CTE with unnest
+// for the (monitor_id, model) whitelist and ROW_NUMBER() windowing.
 //
-// 返回值：map[monitorID] -> []*ChannelMonitorHistoryEntry（不含 message，减少网络开销）。
-// 空 ids / 空 primaryModels 返回空 map，不报错。
-func (r *channelMonitorRepository) ListRecentHistoryForMonitors(
+// Returns map[monitorID] -> entries (without message field to reduce payload).
+// Empty inputs return an empty map without error.
+func (repo *channelMonitorRepository) ListRecentHistoryForMonitors(
 	ctx context.Context,
 	ids []int64,
 	primaryModels map[int64]string,
 	perMonitorLimit int,
 ) (map[int64][]*service.ChannelMonitorHistoryEntry, error) {
-	out := make(map[int64][]*service.ChannelMonitorHistoryEntry, len(ids))
-	pairIDs, pairModels := buildMonitorModelPairs(ids, primaryModels)
-	if len(pairIDs) == 0 {
-		return out, nil
+	resultMap := make(map[int64][]*service.ChannelMonitorHistoryEntry, len(ids))
+	monitorIDs, modelNames := assembleMonitorModelPairs(ids, primaryModels)
+	if len(monitorIDs) == 0 {
+		return resultMap, nil
 	}
-	perMonitorLimit = clampTimelineLimit(perMonitorLimit)
+	perMonitorLimit = constrainTimelineDepth(perMonitorLimit)
 
-	const q = `
+	const stmt = `
 		WITH targets AS (
 		    SELECT unnest($1::bigint[]) AS monitor_id,
 		           unnest($2::text[])   AS model
@@ -436,57 +447,61 @@ func (r *channelMonitorRepository) ListRecentHistoryForMonitors(
 		WHERE rn <= $3
 		ORDER BY monitor_id, checked_at DESC
 	`
-	rows, err := r.db.QueryContext(ctx, q, pq.Array(pairIDs), pq.Array(pairModels), perMonitorLimit)
-	if err != nil {
-		return nil, fmt.Errorf("query recent history batch: %w", err)
+	sqlRows, queryErr := repo.db.QueryContext(ctx, stmt, pq.Array(monitorIDs), pq.Array(modelNames), perMonitorLimit)
+	if queryErr != nil {
+		return nil, fmt.Errorf("batch recent history query failed: %w", queryErr)
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() { _ = sqlRows.Close() }()
 
-	for rows.Next() {
-		var monitorID int64
-		entry := &service.ChannelMonitorHistoryEntry{}
-		var latency, ping sql.NullInt64
-		if err := rows.Scan(&monitorID, &entry.Status, &latency, &ping, &entry.CheckedAt); err != nil {
-			return nil, fmt.Errorf("scan recent history row: %w", err)
+	for sqlRows.Next() {
+		var mid int64
+		histEntry := &service.ChannelMonitorHistoryEntry{}
+		var rawLatency, rawPing sql.NullInt64
+		if scanErr := sqlRows.Scan(&mid, &histEntry.Status, &rawLatency, &rawPing, &histEntry.CheckedAt); scanErr != nil {
+			return nil, fmt.Errorf("failed to scan recent history row: %w", scanErr)
 		}
-		assignNullInt(&entry.LatencyMs, latency)
-		assignNullInt(&entry.PingLatencyMs, ping)
-		out[monitorID] = append(out[monitorID], entry)
+		unwrapNullableInt(&histEntry.LatencyMs, rawLatency)
+		unwrapNullableInt(&histEntry.PingLatencyMs, rawPing)
+		resultMap[mid] = append(resultMap[mid], histEntry)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
+	if iterErr := sqlRows.Err(); iterErr != nil {
+		return nil, iterErr
 	}
-	return out, nil
+	return resultMap, nil
 }
 
-// buildMonitorModelPairs 基于 ids 过滤出有效的 (monitor_id, model) 对，model 为空时跳过。
-// 保证两个数组长度一致且一一对应，供 unnest 展开。
-func buildMonitorModelPairs(ids []int64, primaryModels map[int64]string) ([]int64, []string) {
+// assembleMonitorModelPairs filters the ID list against the primary models map
+// to produce paired slices suitable for SQL unnest.
+func assembleMonitorModelPairs(ids []int64, primaryModels map[int64]string) ([]int64, []string) {
 	if len(ids) == 0 || len(primaryModels) == 0 {
 		return nil, nil
 	}
-	pairIDs := make([]int64, 0, len(ids))
-	pairModels := make([]string, 0, len(ids))
-	for _, id := range ids {
-		model, ok := primaryModels[id]
-		if !ok || strings.TrimSpace(model) == "" {
+	filteredIDs := make([]int64, 0, len(ids))
+	filteredModels := make([]string, 0, len(ids))
+	for _, mid := range ids {
+		modelName, found := primaryModels[mid]
+		if !found || strings.TrimSpace(modelName) == "" {
 			continue
 		}
-		pairIDs = append(pairIDs, id)
-		pairModels = append(pairModels, model)
+		filteredIDs = append(filteredIDs, mid)
+		filteredModels = append(filteredModels, modelName)
 	}
-	return pairIDs, pairModels
+	return filteredIDs, filteredModels
 }
 
-// timelineLimit* 批量 timeline 查询的 perMonitorLimit 夹紧范围。
-// 下限 1 表示至少返回最近一条；上限 200 控制单次响应体与 SQL 内存占用（ROW_NUMBER 窗口上限）。
+// buildMonitorModelPairs is kept as a package-level alias.
+func buildMonitorModelPairs(ids []int64, primaryModels map[int64]string) ([]int64, []string) {
+	return assembleMonitorModelPairs(ids, primaryModels)
+}
+
+// Bounds for per-monitor timeline limit clamping.
 const (
 	timelineLimitMin = 1
 	timelineLimitMax = 200
 )
 
-// clampTimelineLimit 把 perMonitorLimit 夹紧到 [timelineLimitMin, timelineLimitMax]，避免非法值或超大查询。
-func clampTimelineLimit(n int) int {
+// constrainTimelineDepth clamps the per-monitor limit to [timelineLimitMin, timelineLimitMax].
+func constrainTimelineDepth(n int) int {
 	if n < timelineLimitMin {
 		return timelineLimitMin
 	}
@@ -496,17 +511,22 @@ func clampTimelineLimit(n int) int {
 	return n
 }
 
-// ComputeAvailabilityForMonitors 一次性计算多个监控在某个窗口内的每模型可用率与平均延迟。
-// 明细保留 30 天，直接扫 histories（窗口 <= 30 天时无需聚合）。
-func (r *channelMonitorRepository) ComputeAvailabilityForMonitors(ctx context.Context, ids []int64, windowDays int) (map[int64][]*service.ChannelMonitorAvailability, error) {
-	out := make(map[int64][]*service.ChannelMonitorAvailability, len(ids))
+// clampTimelineLimit is kept as a package-level alias.
+func clampTimelineLimit(n int) int {
+	return constrainTimelineDepth(n)
+}
+
+// ComputeAvailabilityForMonitors calculates per-model availability for multiple
+// monitors in a single query. Uses the detail table directly for windows <= 30 days.
+func (repo *channelMonitorRepository) ComputeAvailabilityForMonitors(ctx context.Context, ids []int64, windowDays int) (map[int64][]*service.ChannelMonitorAvailability, error) {
+	resultMap := make(map[int64][]*service.ChannelMonitorAvailability, len(ids))
 	if len(ids) == 0 {
-		return out, nil
+		return resultMap, nil
 	}
 	if windowDays <= 0 {
 		windowDays = 7
 	}
-	const q = `
+	const stmt = `
 		SELECT monitor_id,
 		       model,
 		       COUNT(*)                                                             AS total,
@@ -519,39 +539,34 @@ func (r *channelMonitorRepository) ComputeAvailabilityForMonitors(ctx context.Co
 		  AND checked_at >= NOW() - ($2::int || ' days')::interval
 		GROUP BY monitor_id, model
 	`
-	rows, err := r.db.QueryContext(ctx, q, pq.Array(ids), windowDays)
-	if err != nil {
-		return nil, fmt.Errorf("query availability batch: %w", err)
+	sqlRows, queryErr := repo.db.QueryContext(ctx, stmt, pq.Array(ids), windowDays)
+	if queryErr != nil {
+		return nil, fmt.Errorf("batch availability computation failed: %w", queryErr)
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() { _ = sqlRows.Close() }()
 
-	for rows.Next() {
-		var monitorID int64
-		row := &service.ChannelMonitorAvailability{WindowDays: windowDays}
-		var avgLatency sql.NullFloat64
-		if err := rows.Scan(&monitorID, &row.Model, &row.TotalChecks, &row.OperationalChecks, &avgLatency); err != nil {
-			return nil, fmt.Errorf("scan availability batch row: %w", err)
+	for sqlRows.Next() {
+		var mid int64
+		avail := &service.ChannelMonitorAvailability{WindowDays: windowDays}
+		var rawAvgLatency sql.NullFloat64
+		if scanErr := sqlRows.Scan(&mid, &avail.Model, &avail.TotalChecks, &avail.OperationalChecks, &rawAvgLatency); scanErr != nil {
+			return nil, fmt.Errorf("failed to scan batch availability row: %w", scanErr)
 		}
-		// 批量查询多了首列 monitor_id；其余字段的可用率/平均延迟换算与单 monitor 版本一致，
-		// 抽出 finalizeAvailabilityRow 复用，避免两处分别维护除法与 NullFloat 解包。
-		finalizeAvailabilityRow(row, avgLatency)
-		out[monitorID] = append(out[monitorID], row)
+		computeAvailabilityMetrics(avail, rawAvgLatency)
+		resultMap[mid] = append(resultMap[mid], avail)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
+	if iterErr := sqlRows.Err(); iterErr != nil {
+		return nil, iterErr
 	}
-	return out, nil
+	return resultMap, nil
 }
 
-// ---------- 聚合维护 ----------
+// ---------- Aggregation maintenance ----------
 
-// UpsertDailyRollupsFor 把 targetDate 当天（[targetDate, targetDate+1d)）的明细
-// 按 (monitor_id, model, bucket_date) 聚合写入 channel_monitor_daily_rollups。
-//   - 用 ON CONFLICT (monitor_id, model, bucket_date) DO UPDATE 实现幂等回填，
-//     重复执行只会用最新统计覆盖；
-//   - $1::date 让 PG 自动把入参 truncate 到 UTC 日期，调用方不需要预处理 targetDate。
-func (r *channelMonitorRepository) UpsertDailyRollupsFor(ctx context.Context, targetDate time.Time) (int64, error) {
-	const q = `
+// UpsertDailyRollupsFor aggregates the detail rows for targetDate into the
+// daily rollup table using ON CONFLICT for idempotent back-fill.
+func (repo *channelMonitorRepository) UpsertDailyRollupsFor(ctx context.Context, targetDate time.Time) (int64, error) {
+	const stmt = `
 		INSERT INTO channel_monitor_daily_rollups (
 		    monitor_id, model, bucket_date,
 		    total_checks, ok_count,
@@ -592,28 +607,31 @@ func (r *channelMonitorRepository) UpsertDailyRollupsFor(ctx context.Context, ta
 		    count_ping_latency  = EXCLUDED.count_ping_latency,
 		    computed_at         = NOW()
 	`
-	res, err := r.db.ExecContext(ctx, q, targetDate)
-	if err != nil {
-		return 0, fmt.Errorf("upsert daily rollups for %s: %w", targetDate.Format("2006-01-02"), err)
+	execResult, execErr := repo.db.ExecContext(ctx, stmt, targetDate)
+	if execErr != nil {
+		return 0, fmt.Errorf("daily rollup upsert for %s failed: %w", targetDate.Format("2006-01-02"), execErr)
 	}
-	n, err := res.RowsAffected()
-	if err != nil {
-		return 0, fmt.Errorf("rows affected (upsert rollups): %w", err)
+	affected, affErr := execResult.RowsAffected()
+	if affErr != nil {
+		return 0, fmt.Errorf("unable to determine rows affected by rollup upsert: %w", affErr)
 	}
-	return n, nil
+	return affected, nil
 }
 
-// DeleteRollupsBefore 物理删 bucket_date < beforeDate 的聚合行，同样分批。
-func (r *channelMonitorRepository) DeleteRollupsBefore(ctx context.Context, beforeDate time.Time) (int64, error) {
-	return deleteChannelMonitorBatched(ctx, r.db, channelMonitorPruneRollupSQL, beforeDate)
+// DeleteRollupsBefore removes rollup rows where bucket_date < beforeDate in batches.
+func (repo *channelMonitorRepository) DeleteRollupsBefore(ctx context.Context, beforeDate time.Time) (int64, error) {
+	return pruneMonitorRowsBatched(ctx, repo.db, rollupPruneSQL, beforeDate)
 }
 
-// channelMonitorPruneBatchSize 单批删除上限。与 ops_cleanup_service 保持一致的 5000，
-// 在大表上按 id 小批删可以避免长事务和 WAL 堆积。
-const channelMonitorPruneBatchSize = 5000
+// pruneBatchCeiling is the maximum number of rows deleted per batch to avoid
+// long transactions and WAL accumulation.
+const pruneBatchCeiling = 5000
 
-// channelMonitorPruneHistorySQL 分批物理删明细表过期行。
-const channelMonitorPruneHistorySQL = `
+// channelMonitorPruneBatchSize is kept as a package-level alias.
+const channelMonitorPruneBatchSize = pruneBatchCeiling
+
+// historyPruneSQL deletes expired detail rows in small batches by ID.
+const historyPruneSQL = `
 WITH batch AS (
     SELECT id FROM channel_monitor_histories
     WHERE checked_at < $1
@@ -624,9 +642,12 @@ DELETE FROM channel_monitor_histories
 WHERE id IN (SELECT id FROM batch)
 `
 
-// channelMonitorPruneRollupSQL 分批物理删 rollup 表过期行。bucket_date 需要 ::date 转型
-// 保证与 DATE 列一致比较。
-const channelMonitorPruneRollupSQL = `
+// channelMonitorPruneHistorySQL is kept as a package-level alias.
+const channelMonitorPruneHistorySQL = historyPruneSQL
+
+// rollupPruneSQL deletes expired rollup rows in small batches. The ::date cast
+// ensures consistent comparison with the DATE column type.
+const rollupPruneSQL = `
 WITH batch AS (
     SELECT id FROM channel_monitor_daily_rollups
     WHERE bucket_date < $1::date
@@ -637,129 +658,163 @@ DELETE FROM channel_monitor_daily_rollups
 WHERE id IN (SELECT id FROM batch)
 `
 
-// deleteChannelMonitorBatched 循环执行分批 DELETE，直到影响行为 0。返回累计删除行数。
-// cutoff 由调用方按列类型传入（明细用 time.Time 对 TIMESTAMPTZ，rollup 用 time.Time SQL 侧 ::date 转型）。
-func deleteChannelMonitorBatched(ctx context.Context, db *sql.DB, query string, cutoff time.Time) (int64, error) {
-	var total int64
+// channelMonitorPruneRollupSQL is kept as a package-level alias.
+const channelMonitorPruneRollupSQL = rollupPruneSQL
+
+// pruneMonitorRowsBatched loops a batched DELETE until zero rows are affected,
+// returning the cumulative count of removed rows.
+func pruneMonitorRowsBatched(ctx context.Context, db *sql.DB, stmt string, cutoff time.Time) (int64, error) {
+	var cumulative int64
 	for {
-		res, err := db.ExecContext(ctx, query, cutoff, channelMonitorPruneBatchSize)
-		if err != nil {
-			return total, fmt.Errorf("channel_monitor prune batch: %w", err)
+		execResult, execErr := db.ExecContext(ctx, stmt, cutoff, pruneBatchCeiling)
+		if execErr != nil {
+			return cumulative, fmt.Errorf("monitor prune batch execution failed: %w", execErr)
 		}
-		affected, err := res.RowsAffected()
-		if err != nil {
-			return total, fmt.Errorf("channel_monitor prune rows affected: %w", err)
+		affected, affErr := execResult.RowsAffected()
+		if affErr != nil {
+			return cumulative, fmt.Errorf("unable to determine rows affected in prune batch: %w", affErr)
 		}
-		total += affected
+		cumulative += affected
 		if affected == 0 {
 			break
 		}
 	}
-	return total, nil
+	return cumulative, nil
 }
 
-// LoadAggregationWatermark 读 watermark 表（id=1）。
-// watermark 表不是 ent schema（只有一行），直接走原生 SQL。
-//   - 行不存在或 last_aggregated_date IS NULL：返回 (nil, nil)，由调用方决定首次回填策略
-func (r *channelMonitorRepository) LoadAggregationWatermark(ctx context.Context) (*time.Time, error) {
-	const q = `SELECT last_aggregated_date FROM channel_monitor_aggregation_watermark WHERE id = 1`
-	var t sql.NullTime
-	if err := r.db.QueryRowContext(ctx, q).Scan(&t); err != nil {
-		if err == sql.ErrNoRows {
+// deleteChannelMonitorBatched is kept as a package-level alias.
+func deleteChannelMonitorBatched(ctx context.Context, db *sql.DB, query string, cutoff time.Time) (int64, error) {
+	return pruneMonitorRowsBatched(ctx, db, query, cutoff)
+}
+
+// LoadAggregationWatermark reads the single-row watermark table (id=1).
+// Returns (nil, nil) when no row exists or last_aggregated_date is NULL.
+func (repo *channelMonitorRepository) LoadAggregationWatermark(ctx context.Context) (*time.Time, error) {
+	const stmt = `SELECT last_aggregated_date FROM channel_monitor_aggregation_watermark WHERE id = 1`
+	var scanned sql.NullTime
+	if scanErr := repo.db.QueryRowContext(ctx, stmt).Scan(&scanned); scanErr != nil {
+		if scanErr == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("load aggregation watermark: %w", err)
+		return nil, fmt.Errorf("watermark load failed: %w", scanErr)
 	}
-	if !t.Valid {
+	if !scanned.Valid {
 		return nil, nil
 	}
-	return &t.Time, nil
+	return &scanned.Time, nil
 }
 
-// UpdateAggregationWatermark 更新 watermark（UPSERT 到 id=1）。
-// $1::date 让 PG 把入参 truncate 到 UTC 日期，与 last_aggregated_date 列的 DATE 类型一致。
-func (r *channelMonitorRepository) UpdateAggregationWatermark(ctx context.Context, date time.Time) error {
-	const q = `
+// UpdateAggregationWatermark upserts the watermark row (id=1) with the given date.
+func (repo *channelMonitorRepository) UpdateAggregationWatermark(ctx context.Context, date time.Time) error {
+	const stmt = `
 		INSERT INTO channel_monitor_aggregation_watermark (id, last_aggregated_date, updated_at)
 		VALUES (1, $1::date, NOW())
 		ON CONFLICT (id) DO UPDATE SET
 		    last_aggregated_date = EXCLUDED.last_aggregated_date,
 		    updated_at           = NOW()
 	`
-	if _, err := r.db.ExecContext(ctx, q, date); err != nil {
-		return fmt.Errorf("update aggregation watermark: %w", err)
+	if _, execErr := repo.db.ExecContext(ctx, stmt, date); execErr != nil {
+		return fmt.Errorf("watermark update failed: %w", execErr)
 	}
 	return nil
 }
 
-// ---------- helpers ----------
+// ---------- Conversion helpers ----------
 
-func entToServiceMonitor(row *dbent.ChannelMonitor) *service.ChannelMonitor {
-	if row == nil {
+// convertEntMonitorToService maps an ent entity to the service-layer struct.
+func convertEntMonitorToService(entity *dbent.ChannelMonitor) *service.ChannelMonitor {
+	if entity == nil {
 		return nil
 	}
-	extras := row.ExtraModels
-	if extras == nil {
-		extras = []string{}
+	modelList := entity.ExtraModels
+	if modelList == nil {
+		modelList = []string{}
 	}
-	headers := row.ExtraHeaders
-	if headers == nil {
-		headers = map[string]string{}
+	headerMap := entity.ExtraHeaders
+	if headerMap == nil {
+		headerMap = map[string]string{}
 	}
-	out := &service.ChannelMonitor{
-		ID:               row.ID,
-		Name:             row.Name,
-		Provider:         string(row.Provider),
-		APIMode:          defaultAPIModeRepo(row.APIMode),
-		Endpoint:         row.Endpoint,
-		APIKey:           row.APIKeyEncrypted, // 仍为密文，service 层负责解密
-		PrimaryModel:     row.PrimaryModel,
-		ExtraModels:      extras,
-		GroupName:        row.GroupName,
-		Enabled:          row.Enabled,
-		IntervalSeconds:  row.IntervalSeconds,
-		LastCheckedAt:    row.LastCheckedAt,
-		CreatedBy:        row.CreatedBy,
-		CreatedAt:        row.CreatedAt,
-		UpdatedAt:        row.UpdatedAt,
-		ExtraHeaders:     headers,
-		BodyOverrideMode: row.BodyOverrideMode,
-		BodyOverride:     row.BodyOverride,
+	svc := &service.ChannelMonitor{
+		ID:               entity.ID,
+		Name:             entity.Name,
+		Provider:         string(entity.Provider),
+		APIMode:          fallbackAPIMode(entity.APIMode),
+		Endpoint:         entity.Endpoint,
+		APIKey:           entity.APIKeyEncrypted, // Still ciphertext; service layer handles decryption.
+		PrimaryModel:     entity.PrimaryModel,
+		ExtraModels:      modelList,
+		GroupName:        entity.GroupName,
+		Enabled:          entity.Enabled,
+		IntervalSeconds:  entity.IntervalSeconds,
+		LastCheckedAt:    entity.LastCheckedAt,
+		CreatedBy:        entity.CreatedBy,
+		CreatedAt:        entity.CreatedAt,
+		UpdatedAt:        entity.UpdatedAt,
+		ExtraHeaders:     headerMap,
+		BodyOverrideMode: entity.BodyOverrideMode,
+		BodyOverride:     entity.BodyOverride,
 	}
-	if row.TemplateID != nil {
-		id := *row.TemplateID
-		out.TemplateID = &id
+	if entity.TemplateID != nil {
+		tid := *entity.TemplateID
+		svc.TemplateID = &tid
 	}
-	return out
+	return svc
 }
 
-// emptyHeadersIfNilRepo 与 service.emptyHeadersIfNil 功能一致，
-// repo 独立一份避免 import 循环。
-func emptyHeadersIfNilRepo(h map[string]string) map[string]string {
+// entToServiceMonitor is kept as a package-level alias.
+func entToServiceMonitor(row *dbent.ChannelMonitor) *service.ChannelMonitor {
+	return convertEntMonitorToService(row)
+}
+
+// coalesceHeadersMap returns an empty map when the input is nil,
+// avoiding null JSON serialization.
+func coalesceHeadersMap(h map[string]string) map[string]string {
 	if h == nil {
 		return map[string]string{}
 	}
 	return h
 }
 
-// defaultBodyModeRepo 空串归一为 off（同上不循环）。
-func defaultBodyModeRepo(mode string) string {
+// emptyHeadersIfNilRepo is kept as a package-level alias.
+func emptyHeadersIfNilRepo(h map[string]string) map[string]string {
+	return coalesceHeadersMap(h)
+}
+
+// fallbackBodyMode normalizes an empty body override mode to "off".
+func fallbackBodyMode(mode string) string {
 	if mode == "" {
 		return "off"
 	}
 	return mode
 }
 
-func defaultAPIModeRepo(apiMode string) string {
+// defaultBodyModeRepo is kept as a package-level alias.
+func defaultBodyModeRepo(mode string) string {
+	return fallbackBodyMode(mode)
+}
+
+// fallbackAPIMode normalizes an empty API mode to the default "chat_completions".
+func fallbackAPIMode(apiMode string) string {
 	if apiMode == "" {
 		return "chat_completions"
 	}
 	return apiMode
 }
 
-func emptySliceIfNil(in []string) []string {
+// defaultAPIModeRepo is kept as a package-level alias.
+func defaultAPIModeRepo(apiMode string) string {
+	return fallbackAPIMode(apiMode)
+}
+
+// coalesceStringSlice returns an empty slice when the input is nil.
+func coalesceStringSlice(in []string) []string {
 	if in == nil {
 		return []string{}
 	}
 	return in
+}
+
+// emptySliceIfNil is kept as a package-level alias.
+func emptySliceIfNil(in []string) []string {
+	return coalesceStringSlice(in)
 }

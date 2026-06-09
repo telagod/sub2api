@@ -7,21 +7,21 @@ import (
 	"time"
 )
 
-func buildContentModerationViolationEmailBody(siteName string, log *ContentModerationLog, cfg *ContentModerationConfig) string {
-	if log == nil {
+func buildContentModerationViolationEmailBody(platformName string, entry *ContentModerationLog, conf *ContentModerationConfig) string {
+	if entry == nil {
 		return ""
 	}
-	userName := strings.TrimSpace(log.UserEmail)
-	if userName == "" && log.UserID != nil {
-		userName = fmt.Sprintf("UID %d", *log.UserID)
+	displayName := strings.TrimSpace(entry.UserEmail)
+	if displayName == "" && entry.UserID != nil {
+		displayName = fmt.Sprintf("UID %d", *entry.UserID)
 	}
-	threshold := cfg.BanThreshold
-	if threshold <= 0 {
-		threshold = defaultContentModerationBanThreshold
+	banLimit := conf.BanThreshold
+	if banLimit <= 0 {
+		banLimit = defaultContentModerationBanThreshold
 	}
-	statusBlock := ""
-	if log.AutoBanned {
-		statusBlock = `<div style="margin-top:24px;padding:18px 20px;border-radius:10px;background:#ff3b30;color:#fff;font-size:18px;font-weight:700;text-align:center;line-height:1.6;">账户当前处于封禁状态，所有 API 请求将被拒绝</div>`
+	banStatusHTML := ""
+	if entry.AutoBanned {
+		banStatusHTML = `<div style="margin-top:24px;padding:18px 20px;border-radius:10px;background:#ff3b30;color:#fff;font-size:18px;font-weight:700;text-align:center;line-height:1.6;">账户当前处于封禁状态，所有 API 请求将被拒绝</div>`
 	}
 	return fmt.Sprintf(`<!doctype html>
 <html>
@@ -48,29 +48,29 @@ func buildContentModerationViolationEmailBody(siteName string, log *ContentModer
   </div>
 </body>
 </html>`,
-		html.EscapeString(userName),
+		html.EscapeString(displayName),
 		html.EscapeString(time.Now().Format("2006-01-02 15:04:05")),
-		html.EscapeString(defaultContentModerationString(log.GroupName, "-")),
-		html.EscapeString(defaultContentModerationString(log.HighestCategory, "-")),
-		log.HighestScore,
-		log.ViolationCount,
-		threshold,
-		statusBlock,
-		html.EscapeString(siteName),
+		html.EscapeString(stringOrDefault(entry.GroupName, "-")),
+		html.EscapeString(stringOrDefault(entry.HighestCategory, "-")),
+		entry.HighestScore,
+		entry.ViolationCount,
+		banLimit,
+		banStatusHTML,
+		html.EscapeString(platformName),
 	)
 }
 
-func buildContentModerationAccountDisabledEmailBody(siteName string, log *ContentModerationLog, cfg *ContentModerationConfig) string {
-	if log == nil {
+func buildContentModerationAccountDisabledEmailBody(platformName string, entry *ContentModerationLog, conf *ContentModerationConfig) string {
+	if entry == nil {
 		return ""
 	}
-	userName := strings.TrimSpace(log.UserEmail)
-	if userName == "" && log.UserID != nil {
-		userName = fmt.Sprintf("UID %d", *log.UserID)
+	displayName := strings.TrimSpace(entry.UserEmail)
+	if displayName == "" && entry.UserID != nil {
+		displayName = fmt.Sprintf("UID %d", *entry.UserID)
 	}
-	threshold := cfg.BanThreshold
-	if threshold <= 0 {
-		threshold = defaultContentModerationBanThreshold
+	banLimit := conf.BanThreshold
+	if banLimit <= 0 {
+		banLimit = defaultContentModerationBanThreshold
 	}
 	return fmt.Sprintf(`<!doctype html>
 <html>
@@ -98,18 +98,19 @@ func buildContentModerationAccountDisabledEmailBody(siteName string, log *Conten
   </div>
 </body>
 </html>`,
-		html.EscapeString(userName),
+		html.EscapeString(displayName),
 		html.EscapeString(time.Now().Format("2006-01-02 15:04:05")),
-		html.EscapeString(defaultContentModerationString(log.GroupName, "-")),
-		html.EscapeString(defaultContentModerationString(log.HighestCategory, "-")),
-		log.HighestScore,
-		log.ViolationCount,
-		threshold,
-		html.EscapeString(siteName),
+		html.EscapeString(stringOrDefault(entry.GroupName, "-")),
+		html.EscapeString(stringOrDefault(entry.HighestCategory, "-")),
+		entry.HighestScore,
+		entry.ViolationCount,
+		banLimit,
+		html.EscapeString(platformName),
 	)
 }
 
-func defaultContentModerationString(value string, fallback string) string {
+// stringOrDefault returns the trimmed value if non-empty, otherwise the fallback.
+func stringOrDefault(value string, fallback string) string {
 	if strings.TrimSpace(value) == "" {
 		return fallback
 	}
