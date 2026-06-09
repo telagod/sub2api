@@ -604,11 +604,6 @@ func buildUpstreamErrorFromGJSON(errNode gjson.Result, upstreamReqID string) *Op
 	}
 }
 
-// openAIImagesUpstreamErrorFromGJSON is retained for backward compat.
-func openAIImagesUpstreamErrorFromGJSON(errorObj gjson.Result, upstreamRequestID string) *OpenAIImagesUpstreamError {
-	return buildUpstreamErrorFromGJSON(errorObj, upstreamRequestID)
-}
-
 // openAIImagesErrorTypeForStatus maps an HTTP status to an OpenAI-style error type
 // when the upstream body does not provide its own.
 func openAIImagesErrorTypeForStatus(status int) string {
@@ -826,11 +821,6 @@ func deriveImagesStreamPrefix(parsed *OpenAIImagesRequest) string {
 	return "image_generation"
 }
 
-// openAIImagesStreamPrefix is retained for backward compat.
-func openAIImagesStreamPrefix(parsed *OpenAIImagesRequest) string {
-	return deriveImagesStreamPrefix(parsed)
-}
-
 func buildOpenAIImagesStreamErrorBody(message string) []byte {
 	out := []byte(`{"type":"error","error":{"type":"upstream_error","message":""}}`)
 	if strings.TrimSpace(message) == "" {
@@ -875,11 +865,6 @@ func emitImagesUpstreamErrorJSON(c *gin.Context, err *OpenAIImagesUpstreamError)
 	return true
 }
 
-// writeOpenAIImagesUpstreamErrorResponse is retained for backward compat.
-func writeOpenAIImagesUpstreamErrorResponse(c *gin.Context, err *OpenAIImagesUpstreamError) bool {
-	return emitImagesUpstreamErrorJSON(c, err)
-}
-
 func (s *OpenAIGatewayService) writeOpenAIImagesStreamEvent(c *gin.Context, flusher http.Flusher, eventName string, payload []byte) error {
 	if strings.TrimSpace(eventName) != "" {
 		if _, wErr := fmt.Fprintf(c.Writer, "event: %s\n", eventName); wErr != nil {
@@ -915,18 +900,6 @@ func (s *OpenAIGatewayService) attemptWriteStreamEvent(
 		*lastWrite = time.Now()
 	}
 	return true
-}
-
-// tryWriteOpenAIImagesStreamEvent is retained for backward compat.
-func (s *OpenAIGatewayService) tryWriteOpenAIImagesStreamEvent(
-	c *gin.Context,
-	flusher http.Flusher,
-	clientDisconnected *bool,
-	lastWriteAt *time.Time,
-	eventName string,
-	payload []byte,
-) bool {
-	return s.attemptWriteStreamEvent(c, flusher, clientDisconnected, lastWriteAt, eventName, payload)
 }
 
 func (s *OpenAIGatewayService) handleOpenAIImagesOAuthNonStreamingResponse(
@@ -1464,13 +1437,3 @@ func (s *OpenAIGatewayService) dispatchImagesViaOAuth(
 	}, nil
 }
 
-// forwardOpenAIImagesOAuth is retained for backward compat.
-func (s *OpenAIGatewayService) forwardOpenAIImagesOAuth(
-	ctx context.Context,
-	c *gin.Context,
-	account *Account,
-	parsed *OpenAIImagesRequest,
-	channelMappedModel string,
-) (*OpenAIForwardResult, error) {
-	return s.dispatchImagesViaOAuth(ctx, c, account, parsed, channelMappedModel)
-}
