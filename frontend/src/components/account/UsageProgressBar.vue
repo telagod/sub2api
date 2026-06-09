@@ -1,11 +1,24 @@
 <template>
-  <div class="flex items-center gap-1">
-    <span :class="['w-[28px] shrink-0 rounded px-1 text-center text-[10px] font-medium', labelClass]">{{ label }}</span>
-    <span
-      :class="['text-xs font-mono font-medium tabular-nums', percentClass]"
-      :title="statsTooltip"
-    >{{ displayPercent }}</span>
-    <span v-if="shouldShowResetTime" class="text-[11px] text-muted-foreground tabular-nums">{{ formatResetTime }}</span>
+  <div>
+    <div class="flex items-center gap-1">
+      <span :class="['w-[28px] shrink-0 rounded px-1 text-center text-[10px] font-medium', labelClass]">{{ label }}</span>
+      <span
+        :class="['text-xs font-mono font-medium tabular-nums', percentClass]"
+        :title="statsTooltip"
+      >{{ displayPercent }}</span>
+      <span v-if="shouldShowResetTime" class="text-[11px] text-muted-foreground tabular-nums">{{ formatResetTime }}</span>
+    </div>
+    <div v-if="hasInlineStats" class="ml-[32px] flex items-center gap-1 text-[9px] tabular-nums leading-tight">
+      <span class="text-foreground/70">{{ inlineRequests }}r</span>
+      <span class="text-muted-foreground/40">·</span>
+      <span class="text-foreground/70">{{ inlineTokens }}</span>
+      <span class="text-muted-foreground/40">·</span>
+      <span class="text-emerald-400/90">${{ inlineCost }}</span>
+      <template v-if="windowStats?.user_cost != null">
+        <span class="text-muted-foreground/40">·</span>
+        <span class="text-muted-foreground">u${{ inlineUserCost }}</span>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -74,5 +87,30 @@ const statsTooltip = computed(() => {
   ]
   if (s.user_cost != null) parts.push(`$${s.user_cost.toFixed(2)} user`)
   return parts.join(' · ')
+})
+
+const hasInlineStats = computed(() => {
+  const s = props.windowStats
+  return !!s && (s.requests > 0 || s.tokens > 0 || s.cost > 0)
+})
+
+const inlineRequests = computed(() => {
+  if (!props.windowStats) return '0'
+  return formatCompactNumber(props.windowStats.requests, { allowBillions: false })
+})
+
+const inlineTokens = computed(() => {
+  if (!props.windowStats) return '0'
+  return formatCompactNumber(props.windowStats.tokens)
+})
+
+const inlineCost = computed(() => {
+  if (!props.windowStats) return '0'
+  return props.windowStats.cost.toFixed(2)
+})
+
+const inlineUserCost = computed(() => {
+  if (!props.windowStats?.user_cost) return '0'
+  return props.windowStats.user_cost.toFixed(2)
 })
 </script>

@@ -139,13 +139,13 @@
             <input type="checkbox" :checked="isSelected(row.id)" @change="toggleSel(row.id)" class="rounded border-border text-primary-600 focus:ring-ring" />
           </template>
           <template #cell-name="{ row, value }">
-            <div class="flex flex-col gap-0.5">
-              <div class="flex items-center gap-2">
-                <span class="font-medium text-foreground text-sm truncate max-w-[180px]">{{ value }}</span>
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="font-medium text-foreground text-sm truncate">{{ value }}</span>
                 <PlatformTypeBadge :platform="row.platform" :type="row.type" :plan-type="row.credentials?.plan_type" :privacy-mode="row.extra?.privacy_mode" class="shrink-0" />
               </div>
-              <div class="flex items-center gap-2 text-[10px] text-muted-foreground">
-                <span v-if="row.extra?.email_address || row.extra?.email || row.credentials?.email" class="truncate max-w-[160px]">{{ row.extra?.email_address || row.extra?.email || row.credentials?.email }}</span>
+              <div class="flex items-center gap-1.5 text-[10px] text-muted-foreground min-w-0">
+                <span v-if="row.extra?.email_address || row.extra?.email || row.credentials?.email" class="truncate max-w-[140px]">{{ row.extra?.email_address || row.extra?.email || row.credentials?.email }}</span>
                 <AccountCapacityCell :account="row" />
               </div>
             </div>
@@ -1097,11 +1097,11 @@ function getAntigravityTierClass(row: any): string {
 // All available columns
 const allColumns = computed(() => {
   const c = [
-    { key: 'select', label: '', sortable: false },
-    { key: 'name', label: t('admin.accounts.columns.name'), sortable: true },
-    { key: 'status', label: t('admin.accounts.columns.status'), sortable: true },
-    { key: 'schedulable', label: '⚙', sortable: true },
-    { key: 'usage', label: t('admin.accounts.columns.usageWindows'), sortable: false },
+    { key: 'select', label: '', sortable: false, class: 'w-10' },
+    { key: 'name', label: t('admin.accounts.columns.name'), sortable: true, class: 'min-w-[200px] max-w-[320px]' },
+    { key: 'status', label: t('admin.accounts.columns.status'), sortable: true, class: 'w-[100px]' },
+    { key: 'schedulable', label: '⚙', sortable: true, class: 'w-12' },
+    { key: 'usage', label: t('admin.accounts.columns.usageWindows'), sortable: false, class: 'min-w-[180px]' },
     { key: 'today_stats', label: t('admin.accounts.columns.todayStats'), sortable: false }
   ]
   if (!authStore.isSimpleMode) {
@@ -1111,13 +1111,13 @@ const allColumns = computed(() => {
     { key: 'platform_type', label: t('admin.accounts.columns.platformType'), sortable: false },
     { key: 'capacity', label: t('admin.accounts.columns.capacity'), sortable: false },
     { key: 'proxy', label: t('admin.accounts.columns.proxy'), sortable: false },
-    { key: 'priority', label: t('admin.accounts.columns.priority'), sortable: true },
-    { key: 'rate_multiplier', label: t('admin.accounts.columns.billingRateMultiplier'), sortable: true },
-    { key: 'last_used_at', label: t('admin.accounts.columns.lastUsed'), sortable: true },
-    { key: 'created_at', label: t('admin.accounts.columns.createdAt'), sortable: true },
-    { key: 'expires_at', label: t('admin.accounts.columns.expiresAt'), sortable: true },
+    { key: 'priority', label: t('admin.accounts.columns.priority'), sortable: true, class: 'w-[80px]' },
+    { key: 'rate_multiplier', label: t('admin.accounts.columns.billingRateMultiplier'), sortable: true, class: 'w-[80px]' },
+    { key: 'last_used_at', label: t('admin.accounts.columns.lastUsed'), sortable: true, class: 'w-[120px]' },
+    { key: 'created_at', label: t('admin.accounts.columns.createdAt'), sortable: true, class: 'w-[120px]' },
+    { key: 'expires_at', label: t('admin.accounts.columns.expiresAt'), sortable: true, class: 'w-[140px]' },
     { key: 'notes', label: t('admin.accounts.columns.notes'), sortable: false },
-    { key: 'actions', label: t('admin.accounts.columns.actions'), sortable: false }
+    { key: 'actions', label: t('admin.accounts.columns.actions'), sortable: false, class: 'w-[140px]' }
   )
   return c
 })

@@ -56,6 +56,7 @@
           label="7d"
           :utilization="usageInfo.seven_day.utilization"
           :resets-at="usageInfo.seven_day.resets_at"
+          :window-stats="usageInfo.seven_day.window_stats"
           color="emerald"
         />
 
@@ -65,6 +66,7 @@
           label="7d S"
           :utilization="usageInfo.seven_day_sonnet.utilization"
           :resets-at="usageInfo.seven_day_sonnet.resets_at"
+          :window-stats="usageInfo.seven_day_sonnet.window_stats"
           color="purple"
         />
 
@@ -107,7 +109,7 @@
 
     <!-- OpenAI OAuth accounts: single source from /usage API -->
     <template v-else-if="account.platform === 'openai' && account.type === 'oauth'">
-      <div v-if="hasOpenAIUsageFallback" class="space-y-1">
+      <div v-if="hasOpenAIUsageFallback" class="space-y-0.5">
         <UsageProgressBar
           v-if="usageInfo?.five_hour"
           label="5h"
@@ -1160,7 +1162,14 @@ const formatKeyUserCost = computed(() => {
 })
 
 onMounted(() => {
-  if (buildUsageFromExtra()) return
+  if (buildUsageFromExtra()) {
+    // Codex extra gives us percentage immediately, but no window_stats.
+    // Fire a background API call to fetch real stats (requests/tokens/cost).
+    if (shouldFetchUsage.value) {
+      loadUsage().catch(() => {})
+    }
+    return
+  }
   if (!shouldAutoLoadUsageOnMount.value) return
   const source = isAnthropicOAuthOrSetupToken.value ? 'passive' : undefined
   requestAutoLoad(source)
