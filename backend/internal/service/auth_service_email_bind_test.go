@@ -244,7 +244,7 @@ func TestAuthServiceBindEmailIdentity_RollsBackWhenFirstBindDefaultsFail(t *test
 	require.NoError(t, err)
 
 	updatedUser, err := svc.BindEmailIdentity(ctx, user.ID, "rollback@example.com", "123456", "new-password")
-	require.ErrorContains(t, err, "apply email first bind defaults")
+	require.ErrorContains(t, err, "apply email first-bind defaults")
 	require.ErrorContains(t, err, "temporary assign failure")
 	require.Nil(t, updatedUser)
 
