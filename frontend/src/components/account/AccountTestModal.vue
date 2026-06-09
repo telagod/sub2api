@@ -214,7 +214,7 @@
                 ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
                 : status === 'error'
                   ? 'border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
-                  : 'bg-foreground text-foreground  hover:'
+                  : 'bg-primary-500 text-white hover:bg-primary-400'
           ]"
         >
           <Icon
