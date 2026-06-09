@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/pkg/antigravity"
 	"github.com/telagod/subme/internal/pkg/tlsfingerprint"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/require"
 )
 
 // antigravityFailingWriter 模拟客户端断开连接的 gin.ResponseWriter

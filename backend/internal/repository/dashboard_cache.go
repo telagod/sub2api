@@ -5,15 +5,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/service"
-	"github.com/redis/go-redis/v9"
 )
 
 const dashboardStatsCacheKey = "dashboard:stats:v1"
 
 type dashboardCache struct {
-	rdb       *redis.Client
+	rdb         *redis.Client
 	keyPrefixV2 string
 }
 
@@ -26,7 +26,7 @@ func NewDashboardCache(rdb *redis.Client, cfg *config.Config) service.DashboardS
 		prefix += ":"
 	}
 	return &dashboardCache{
-		rdb:       rdb,
+		rdb:         rdb,
 		keyPrefixV2: prefix,
 	}
 }

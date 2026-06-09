@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/robfig/cron/v3"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/pkg/logger"
-	"github.com/robfig/cron/v3"
 )
 
 const scheduledTestDefaultMaxWorkers = 10

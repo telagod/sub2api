@@ -8,9 +8,9 @@ import (
 	"math"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/internal/payment"
-	"github.com/stretchr/testify/assert"
 )
 
 type paymentFulfillmentTestProvider struct {

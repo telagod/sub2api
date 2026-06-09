@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/telagod/subme/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/telagod/subme/internal/config"
 )
 
 var corsWarningOnce sync.Once

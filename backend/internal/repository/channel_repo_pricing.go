@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/telagod/subme/internal/service"
 	"github.com/lib/pq"
+	"github.com/telagod/subme/internal/service"
 )
 
 // --- 模型定价 ---

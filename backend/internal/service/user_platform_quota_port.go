@@ -30,14 +30,14 @@ type UserPlatformQuotaSnapshot struct {
 // UserPlatformQuotaRecord is the service-layer DTO decoupled from the
 // repository layer.
 type UserPlatformQuotaRecord struct {
-	UserID          int64
-	Platform        string
-	DailyLimitUSD   *float64
-	WeeklyLimitUSD  *float64
-	MonthlyLimitUSD *float64
-	DailyUsageUSD   float64
-	WeeklyUsageUSD  float64
-	MonthlyUsageUSD float64
+	UserID             int64
+	Platform           string
+	DailyLimitUSD      *float64
+	WeeklyLimitUSD     *float64
+	MonthlyLimitUSD    *float64
+	DailyUsageUSD      float64
+	WeeklyUsageUSD     float64
+	MonthlyUsageUSD    float64
 	DailyWindowStart   *time.Time
 	WeeklyWindowStart  *time.Time
 	MonthlyWindowStart *time.Time

@@ -14,9 +14,9 @@ import (
 	"time"
 
 	httppool "github.com/telagod/subme/internal/pkg/httpclient"
-	"github.com/telagod/subme/internal/pkg/syncmapreaper"
 	openaipkg "github.com/telagod/subme/internal/pkg/openai"
 	"github.com/telagod/subme/internal/pkg/pagination"
+	"github.com/telagod/subme/internal/pkg/syncmapreaper"
 	"github.com/telagod/subme/internal/pkg/timezone"
 	"github.com/telagod/subme/internal/pkg/tlsfingerprint"
 	"github.com/telagod/subme/internal/pkg/usagestats"
@@ -131,13 +131,13 @@ const (
 
 // UsageCache 封装账户使用量相关的缓存
 type UsageCache struct {
-	apiCache            sync.Map           // accountID -> *apiUsageCache
-	windowStatsCache    sync.Map           // accountID -> *windowStatsCache (5h window)
-	windowStats7dCache  sync.Map           // accountID -> *windowStatsCache (7d window)
-	antigravityCache    sync.Map           // accountID -> *antigravityUsageCache
-	apiFlight           singleflight.Group // 防止同一账号的并发请求击穿缓存（Anthropic）
-	antigravityFlight   singleflight.Group // 防止同一 Antigravity 账号的并发请求击穿缓存
-	openAIProbeCache    sync.Map           // accountID -> time.Time
+	apiCache           sync.Map           // accountID -> *apiUsageCache
+	windowStatsCache   sync.Map           // accountID -> *windowStatsCache (5h window)
+	windowStats7dCache sync.Map           // accountID -> *windowStatsCache (7d window)
+	antigravityCache   sync.Map           // accountID -> *antigravityUsageCache
+	apiFlight          singleflight.Group // 防止同一账号的并发请求击穿缓存（Anthropic）
+	antigravityFlight  singleflight.Group // 防止同一 Antigravity 账号的并发请求击穿缓存
+	openAIProbeCache   sync.Map           // accountID -> time.Time
 }
 
 // NewUsageCache 创建 UsageCache 实例，启动后台缓存清扫

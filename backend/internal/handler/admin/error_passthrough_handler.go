@@ -3,10 +3,10 @@ package admin
 import (
 	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"github.com/telagod/subme/internal/model"
 	"github.com/telagod/subme/internal/pkg/response"
 	"github.com/telagod/subme/internal/service"
-	"github.com/gin-gonic/gin"
 )
 
 // ErrorPassthroughHandler 处理错误透传规则的 HTTP 请求

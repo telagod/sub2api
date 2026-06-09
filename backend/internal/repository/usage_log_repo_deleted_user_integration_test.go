@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/telagod/subme/internal/pkg/usagestats"
 	"github.com/telagod/subme/internal/service"
-	"github.com/stretchr/testify/require"
 )
 
 func TestUsageLog_ListWithFilters_ResolvesSoftDeletedUser(t *testing.T) {

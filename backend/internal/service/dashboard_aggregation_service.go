@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/pkg/logger"
-	"github.com/google/uuid"
 )
 
 const (

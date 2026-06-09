@@ -8,11 +8,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 	"github.com/telagod/subme/internal/config"
 	middleware2 "github.com/telagod/subme/internal/server/middleware"
 	"github.com/telagod/subme/internal/service"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAuthHandlerRevokeAllSessionsInvalidatesAccessTokens(t *testing.T) {

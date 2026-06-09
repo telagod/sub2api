@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/telagod/subme/internal/model"
 	"github.com/telagod/subme/internal/service"
-	"github.com/redis/go-redis/v9"
 )
 
 const (

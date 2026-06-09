@@ -5,13 +5,13 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/google/wire"
+	"github.com/redis/go-redis/v9"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/payment"
 	"github.com/telagod/subme/internal/pkg/antigravity"
 	"github.com/telagod/subme/internal/pkg/logger"
-	"github.com/google/wire"
-	"github.com/redis/go-redis/v9"
 )
 
 // BuildInfo contains build information

@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lib/pq"
 	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/telagod/subme/internal/service"
-	"github.com/lib/pq"
 )
 
 type channelRepository struct {

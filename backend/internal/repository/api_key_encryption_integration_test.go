@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/telagod/subme/internal/service"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/service"
 )
 
 // TestAPIKey_EncryptedAtRest_DecryptedOnRead 验证启用加密时 api_key 端到端:

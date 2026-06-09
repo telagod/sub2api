@@ -1436,4 +1436,3 @@ func (s *OpenAIGatewayService) dispatchImagesViaOAuth(
 		ImageOutputSizes: imgSizes,
 	}, nil
 }
-

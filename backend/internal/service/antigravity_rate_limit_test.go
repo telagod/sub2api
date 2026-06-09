@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/telagod/subme/internal/pkg/antigravity"
 	"github.com/telagod/subme/internal/pkg/tlsfingerprint"
-	"github.com/stretchr/testify/require"
 )
 
 // 编译期接口断言

@@ -6,8 +6,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/telagod/subme/internal/service"
 	"github.com/stretchr/testify/suite"
+	"github.com/telagod/subme/internal/service"
 )
 
 type SettingRepoSuite struct {

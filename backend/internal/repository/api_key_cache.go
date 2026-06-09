@@ -8,8 +8,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/telagod/subme/internal/service"
 	"github.com/redis/go-redis/v9"
+	"github.com/telagod/subme/internal/service"
 )
 
 const (

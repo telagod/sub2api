@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/internal/service"
-	"github.com/stretchr/testify/suite"
 )
 
 type ProxyExpirySuite struct {

@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/require"
 	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/telagod/subme/internal/service"
-	"github.com/stretchr/testify/require"
 )
 
 func newSQLMock(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {

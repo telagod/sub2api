@@ -11,11 +11,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/telagod/subme/internal/payment"
-	"github.com/telagod/subme/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/payment"
+	"github.com/telagod/subme/internal/service"
 )
 
 func TestWriteSuccessResponse(t *testing.T) {

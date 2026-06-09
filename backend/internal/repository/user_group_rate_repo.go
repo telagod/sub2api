@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/telagod/subme/internal/service"
 	"github.com/lib/pq"
+	"github.com/telagod/subme/internal/service"
 )
 
 type userGroupRateRepository struct {

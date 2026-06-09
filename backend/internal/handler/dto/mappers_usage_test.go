@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/telagod/subme/internal/service"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/service"
 )
 
 func TestUsageLogFromService_IncludesOpenAIWSMode(t *testing.T) {

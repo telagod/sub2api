@@ -15,10 +15,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/telagod/subme/internal/pkg/logger"
-	"github.com/telagod/subme/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/telagod/subme/internal/pkg/logger"
+	"github.com/telagod/subme/internal/service"
 )
 
 type OpsWSProxyConfig struct {

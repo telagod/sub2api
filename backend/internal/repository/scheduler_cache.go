@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/telagod/subme/internal/service"
 	"github.com/redis/go-redis/v9"
+	"github.com/telagod/subme/internal/service"
 )
 
 const (
@@ -282,7 +282,6 @@ func (c *schedulerCache) UpdateLastUsed(ctx context.Context, updates map[int64]t
 	_, err = pipe.Exec(ctx)
 	return err
 }
-
 
 func (c *schedulerCache) TryLockBucket(ctx context.Context, bucket service.SchedulerBucket, ttl time.Duration) (bool, error) {
 	key := schedulerBucketKey(schedulerLockPrefix, bucket)

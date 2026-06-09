@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/internal/config"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
 )
 
 func TestOpenAI429FastPath_MarksOAuthAccountCoolingDown(t *testing.T) {

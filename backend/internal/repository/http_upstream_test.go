@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/pkg/tlsfingerprint"
 	"github.com/telagod/subme/internal/service"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 // HTTPUpstreamSuite HTTP 上游服务测试套件

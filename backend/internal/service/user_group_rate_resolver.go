@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/telagod/subme/internal/pkg/logger"
 	gocache "github.com/patrickmn/go-cache"
+	"github.com/telagod/subme/internal/pkg/logger"
 	"golang.org/x/sync/singleflight"
 )
 

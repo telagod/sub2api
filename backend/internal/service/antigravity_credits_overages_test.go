@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/internal/pkg/antigravity"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/pkg/antigravity"
 )
 
 func TestClassifyAntigravity429(t *testing.T) {

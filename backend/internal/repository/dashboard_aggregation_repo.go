@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/telagod/subme/internal/pkg/timezone"
 	"github.com/telagod/subme/internal/service"
-	"github.com/lib/pq"
 )
 
 type dashboardAggregationRepository struct {

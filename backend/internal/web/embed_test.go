@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/telagod/subme/internal/server/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/server/middleware"
 )
 
 func init() {

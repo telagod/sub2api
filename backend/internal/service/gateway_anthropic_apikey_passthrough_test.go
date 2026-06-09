@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/pkg/claude"
 	"github.com/telagod/subme/internal/pkg/tlsfingerprint"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 )
 

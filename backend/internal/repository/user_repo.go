@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/apikey"
 	"github.com/telagod/subme/ent/authidentity"
@@ -22,7 +23,6 @@ import (
 	"github.com/telagod/subme/ent/usersubscription"
 	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/telagod/subme/internal/service"
-	"github.com/lib/pq"
 
 	entsql "entgo.io/ent/dialect/sql"
 )

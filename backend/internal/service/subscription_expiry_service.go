@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/google/uuid"
+	"github.com/telagod/subme/internal/pkg/pagination"
 )
 
 const (

@@ -3,8 +3,8 @@ package service
 import (
 	"math"
 
-	"github.com/telagod/subme/internal/payment"
 	"github.com/shopspring/decimal"
+	"github.com/telagod/subme/internal/payment"
 )
 
 const defaultBalanceRechargeMultiplier = 1.0

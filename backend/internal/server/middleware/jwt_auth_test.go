@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/internal/config"
-	"github.com/telagod/subme/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/service"
 )
 
 // stubJWTUserRepo 实现 UserRepository 的最小子集，仅支持 GetByID。

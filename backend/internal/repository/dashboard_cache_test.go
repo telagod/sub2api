@@ -3,8 +3,8 @@ package repository
 import (
 	"testing"
 
-	"github.com/telagod/subme/internal/config"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
 )
 
 func TestNewDashboardCacheKeyPrefix(t *testing.T) {

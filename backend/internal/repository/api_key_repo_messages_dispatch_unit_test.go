@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/internal/service"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGroupEntityToService_PreservesMessagesDispatchModelConfig(t *testing.T) {

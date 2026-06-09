@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/telagod/subme/internal/config"
-	"github.com/telagod/subme/internal/pkg/dingtalk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/pkg/dingtalk"
 )
 
 func TestDingTalkOAuthStart_Disabled(t *testing.T) {
@@ -108,7 +108,9 @@ func TestDtResolveDeptPath_SingleLevel(t *testing.T) {
 		"1":  `{"errcode":0,"result":{"dept_id":1,"name":"公司","parent_id":0}}`,
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var req struct{ DeptID int64 `json:"dept_id"` }
+		var req struct {
+			DeptID int64 `json:"dept_id"`
+		}
 		_ = json.NewDecoder(r.Body).Decode(&req)
 		w.Header().Set("Content-Type", "application/json")
 		if resp, ok := responses[fmt.Sprintf("%d", req.DeptID)]; ok {
@@ -135,7 +137,9 @@ func TestDtResolveDeptPath_MultiLevel(t *testing.T) {
 		"1":  `{"errcode":0,"result":{"dept_id":1,"name":"公司","parent_id":0}}`,
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var req struct{ DeptID int64 `json:"dept_id"` }
+		var req struct {
+			DeptID int64 `json:"dept_id"`
+		}
 		_ = json.NewDecoder(r.Body).Decode(&req)
 		w.Header().Set("Content-Type", "application/json")
 		if resp, ok := responses[fmt.Sprintf("%d", req.DeptID)]; ok {

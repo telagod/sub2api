@@ -11,6 +11,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/pquerna/otp/totp"
+	"github.com/stretchr/testify/require"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/authidentity"
 	"github.com/telagod/subme/ent/enttest"
@@ -21,9 +24,6 @@ import (
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/telagod/subme/internal/service"
-	"github.com/gin-gonic/gin"
-	"github.com/pquerna/otp/totp"
-	"github.com/stretchr/testify/require"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"

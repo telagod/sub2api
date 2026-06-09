@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/authidentity"
 	"github.com/telagod/subme/ent/authidentitychannel"
 	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/telagod/subme/internal/service"
-	"github.com/stretchr/testify/suite"
 )
 
 type UserRepoSuite struct {

@@ -7,12 +7,12 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/authidentity"
 	"github.com/telagod/subme/ent/authidentitychannel"
 	"github.com/telagod/subme/ent/enttest"
 	infraerrors "github.com/telagod/subme/internal/pkg/errors"
-	"github.com/stretchr/testify/require"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"

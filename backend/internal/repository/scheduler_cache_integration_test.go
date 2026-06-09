@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/internal/service"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/service"
 )
 
 func TestSchedulerCacheSnapshotUsesSlimMetadataButKeepsFullAccount(t *testing.T) {

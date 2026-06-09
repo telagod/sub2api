@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/authidentity"
 	"github.com/telagod/subme/ent/authidentitychannel"
@@ -24,8 +26,6 @@ import (
 	"github.com/telagod/subme/internal/payment"
 	"github.com/telagod/subme/internal/repository"
 	"github.com/telagod/subme/internal/service"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/require"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"

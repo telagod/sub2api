@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/telagod/subme/internal/domain"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/domain"
 	"github.com/tidwall/gjson"
 )
 

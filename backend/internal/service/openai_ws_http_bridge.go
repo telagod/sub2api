@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/telagod/subme/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/telagod/subme/internal/config"
 	"github.com/tidwall/gjson"
 )
 

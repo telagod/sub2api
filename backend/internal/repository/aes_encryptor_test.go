@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/telagod/subme/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
 )
 
 // ── 测试辅助 ─────────────────────────────────────────────────────────────────

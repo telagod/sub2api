@@ -8,9 +8,9 @@ import (
 	"math/rand/v2"
 	"time"
 
+	"github.com/dgraph-io/ristretto"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/pkg/apikeyhash"
-	"github.com/dgraph-io/ristretto"
 )
 
 const apiKeyAuthSnapshotVersion = 12 // v12: include exclusive group authorization fields

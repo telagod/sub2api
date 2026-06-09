@@ -3,10 +3,10 @@ package middleware
 import (
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/telagod/subme/internal/pkg/ctxkey"
 	"github.com/telagod/subme/internal/pkg/ip"
 	"github.com/telagod/subme/internal/pkg/logger"
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 

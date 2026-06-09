@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/telagod/subme/internal/pkg/ctxkey"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/pkg/ctxkey"
 )
 
 func TestClientRequestIDGeneratesAndExposesID(t *testing.T) {

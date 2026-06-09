@@ -1,9 +1,9 @@
 package admin
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/telagod/subme/internal/pkg/response"
 	"github.com/telagod/subme/internal/service"
-	"github.com/gin-gonic/gin"
 )
 
 type AntigravityOAuthHandler struct {

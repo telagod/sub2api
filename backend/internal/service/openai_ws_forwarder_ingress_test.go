@@ -8,9 +8,9 @@ import (
 	"net"
 	"testing"
 
-	"github.com/telagod/subme/internal/config"
 	coderws "github.com/coder/websocket"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
 	"github.com/tidwall/gjson"
 )
 

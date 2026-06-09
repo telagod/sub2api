@@ -11,12 +11,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/internal/config"
-	"github.com/telagod/subme/internal/pkg/apicompat"
-	"github.com/telagod/subme/internal/pkg/claude"
 	coderws "github.com/coder/websocket"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/pkg/apicompat"
+	"github.com/telagod/subme/internal/pkg/claude"
 	"github.com/tidwall/gjson"
 )
 

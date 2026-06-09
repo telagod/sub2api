@@ -9,14 +9,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/authidentity"
 	"github.com/telagod/subme/ent/redeemcode"
 	dbuser "github.com/telagod/subme/ent/user"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/service"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/require"
 )
 
 func TestEmailOAuthCallbackRequiresPendingRegistrationWhenInvitationEnabled(t *testing.T) {

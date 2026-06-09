@@ -15,11 +15,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	dbent "github.com/telagod/subme/ent"
 	_ "github.com/telagod/subme/ent/runtime"
 	"github.com/telagod/subme/internal/pkg/timezone"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"

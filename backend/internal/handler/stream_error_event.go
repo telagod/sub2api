@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/telagod/subme/internal/pkg/ctxkey"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/telagod/subme/internal/pkg/ctxkey"
 )
 
 // responsesFailedError matches the OpenAI Responses protocol error sub-object.

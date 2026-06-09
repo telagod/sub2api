@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/telagod/subme/internal/server/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/telagod/subme/internal/server/middleware"
 )
 
 const (

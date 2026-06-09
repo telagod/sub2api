@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/telagod/subme/internal/pkg/response"
 	"github.com/telagod/subme/internal/server/middleware"
 	"github.com/telagod/subme/internal/service"
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 )
 
 var validOpsAlertMetricTypes = []string{

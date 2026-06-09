@@ -88,10 +88,10 @@ const (
 	monitorRunOneBuffer = 10 * time.Second
 
 	// HTTP transport parameters.
-	monitorIdleConnTimeout      = 30 * time.Second
-	monitorTLSHandshakeTimeout  = 10 * time.Second
+	monitorIdleConnTimeout       = 30 * time.Second
+	monitorTLSHandshakeTimeout   = 10 * time.Second
 	monitorResponseHeaderTimeout = 30 * time.Second
-	monitorPingDiscardMaxBytes  = 1024
+	monitorPingDiscardMaxBytes   = 1024
 
 	// Custom dialer parameters.
 	monitorDialTimeout   = 10 * time.Second

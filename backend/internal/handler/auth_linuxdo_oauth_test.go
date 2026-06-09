@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/authidentity"
 	"github.com/telagod/subme/ent/identityadoptiondecision"
@@ -18,8 +20,6 @@ import (
 	"github.com/telagod/subme/internal/config"
 	servermiddleware "github.com/telagod/subme/internal/server/middleware"
 	"github.com/telagod/subme/internal/service"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSanitizeFrontendRedirectPath(t *testing.T) {

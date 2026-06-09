@@ -7,9 +7,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/telagod/subme/internal/config"
 	"github.com/imroc/req/v3"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
 )
 
 func TestAdminService_EnsureOpenAIPrivacy_RetriesNonSuccessModes(t *testing.T) {

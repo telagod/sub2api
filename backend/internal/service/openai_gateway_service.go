@@ -21,6 +21,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/pkg/apicompat"
 	"github.com/telagod/subme/internal/pkg/ip"
@@ -29,8 +31,6 @@ import (
 	"github.com/telagod/subme/internal/pkg/openai_compat"
 	"github.com/telagod/subme/internal/util/responseheaders"
 	"github.com/telagod/subme/internal/util/urlvalidator"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"go.uber.org/zap"

@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/telagod/subme/internal/pkg/openai"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/pkg/openai"
 )
 
 type openaiOAuthClientAuthURLStub struct{}

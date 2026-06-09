@@ -11,12 +11,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dgraph-io/ristretto"
 	"github.com/telagod/subme/internal/config"
 	infraerrors "github.com/telagod/subme/internal/pkg/errors"
 	"github.com/telagod/subme/internal/pkg/ip"
 	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/telagod/subme/internal/pkg/timezone"
-	"github.com/dgraph-io/ristretto"
 	"golang.org/x/sync/singleflight"
 )
 

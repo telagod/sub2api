@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/telagod/subme/internal/pkg/response"
 	"github.com/telagod/subme/internal/service"
-	"github.com/gin-gonic/gin"
 )
 
 type ContentModerationHandler struct {

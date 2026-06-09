@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/telagod/subme/internal/config"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
 	"github.com/tidwall/gjson"
 )
 

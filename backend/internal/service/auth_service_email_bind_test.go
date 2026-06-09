@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/authidentity"
 	"github.com/telagod/subme/ent/enttest"
@@ -17,7 +18,6 @@ import (
 	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/telagod/subme/internal/repository"
 	"github.com/telagod/subme/internal/service"
-	"github.com/stretchr/testify/require"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"

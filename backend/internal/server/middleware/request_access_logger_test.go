@@ -8,9 +8,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/telagod/subme/internal/pkg/ctxkey"
 	"github.com/telagod/subme/internal/pkg/logger"
-	"github.com/gin-gonic/gin"
 )
 
 type testLogSink struct {

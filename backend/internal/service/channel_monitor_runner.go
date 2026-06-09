@@ -44,9 +44,9 @@ type ChannelMonitorRunner struct {
 	svc            monitorRunnerSvc
 	settingService *SettingService
 
-	workerPool   pond.Pool
-	rootCtx      context.Context
-	rootCancel   context.CancelFunc
+	workerPool pond.Pool
+	rootCtx    context.Context
+	rootCancel context.CancelFunc
 
 	guard    sync.Mutex
 	taskMap  map[int64]*scheduledMonitor

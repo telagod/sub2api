@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/telagod/subme/internal/config"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
 )
 
 // dbFallbackRepoStub extends errorPolicyRepoStub with a configurable DB account

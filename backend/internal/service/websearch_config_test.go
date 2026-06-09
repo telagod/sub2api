@@ -6,8 +6,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/telagod/subme/internal/pkg/websearch"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/pkg/websearch"
 )
 
 // --- validateWebSearchConfig ---

@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/apikey"
 	"github.com/telagod/subme/ent/schema/mixins"
 	"github.com/telagod/subme/ent/usersubscription"
 	"github.com/telagod/subme/internal/service"
-	"github.com/stretchr/testify/require"
 )
 
 func uniqueSoftDeleteValue(t *testing.T, prefix string) string {

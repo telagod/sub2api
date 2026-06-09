@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/telagod/subme/internal/payment"
 	infraerrors "github.com/telagod/subme/internal/pkg/errors"
-	"github.com/stretchr/testify/require"
 )
 
 type paymentResumeLookupProvider struct {

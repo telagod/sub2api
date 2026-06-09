@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/telagod/subme/internal/service"
 	"github.com/redis/go-redis/v9"
+	"github.com/telagod/subme/internal/service"
 )
 
 const proxyLatencyKeyPrefix = "proxy:latency:"

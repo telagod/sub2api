@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/internal/config"
-	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/pkg/pagination"
 )
 
 type authRepoStub struct {

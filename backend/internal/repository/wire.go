@@ -5,11 +5,11 @@ import (
 	"errors"
 
 	entsql "entgo.io/ent/dialect/sql"
+	"github.com/google/wire"
+	"github.com/redis/go-redis/v9"
 	"github.com/telagod/subme/ent"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/service"
-	"github.com/google/wire"
-	"github.com/redis/go-redis/v9"
 )
 
 // ProvideConcurrencyCache 创建并发控制缓存，从配置读取 TTL 参数

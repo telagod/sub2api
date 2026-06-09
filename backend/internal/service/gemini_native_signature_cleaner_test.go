@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/telagod/subme/internal/pkg/antigravity"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/pkg/antigravity"
 )
 
 func TestCleanGeminiNativeThoughtSignatures_ReplacesNestedThoughtSignatures(t *testing.T) {

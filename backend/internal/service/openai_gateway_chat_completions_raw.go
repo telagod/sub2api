@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/telagod/subme/internal/pkg/apicompat"
 	"github.com/telagod/subme/internal/pkg/logger"
 	"github.com/telagod/subme/internal/util/responseheaders"
-	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"go.uber.org/zap"

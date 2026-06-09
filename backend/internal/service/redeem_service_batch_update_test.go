@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	infraerrors "github.com/telagod/subme/internal/pkg/errors"
 	"github.com/stretchr/testify/require"
+	infraerrors "github.com/telagod/subme/internal/pkg/errors"
 )
 
 func TestRedeemService_BatchUpdate_PartialFields(t *testing.T) {

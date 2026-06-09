@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/ent/pendingauthsession"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/ent/pendingauthsession"
 )
 
 func TestLogoutClearsOAuthStateCookiesAndConsumesPendingSession(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/telagod/subme/internal/pkg/ctxkey"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/pkg/ctxkey"
 )
 
 func TestRequestMetadataWriteAndRead_NoBridge(t *testing.T) {

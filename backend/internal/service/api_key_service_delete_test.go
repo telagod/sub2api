@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/telagod/subme/internal/pkg/apikeyhash"
 	"github.com/telagod/subme/internal/pkg/pagination"
-	"github.com/stretchr/testify/require"
 )
 
 // apiKeyRepoStub 是 APIKeyRepository 接口的测试桩实现。

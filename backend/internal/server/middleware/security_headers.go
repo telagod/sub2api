@@ -7,8 +7,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/telagod/subme/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/telagod/subme/internal/config"
 )
 
 const (

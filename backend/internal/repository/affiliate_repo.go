@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/user"
 	"github.com/telagod/subme/internal/service"
-	"github.com/lib/pq"
 )
 
 const (

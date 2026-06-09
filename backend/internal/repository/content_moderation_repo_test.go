@@ -8,8 +8,8 @@ import (
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/telagod/subme/internal/service"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/service"
 )
 
 func TestBuildContentModerationLogWhere_BlockedIncludesAllBlockActions(t *testing.T) {

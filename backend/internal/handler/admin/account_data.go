@@ -10,11 +10,11 @@ import (
 
 	"log/slog"
 
+	"github.com/gin-gonic/gin"
 	infraerrors "github.com/telagod/subme/internal/pkg/errors"
 	"github.com/telagod/subme/internal/pkg/openai"
 	"github.com/telagod/subme/internal/pkg/response"
 	"github.com/telagod/subme/internal/service"
-	"github.com/gin-gonic/gin"
 )
 
 const (

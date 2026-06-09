@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/pkg/pagination"
 )
 
 // --- marshalModelMapping ---

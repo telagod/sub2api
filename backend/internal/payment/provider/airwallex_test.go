@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/internal/payment"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/payment"
 )
 
 func TestNewAirwallexValidatesConfig(t *testing.T) {

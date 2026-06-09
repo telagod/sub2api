@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
+	gocache "github.com/patrickmn/go-cache"
+	"github.com/stretchr/testify/require"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/pkg/ctxkey"
 	"github.com/telagod/subme/internal/pkg/usagestats"
-	gocache "github.com/patrickmn/go-cache"
-	"github.com/stretchr/testify/require"
 )
 
 type userGroupRateRepoHotpathStub struct {

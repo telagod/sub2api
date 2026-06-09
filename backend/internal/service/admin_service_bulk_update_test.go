@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/telagod/subme/internal/pkg/pagination"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/pkg/pagination"
 )
 
 type accountRepoStubForBulkUpdate struct {

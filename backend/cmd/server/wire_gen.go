@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"github.com/redis/go-redis/v9"
 	"github.com/telagod/subme/ent"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/handler"
@@ -17,7 +18,6 @@ import (
 	"github.com/telagod/subme/internal/server"
 	"github.com/telagod/subme/internal/server/middleware"
 	"github.com/telagod/subme/internal/service"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
 	"sync"

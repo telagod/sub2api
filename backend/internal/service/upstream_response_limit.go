@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/telagod/subme/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/telagod/subme/internal/config"
 )
 
 var ErrUpstreamResponseBodyTooLarge = errors.New("upstream response body too large")

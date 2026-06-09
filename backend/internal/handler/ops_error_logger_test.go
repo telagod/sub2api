@@ -6,10 +6,10 @@ import (
 	"sync"
 	"testing"
 
-	middleware2 "github.com/telagod/subme/internal/server/middleware"
-	"github.com/telagod/subme/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	middleware2 "github.com/telagod/subme/internal/server/middleware"
+	"github.com/telagod/subme/internal/service"
 )
 
 func resetOpsErrorLoggerStateForTest(t *testing.T) {

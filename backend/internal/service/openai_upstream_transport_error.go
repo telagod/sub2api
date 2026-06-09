@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/telagod/subme/internal/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/telagod/subme/internal/pkg/logger"
 	"go.uber.org/zap"
 )
 

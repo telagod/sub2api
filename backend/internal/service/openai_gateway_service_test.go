@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/internal/config"
-	"github.com/telagod/subme/internal/pkg/openai"
 	"github.com/cespare/xxhash/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/config"
+	"github.com/telagod/subme/internal/pkg/openai"
 	"github.com/tidwall/gjson"
 )
 

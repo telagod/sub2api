@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/internal/handler/dto"
-	"github.com/telagod/subme/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/handler/dto"
+	"github.com/telagod/subme/internal/service"
 )
 
 func TestParseTimeRange(t *testing.T) {

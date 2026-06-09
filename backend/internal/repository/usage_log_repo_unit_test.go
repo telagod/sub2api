@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/telagod/subme/internal/service"
 	"github.com/stretchr/testify/require"
+	"github.com/telagod/subme/internal/service"
 )
 
 func TestSafeDateFormat(t *testing.T) {
