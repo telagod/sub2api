@@ -2824,22 +2824,6 @@ func (s *ContentModerationService) checkSync(ctx context.Context, input ContentM
 	return s.executeSynchronousCheck(ctx, input, cfg, content, hashText, queueDelay, allowBlock)
 }
 
-func cloneContentModerationConfig(cfg *ContentModerationConfig) *ContentModerationConfig {
-	return duplicateConfig(cfg)
-}
-
-func evaluateModerationScores(scores map[string]float64, thresholds map[string]float64) (bool, string, float64) {
-	return assessModerationScores(scores, thresholds)
-}
-
-func mergeContentModerationThresholds(base map[string]float64, override map[string]float64) map[string]float64 {
-	return overlayThresholds(base, override)
-}
-
-func normalizeInt64IDs(ids []int64) []int64 { return deduplicateInt64s(ids) }
-
-func normalizeModerationAPIKeys(keys []string) []string { return deduplicateAPIKeys(keys) }
-
 func deleteModerationAPIKeysByHash(keys []string, hashes []string) []string {
 	return removeKeysByHash(keys, hashes)
 }

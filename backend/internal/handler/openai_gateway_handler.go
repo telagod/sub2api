@@ -2003,10 +2003,6 @@ func emitContentModerationWSError(ctx context.Context, conn *coderws.Conn, decis
 
 // Backward-compatible aliases for callers in other handler files and tests.
 
-func usageRecordContextV2(parent context.Context, base context.Context) context.Context {
-	return buildUsageRecordContext(parent, base)
-}
-
 func wrapUsageRecordTaskContextV2(parent context.Context, task service.UsageRecordTask) service.UsageRecordTask {
 	return enrichUsageRecordTask(parent, task)
 }

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/userplatformquota"
 	"github.com/telagod/subme/internal/pkg/timezone"
-	"github.com/lib/pq"
 )
 
 // UserPlatformQuotaRecord is the repository-layer transfer struct,
@@ -275,11 +275,6 @@ func (repo *userPlatformQuotaRepository) executeInTx(ctx context.Context, fn fun
 	return nil
 }
 
-// withTx is kept as a method alias.
-func (repo *userPlatformQuotaRepository) withTx(ctx context.Context, fn func(txCtx context.Context, txClient *dbent.Client) error) error {
-	return repo.executeInTx(ctx, fn)
-}
-
 // mapEntQuotaToRecord converts an ent entity to the repository record struct.
 func mapEntQuotaToRecord(e *dbent.UserPlatformQuota) *UserPlatformQuotaRecord {
 	return &UserPlatformQuotaRecord{
@@ -297,11 +292,6 @@ func mapEntQuotaToRecord(e *dbent.UserPlatformQuota) *UserPlatformQuotaRecord {
 	}
 }
 
-// entQuotaToRecord is kept as a package-level alias.
-func entQuotaToRecord(e *dbent.UserPlatformQuota) *UserPlatformQuotaRecord {
-	return mapEntQuotaToRecord(e)
-}
-
 // resetOrAccumulate returns cost (reset) when the window has changed,
 // or prevUsage + cost (accumulate) when the window is still current.
 func resetOrAccumulate(prevUsage float64, prevStart *time.Time, currStart time.Time, cost float64) float64 {
@@ -309,11 +299,6 @@ func resetOrAccumulate(prevUsage float64, prevStart *time.Time, currStart time.T
 		return cost
 	}
 	return prevUsage + cost
-}
-
-// maybeReset is kept as a package-level alias.
-func maybeReset(prevUsage float64, prevStart *time.Time, currStart time.Time, cost float64) float64 {
-	return resetOrAccumulate(prevUsage, prevStart, currStart, cost)
 }
 
 // rollingMonthlyResetOrAccumulate handles the 30-day rolling monthly window.
@@ -324,11 +309,6 @@ func rollingMonthlyResetOrAccumulate(prevUsage float64, prevStart *time.Time, co
 		return cost, now
 	}
 	return prevUsage + cost, *prevStart
-}
-
-// monthlyMaybeReset is kept as a package-level alias.
-func monthlyMaybeReset(prevUsage float64, prevStart *time.Time, cost float64, now time.Time) (float64, time.Time) {
-	return rollingMonthlyResetOrAccumulate(prevUsage, prevStart, cost, now)
 }
 
 // UpsertForUser fully replaces all platform limit configurations for a user:
@@ -388,11 +368,6 @@ func markMissingPlatformsDeleted(ctx context.Context, client *dbent.Client, user
 	return execErr
 }
 
-// softDeleteMissingPlatforms is kept as a package-level alias.
-func softDeleteMissingPlatforms(ctx context.Context, client *dbent.Client, userID int64, keepPlatforms []string, now time.Time) error {
-	return markMissingPlatformsDeleted(ctx, client, userID, keepPlatforms, now)
-}
-
 // overwriteLimitRow attempts to UPDATE the active row's limits, returning the
 // number of affected rows. Only targets active (non-soft-deleted) rows.
 func overwriteLimitRow(ctx context.Context, client *dbent.Client, userID int64, rec UserPlatformQuotaRecord, ts time.Time) (int64, error) {
@@ -407,11 +382,6 @@ func overwriteLimitRow(ctx context.Context, client *dbent.Client, userID int64, 
 		return 0, execErr
 	}
 	return execResult.RowsAffected()
-}
-
-// updateLimitsRow is kept as a package-level alias.
-func updateLimitsRow(ctx context.Context, client *dbent.Client, userID int64, rec UserPlatformQuotaRecord, now time.Time) (int64, error) {
-	return overwriteLimitRow(ctx, client, userID, rec, now)
 }
 
 // createLimitRow inserts a new quota row with zero usage. Uses ON CONFLICT DO NOTHING
@@ -442,17 +412,9 @@ func createLimitRow(ctx context.Context, client *dbent.Client, userID int64, rec
 	return nil
 }
 
-// insertLimitsRow is kept as a package-level alias.
-func insertLimitsRow(ctx context.Context, client *dbent.Client, userID int64, rec UserPlatformQuotaRecord, now time.Time) error {
-	return createLimitRow(ctx, client, userID, rec, now)
-}
-
 // maxRowsPerBatch is the ceiling for rows in a single BatchSnapshotUsage SQL statement.
 // 9 parameters per row x 6000 = 54000, safely under Postgres' 65535 limit.
 const maxRowsPerBatch = 6000
-
-// batchRows is kept as a package-level alias.
-const batchRows = maxRowsPerBatch
 
 // BatchSnapshotUsage writes an entire batch of usage snapshots as absolute values
 // using a multi-row UPSERT. Each batch shares $1=now for timestamps.

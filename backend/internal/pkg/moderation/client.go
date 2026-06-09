@@ -120,19 +120,19 @@ func EvaluateScores(scores map[string]float64, thresholds map[string]float64) (f
 }
 
 var DefaultThresholds = map[string]float64{
-	"harassment":            0.95,
+	"harassment":             0.95,
 	"harassment/threatening": 0.90,
-	"hate":                  0.65,
-	"hate/threatening":      0.95,
-	"illicit":               0.95,
-	"illicit/violent":       0.95,
-	"self-harm":            0.65,
-	"self-harm/intent":     0.85,
+	"hate":                   0.65,
+	"hate/threatening":       0.95,
+	"illicit":                0.95,
+	"illicit/violent":        0.95,
+	"self-harm":              0.65,
+	"self-harm/intent":       0.85,
 	"self-harm/instructions": 0.95,
-	"sexual":               0.65,
-	"sexual/minors":        0.65,
-	"violence":             0.95,
-	"violence/graphic":     0.95,
+	"sexual":                 0.65,
+	"sexual/minors":          0.65,
+	"violence":               0.95,
+	"violence/graphic":       0.95,
 }
 
 var Categories = []string{

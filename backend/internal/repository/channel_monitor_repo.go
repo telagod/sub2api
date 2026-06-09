@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	dbent "github.com/telagod/subme/ent"
 	"github.com/telagod/subme/ent/channelmonitor"
 	"github.com/telagod/subme/ent/channelmonitorhistory"
 	"github.com/telagod/subme/internal/service"
-	"github.com/lib/pq"
 )
 
 // channelMonitorRepository implements service.ChannelMonitorRepository.
@@ -295,11 +295,6 @@ func unwrapNullableInt(target **int, src sql.NullInt64) {
 	*target = &val
 }
 
-// assignNullInt is kept as a package-level alias.
-func assignNullInt(dst **int, n sql.NullInt64) {
-	unwrapNullableInt(dst, n)
-}
-
 // ComputeAvailability calculates per-model availability percentage and average
 // latency within the specified time window.
 // "Available" is defined as status IN (operational, degraded).
@@ -348,11 +343,6 @@ func parseAvailabilityRow(scanner interface{ Scan(...any) error }, windowDays in
 	return avail, nil
 }
 
-// scanAvailabilityRow is kept as a package-level alias.
-func scanAvailabilityRow(rows interface{ Scan(...any) error }, windowDays int) (*service.ChannelMonitorAvailability, error) {
-	return parseAvailabilityRow(rows, windowDays)
-}
-
 // computeAvailabilityMetrics derives the availability percentage and unpacks
 // the nullable average latency into the result struct.
 func computeAvailabilityMetrics(avail *service.ChannelMonitorAvailability, rawAvgLatency sql.NullFloat64) {
@@ -363,11 +353,6 @@ func computeAvailabilityMetrics(avail *service.ChannelMonitorAvailability, rawAv
 		rounded := int(rawAvgLatency.Float64)
 		avail.AvgLatencyMs = &rounded
 	}
-}
-
-// finalizeAvailabilityRow is kept as a package-level alias.
-func finalizeAvailabilityRow(row *service.ChannelMonitorAvailability, avgLatency sql.NullFloat64) {
-	computeAvailabilityMetrics(row, avgLatency)
 }
 
 // ListLatestForMonitorIDs fetches the most recent record per (monitor_id, model)
@@ -489,11 +474,6 @@ func assembleMonitorModelPairs(ids []int64, primaryModels map[int64]string) ([]i
 	return filteredIDs, filteredModels
 }
 
-// buildMonitorModelPairs is kept as a package-level alias.
-func buildMonitorModelPairs(ids []int64, primaryModels map[int64]string) ([]int64, []string) {
-	return assembleMonitorModelPairs(ids, primaryModels)
-}
-
 // Bounds for per-monitor timeline limit clamping.
 const (
 	timelineLimitMin = 1
@@ -509,11 +489,6 @@ func constrainTimelineDepth(n int) int {
 		return timelineLimitMax
 	}
 	return n
-}
-
-// clampTimelineLimit is kept as a package-level alias.
-func clampTimelineLimit(n int) int {
-	return constrainTimelineDepth(n)
 }
 
 // ComputeAvailabilityForMonitors calculates per-model availability for multiple
@@ -627,9 +602,6 @@ func (repo *channelMonitorRepository) DeleteRollupsBefore(ctx context.Context, b
 // long transactions and WAL accumulation.
 const pruneBatchCeiling = 5000
 
-// channelMonitorPruneBatchSize is kept as a package-level alias.
-const channelMonitorPruneBatchSize = pruneBatchCeiling
-
 // historyPruneSQL deletes expired detail rows in small batches by ID.
 const historyPruneSQL = `
 WITH batch AS (
@@ -641,9 +613,6 @@ WITH batch AS (
 DELETE FROM channel_monitor_histories
 WHERE id IN (SELECT id FROM batch)
 `
-
-// channelMonitorPruneHistorySQL is kept as a package-level alias.
-const channelMonitorPruneHistorySQL = historyPruneSQL
 
 // rollupPruneSQL deletes expired rollup rows in small batches. The ::date cast
 // ensures consistent comparison with the DATE column type.
@@ -657,9 +626,6 @@ WITH batch AS (
 DELETE FROM channel_monitor_daily_rollups
 WHERE id IN (SELECT id FROM batch)
 `
-
-// channelMonitorPruneRollupSQL is kept as a package-level alias.
-const channelMonitorPruneRollupSQL = rollupPruneSQL
 
 // pruneMonitorRowsBatched loops a batched DELETE until zero rows are affected,
 // returning the cumulative count of removed rows.
@@ -680,11 +646,6 @@ func pruneMonitorRowsBatched(ctx context.Context, db *sql.DB, stmt string, cutof
 		}
 	}
 	return cumulative, nil
-}
-
-// deleteChannelMonitorBatched is kept as a package-level alias.
-func deleteChannelMonitorBatched(ctx context.Context, db *sql.DB, query string, cutoff time.Time) (int64, error) {
-	return pruneMonitorRowsBatched(ctx, db, query, cutoff)
 }
 
 // LoadAggregationWatermark reads the single-row watermark table (id=1).
@@ -761,11 +722,6 @@ func convertEntMonitorToService(entity *dbent.ChannelMonitor) *service.ChannelMo
 	return svc
 }
 
-// entToServiceMonitor is kept as a package-level alias.
-func entToServiceMonitor(row *dbent.ChannelMonitor) *service.ChannelMonitor {
-	return convertEntMonitorToService(row)
-}
-
 // coalesceHeadersMap returns an empty map when the input is nil,
 // avoiding null JSON serialization.
 func coalesceHeadersMap(h map[string]string) map[string]string {
@@ -812,9 +768,4 @@ func coalesceStringSlice(in []string) []string {
 		return []string{}
 	}
 	return in
-}
-
-// emptySliceIfNil is kept as a package-level alias.
-func emptySliceIfNil(in []string) []string {
-	return coalesceStringSlice(in)
 }

@@ -2047,22 +2047,6 @@ func clonePendingMap(src map[string]any) map[string]any {
 	return duplicateMap(src)
 }
 
-func mergePendingCompletionResponse(sess *dbent.PendingAuthSession, extra map[string]any) map[string]any {
-	return mergeCompletionPayload(sess, extra)
-}
-
-func updatePendingOAuthSessionProgress(
-	ctx context.Context,
-	entDB *dbent.Client,
-	sess *dbent.PendingAuthSession,
-	intent string,
-	resolvedEmail string,
-	targetUserID *int64,
-	completionResp map[string]any,
-) (*dbent.PendingAuthSession, error) {
-	return persistPendingOAuthProgress(ctx, entDB, sess, intent, resolvedEmail, targetUserID, completionResp)
-}
-
 func resolvePendingOAuthTargetUserID(ctx context.Context, entDB *dbent.Client, sess *dbent.PendingAuthSession) (int64, error) {
 	return determinePendingOAuthTargetUser(ctx, entDB, sess)
 }
@@ -2073,14 +2057,6 @@ func findActiveUserByID(ctx context.Context, entDB *dbent.Client, uid int64) (*d
 
 func cloneOAuthMetadata(src map[string]any) map[string]any {
 	return copyOAuthMetadata(src)
-}
-
-func mergeOAuthMetadata(base map[string]any, overlay map[string]any) map[string]any {
-	return overlayOAuthMetadata(base, overlay)
-}
-
-func normalizeAdoptedOAuthDisplayName(name string) string {
-	return truncateAdoptedDisplayName(name)
 }
 
 func consumePendingOAuthBrowserSessionTx(ctx context.Context, tx *dbent.Tx, sess *dbent.PendingAuthSession) error {
@@ -2099,42 +2075,6 @@ func applyPendingOAuthAdoption(
 	return executePendingOAuthAdoption(ctx, entDB, authSvc, userSvc, sess, dec, overrideUID)
 }
 
-func pendingOAuthCompletionCanIssueTokenPair(sess *dbent.PendingAuthSession, data map[string]any) bool {
-	return canIssuePendingOAuthTokenPair(sess, data)
-}
-
-func pendingSessionWantsInvitation(data map[string]any) bool {
-	return flowStateIndicatesInvitationRequired(data)
-}
-
 func ensurePendingOAuthIdentityForUser(ctx context.Context, tx *dbent.Tx, sess *dbent.PendingAuthSession, uid int64) (*dbent.AuthIdentity, error) {
 	return linkPendingOAuthIdentityToUser(ctx, tx, sess, uid)
-}
-
-func channelRecordMetadata(ch *dbent.AuthIdentityChannel) map[string]any {
-	return existingChannelMeta(ch)
-}
-
-func oauthIdentityIssuer(sess *dbent.PendingAuthSession) *string {
-	return extractOAuthIdentityIssuer(sess)
-}
-
-func shouldSkipAvatarAdoption(err error) bool {
-	return avatarAdoptionCanBeSkipped(err)
-}
-
-func shouldBindPendingOAuthIdentity(sess *dbent.PendingAuthSession, dec *dbent.IdentityAdoptionDecision) bool {
-	return shouldLinkPendingOAuthIdentity(sess, dec)
-}
-
-func pendingOAuthChoiceCompletionResponse(sess *dbent.PendingAuthSession, email string) map[string]any {
-	return composeChoiceCompletionPayload(sess, email)
-}
-
-func buildLegacyCompleteRegistrationPendingResponse(
-	sess *dbent.PendingAuthSession,
-	forceEmail bool,
-	verifyRequired bool,
-) map[string]any {
-	return composeLegacyRegistrationPendingResponse(sess, forceEmail, verifyRequired)
 }

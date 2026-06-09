@@ -24,15 +24,15 @@ import (
 )
 
 const (
-	dtCookiePath         = "/api/v1/auth/oauth/dingtalk"
-	dtStateCookie        = "dingtalk_oauth_state"
-	dtRedirectCookie     = "dingtalk_oauth_redirect"
-	dtIntentCookie       = "dingtalk_oauth_intent"
-	dtBindUserCookie     = "dingtalk_oauth_bind_user"
-	dtCookieMaxAge       = 600
-	dtDefaultRedirect    = "/dashboard"
-	dtDefaultFrontendCB  = "/auth/dingtalk/callback"
-	dtSyntheticDomain    = service.DingTalkConnectSyntheticEmailDomain
+	dtCookiePath        = "/api/v1/auth/oauth/dingtalk"
+	dtStateCookie       = "dingtalk_oauth_state"
+	dtRedirectCookie    = "dingtalk_oauth_redirect"
+	dtIntentCookie      = "dingtalk_oauth_intent"
+	dtBindUserCookie    = "dingtalk_oauth_bind_user"
+	dtCookieMaxAge      = 600
+	dtDefaultRedirect   = "/dashboard"
+	dtDefaultFrontendCB = "/auth/dingtalk/callback"
+	dtSyntheticDomain   = service.DingTalkConnectSyntheticEmailDomain
 )
 
 func setDTCookie(c *gin.Context, name, value string, maxAge int, secure bool) {

@@ -215,11 +215,6 @@ func deduplicateAndSortKeys(keys ...string) []string {
 	return sorted
 }
 
-// normalizeLockKeys is an alias kept for callers outside this file.
-func normalizeLockKeys(keys ...string) []string {
-	return deduplicateAndSortKeys(keys...)
-}
-
 // advisoryLockHash computes a 64-bit FNV-1a hash suitable for Postgres advisory locks.
 func advisoryLockHash(key string) int64 {
 	h := fnv.New64a()
@@ -569,11 +564,6 @@ func expandCompatibleProviderKeys(providerType, providerKey string) []string {
 	return candidates
 }
 
-// compatibleIdentityProviderKeys is kept as a package-level alias for callers.
-func compatibleIdentityProviderKeys(providerType, providerKey string) []string {
-	return expandCompatibleProviderKeys(providerType, providerKey)
-}
-
 // resolveCanonicalProviderKey decides which provider key should be stored,
 // preferring "wechat-main" over "wechat" for the wechat provider type.
 func resolveCanonicalProviderKey(providerType, currentKey, incomingKey string) string {
@@ -595,11 +585,6 @@ func resolveCanonicalProviderKey(providerType, currentKey, incomingKey string) s
 	return curr
 }
 
-// canonicalizeCompatibleIdentityProviderKey is kept as a package-level alias for callers.
-func canonicalizeCompatibleIdentityProviderKey(providerType, existingKey, requestedKey string) string {
-	return resolveCanonicalProviderKey(providerType, existingKey, requestedKey)
-}
-
 // providerKeyPriority returns a sort-order rank for a provider key. Lower is better.
 func providerKeyPriority(providerType, providerKey string) int {
 	pt := strings.TrimSpace(strings.ToLower(providerType))
@@ -617,11 +602,6 @@ func providerKeyPriority(providerType, providerKey string) int {
 	}
 }
 
-// compatibleIdentityProviderKeyRank is kept as a package-level alias.
-func compatibleIdentityProviderKeyRank(providerType, providerKey string) int {
-	return providerKeyPriority(providerType, providerKey)
-}
-
 // pickOwnedIdentity selects the best-ranked identity owned by the given user.
 func pickOwnedIdentity(records []*dbent.AuthIdentity, ownerID int64) *dbent.AuthIdentity {
 	var best *dbent.AuthIdentity
@@ -636,11 +616,6 @@ func pickOwnedIdentity(records []*dbent.AuthIdentity, ownerID int64) *dbent.Auth
 	return best
 }
 
-// selectOwnedCompatibleIdentity is kept as a package-level alias.
-func selectOwnedCompatibleIdentity(records []*dbent.AuthIdentity, userID int64) *dbent.AuthIdentity {
-	return pickOwnedIdentity(records, userID)
-}
-
 // detectIdentityOwnerConflict returns true if any record belongs to a different user.
 func detectIdentityOwnerConflict(records []*dbent.AuthIdentity, ownerID int64) bool {
 	for _, rec := range records {
@@ -649,11 +624,6 @@ func detectIdentityOwnerConflict(records []*dbent.AuthIdentity, ownerID int64) b
 		}
 	}
 	return false
-}
-
-// hasCompatibleIdentityConflict is kept as a package-level alias.
-func hasCompatibleIdentityConflict(records []*dbent.AuthIdentity, userID int64) bool {
-	return detectIdentityOwnerConflict(records, userID)
 }
 
 // pickOwnedChannel selects the best-ranked channel whose parent identity
@@ -671,11 +641,6 @@ func pickOwnedChannel(records []*dbent.AuthIdentityChannel, ownerID int64) *dben
 	return best
 }
 
-// selectOwnedCompatibleChannel is kept as a package-level alias.
-func selectOwnedCompatibleChannel(records []*dbent.AuthIdentityChannel, userID int64) *dbent.AuthIdentityChannel {
-	return pickOwnedChannel(records, userID)
-}
-
 // detectChannelOwnerConflict returns true if any channel record belongs to
 // a different user (via its parent identity edge).
 func detectChannelOwnerConflict(records []*dbent.AuthIdentityChannel, ownerID int64) bool {
@@ -685,11 +650,6 @@ func detectChannelOwnerConflict(records []*dbent.AuthIdentityChannel, ownerID in
 		}
 	}
 	return false
-}
-
-// hasCompatibleChannelConflict is kept as a package-level alias.
-func hasCompatibleChannelConflict(records []*dbent.AuthIdentityChannel, userID int64) bool {
-	return detectChannelOwnerConflict(records, userID)
 }
 
 func (r *userRepository) RecordProviderGrant(ctx context.Context, input ProviderGrantRecordInput) (bool, error) {
@@ -786,11 +746,6 @@ func buildAdoptionLockKeys(sessionID int64, identityID *int64) []string {
 		lockKeys = append(lockKeys, fmt.Sprintf("identity-adoption:identity:%d", *identityID))
 	}
 	return lockKeys
-}
-
-// identityAdoptionDecisionLockKeys is kept as a package-level alias.
-func identityAdoptionDecisionLockKeys(pendingAuthSessionID int64, identityID *int64) []string {
-	return buildAdoptionLockKeys(pendingAuthSessionID, identityID)
 }
 
 func (r *userRepository) GetIdentityAdoptionDecisionByPendingAuthSessionID(ctx context.Context, pendingAuthSessionID int64) (*dbent.IdentityAdoptionDecision, error) {
@@ -910,11 +865,6 @@ func duplicateMetadataMap(src map[string]any) map[string]any {
 	return dst
 }
 
-// copyMetadata is kept as a package-level alias.
-func copyMetadata(in map[string]any) map[string]any {
-	return duplicateMetadataMap(in)
-}
-
 // ensureChannelProviderConsistency validates that, when a channel is present,
 // its provider type and key match the canonical identity.
 func ensureChannelProviderConsistency(canonical AuthIdentityKey, channel *AuthIdentityChannelKey) error {
@@ -932,11 +882,6 @@ func ensureChannelProviderConsistency(canonical AuthIdentityKey, channel *AuthId
 	}
 
 	return nil
-}
-
-// validateAuthIdentityChannelProviderMatch is kept as a package-level alias.
-func validateAuthIdentityChannelProviderMatch(canonical AuthIdentityKey, channel *AuthIdentityChannelKey) error {
-	return ensureChannelProviderConsistency(canonical, channel)
 }
 
 // resolveTransactionAwareExecutor returns a SQL executor that respects the
@@ -967,11 +912,6 @@ func (r *userRepository) obtainProfileIdentitySQL(ctx context.Context) (sqlQuery
 	return executor, nil
 }
 
-// userProfileIdentitySQL is kept as a method alias.
-func (r *userRepository) userProfileIdentitySQL(ctx context.Context) (sqlQueryExecutor, error) {
-	return r.obtainProfileIdentitySQL(ctx)
-}
-
 // extractSQLFromEntClient uses reflection to obtain the underlying SQL driver
 // from an ent client, enabling raw SQL queries within the same connection.
 func extractSQLFromEntClient(c *dbent.Client) sqlQueryExecutor {
@@ -992,9 +932,4 @@ func extractSQLFromEntClient(c *dbent.Client) sqlQueryExecutor {
 		return nil
 	}
 	return executor
-}
-
-// sqlExecutorFromEntClient is kept as a package-level alias.
-func sqlExecutorFromEntClient(client *dbent.Client) sqlQueryExecutor {
-	return extractSQLFromEntClient(client)
 }

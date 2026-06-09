@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/telagod/subme/internal/config"
 	"github.com/telagod/subme/internal/handler"
 	"github.com/telagod/subme/internal/service"
-	"github.com/stretchr/testify/require"
 )
 
 func TestProvideServiceBuildInfo(t *testing.T) {
