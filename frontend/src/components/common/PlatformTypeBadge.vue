@@ -4,7 +4,9 @@
     <span :class="['inline-block text-[9px] leading-tight font-medium px-1 py-0 rounded', compactPlatformClass]">{{ compactPlatformLabel }}</span>
     <span :class="['inline-block text-[9px] leading-tight font-medium px-1 py-0 rounded', compactTypeClass]">{{ compactTypeLabel }}</span>
     <span v-if="planLabel" :class="['inline-block text-[9px] leading-tight font-medium px-1 py-0 rounded', compactPlanClass]">{{ planLabel }}</span>
-    <span v-if="privacyBadge" class="text-[9px] leading-tight" :title="privacyBadge.title">🔒</span>
+    <span v-if="privacyBadge" :class="['inline-flex items-center rounded px-0.5 py-0', privacyBadge.class]" :title="privacyBadge.title">
+      <svg class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+    </span>
   </div>
   <!-- Full mode: existing two-row badge blocks -->
   <div v-else class="inline-flex flex-col gap-0.5 text-xs font-medium">
