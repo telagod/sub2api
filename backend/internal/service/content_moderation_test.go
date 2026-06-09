@@ -393,7 +393,7 @@ func TestBuildContentModerationLog_RedactsInputExcerpt(t *testing.T) {
 	log := svc.buildLog(input, cfg, ContentModerationActionAllow, true, "sexual", 0.8, map[string]float64{"sexual": 0.8}, "hello sk-proj-1234567890abcdef", nil, nil, "")
 
 	require.NotContains(t, log.InputExcerpt, "sk-proj-1234567890abcdef")
-	require.Contains(t, log.InputExcerpt, "[已脱敏]")
+	require.Contains(t, log.InputExcerpt, "[REDACTED]")
 }
 
 func TestRedactContentModerationSecrets_LongHexAndTokens(t *testing.T) {
@@ -405,7 +405,7 @@ func TestRedactContentModerationSecrets_LongHexAndTokens(t *testing.T) {
 	require.NotContains(t, out, "abc123456789xyz")
 	require.NotContains(t, out, "eyJhbGciOiJIUzI1NiJ9")
 	require.NotContains(t, out, "https://example.com/private/path")
-	require.Contains(t, out, "[已脱敏]")
+	require.Contains(t, out, "[REDACTED]")
 }
 
 func TestContentModerationConfigNormalize_NonHitRetentionMaxThreeDays(t *testing.T) {
@@ -957,7 +957,7 @@ func TestBuildModerationTestInputRejectsMultipleImages(t *testing.T) {
 	})
 
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "最多上传 1 张测试图片")
+	require.Contains(t, err.Error(), "at most 1 test images allowed")
 }
 
 func TestExtractContentModerationInput_OpenAIResponsesCodexPayloadUsesLastUserMessage(t *testing.T) {

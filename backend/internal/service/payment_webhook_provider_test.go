@@ -295,7 +295,7 @@ func TestGetOrderProviderInstanceRejectsMissingSnapshotInstanceWithoutLegacyFall
 	got, err := svc.getOrderProviderInstance(ctx, order)
 	require.Nil(t, got)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "provider snapshot instance 999999 is missing")
+	require.Contains(t, err.Error(), "provider snapshot instance 999999 not found")
 }
 
 func TestGetWebhookProviderRejectsAmbiguousRegistryFallback(t *testing.T) {

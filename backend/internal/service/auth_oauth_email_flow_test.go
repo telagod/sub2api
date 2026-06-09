@@ -395,7 +395,7 @@ func TestRollbackOAuthEmailAccountCreationPropagatesDeleteError(t *testing.T) {
 	err := authService.RollbackOAuthEmailAccountCreation(context.Background(), 42, "")
 
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "delete created oauth user")
+	require.Contains(t, err.Error(), "failed to remove partially-created oauth user")
 }
 
 func TestFinalizeOAuthEmailAccount_SnapshotsPlatformQuotaDefaults(t *testing.T) {

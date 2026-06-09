@@ -97,6 +97,9 @@ func (f *UserPlatformQuotaUsageFlusher) onTick() {
 }
 
 func (f *UserPlatformQuotaUsageFlusher) drainAll() {
+	if f == nil {
+		return
+	}
 	root := context.Background()
 	for round := 0; round < flusherMaxBatchesPerTick; round++ {
 		if !f.drainOneBatch(root) {

@@ -272,6 +272,7 @@ func TestImportDataReusesProxyAndSkipsDefaultGroup(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 
 	require.Len(t, adminSvc.createdProxies, 0)
-	require.Len(t, adminSvc.createdAccounts, 1)
-	require.True(t, adminSvc.createdAccounts[0].SkipDefaultGroupBind)
+	require.Len(t, adminSvc.bulkCreatedAccounts, 1)
+	require.Len(t, adminSvc.bulkCreatedGroups, 1)
+	require.Empty(t, adminSvc.bulkCreatedGroups[0], "skip_default_group_bind should result in no group IDs")
 }

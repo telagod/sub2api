@@ -312,7 +312,7 @@ func TestParseGitHubOAuthProfileRejectsPublicEmailWhenEmailsEndpointFails(t *tes
 
 	require.Error(t, err)
 	require.Nil(t, profile)
-	require.Contains(t, err.Error(), "github emails endpoint status 403")
+	require.Contains(t, err.Error(), "github emails endpoint returned status 403")
 }
 
 type oauthEmailAffiliateBindCall struct {

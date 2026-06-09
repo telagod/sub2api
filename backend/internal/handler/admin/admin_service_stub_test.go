@@ -20,6 +20,8 @@ type stubAdminService struct {
 	boundAuthIdentity    *service.AdminBindAuthIdentityInput
 	boundAuthIdentityFor int64
 	createdAccounts      []*service.CreateAccountInput
+	bulkCreatedAccounts  []*service.Account
+	bulkCreatedGroups    [][]int64
 	createdProxies       []*service.CreateProxyInput
 	updatedProxyIDs      []int64
 	updatedProxies       []*service.UpdateProxyInput
@@ -633,6 +635,8 @@ func (s *stubAdminService) RevertAccountProxyFallback(ctx context.Context, id in
 }
 
 func (s *stubAdminService) BulkCreateAccounts(ctx context.Context, accounts []*service.Account, groupIDsPerAccount [][]int64) error {
+	s.bulkCreatedAccounts = append(s.bulkCreatedAccounts, accounts...)
+	s.bulkCreatedGroups = append(s.bulkCreatedGroups, groupIDsPerAccount...)
 	return nil
 }
 
