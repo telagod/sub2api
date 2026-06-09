@@ -64,15 +64,15 @@ func waitFor(t *testing.T, timeout time.Duration, msg string, cond func() bool) 
 }
 
 func runnerTaskCount(r *ChannelMonitorRunner) int {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return len(r.tasks)
+	r.guard.Lock()
+	defer r.guard.Unlock()
+	return len(r.taskMap)
 }
 
 func runnerTaskPtr(r *ChannelMonitorRunner, id int64) *scheduledMonitor {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.tasks[id]
+	r.guard.Lock()
+	defer r.guard.Unlock()
+	return r.taskMap[id]
 }
 
 // TestSchedule_AddsTaskAndFiresOnce 验证 Schedule 后立即触发一次首检测，并把任务记入 tasks 表。

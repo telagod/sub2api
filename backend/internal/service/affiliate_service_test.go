@@ -23,27 +23,27 @@ func TestResolveRebateRatePercent_PerUserOverride(t *testing.T) {
 
 	// nil exclusive rate → falls back to global default (20%)
 	require.InDelta(t, AffiliateRebateRateDefault,
-		svc.resolveRebateRatePercent(context.Background(), &AffiliateSummary{}), 1e-9)
+		svc.effectiveRate(context.Background(), &AffiliateSummary{}), 1e-9)
 
 	// exclusive rate set → overrides global
 	rate := 50.0
 	require.InDelta(t, 50.0,
-		svc.resolveRebateRatePercent(context.Background(), &AffiliateSummary{AffRebateRatePercent: &rate}), 1e-9)
+		svc.effectiveRate(context.Background(), &AffiliateSummary{AffRebateRatePercent: &rate}), 1e-9)
 
 	// exclusive rate 0 → returns 0 (no rebate, intentional)
 	zero := 0.0
 	require.InDelta(t, 0.0,
-		svc.resolveRebateRatePercent(context.Background(), &AffiliateSummary{AffRebateRatePercent: &zero}), 1e-9)
+		svc.effectiveRate(context.Background(), &AffiliateSummary{AffRebateRatePercent: &zero}), 1e-9)
 
 	// exclusive rate above max → clamped to Max
 	tooHigh := 250.0
 	require.InDelta(t, AffiliateRebateRateMax,
-		svc.resolveRebateRatePercent(context.Background(), &AffiliateSummary{AffRebateRatePercent: &tooHigh}), 1e-9)
+		svc.effectiveRate(context.Background(), &AffiliateSummary{AffRebateRatePercent: &tooHigh}), 1e-9)
 
 	// exclusive rate below min → clamped to Min
 	tooLow := -5.0
 	require.InDelta(t, AffiliateRebateRateMin,
-		svc.resolveRebateRatePercent(context.Background(), &AffiliateSummary{AffRebateRatePercent: &tooLow}), 1e-9)
+		svc.effectiveRate(context.Background(), &AffiliateSummary{AffRebateRatePercent: &tooLow}), 1e-9)
 }
 
 // TestIsEnabled_NilSettingServiceReturnsDefault verifies that IsEnabled
@@ -62,31 +62,31 @@ func TestIsEnabled_NilSettingServiceReturnsDefault(t *testing.T) {
 // are accepted, NaN/Inf and out-of-range values produce a typed BadRequest.
 func TestValidateExclusiveRate_BoundaryAndInvalid(t *testing.T) {
 	t.Parallel()
-	require.NoError(t, validateExclusiveRate(nil))
+	require.NoError(t, checkExclusiveRate(nil))
 
 	for _, v := range []float64{0, 0.01, 50, 99.99, 100} {
 		v := v
-		require.NoError(t, validateExclusiveRate(&v), "value %v should be valid", v)
+		require.NoError(t, checkExclusiveRate(&v), "value %v should be valid", v)
 	}
 
 	for _, v := range []float64{-0.01, 100.01, -100, 200} {
 		v := v
-		require.Error(t, validateExclusiveRate(&v), "value %v should be rejected", v)
+		require.Error(t, checkExclusiveRate(&v), "value %v should be rejected", v)
 	}
 
 	nan := math.NaN()
-	require.Error(t, validateExclusiveRate(&nan))
+	require.Error(t, checkExclusiveRate(&nan))
 	posInf := math.Inf(1)
-	require.Error(t, validateExclusiveRate(&posInf))
+	require.Error(t, checkExclusiveRate(&posInf))
 	negInf := math.Inf(-1)
-	require.Error(t, validateExclusiveRate(&negInf))
+	require.Error(t, checkExclusiveRate(&negInf))
 }
 
 func TestMaskEmail(t *testing.T) {
 	t.Parallel()
-	require.Equal(t, "a***@g***.com", maskEmail("alice@gmail.com"))
-	require.Equal(t, "x***@d***", maskEmail("x@domain"))
-	require.Equal(t, "", maskEmail(""))
+	require.Equal(t, "a***@g***.com", obscureEmail("alice@gmail.com"))
+	require.Equal(t, "x***@d***", obscureEmail("x@domain"))
+	require.Equal(t, "", obscureEmail(""))
 }
 
 func TestIsValidAffiliateCodeFormat(t *testing.T) {
@@ -125,7 +125,7 @@ func TestIsValidAffiliateCodeFormat(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			require.Equal(t, tc.want, isValidAffiliateCodeFormat(tc.in))
+			require.Equal(t, tc.want, validCodeFormat(tc.in))
 		})
 	}
 }

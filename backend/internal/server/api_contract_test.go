@@ -1663,7 +1663,7 @@ func (s *stubAccountRepo) List(ctx context.Context, params pagination.Pagination
 	return nil, nil, errors.New("not implemented")
 }
 
-func (s *stubAccountRepo) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64, privacyMode string) ([]service.Account, *pagination.PaginationResult, error) {
+func (s *stubAccountRepo) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64, privacyMode string, extraFilters ...map[string]string) ([]service.Account, *pagination.PaginationResult, error) {
 	return nil, nil, errors.New("not implemented")
 }
 
@@ -1802,6 +1802,10 @@ func (s *stubAccountRepo) ListCRSAccountIDs(ctx context.Context) (map[string]int
 
 func (s *stubAccountRepo) RevertProxyFallback(ctx context.Context, accountID int64) error {
 	return nil
+}
+
+func (s *stubAccountRepo) BulkCreate(ctx context.Context, accounts []*service.Account, groupIDsPerAccount [][]int64) error {
+	return errors.New("not implemented")
 }
 
 type stubProxyRepo struct{}

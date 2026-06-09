@@ -79,7 +79,7 @@ func (s *accountRepoStub) List(ctx context.Context, params pagination.Pagination
 	panic("unexpected List call")
 }
 
-func (s *accountRepoStub) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64, privacyMode string) ([]Account, *pagination.PaginationResult, error) {
+func (s *accountRepoStub) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64, privacyMode string, extraFilters ...map[string]string) ([]Account, *pagination.PaginationResult, error) {
 	panic("unexpected ListWithFilters call")
 }
 
@@ -213,6 +213,10 @@ func (s *accountRepoStub) ResetQuotaUsed(ctx context.Context, id int64) error {
 
 func (s *accountRepoStub) RevertProxyFallback(ctx context.Context, accountID int64) error {
 	panic("unexpected RevertProxyFallback call")
+}
+
+func (s *accountRepoStub) BulkCreate(ctx context.Context, accounts []*Account, groupIDsPerAccount [][]int64) error {
+	panic("unexpected BulkCreate call")
 }
 
 // TestAccountService_Delete_NotFound 测试删除不存在的账号时返回正确的错误。

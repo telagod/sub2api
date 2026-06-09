@@ -79,7 +79,7 @@ func (m *mockAccountRepoForGemini) Delete(ctx context.Context, id int64) error  
 func (m *mockAccountRepoForGemini) List(ctx context.Context, params pagination.PaginationParams) ([]Account, *pagination.PaginationResult, error) {
 	return nil, nil, nil
 }
-func (m *mockAccountRepoForGemini) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64, privacyMode string) ([]Account, *pagination.PaginationResult, error) {
+func (m *mockAccountRepoForGemini) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64, privacyMode string, extraFilters ...map[string]string) ([]Account, *pagination.PaginationResult, error) {
 	return nil, nil, nil
 }
 func (m *mockAccountRepoForGemini) ListByGroup(ctx context.Context, groupID int64) ([]Account, error) {
@@ -188,6 +188,10 @@ func (m *mockAccountRepoForGemini) ResetQuotaUsed(ctx context.Context, id int64)
 }
 
 func (m *mockAccountRepoForGemini) RevertProxyFallback(ctx context.Context, accountID int64) error {
+	return nil
+}
+
+func (m *mockAccountRepoForGemini) BulkCreate(ctx context.Context, accounts []*Account, groupIDsPerAccount [][]int64) error {
 	return nil
 }
 

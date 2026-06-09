@@ -474,14 +474,14 @@ func TestAuthPendingIdentityService_ConsumeBrowserSessionRejectsStaleLoadedSessi
 	})
 	require.NoError(t, err)
 
-	loaded, err := svc.getBrowserSession(ctx, session.SessionToken)
+	loaded, err := svc.lookupBrowserSession(ctx, session.SessionToken)
 	require.NoError(t, err)
 
-	consumed, err := svc.consumeSession(ctx, loaded, "browser-session", ErrPendingAuthSessionExpired, ErrPendingAuthSessionConsumed)
+	consumed, err := svc.markSessionConsumed(ctx, loaded, "browser-session", ErrPendingAuthSessionExpired, ErrPendingAuthSessionConsumed)
 	require.NoError(t, err)
 	require.NotNil(t, consumed.ConsumedAt)
 
-	_, err = svc.consumeSession(ctx, loaded, "browser-session", ErrPendingAuthSessionExpired, ErrPendingAuthSessionConsumed)
+	_, err = svc.markSessionConsumed(ctx, loaded, "browser-session", ErrPendingAuthSessionExpired, ErrPendingAuthSessionConsumed)
 	require.ErrorIs(t, err, ErrPendingAuthSessionConsumed)
 }
 

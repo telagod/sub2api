@@ -113,7 +113,7 @@ func TestUserAvailableChannel_FieldWhitelist(t *testing.T) {
 	}
 
 	// pricing interval 白名单：不应暴露 id / sort_order。
-	pricing := toUserPricing(&service.ChannelModelPricing{
+	pricing := convertPricing(&service.ChannelModelPricing{
 		BillingMode: service.BillingModeToken,
 		Intervals: []service.PricingInterval{
 			{ID: 7, MinTokens: 0, MaxTokens: nil, SortOrder: 3},
@@ -146,7 +146,7 @@ func TestBuildPlatformSections_GroupsByPlatform(t *testing.T) {
 		{ID: 2, Name: "g-ant", Platform: "anthropic"},
 		{ID: 3, Name: "g-empty", Platform: ""},
 	}
-	sections := buildPlatformSections(ch, visible)
+	sections := assemblePlatformSections(ch, visible)
 	require.Len(t, sections, 2)
 	require.Equal(t, "anthropic", sections[0].Platform)
 	require.Equal(t, "openai", sections[1].Platform)
