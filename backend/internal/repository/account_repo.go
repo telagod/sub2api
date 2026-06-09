@@ -424,10 +424,7 @@ func (r *accountRepository) Update(ctx context.Context, account *service.Account
 	if account == nil {
 		return nil
 	}
-	schedulable := account.Schedulable
-	if account.Status == service.StatusError {
-		schedulable = false
-	}
+	canSchedule := account.Schedulable && account.Status != service.StatusError
 
 	encCredentials, encErr := r.cipher.EncryptMap(normalizeJSONMap(account.Credentials))
 	if encErr != nil {
@@ -444,7 +441,7 @@ func (r *accountRepository) Update(ctx context.Context, account *service.Account
 		SetPriority(account.Priority).
 		SetStatus(account.Status).
 		SetErrorMessage(account.ErrorMessage).
-		SetSchedulable(schedulable).
+		SetSchedulable(canSchedule).
 		SetAutoPauseOnExpired(account.AutoPauseOnExpired)
 
 	if account.RateMultiplier != nil {
@@ -569,7 +566,7 @@ func (r *accountRepository) Delete(ctx context.Context, id int64) error {
 			return err
 		}
 	}
-	r.deleteSchedulerAccountSnapshot(ctx, id)
+	r.evictSchedulerEntry(ctx, id)
 	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventAccountChanged, &id, nil, buildSchedulerGroupPayload(groupIDs)); err != nil {
 		logger.LegacyPrintf("repository.account", "[SchedulerOutbox] enqueue account delete failed: account=%d err=%v", id, err)
 	}
@@ -890,12 +887,12 @@ func (r *accountRepository) syncSchedulerAccountSnapshot(ctx context.Context, ac
 	}
 }
 
-func (r *accountRepository) deleteSchedulerAccountSnapshot(ctx context.Context, accountID int64) {
-	if r == nil || r.schedulerCache == nil || accountID <= 0 {
+func (r *accountRepository) evictSchedulerEntry(ctx context.Context, id int64) {
+	if r == nil || r.schedulerCache == nil || id <= 0 {
 		return
 	}
-	if err := r.schedulerCache.DeleteAccount(ctx, accountID); err != nil {
-		logger.LegacyPrintf("repository.account", "[Scheduler] delete account snapshot failed: id=%d err=%v", accountID, err)
+	if err := r.schedulerCache.DeleteAccount(ctx, id); err != nil {
+		logger.LegacyPrintf("repository.account", "[Scheduler] evict entry failed: id=%d err=%v", id, err)
 	}
 }
 
@@ -1221,10 +1218,8 @@ func (r *accountRepository) SetModelRateLimit(ctx context.Context, id int64, sco
 		"rate_limited_at":     now.Format(time.RFC3339),
 		"rate_limit_reset_at": resetAt.UTC().Format(time.RFC3339),
 	}
-	if len(reason) > 0 {
-		if value := strings.TrimSpace(reason[0]); value != "" {
-			payload["reason"] = value
-		}
+	if len(reason) > 0 && strings.TrimSpace(reason[0]) != "" {
+		payload["reason"] = strings.TrimSpace(reason[0])
 	}
 	raw, err := json.Marshal(payload)
 	if err != nil {
@@ -1409,16 +1404,13 @@ func (r *accountRepository) UpdateSessionWindow(ctx context.Context, id int64, s
 }
 
 func (r *accountRepository) UpdateSessionWindowEnd(ctx context.Context, id int64, end time.Time) error {
-	_, err := r.client.Account.Update().
+	if _, err := r.client.Account.Update().
 		Where(dbaccount.IDEQ(id)).
 		SetSessionWindowEnd(end).
-		Save(ctx)
-	if err != nil {
+		Save(ctx); err != nil {
 		return err
 	}
-	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventAccountChanged, &id, nil, nil); err != nil {
-		logger.LegacyPrintf("repository.account", "[SchedulerOutbox] enqueue session window end update failed: account=%d err=%v", id, err)
-	}
+	_ = enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventAccountChanged, &id, nil, nil)
 	return nil
 }
 
@@ -1760,10 +1752,10 @@ func (r *accountRepository) accountsToService(ctx context.Context, accounts []*d
 			}
 		}
 		out.ProxyFallbackOriginID = acc.ProxyFallbackOriginID
-		if acc.ProxyFallbackOriginID != nil {
-			if op, ok := proxyMap[*acc.ProxyFallbackOriginID]; ok && op != nil {
-				n := op.Name
-				out.ProxyFallbackOriginName = &n
+		if fid := acc.ProxyFallbackOriginID; fid != nil {
+			if fp, found := proxyMap[*fid]; found && fp != nil {
+				name := fp.Name
+				out.ProxyFallbackOriginName = &name
 			}
 		}
 		if groups, ok := groupsByAccount[acc.ID]; ok {
@@ -2213,20 +2205,22 @@ func (r *accountRepository) ResetQuotaUsed(ctx context.Context, id int64) error 
 
 // RevertProxyFallback 将账号的 proxy_id 切回 proxy_fallback_origin_id，并清空 origin 字段。
 // 仅当 proxy_fallback_origin_id IS NOT NULL 时执行更新；
-// 若影响行数为 0，则返回 ErrAccountNotInFallback（账号存在但不在 fallback 状态）。
 func (r *accountRepository) RevertProxyFallback(ctx context.Context, accountID int64) error {
-	res, err := r.sql.ExecContext(ctx, `
-		UPDATE accounts SET proxy_id=proxy_fallback_origin_id, proxy_fallback_origin_id=NULL, updated_at=NOW()
-		WHERE id=$1 AND proxy_fallback_origin_id IS NOT NULL AND deleted_at IS NULL`, accountID)
+	const stmt = `UPDATE accounts
+		SET proxy_id = proxy_fallback_origin_id,
+		    proxy_fallback_origin_id = NULL,
+		    updated_at = NOW()
+		WHERE id = $1
+		  AND proxy_fallback_origin_id IS NOT NULL
+		  AND deleted_at IS NULL`
+	result, err := r.sql.ExecContext(ctx, stmt, accountID)
 	if err != nil {
 		return err
 	}
-	n, _ := res.RowsAffected()
-	if n == 0 {
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
 		return service.ErrAccountNotInFallback
 	}
-	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventAccountChanged, &accountID, nil, nil); err != nil {
-		logger.LegacyPrintf("repository.account", "[SchedulerOutbox] revert fallback enqueue failed: account=%d err=%v", accountID, err)
-	}
+	_ = enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventAccountChanged, &accountID, nil, nil)
 	return nil
 }

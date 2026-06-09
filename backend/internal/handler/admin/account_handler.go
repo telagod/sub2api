@@ -583,7 +583,7 @@ func (h *AccountHandler) Create(c *gin.Context) {
 	}
 	// OpenAI APIKey 账号创建后异步探测上游 /v1/responses 能力。
 	// 探测失败不影响账号创建响应。
-	h.scheduleOpenAIResponsesProbe(createdAccount)
+	h.asyncProbeResponsesAPI(createdAccount)
 	response.Success(c, result.Data)
 }
 
@@ -647,33 +647,27 @@ func (h *AccountHandler) Update(c *gin.Context) {
 	// OpenAI APIKey: credentials 修改后重新探测上游能力（base_url/api_key 可能变更）。
 	// 异步执行，探测失败不影响账号更新响应。
 	if len(req.Credentials) > 0 {
-		h.scheduleOpenAIResponsesProbe(account)
+		h.asyncProbeResponsesAPI(account)
 	}
 
 	response.Success(c, h.buildAccountResponseWithRuntime(c.Request.Context(), account))
 }
 
-// scheduleOpenAIResponsesProbe 异步触发 OpenAI APIKey 账号的 Responses API 能力探测。
-//
-// 仅对 platform=openai && type=apikey 账号生效；其他账号无操作。
-// 探测本身在 goroutine 中执行（会发一次 HTTP 请求到上游），不会阻塞
-// 当前请求。探测错误仅记录日志，不向上下文传播：探测失败时标记保持缺失，
-// 网关会按"现状即证据"默认走 Responses。
-func (h *AccountHandler) scheduleOpenAIResponsesProbe(account *service.Account) {
-	if account == nil || account.Platform != service.PlatformOpenAI || account.Type != service.AccountTypeAPIKey {
+func (h *AccountHandler) asyncProbeResponsesAPI(acct *service.Account) {
+	if acct == nil || h.accountTestService == nil {
 		return
 	}
-	if h.accountTestService == nil {
+	if acct.Platform != service.PlatformOpenAI || acct.Type != service.AccountTypeAPIKey {
 		return
 	}
-	accountID := account.ID
+	id := acct.ID
 	go func() {
 		defer func() {
-			if r := recover(); r != nil {
-				slog.Error("openai_responses_probe_panic", "account_id", accountID, "recover", r)
+			if v := recover(); v != nil {
+				slog.Error("responses_probe_panic", "account_id", id, "recover", v)
 			}
 		}()
-		h.accountTestService.ProbeOpenAIAPIKeyResponsesSupport(context.Background(), accountID)
+		h.accountTestService.ProbeOpenAIAPIKeyResponsesSupport(context.Background(), id)
 	}()
 }
 
@@ -987,26 +981,14 @@ type ApplyOAuthCredentialsRequest struct {
 	Extra       map[string]any `json:"extra"`
 }
 
-// ApplyOAuthCredentials 将"重新授权"得到的新凭据原子落库。
+// ApplyOAuthCredentials persists re-authorized OAuth credentials.
 // POST /api/v1/admin/accounts/:id/apply-oauth-credentials
-//
-// 与通用 PUT /:id (Update) 接口的关键区别：
-//   - 仅接收 type / credentials / extra 三个字段（不接受 concurrency / rpm / quota_* 等可能误传的字段）
-//   - Extra 走 UpdateAccountExtra(JSONB key 级合并)，**绝不**全量覆盖；
-//     避免 base_rpm / window_cost_limit / max_sessions / quota_* / privacy_mode
-//     等持久化配置在重新授权后丢失
-//   - 内置 ClearError + InvalidateToken，避免前端额外两次调用，
-//     并修复旧路径未失效 token 缓存导致重新授权后立即 401 的隐性 bug
-//
-// 与 /refresh 的区别：/refresh 用现有 refresh_token 换 access_token（无用户交互），
-// 本接口承接前端完成完整 OAuth 流程后的落库步骤。
 func (h *AccountHandler) ApplyOAuthCredentials(c *gin.Context) {
-	accountID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "Invalid account ID")
 		return
 	}
-
 	var req ApplyOAuthCredentialsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request: "+err.Error())
@@ -1014,9 +996,7 @@ func (h *AccountHandler) ApplyOAuthCredentials(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-
-	// 预检查账号存在 + OAuth 类型（与 Refresh handler 语义一致，提供更友好的错误信息）。
-	existing, err := h.adminService.GetAccount(ctx, accountID)
+	existing, err := h.adminService.GetAccount(ctx, id)
 	if err != nil {
 		response.NotFound(c, "Account not found")
 		return
@@ -1026,7 +1006,7 @@ func (h *AccountHandler) ApplyOAuthCredentials(c *gin.Context) {
 		return
 	}
 
-	updatedAccount, err := h.adminService.UpdateAccount(ctx, accountID, &service.UpdateAccountInput{
+	acct, err := h.adminService.UpdateAccount(ctx, id, &service.UpdateAccountInput{
 		Type:        req.Type,
 		Credentials: req.Credentials,
 	})
@@ -1035,43 +1015,25 @@ func (h *AccountHandler) ApplyOAuthCredentials(c *gin.Context) {
 		return
 	}
 
-	// 增量合并 Extra（JSONB key 级 merge，绝不覆盖 base_rpm / window_cost_limit /
-	// max_sessions / quota_* / privacy_mode 等持久化键）。
-	// best-effort：失败仅记日志；下方 ClearAccountError 会从 DB 重新读取最新 account，
-	// 因此响应里的 extra 始终以 DB 为准——这里不需要手动维护内存快照。
 	if len(req.Extra) > 0 {
-		if extraErr := h.adminService.UpdateAccountExtra(ctx, accountID, req.Extra); extraErr != nil {
-			extraKeys := make([]string, 0, len(req.Extra))
-			for k := range req.Extra {
-				extraKeys = append(extraKeys, k)
-			}
-			slog.Error("apply_oauth_credentials.update_extra_failed",
-				"account_id", accountID,
-				"extra_keys", extraKeys,
-				"err", extraErr,
-			)
+		if mergeErr := h.adminService.UpdateAccountExtra(ctx, id, req.Extra); mergeErr != nil {
+			slog.Error("reauth_extra_merge_failed", "account_id", id, "err", mergeErr)
 		}
 	}
 
-	if cleared, clearErr := h.adminService.ClearAccountError(ctx, accountID); clearErr != nil {
-		slog.Warn("apply_oauth_credentials.clear_error_failed",
-			"account_id", accountID,
-			"err", clearErr,
-		)
+	if cleared, clearErr := h.adminService.ClearAccountError(ctx, id); clearErr != nil {
+		slog.Warn("reauth_clear_error_failed", "account_id", id, "err", clearErr)
 	} else if cleared != nil {
-		updatedAccount = cleared
+		acct = cleared
 	}
 
-	if h.tokenCacheInvalidator != nil && updatedAccount.IsOAuth() {
-		if invalidateErr := h.tokenCacheInvalidator.InvalidateToken(ctx, updatedAccount); invalidateErr != nil {
-			slog.Warn("apply_oauth_credentials.invalidate_token_failed",
-				"account_id", accountID,
-				"err", invalidateErr,
-			)
+	if h.tokenCacheInvalidator != nil && acct.IsOAuth() {
+		if err := h.tokenCacheInvalidator.InvalidateToken(ctx, acct); err != nil {
+			slog.Warn("reauth_invalidate_token_failed", "account_id", id, "err", err)
 		}
 	}
 
-	response.Success(c, h.buildAccountResponseWithRuntime(ctx, updatedAccount))
+	response.Success(c, h.buildAccountResponseWithRuntime(ctx, acct))
 }
 
 // GetStats handles getting account statistics
@@ -1131,19 +1093,19 @@ func (h *AccountHandler) ClearError(c *gin.Context) {
 	response.Success(c, h.buildAccountResponseWithRuntime(c.Request.Context(), account))
 }
 
-// RevertProxyFallback handles reverting account proxy to original before fallback.
+// RevertProxyFallback restores the original proxy before fallback.
 // POST /api/v1/admin/accounts/:id/revert-proxy-fallback
 func (h *AccountHandler) RevertProxyFallback(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	accountID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "Invalid account ID")
 		return
 	}
-	if err := h.adminService.RevertAccountProxyFallback(c.Request.Context(), id); err != nil {
+	if err := h.adminService.RevertAccountProxyFallback(c.Request.Context(), accountID); err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, gin.H{"message": "reverted"})
+	response.Success(c, gin.H{"message": "proxy restored"})
 }
 
 // BatchClearError handles batch clearing account errors
@@ -1378,7 +1340,7 @@ func (h *AccountHandler) BatchCreate(c *gin.Context) {
 				}
 			}
 			// OpenAI APIKey 账号异步探测 /v1/responses 能力。
-			h.scheduleOpenAIResponsesProbe(account)
+			h.asyncProbeResponsesAPI(account)
 			success++
 			results = append(results, gin.H{
 				"name":    item.Name,
@@ -1556,7 +1518,7 @@ func (h *AccountHandler) BulkUpdate(c *gin.Context) {
 
 	result, err := h.adminService.BulkUpdateAccounts(c.Request.Context(), &service.BulkUpdateAccountsInput{
 		AccountIDs:            req.AccountIDs,
-		Filters:               toServiceBulkUpdateAccountFilters(req.Filters),
+		Filters:               mapBulkFilters(req.Filters),
 		Name:                  req.Name,
 		ProxyID:               req.ProxyID,
 		Concurrency:           req.Concurrency,
@@ -1592,17 +1554,13 @@ func (h *AccountHandler) BulkUpdate(c *gin.Context) {
 	response.Success(c, result)
 }
 
-func toServiceBulkUpdateAccountFilters(filters *BulkUpdateAccountFilters) *service.BulkUpdateAccountFilters {
-	if filters == nil {
+func mapBulkFilters(f *BulkUpdateAccountFilters) *service.BulkUpdateAccountFilters {
+	if f == nil {
 		return nil
 	}
 	return &service.BulkUpdateAccountFilters{
-		Platform:    filters.Platform,
-		Type:        filters.Type,
-		Status:      filters.Status,
-		Group:       filters.Group,
-		Search:      filters.Search,
-		PrivacyMode: filters.PrivacyMode,
+		Platform: f.Platform, Type: f.Type, Status: f.Status,
+		Group: f.Group, Search: f.Search, PrivacyMode: f.PrivacyMode,
 	}
 }
 
@@ -2103,7 +2061,7 @@ func (h *AccountHandler) GetAvailableModels(c *gin.Context) {
 	response.Success(c, models)
 }
 
-// SyncUpstreamModels handles syncing live supported models from an account's upstream.
+// SyncUpstreamModels fetches live supported models from an account's upstream.
 // POST /api/v1/admin/accounts/:id/models/sync-upstream
 func (h *AccountHandler) SyncUpstreamModels(c *gin.Context) {
 	accountID, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -2111,41 +2069,15 @@ func (h *AccountHandler) SyncUpstreamModels(c *gin.Context) {
 		response.BadRequest(c, "Invalid account ID")
 		return
 	}
-
-	account, err := h.adminService.GetAccount(c.Request.Context(), accountID)
+	acct, err := h.adminService.GetAccount(c.Request.Context(), accountID)
 	if err != nil {
 		response.NotFound(c, "Account not found")
 		return
 	}
-
-	if h.accountTestService == nil {
-		response.InternalError(c, "Account test service is not configured")
-		return
-	}
-
-	models, err := h.accountTestService.FetchUpstreamSupportedModels(c.Request.Context(), account)
-	if err != nil {
-		var syncErr *service.UpstreamModelSyncError
-		if errors.As(err, &syncErr) {
-			switch syncErr.Kind {
-			case service.UpstreamModelSyncErrorConfiguration, service.UpstreamModelSyncErrorUnsupported:
-				response.BadRequest(c, syncErr.SafeMessage())
-			default:
-				slog.Warn("sync_upstream_models_failed", "account_id", accountID, "kind", syncErr.Kind)
-				response.Error(c, http.StatusBadGateway, syncErr.SafeMessage())
-			}
-			return
-		}
-
-		slog.Warn("sync_upstream_models_failed", "account_id", accountID)
-		response.Error(c, http.StatusBadGateway, "Failed to sync upstream models from upstream")
-		return
-	}
-
-	response.Success(c, gin.H{"models": models})
+	h.fetchAndRespondModels(c, acct, "account_id", accountID)
 }
 
-// SyncUpstreamModelsPreview handles syncing live supported models using provided credentials (no account ID needed).
+// SyncUpstreamModelsPreview fetches models using provided credentials without persisting.
 // POST /api/v1/admin/accounts/models/sync-upstream-preview
 func (h *AccountHandler) SyncUpstreamModelsPreview(c *gin.Context) {
 	var req struct {
@@ -2158,40 +2090,35 @@ func (h *AccountHandler) SyncUpstreamModelsPreview(c *gin.Context) {
 		response.BadRequest(c, "Invalid request: "+err.Error())
 		return
 	}
-
-	tempAccount := &service.Account{
-		Platform: req.Platform,
-		Type:     req.Type,
-		Credentials: map[string]any{
-			"api_key":  req.APIKey,
-			"base_url": req.BaseURL,
-		},
+	ephemeral := &service.Account{
+		Platform:    req.Platform,
+		Type:        req.Type,
+		Credentials: map[string]any{"api_key": req.APIKey, "base_url": req.BaseURL},
 	}
+	h.fetchAndRespondModels(c, ephemeral, "platform", req.Platform)
+}
 
+func (h *AccountHandler) fetchAndRespondModels(c *gin.Context, acct *service.Account, logKey string, logVal any) {
 	if h.accountTestService == nil {
 		response.InternalError(c, "Account test service is not configured")
 		return
 	}
-
-	models, err := h.accountTestService.FetchUpstreamSupportedModels(c.Request.Context(), tempAccount)
+	models, err := h.accountTestService.FetchUpstreamSupportedModels(c.Request.Context(), acct)
 	if err != nil {
 		var syncErr *service.UpstreamModelSyncError
 		if errors.As(err, &syncErr) {
-			switch syncErr.Kind {
-			case service.UpstreamModelSyncErrorConfiguration, service.UpstreamModelSyncErrorUnsupported:
+			if syncErr.Kind == service.UpstreamModelSyncErrorConfiguration || syncErr.Kind == service.UpstreamModelSyncErrorUnsupported {
 				response.BadRequest(c, syncErr.SafeMessage())
-			default:
-				slog.Warn("sync_upstream_models_preview_failed", "platform", req.Platform, "kind", syncErr.Kind)
+			} else {
+				slog.Warn("upstream_model_sync_failed", logKey, logVal, "kind", syncErr.Kind)
 				response.Error(c, http.StatusBadGateway, syncErr.SafeMessage())
 			}
 			return
 		}
-
-		slog.Warn("sync_upstream_models_preview_failed", "platform", req.Platform)
-		response.Error(c, http.StatusBadGateway, "Failed to sync upstream models from upstream")
+		slog.Warn("upstream_model_sync_failed", logKey, logVal)
+		response.Error(c, http.StatusBadGateway, "Failed to fetch models from upstream")
 		return
 	}
-
 	response.Success(c, gin.H{"models": models})
 }
 
