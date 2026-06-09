@@ -1292,11 +1292,11 @@ func TestContentModerationCallModeration_400DoesNotFreezeAPIKey(t *testing.T) {
 	cfg.RetryCount = 5
 	svc := NewContentModerationService(nil, nil, nil, nil, nil, nil, nil)
 
-	_, err := svc.callModeration(context.Background(), cfg, "hello")
+	_, err := svc.invokeWithRetry(context.Background(), cfg, "hello")
 
 	require.Error(t, err)
 	require.Equal(t, 1, requestCount)
-	status := svc.apiKeyStatusForHash(0, moderationAPIKeyHash("sk-test"), maskSecretTail("sk-test"), true)
+	status := svc.resolveKeyStatus(0, moderationAPIKeyHash("sk-test"), maskSecretTail("sk-test"), true)
 	require.Equal(t, "error", status.Status)
 	require.Equal(t, http.StatusBadRequest, status.LastHTTPStatus)
 	require.Zero(t, status.FailureCount)
@@ -1331,10 +1331,10 @@ func TestContentModerationCallModeration_FreezesByHTTPStatus(t *testing.T) {
 			cfg.RetryCount = 0
 			svc := NewContentModerationService(nil, nil, nil, nil, nil, nil, nil)
 
-			_, err := svc.callModeration(context.Background(), cfg, "hello")
+			_, err := svc.invokeWithRetry(context.Background(), cfg, "hello")
 
 			require.Error(t, err)
-			status := svc.apiKeyStatusForHash(0, moderationAPIKeyHash("sk-test"), maskSecretTail("sk-test"), true)
+			status := svc.resolveKeyStatus(0, moderationAPIKeyHash("sk-test"), maskSecretTail("sk-test"), true)
 			require.Equal(t, "frozen", status.Status)
 			require.Equal(t, tt.statusCode, status.LastHTTPStatus)
 			require.Equal(t, 1, status.FailureCount)
@@ -1508,7 +1508,7 @@ func TestContentModerationAutoBanSkipsAdminAccount(t *testing.T) {
 	invalidator := &contentModerationTestAuthCacheInvalidator{}
 	svc := NewContentModerationService(nil, repo, nil, nil, userRepo, invalidator, nil)
 
-	svc.persistContentModerationLog(context.Background(), cfg, newContentModerationFlaggedLog(userID), "", false, true)
+	svc.writeLogAndSideEffects(context.Background(), cfg, newContentModerationFlaggedLog(userID), "", false, true)
 
 	logs := requireContentModerationLogCount(t, repo, 2)
 	require.Equal(t, 2, logs[1].ViolationCount)
@@ -1535,7 +1535,7 @@ func TestContentModerationAutoBanDisablesRegularUserAtThreshold(t *testing.T) {
 	invalidator := &contentModerationTestAuthCacheInvalidator{}
 	svc := NewContentModerationService(nil, repo, nil, nil, userRepo, invalidator, nil)
 
-	svc.persistContentModerationLog(context.Background(), cfg, newContentModerationFlaggedLog(userID), "", false, true)
+	svc.writeLogAndSideEffects(context.Background(), cfg, newContentModerationFlaggedLog(userID), "", false, true)
 
 	logs := requireContentModerationLogCount(t, repo, 2)
 	require.Equal(t, 2, logs[1].ViolationCount)
@@ -1556,7 +1556,7 @@ func TestContentModerationAdminBelowBanThresholdRecordsViolationOnly(t *testing.
 	invalidator := &contentModerationTestAuthCacheInvalidator{}
 	svc := NewContentModerationService(nil, repo, nil, nil, userRepo, invalidator, nil)
 
-	svc.persistContentModerationLog(context.Background(), cfg, newContentModerationFlaggedLog(userID), "", false, true)
+	svc.writeLogAndSideEffects(context.Background(), cfg, newContentModerationFlaggedLog(userID), "", false, true)
 
 	logs := requireContentModerationLogCount(t, repo, 1)
 	require.Equal(t, 1, logs[0].ViolationCount)

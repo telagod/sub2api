@@ -299,11 +299,6 @@ func appendTextFragment(fragments *[]string, text string) {
 	*fragments = append(*fragments, text)
 }
 
-// normalizeContentModerationText collapses whitespace and trims a text string.
-func normalizeContentModerationText(text string) string {
-	return strings.Join(strings.Fields(strings.TrimSpace(text)), " ")
-}
-
 // pickRandomIndex returns a cryptographically random index in [0, count).
 func pickRandomIndex(count int) (int, error) {
 	idx, err := rand.Int(rand.Reader, big.NewInt(int64(count)))

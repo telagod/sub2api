@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/telagod/subme/internal/pkg/apicompat"
 	"github.com/telagod/subme/internal/pkg/geminicli"
 	"github.com/telagod/subme/internal/pkg/logger"
 	"github.com/telagod/subme/internal/util/responseheaders"
-	"github.com/gin-gonic/gin"
 )
 
 // ForwardAsChatCompletions serves OpenAI Chat Completions clients through
@@ -427,17 +427,6 @@ func (s *GeminiMessagesCompatService) buildGeminiCCUpstreamRequestFactory(
 	}
 }
 
-// buildGeminiChatCompletionsUpstreamRequestFunc is retained for backward compat.
-func (s *GeminiMessagesCompatService) buildGeminiChatCompletionsUpstreamRequestFunc(
-	account *Account,
-	mappedModel string,
-	geminiReq []byte,
-	clientStream bool,
-	useUpstreamStream bool,
-) (func(context.Context) (*http.Request, string, error), string) {
-	return s.buildGeminiCCUpstreamRequestFactory(account, mappedModel, geminiReq, clientStream, useUpstreamStream)
-}
-
 func (s *GeminiMessagesCompatService) handleGeminiCCSync(
 	c *gin.Context,
 	resp *http.Response,
@@ -469,16 +458,6 @@ func (s *GeminiMessagesCompatService) handleGeminiCCSync(
 	return usageObj, nil
 }
 
-// handleChatCompletionsNonStreamingResponseFromGemini is retained for backward compat.
-func (s *GeminiMessagesCompatService) handleChatCompletionsNonStreamingResponseFromGemini(
-	c *gin.Context,
-	resp *http.Response,
-	originalModel string,
-	isOAuth bool,
-) (*ClaudeUsage, error) {
-	return s.handleGeminiCCSync(c, resp, originalModel, isOAuth)
-}
-
 func geminiToChatCompletions(
 	geminiMap map[string]any,
 	callerModel string,
@@ -505,16 +484,6 @@ func geminiToChatCompletions(
 	}
 	responsesResp := apicompat.AnthropicToResponsesResponse(&anthropicResp)
 	return apicompat.ResponsesToChatCompletions(responsesResp, callerModel), usageObj, nil
-}
-
-// geminiResponseToChatCompletions is retained for backward compat.
-func geminiResponseToChatCompletions(
-	geminiResp map[string]any,
-	originalModel string,
-	rawData []byte,
-	usageOverride *ClaudeUsage,
-) (*apicompat.ChatCompletionsResponse, *ClaudeUsage, error) {
-	return geminiToChatCompletions(geminiResp, originalModel, rawData, usageOverride)
 }
 
 func (s *GeminiMessagesCompatService) handleGeminiCCStream(
@@ -812,18 +781,6 @@ func (s *GeminiMessagesCompatService) handleGeminiCCStream(
 	return &geminiStreamResult{usage: &accUsage, firstTokenMs: ttfMs}, nil
 }
 
-// handleChatCompletionsStreamingResponseFromGemini is retained for backward compat.
-func (s *GeminiMessagesCompatService) handleChatCompletionsStreamingResponseFromGemini(
-	c *gin.Context,
-	resp *http.Response,
-	startTime time.Time,
-	originalModel string,
-	isOAuth bool,
-	includeUsage bool,
-) (*geminiStreamResult, error) {
-	return s.handleGeminiCCStream(c, resp, startTime, originalModel, isOAuth, includeUsage)
-}
-
 func (s *GeminiMessagesCompatService) mapGeminiCCError(
 	c *gin.Context,
 	account *Account,
@@ -915,17 +872,6 @@ func (s *GeminiMessagesCompatService) mapGeminiCCError(
 	return s.emitCCError(c, httpCode, eType, eMsg)
 }
 
-// writeGeminiChatCompletionsMappedError is retained for backward compat.
-func (s *GeminiMessagesCompatService) writeGeminiChatCompletionsMappedError(
-	c *gin.Context,
-	account *Account,
-	upstreamStatus int,
-	upstreamRequestID string,
-	body []byte,
-) error {
-	return s.mapGeminiCCError(c, account, upstreamStatus, upstreamRequestID, body)
-}
-
 func (s *GeminiMessagesCompatService) emitCCError(c *gin.Context, status int, errType, message string) error {
 	c.JSON(status, gin.H{
 		"error": gin.H{
@@ -934,24 +880,4 @@ func (s *GeminiMessagesCompatService) emitCCError(c *gin.Context, status int, er
 		},
 	})
 	return fmt.Errorf("%s", message)
-}
-
-// writeChatCompletionsError is retained for backward compat.
-func (s *GeminiMessagesCompatService) writeChatCompletionsError(c *gin.Context, status int, errType, message string) error {
-	return s.emitCCError(c, status, errType, message)
-}
-
-// forwardClaudeBodyAsChatCompletions is retained for backward compat.
-func (s *GeminiMessagesCompatService) forwardClaudeBodyAsChatCompletions(
-	ctx context.Context,
-	c *gin.Context,
-	account *Account,
-	claudeBody []byte,
-	originalModel string,
-	clientStream bool,
-	includeUsage bool,
-	startTime time.Time,
-	originalChatBody []byte,
-) (*ForwardResult, error) {
-	return s.relayAnthropicBodyAsChatCompletions(ctx, c, account, claudeBody, originalModel, clientStream, includeUsage, startTime, originalChatBody)
 }
