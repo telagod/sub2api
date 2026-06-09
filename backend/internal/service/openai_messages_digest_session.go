@@ -14,79 +14,84 @@ type openAICompatAnthropicDigestBinding struct {
 	ExpiresAt      time.Time
 }
 
+// buildOpenAICompatAnthropicDigestChain constructs a deterministic digest
+// chain from the Anthropic request by hashing each system prompt and message
+// with a role prefix.
 func buildOpenAICompatAnthropicDigestChain(req *apicompat.AnthropicRequest) string {
 	if req == nil {
 		return ""
 	}
 
-	parts := make([]string, 0, len(req.Messages)+1)
+	segments := make([]string, 0, len(req.Messages)+1)
 	if len(req.System) > 0 && strings.TrimSpace(string(req.System)) != "" && strings.TrimSpace(string(req.System)) != "null" {
-		parts = append(parts, "s:"+shortHash(req.System))
+		segments = append(segments, "s:"+shortHash(req.System))
 	}
 	for _, msg := range req.Messages {
-		content := msg.Content
-		if len(content) == 0 || strings.TrimSpace(string(content)) == "" {
+		body := msg.Content
+		if len(body) == 0 || strings.TrimSpace(string(body)) == "" {
 			continue
 		}
-		prefix := "u"
+		tag := "u"
 		if strings.TrimSpace(msg.Role) == "assistant" {
-			prefix = "a"
+			tag = "a"
 		}
-		parts = append(parts, prefix+":"+shortHash(content))
+		segments = append(segments, tag+":"+shortHash(body))
 	}
-	return strings.Join(parts, "-")
+	return strings.Join(segments, "-")
 }
 
-func openAICompatAnthropicDigestNamespace(account *Account, cAPIKeyID int64) string {
-	if account == nil || account.ID <= 0 {
+func openAICompatAnthropicDigestNamespace(acct *Account, clientKeyID int64) string {
+	if acct == nil || acct.ID <= 0 {
 		return ""
 	}
-	return fmt.Sprintf("%d|%d|", account.ID, cAPIKeyID)
+	return fmt.Sprintf("%d|%d|", acct.ID, clientKeyID)
 }
 
-func (s *OpenAIGatewayService) findOpenAICompatAnthropicDigestPromptCacheKey(account *Account, cAPIKeyID int64, digestChain string) (promptCacheKey string, matchedChain string) {
+// findOpenAICompatAnthropicDigestPromptCacheKey walks the digest chain from
+// longest to shortest, looking for a cached prompt cache key binding.
+func (s *OpenAIGatewayService) findOpenAICompatAnthropicDigestPromptCacheKey(acct *Account, clientKeyID int64, digestChain string) (promptCacheKey string, matchedChain string) {
 	if s == nil || digestChain == "" {
 		return "", ""
 	}
-	ns := openAICompatAnthropicDigestNamespace(account, cAPIKeyID)
+	ns := openAICompatAnthropicDigestNamespace(acct, clientKeyID)
 	if ns == "" {
 		return "", ""
 	}
-	chain := digestChain
+	suffix := digestChain
 	for {
-		if raw, ok := s.openaiCompatAnthropicDigestSessions.Load(ns + chain); ok {
-			if binding, ok := raw.(openAICompatAnthropicDigestBinding); ok {
-				if binding.ExpiresAt.IsZero() || time.Now().Before(binding.ExpiresAt) {
-					if key := strings.TrimSpace(binding.PromptCacheKey); key != "" {
-						return key, chain
+		if val, loaded := s.openaiCompatAnthropicDigestSessions.Load(ns + suffix); loaded {
+			if entry, valid := val.(openAICompatAnthropicDigestBinding); valid {
+				if entry.ExpiresAt.IsZero() || time.Now().Before(entry.ExpiresAt) {
+					if ck := strings.TrimSpace(entry.PromptCacheKey); ck != "" {
+						return ck, suffix
 					}
 				}
 			}
-			s.openaiCompatAnthropicDigestSessions.Delete(ns + chain)
+			s.openaiCompatAnthropicDigestSessions.Delete(ns + suffix)
 		}
-		i := strings.LastIndex(chain, "-")
-		if i < 0 {
+		splitIdx := strings.LastIndex(suffix, "-")
+		if splitIdx < 0 {
 			return "", ""
 		}
-		chain = chain[:i]
+		suffix = suffix[:splitIdx]
 	}
 }
 
-func (s *OpenAIGatewayService) bindOpenAICompatAnthropicDigestPromptCacheKey(account *Account, cAPIKeyID int64, digestChain, promptCacheKey, oldDigestChain string) {
-	if s == nil || digestChain == "" || strings.TrimSpace(promptCacheKey) == "" {
+func (s *OpenAIGatewayService) bindOpenAICompatAnthropicDigestPromptCacheKey(acct *Account, clientKeyID int64, digestChain, cacheKey, prevDigestChain string) {
+	if s == nil || digestChain == "" || strings.TrimSpace(cacheKey) == "" {
 		return
 	}
-	ns := openAICompatAnthropicDigestNamespace(account, cAPIKeyID)
+	ns := openAICompatAnthropicDigestNamespace(acct, clientKeyID)
 	if ns == "" {
 		return
 	}
-	binding := openAICompatAnthropicDigestBinding{
-		PromptCacheKey: strings.TrimSpace(promptCacheKey),
+	entry := openAICompatAnthropicDigestBinding{
+		PromptCacheKey: strings.TrimSpace(cacheKey),
 		ExpiresAt:      time.Now().Add(s.openAIWSResponseStickyTTL()),
 	}
-	s.openaiCompatAnthropicDigestSessions.Store(ns+digestChain, binding)
-	if oldDigestChain != "" && oldDigestChain != digestChain {
-		s.openaiCompatAnthropicDigestSessions.Delete(ns + oldDigestChain)
+	s.openaiCompatAnthropicDigestSessions.Store(ns+digestChain, entry)
+	if prevDigestChain != "" && prevDigestChain != digestChain {
+		s.openaiCompatAnthropicDigestSessions.Delete(ns + prevDigestChain)
 	}
 }
 
@@ -101,21 +106,21 @@ func promptCacheKeyFromAnthropicMetadataSession(req *apicompat.AnthropicRequest)
 	if req == nil || len(req.Metadata) == 0 {
 		return ""
 	}
-	var metadata struct {
+	var meta struct {
 		UserID string `json:"user_id"`
 	}
-	if err := json.Unmarshal(req.Metadata, &metadata); err != nil {
+	if unmarshalErr := json.Unmarshal(req.Metadata, &meta); unmarshalErr != nil {
 		return ""
 	}
-	parsed := ParseMetadataUserID(metadata.UserID)
-	if parsed == nil || strings.TrimSpace(parsed.SessionID) == "" {
+	parsedID := ParseMetadataUserID(meta.UserID)
+	if parsedID == nil || strings.TrimSpace(parsedID.SessionID) == "" {
 		return ""
 	}
 	seed := strings.Join([]string{
 		"anthropic-metadata",
-		strings.TrimSpace(parsed.DeviceID),
-		strings.TrimSpace(parsed.AccountUUID),
-		strings.TrimSpace(parsed.SessionID),
+		strings.TrimSpace(parsedID.DeviceID),
+		strings.TrimSpace(parsedID.AccountUUID),
+		strings.TrimSpace(parsedID.SessionID),
 	}, "|")
 	return "anthropic-metadata-" + hashSensitiveValueForLog(seed)
 }
@@ -124,12 +129,12 @@ func cloneAnthropicRequestForDigest(req *apicompat.AnthropicRequest) *apicompat.
 	if req == nil {
 		return nil
 	}
-	cp := *req
+	dup := *req
 	if len(req.System) > 0 {
-		cp.System = append(json.RawMessage(nil), req.System...)
+		dup.System = append(json.RawMessage(nil), req.System...)
 	}
 	if len(req.Messages) > 0 {
-		cp.Messages = append([]apicompat.AnthropicMessage(nil), req.Messages...)
+		dup.Messages = append([]apicompat.AnthropicMessage(nil), req.Messages...)
 	}
-	return &cp
+	return &dup
 }

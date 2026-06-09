@@ -24,100 +24,99 @@ func (s *OpenAIGatewayService) ForwardEmbeddings(
 	body []byte,
 	defaultMappedModel string,
 ) (*OpenAIForwardResult, error) {
-	startTime := time.Now()
+	began := time.Now()
 
-	originalModel := strings.TrimSpace(gjson.GetBytes(body, "model").String())
-	if originalModel == "" {
+	reqModel := strings.TrimSpace(gjson.GetBytes(body, "model").String())
+	if reqModel == "" {
 		writeOpenAIEmbeddingsError(c, http.StatusBadRequest, "invalid_request_error", "model is required")
 		return nil, fmt.Errorf("missing model in request")
 	}
 
-	billingModel := resolveOpenAIForwardModel(account, originalModel, defaultMappedModel)
-	upstreamModel := normalizeOpenAIModelForUpstream(account, billingModel)
-	upstreamBody := body
-	if upstreamModel != originalModel {
-		upstreamBody = ReplaceModelInBody(body, upstreamModel)
+	billModel := resolveOpenAIForwardModel(account, reqModel, defaultMappedModel)
+	upModel := normalizeOpenAIModelForUpstream(account, billModel)
+	payload := body
+	if upModel != reqModel {
+		payload = ReplaceModelInBody(body, upModel)
 	}
 
 	logger.L().Debug("openai embeddings: forwarding",
 		zap.Int64("account_id", account.ID),
-		zap.String("original_model", originalModel),
-		zap.String("billing_model", billingModel),
-		zap.String("upstream_model", upstreamModel),
+		zap.String("original_model", reqModel),
+		zap.String("billing_model", billModel),
+		zap.String("upstream_model", upModel),
 	)
 
-	apiKey := account.GetOpenAIApiKey()
-	if apiKey == "" {
+	authKey := account.GetOpenAIApiKey()
+	if authKey == "" {
 		return nil, fmt.Errorf("account %d missing api_key", account.ID)
 	}
-	baseURL := account.GetOpenAIBaseURL()
-	if baseURL == "" {
-		baseURL = "https://api.openai.com"
+	origin := account.GetOpenAIBaseURL()
+	if origin == "" {
+		origin = "https://api.openai.com"
 	}
-	validatedURL, err := s.validateUpstreamBaseURL(baseURL)
-	if err != nil {
-		return nil, fmt.Errorf("invalid base_url: %w", err)
+	checkedURL, urlErr := s.validateUpstreamBaseURL(origin)
+	if urlErr != nil {
+		return nil, fmt.Errorf("invalid base_url: %w", urlErr)
 	}
-	targetURL := buildOpenAIEmbeddingsURL(validatedURL)
+	endpoint := buildOpenAIEmbeddingsURL(checkedURL)
 
-	upstreamCtx, releaseUpstreamCtx := decoupleUpstreamContext(ctx)
-	upstreamReq, err := http.NewRequestWithContext(upstreamCtx, http.MethodPost, targetURL, bytes.NewReader(upstreamBody))
-	releaseUpstreamCtx()
-	if err != nil {
-		return nil, fmt.Errorf("build upstream request: %w", err)
+	detachedCtx, releaseCtx := decoupleUpstreamContext(ctx)
+	req, reqErr := http.NewRequestWithContext(detachedCtx, http.MethodPost, endpoint, bytes.NewReader(payload))
+	releaseCtx()
+	if reqErr != nil {
+		return nil, fmt.Errorf("build upstream request: %w", reqErr)
 	}
-	upstreamReq = upstreamReq.WithContext(WithHTTPUpstreamProfile(upstreamReq.Context(), HTTPUpstreamProfileOpenAI))
-	upstreamReq.Header.Set("Content-Type", "application/json")
-	upstreamReq.Header.Set("Authorization", "Bearer "+apiKey)
-	upstreamReq.Header.Set("Accept", "application/json")
-	for key, values := range c.Request.Header {
-		lowerKey := strings.ToLower(key)
-		if openaiCCRawAllowedHeaders[lowerKey] {
-			for _, v := range values {
-				upstreamReq.Header.Add(key, v)
+	req = req.WithContext(WithHTTPUpstreamProfile(req.Context(), HTTPUpstreamProfileOpenAI))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+authKey)
+	req.Header.Set("Accept", "application/json")
+
+	for hdr, vals := range c.Request.Header {
+		if openaiCCRawAllowedHeaders[strings.ToLower(hdr)] {
+			for _, val := range vals {
+				req.Header.Add(hdr, val)
 			}
 		}
 	}
-	if customUA := account.GetOpenAIUserAgent(); customUA != "" {
-		upstreamReq.Header.Set("user-agent", customUA)
+	if ua := account.GetOpenAIUserAgent(); ua != "" {
+		req.Header.Set("user-agent", ua)
 	}
 
-	proxyURL := ""
+	proxyAddr := ""
 	if account.Proxy != nil {
-		proxyURL = account.Proxy.URL()
+		proxyAddr = account.Proxy.URL()
 	}
-	resp, err := s.httpUpstream.Do(upstreamReq, proxyURL, account.ID, account.Concurrency)
-	if err != nil {
-		safeErr := sanitizeUpstreamErrorMessage(err.Error())
-		setOpsUpstreamError(c, 0, safeErr, "")
+	resp, doErr := s.httpUpstream.Do(req, proxyAddr, account.ID, account.Concurrency)
+	if doErr != nil {
+		sanitized := sanitizeUpstreamErrorMessage(doErr.Error())
+		setOpsUpstreamError(c, 0, sanitized, "")
 		appendOpsUpstreamError(c, OpsUpstreamErrorEvent{
 			Platform:           account.Platform,
 			AccountID:          account.ID,
 			AccountName:        account.Name,
 			UpstreamStatusCode: 0,
 			Kind:               "request_error",
-			Message:            safeErr,
+			Message:            sanitized,
 		})
 		writeOpenAIEmbeddingsError(c, http.StatusBadGateway, "upstream_error", "Upstream request failed")
-		return nil, fmt.Errorf("upstream request failed: %s", safeErr)
+		return nil, fmt.Errorf("upstream request failed: %s", sanitized)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
-		respBody := s.readUpstreamErrorBody(resp)
+		errBody := s.readUpstreamErrorBody(resp)
 		_ = resp.Body.Close()
-		resp.Body = io.NopCloser(bytes.NewReader(respBody))
+		resp.Body = io.NopCloser(bytes.NewReader(errBody))
 
-		upstreamMsg := strings.TrimSpace(extractUpstreamErrorMessage(respBody))
-		upstreamMsg = sanitizeUpstreamErrorMessage(upstreamMsg)
-		if s.shouldFailoverOpenAIUpstreamResponse(resp.StatusCode, upstreamMsg, respBody) {
-			upstreamDetail := ""
+		upstreamErrMsg := sanitizeUpstreamErrorMessage(strings.TrimSpace(extractUpstreamErrorMessage(errBody)))
+		if s.shouldFailoverOpenAIUpstreamResponse(resp.StatusCode, upstreamErrMsg, errBody) {
+			detail := ""
 			if s.cfg != nil && s.cfg.Gateway.LogUpstreamErrorBody {
-				maxBytes := s.cfg.Gateway.LogUpstreamErrorBodyMaxBytes
-				if maxBytes <= 0 {
-					maxBytes = 2048
+				limit := s.cfg.Gateway.LogUpstreamErrorBodyMaxBytes
+				if limit <= 0 {
+					limit = 2048
 				}
-				upstreamDetail = truncateString(string(respBody), maxBytes)
+				detail = truncateString(string(errBody), limit)
 			}
 			appendOpsUpstreamError(c, OpsUpstreamErrorEvent{
 				Platform:           account.Platform,
@@ -126,42 +125,42 @@ func (s *OpenAIGatewayService) ForwardEmbeddings(
 				UpstreamStatusCode: resp.StatusCode,
 				UpstreamRequestID:  resp.Header.Get("x-request-id"),
 				Kind:               "failover",
-				Message:            upstreamMsg,
-				Detail:             upstreamDetail,
+				Message:            upstreamErrMsg,
+				Detail:             detail,
 			})
-			s.handleOpenAIAccountUpstreamError(ctx, account, resp.StatusCode, resp.Header, respBody, upstreamModel)
+			s.handleOpenAIAccountUpstreamError(ctx, account, resp.StatusCode, resp.Header, errBody, upModel)
 			return nil, &UpstreamFailoverError{
 				StatusCode:             resp.StatusCode,
-				ResponseBody:           respBody,
+				ResponseBody:           errBody,
 				RetryableOnSameAccount: account.IsPoolMode() && account.IsPoolModeRetryableStatus(resp.StatusCode),
 			}
 		}
-		writeOpenAIEmbeddingsUpstreamResponse(c, resp, respBody, s.responseHeaderFilter)
+		writeOpenAIEmbeddingsUpstreamResponse(c, resp, errBody, s.responseHeaderFilter)
 		return nil, fmt.Errorf("upstream returned status %d", resp.StatusCode)
 	}
 
-	respBody, err := ReadUpstreamResponseBody(resp.Body, s.cfg, c, openAITooLargeError)
-	if err != nil {
-		if !errors.Is(err, ErrUpstreamResponseBodyTooLarge) {
+	respPayload, readErr := ReadUpstreamResponseBody(resp.Body, s.cfg, c, openAITooLargeError)
+	if readErr != nil {
+		if !errors.Is(readErr, ErrUpstreamResponseBodyTooLarge) {
 			writeOpenAIEmbeddingsError(c, http.StatusBadGateway, "api_error", "Failed to read upstream response")
 		}
-		return nil, fmt.Errorf("read upstream body: %w", err)
+		return nil, fmt.Errorf("read upstream body: %w", readErr)
 	}
 
-	writeOpenAIEmbeddingsUpstreamResponse(c, resp, respBody, s.responseHeaderFilter)
+	writeOpenAIEmbeddingsUpstreamResponse(c, resp, respPayload, s.responseHeaderFilter)
 
 	return &OpenAIForwardResult{
 		RequestID:     firstNonEmptyString(resp.Header.Get("x-request-id"), resp.Header.Get("request-id")),
-		Usage:         extractOpenAIEmbeddingsUsage(respBody),
-		Model:         originalModel,
-		BillingModel:  billingModel,
-		UpstreamModel: upstreamModel,
+		Usage:         extractOpenAIEmbeddingsUsage(respPayload),
+		Model:         reqModel,
+		BillingModel:  billModel,
+		UpstreamModel: upModel,
 		Stream:        false,
-		Duration:      time.Since(startTime),
+		Duration:      time.Since(began),
 	}, nil
 }
 
-func writeOpenAIEmbeddingsUpstreamResponse(c *gin.Context, resp *http.Response, body []byte, filter *responseheaders.CompiledHeaderFilter) {
+func writeOpenAIEmbeddingsUpstreamResponse(c *gin.Context, resp *http.Response, payload []byte, headerFilter *responseheaders.CompiledHeaderFilter) {
 	if c == nil || resp == nil {
 		return
 	}
@@ -169,67 +168,67 @@ func writeOpenAIEmbeddingsUpstreamResponse(c *gin.Context, resp *http.Response, 
 		return
 	}
 	if resp.Header != nil {
-		responseheaders.WriteFilteredHeaders(c.Writer.Header(), resp.Header, filter)
+		responseheaders.WriteFilteredHeaders(c.Writer.Header(), resp.Header, headerFilter)
 	}
-	if ct := resp.Header.Get("Content-Type"); ct != "" {
-		c.Writer.Header().Set("Content-Type", ct)
-	} else {
-		c.Writer.Header().Set("Content-Type", "application/json")
+	contentType := resp.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "application/json"
 	}
+	c.Writer.Header().Set("Content-Type", contentType)
 	c.Writer.WriteHeader(resp.StatusCode)
-	_, _ = c.Writer.Write(body)
+	_, _ = c.Writer.Write(payload)
 }
 
-func writeOpenAIEmbeddingsError(c *gin.Context, statusCode int, errType, message string) {
-	c.JSON(statusCode, gin.H{
+func writeOpenAIEmbeddingsError(c *gin.Context, code int, errKind, msg string) {
+	c.JSON(code, gin.H{
 		"error": gin.H{
-			"type":    errType,
-			"message": message,
+			"type":    errKind,
+			"message": msg,
 		},
 	})
 }
 
-func extractOpenAIEmbeddingsUsage(body []byte) OpenAIUsage {
-	usage := gjson.GetBytes(body, "usage")
-	if !usage.Exists() || !usage.IsObject() {
+func extractOpenAIEmbeddingsUsage(payload []byte) OpenAIUsage {
+	usageResult := gjson.GetBytes(payload, "usage")
+	if !usageResult.Exists() || !usageResult.IsObject() {
 		return OpenAIUsage{}
 	}
-	inputTokens := firstPositiveGJSONInt(
-		usage.Get("prompt_tokens"),
-		usage.Get("input_tokens"),
-		usage.Get("total_tokens"),
+	promptTokens := firstPositiveGJSONInt(
+		usageResult.Get("prompt_tokens"),
+		usageResult.Get("input_tokens"),
+		usageResult.Get("total_tokens"),
 	)
-	outputTokens := firstPositiveGJSONInt(
-		usage.Get("completion_tokens"),
-		usage.Get("output_tokens"),
+	completionTokens := firstPositiveGJSONInt(
+		usageResult.Get("completion_tokens"),
+		usageResult.Get("output_tokens"),
 	)
-	cacheReadTokens := firstPositiveGJSONInt(
-		usage.Get("prompt_tokens_details.cached_tokens"),
-		usage.Get("input_tokens_details.cached_tokens"),
-		usage.Get("cache_read_tokens"),
-		usage.Get("cache_read_input_tokens"),
+	cachedRead := firstPositiveGJSONInt(
+		usageResult.Get("prompt_tokens_details.cached_tokens"),
+		usageResult.Get("input_tokens_details.cached_tokens"),
+		usageResult.Get("cache_read_tokens"),
+		usageResult.Get("cache_read_input_tokens"),
 	)
-	cacheCreationTokens := firstPositiveGJSONInt(
-		usage.Get("cache_creation_tokens"),
-		usage.Get("cache_creation_input_tokens"),
-		usage.Get("input_tokens_details.cache_creation_tokens"),
+	cachedCreation := firstPositiveGJSONInt(
+		usageResult.Get("cache_creation_tokens"),
+		usageResult.Get("cache_creation_input_tokens"),
+		usageResult.Get("input_tokens_details.cache_creation_tokens"),
 	)
 	return OpenAIUsage{
-		InputTokens:              inputTokens,
-		OutputTokens:             outputTokens,
-		CacheReadInputTokens:     cacheReadTokens,
-		CacheCreationInputTokens: cacheCreationTokens,
+		InputTokens:              promptTokens,
+		OutputTokens:             completionTokens,
+		CacheReadInputTokens:     cachedRead,
+		CacheCreationInputTokens: cachedCreation,
 	}
 }
 
-func firstPositiveGJSONInt(values ...gjson.Result) int {
-	for _, value := range values {
-		if !value.Exists() {
+func firstPositiveGJSONInt(results ...gjson.Result) int {
+	for _, r := range results {
+		if !r.Exists() {
 			continue
 		}
-		n := int(value.Int())
-		if n > 0 {
-			return n
+		val := int(r.Int())
+		if val > 0 {
+			return val
 		}
 	}
 	return 0

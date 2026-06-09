@@ -9,153 +9,154 @@ import (
 	"github.com/tidwall/sjson"
 )
 
-// stripMessageCacheControl 移除 $.messages[*].content[*].cache_control。
-// 与 Parrot _strip_message_cache_control 语义一致。
+// stripMessageCacheControl removes $.messages[*].content[*].cache_control.
 //
-// 旧策略为什么整体清空：客户端（特别是 Claude Code）经常把 cache_control 打在
-// "当前最后一条 user message" 上；下一轮对话 messages 追加后，原本的最后一条
-// 变成中间某条，cache_control 还挂着就导致"前缀签名变化"，破坏缓存命中。
-// 统一由代理重新打断点（addMessageCacheBreakpoints）才能在多轮间稳定。
-func stripMessageCacheControl(body []byte) []byte {
-	messages := gjson.GetBytes(body, "messages")
-	if !messages.IsArray() {
-		return body
+// Clients (especially Claude Code) tend to pin cache_control on the "current last
+// user message". After a new turn appends more messages, that formerly-last message
+// becomes an intermediate one with stale cache_control, breaking prefix signature
+// stability. Clearing everything and letting the proxy re-inject breakpoints
+// (via addMessageCacheBreakpoints) keeps multi-turn caching reliable.
+func stripMessageCacheControl(data []byte) []byte {
+	msgs := gjson.GetBytes(data, "messages")
+	if !msgs.IsArray() {
+		return data
 	}
-	msgIdx := -1
-	messages.ForEach(func(_, msg gjson.Result) bool {
-		msgIdx++
-		content := msg.Get("content")
-		if !content.IsArray() {
+	mi := -1
+	msgs.ForEach(func(_, m gjson.Result) bool {
+		mi++
+		blocks := m.Get("content")
+		if !blocks.IsArray() {
 			return true
 		}
-		blockIdx := -1
-		content.ForEach(func(_, block gjson.Result) bool {
-			blockIdx++
-			if !block.Get("cache_control").Exists() {
+		bi := -1
+		blocks.ForEach(func(_, blk gjson.Result) bool {
+			bi++
+			if !blk.Get("cache_control").Exists() {
 				return true
 			}
-			path := fmt.Sprintf("messages.%d.content.%d.cache_control", msgIdx, blockIdx)
-			if next, err := sjson.DeleteBytes(body, path); err == nil {
-				body = next
+			jp := fmt.Sprintf("messages.%d.content.%d.cache_control", mi, bi)
+			if updated, delErr := sjson.DeleteBytes(data, jp); delErr == nil {
+				data = updated
 			}
 			return true
 		})
 		return true
 	})
-	return body
+	return data
 }
 
-// addMessageCacheBreakpoints 在 messages 上注入两个稳定的 cache 断点：
-//  1. 最后一条 message
-//  2. 当 messages 数量 ≥ 4 时，倒数第二个 role=user 的 message
+// addMessageCacheBreakpoints injects two stable cache breakpoints on messages:
+//  1. The last message.
+//  2. When there are >= 4 messages, the second-to-last user-role message.
 //
-// 与 Parrot add_cache_breakpoints 一致。两个断点 + system prompt block 的断点
-// + tools[-1] 的断点共同构成最多 4 个断点（Anthropic 上限）。
+// Together with a system-prompt breakpoint and a tools[-1] breakpoint, this fills
+// up to 4 breakpoints (the Anthropic maximum).
 //
-// cache_control ttl 策略：
-//   - 若目标 block 已有 cache_control.ttl → 不覆盖
-//   - 否则写入 {"type":"ephemeral","ttl": claude.DefaultCacheControlTTL}
+// TTL policy:
+//   - If the target block already has cache_control.ttl, it is preserved.
+//   - Otherwise {"type":"ephemeral","ttl": claude.DefaultCacheControlTTL} is written.
 //
-// 调用前应先 stripMessageCacheControl 以保证幂等和稳定。
-func addMessageCacheBreakpoints(body []byte) []byte {
-	messages := gjson.GetBytes(body, "messages")
-	if !messages.IsArray() {
-		return body
+// stripMessageCacheControl should be called beforehand for idempotency.
+func addMessageCacheBreakpoints(data []byte) []byte {
+	msgs := gjson.GetBytes(data, "messages")
+	if !msgs.IsArray() {
+		return data
 	}
-	arr := messages.Array()
-	if len(arr) == 0 {
-		return body
+	elements := msgs.Array()
+	total := len(elements)
+	if total == 0 {
+		return data
 	}
 
-	body = injectCacheControlOnLastContentBlock(body, len(arr)-1, &arr[len(arr)-1])
+	data = injectCacheControlOnLastContentBlock(data, total-1, &elements[total-1])
 
-	if len(arr) >= 4 {
-		userCount := 0
-		for i := len(arr) - 1; i >= 0; i-- {
-			if arr[i].Get("role").String() != "user" {
+	if total >= 4 {
+		usersFound := 0
+		for k := total - 1; k >= 0; k-- {
+			if elements[k].Get("role").String() != "user" {
 				continue
 			}
-			userCount++
-			if userCount == 2 {
-				body = injectCacheControlOnLastContentBlock(body, i, &arr[i])
+			usersFound++
+			if usersFound == 2 {
+				data = injectCacheControlOnLastContentBlock(data, k, &elements[k])
 				break
 			}
 		}
 	}
 
-	return body
+	return data
 }
 
-// rewriteMessageCacheControlIfEnabled 按系统设置决定是否执行旧版 messages 缓存断点改写。
-func (s *GatewayService) rewriteMessageCacheControlIfEnabled(ctx context.Context, body []byte) []byte {
+// rewriteMessageCacheControlIfEnabled conditionally applies legacy message cache breakpoint rewriting.
+func (s *GatewayService) rewriteMessageCacheControlIfEnabled(ctx context.Context, data []byte) []byte {
 	if s == nil || !s.isRewriteMessageCacheControlEnabled(ctx) {
-		return body
+		return data
 	}
-	body = stripMessageCacheControl(body)
-	return addMessageCacheBreakpoints(body)
+	data = stripMessageCacheControl(data)
+	return addMessageCacheBreakpoints(data)
 }
 
 func (s *GatewayService) isRewriteMessageCacheControlEnabled(ctx context.Context) bool {
-	if s == nil {
+	if s == nil || s.settingService == nil {
 		return false
 	}
-	if s.settingService != nil {
-		return s.settingService.IsRewriteMessageCacheControlEnabled(ctx)
-	}
-	return false
+	return s.settingService.IsRewriteMessageCacheControlEnabled(ctx)
 }
 
-// injectCacheControlOnLastContentBlock 把 cache_control 断点打在 messages[idx]
-// 的最后一个 content block 上。若 content 是 string，先升级成单块 text 数组
-// （对齐 Parrot _inject_cache_on_msg 的行为）。
+// injectCacheControlOnLastContentBlock places a cache_control breakpoint on the
+// final content block of messages[idx]. If content is a plain string, it is first
+// promoted to a single-element text array.
 //
-// msg 是调用方已持有的 gjson.Result 快照，用于省一次 GetBytes。
-func injectCacheControlOnLastContentBlock(body []byte, idx int, msg *gjson.Result) []byte {
-	content := msg.Get("content")
+// msg is a pre-fetched gjson.Result snapshot to avoid a redundant GetBytes call.
+func injectCacheControlOnLastContentBlock(data []byte, idx int, msg *gjson.Result) []byte {
+	contentResult := msg.Get("content")
 
-	if content.Type == gjson.String {
-		text := content.String()
-		blockRaw := fmt.Sprintf(
+	// String content: upgrade to array with cache_control baked in.
+	if contentResult.Type == gjson.String {
+		textVal := contentResult.String()
+		fragment := fmt.Sprintf(
 			`[{"type":"text","text":%s,"cache_control":{"type":"ephemeral","ttl":%q}}]`,
-			mustJSONString(text), claude.DefaultCacheControlTTL,
+			mustJSONString(textVal), claude.DefaultCacheControlTTL,
 		)
-		if next, err := sjson.SetRawBytes(body, fmt.Sprintf("messages.%d.content", idx), []byte(blockRaw)); err == nil {
-			body = next
+		if patched, patchErr := sjson.SetRawBytes(data, fmt.Sprintf("messages.%d.content", idx), []byte(fragment)); patchErr == nil {
+			data = patched
 		}
-		return body
+		return data
 	}
 
-	if !content.IsArray() {
-		return body
+	if !contentResult.IsArray() {
+		return data
 	}
-	contentArr := content.Array()
-	if len(contentArr) == 0 {
-		return body
+	parts := contentResult.Array()
+	if len(parts) == 0 {
+		return data
 	}
-	lastBlockIdx := len(contentArr) - 1
-	lastBlock := contentArr[lastBlockIdx]
+	tailIdx := len(parts) - 1
+	tailBlock := parts[tailIdx]
 
-	if cc := lastBlock.Get("cache_control"); cc.Exists() && cc.Get("ttl").String() != "" {
-		return body
+	// If ttl is already explicitly set, leave it alone.
+	if existing := tailBlock.Get("cache_control"); existing.Exists() && existing.Get("ttl").String() != "" {
+		return data
 	}
 
-	pathPrefix := fmt.Sprintf("messages.%d.content.%d.cache_control", idx, lastBlockIdx)
-	existingCC := lastBlock.Get("cache_control")
-	if existingCC.Exists() {
-		if next, err := sjson.SetBytes(body, pathPrefix+".ttl", claude.DefaultCacheControlTTL); err == nil {
-			body = next
+	basePath := fmt.Sprintf("messages.%d.content.%d.cache_control", idx, tailIdx)
+	if tailBlock.Get("cache_control").Exists() {
+		// cache_control exists but without ttl: add the ttl field.
+		if patched, patchErr := sjson.SetBytes(data, basePath+".ttl", claude.DefaultCacheControlTTL); patchErr == nil {
+			data = patched
 		}
-		return body
+		return data
 	}
-	raw := fmt.Sprintf(`{"type":"ephemeral","ttl":%q}`, claude.DefaultCacheControlTTL)
-	if next, err := sjson.SetRawBytes(body, pathPrefix, []byte(raw)); err == nil {
-		body = next
+	// No cache_control at all: write the full object.
+	ccJSON := fmt.Sprintf(`{"type":"ephemeral","ttl":%q}`, claude.DefaultCacheControlTTL)
+	if patched, patchErr := sjson.SetRawBytes(data, basePath, []byte(ccJSON)); patchErr == nil {
+		data = patched
 	}
-	return body
+	return data
 }
 
-// mustJSONString 把一个 Go string 序列化为合法 JSON string（含引号），
-// 用于 sjson.SetRawBytes 场景下手工拼 JSON。
+// mustJSONString serializes a Go string into a valid JSON string literal (with quotes),
+// for use in hand-assembled JSON passed to sjson.SetRawBytes.
 func mustJSONString(s string) string {
 	return fmt.Sprintf("%q", s)
 }

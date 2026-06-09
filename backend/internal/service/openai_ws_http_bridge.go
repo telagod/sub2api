@@ -22,6 +22,8 @@ const (
 	openAIWSHTTPBridgeErrorBodyLimitBytes         = 64 * 1024
 )
 
+// ResolveOpenAIWSClientReadLimitBytes returns the configured read-limit for
+// WebSocket client messages, falling back to the 64 MiB default.
 func ResolveOpenAIWSClientReadLimitBytes(cfg *config.Config) int64 {
 	if cfg == nil || cfg.Gateway.OpenAIWS.ClientReadLimitBytes <= 0 {
 		return openAIWSClientReadLimitBytesDefault
@@ -40,30 +42,30 @@ func (s *OpenAIGatewayService) openAIWSHTTPBridgeThresholdBytes() int64 {
 	return s.cfg.Gateway.OpenAIWS.HTTPBridgeThresholdBytes
 }
 
-func (s *OpenAIGatewayService) shouldBridgeOpenAIWSHTTP(payloadBytes int, previousResponseID string) bool {
+func (s *OpenAIGatewayService) shouldBridgeOpenAIWSHTTP(msgSize int, prevResponseID string) bool {
 	if !s.openAIWSHTTPBridgeEnabled() {
 		return false
 	}
-	if strings.TrimSpace(previousResponseID) != "" {
+	if strings.TrimSpace(prevResponseID) != "" {
 		return false
 	}
-	threshold := s.openAIWSHTTPBridgeThresholdBytes()
-	return threshold > 0 && int64(payloadBytes) >= threshold
+	limit := s.openAIWSHTTPBridgeThresholdBytes()
+	return limit > 0 && int64(msgSize) >= limit
 }
 
-func prepareOpenAIWSHTTPBridgeBody(payload []byte) ([]byte, error) {
-	var body map[string]any
-	if err := json.Unmarshal(payload, &body); err != nil {
-		return nil, err
+func prepareOpenAIWSHTTPBridgeBody(raw []byte) ([]byte, error) {
+	var obj map[string]any
+	if unmarshalErr := json.Unmarshal(raw, &obj); unmarshalErr != nil {
+		return nil, unmarshalErr
 	}
-	if body == nil {
+	if obj == nil {
 		return nil, errors.New("response.create payload must be a JSON object")
 	}
-	delete(body, "type")
-	delete(body, "generate")
-	delete(body, "previous_response_id")
-	body["stream"] = true
-	return json.Marshal(body)
+	delete(obj, "type")
+	delete(obj, "generate")
+	delete(obj, "previous_response_id")
+	obj["stream"] = true
+	return json.Marshal(obj)
 }
 
 type openAIWSToolCallReplayCollector struct {
@@ -71,89 +73,89 @@ type openAIWSToolCallReplayCollector struct {
 	seen  map[string]struct{}
 }
 
-func (c *openAIWSToolCallReplayCollector) AddEvent(eventType string, message []byte) {
-	switch strings.TrimSpace(eventType) {
+func (col *openAIWSToolCallReplayCollector) AddEvent(evtType string, msg []byte) {
+	switch strings.TrimSpace(evtType) {
 	case "response.output_item.done":
-		c.addItem(gjson.GetBytes(message, "item"))
+		col.addItem(gjson.GetBytes(msg, "item"))
 	case "response.completed", "response.done":
-		output := gjson.GetBytes(message, "response.output")
-		if !output.IsArray() {
+		outputArr := gjson.GetBytes(msg, "response.output")
+		if !outputArr.IsArray() {
 			return
 		}
-		for _, item := range output.Array() {
-			c.addItem(item)
+		for _, elem := range outputArr.Array() {
+			col.addItem(elem)
 		}
 	}
 }
 
-func (c *openAIWSToolCallReplayCollector) Items() []json.RawMessage {
-	return cloneOpenAIWSRawMessages(c.items)
+func (col *openAIWSToolCallReplayCollector) Items() []json.RawMessage {
+	return cloneOpenAIWSRawMessages(col.items)
 }
 
-func (c *openAIWSToolCallReplayCollector) addItem(item gjson.Result) {
-	if !item.Exists() || item.Type != gjson.JSON {
+func (col *openAIWSToolCallReplayCollector) addItem(node gjson.Result) {
+	if !node.Exists() || node.Type != gjson.JSON {
 		return
 	}
-	raw := strings.TrimSpace(item.Raw)
-	if raw == "" || !strings.HasPrefix(raw, "{") {
+	rawStr := strings.TrimSpace(node.Raw)
+	if rawStr == "" || !strings.HasPrefix(rawStr, "{") {
 		return
 	}
-	if !isCodexToolCallContextItemType(item.Get("type").String()) {
+	if !isCodexToolCallContextItemType(node.Get("type").String()) {
 		return
 	}
-	key := strings.TrimSpace(item.Get("id").String())
-	if key == "" {
-		key = strings.TrimSpace(item.Get("call_id").String())
+	dedup := strings.TrimSpace(node.Get("id").String())
+	if dedup == "" {
+		dedup = strings.TrimSpace(node.Get("call_id").String())
 	}
-	if key == "" {
-		key = raw
+	if dedup == "" {
+		dedup = rawStr
 	}
-	if c.seen == nil {
-		c.seen = make(map[string]struct{})
+	if col.seen == nil {
+		col.seen = make(map[string]struct{})
 	}
-	if _, ok := c.seen[key]; ok {
+	if _, exists := col.seen[dedup]; exists {
 		return
 	}
-	c.seen[key] = struct{}{}
-	c.items = append(c.items, json.RawMessage(raw))
+	col.seen[dedup] = struct{}{}
+	col.items = append(col.items, json.RawMessage(rawStr))
 }
 
-func buildOpenAIWSHTTPBridgeErrorEvent(statusCode int, message string) []byte {
-	message = strings.TrimSpace(message)
-	if message == "" {
-		message = http.StatusText(statusCode)
+func buildOpenAIWSHTTPBridgeErrorEvent(code int, msg string) []byte {
+	msg = strings.TrimSpace(msg)
+	if msg == "" {
+		msg = http.StatusText(code)
 	}
-	if message == "" {
-		message = "upstream request failed"
+	if msg == "" {
+		msg = "upstream request failed"
 	}
-	event := map[string]any{
+	envelope := map[string]any{
 		"type":   "error",
-		"status": statusCode,
+		"status": code,
 		"error": map[string]any{
 			"type":    "upstream_error",
-			"message": message,
+			"message": msg,
 		},
 	}
-	body, err := json.Marshal(event)
-	if err != nil {
+	encoded, encErr := json.Marshal(envelope)
+	if encErr != nil {
 		return []byte(`{"type":"error","error":{"type":"upstream_error","message":"upstream request failed"}}`)
 	}
-	return body
+	return encoded
 }
 
 func (s *OpenAIGatewayService) proxyOpenAIWSHTTPBridgeTurn(
-	ctx context.Context,
-	c *gin.Context,
-	account *Account,
-	token string,
-	payload []byte,
-	payloadBytes int,
-	originalModel string,
-	imageBillingModel string,
-	imageSizeTier string,
-	imageInputSize string,
-	turn int,
-	writeClientMessage func([]byte) error,
+	reqCtx context.Context,
+	gc *gin.Context,
+	acct *Account,
+	authToken string,
+	rawPayload []byte,
+	payloadLen int,
+	srcModel string,
+	imgBillingModel string,
+	imgSizeTier string,
+	imgInputSize string,
+	turnIdx int,
+	sendToClient func([]byte) error,
 ) (*OpenAIForwardResult, error) {
 	if s == nil {
 		return nil, errors.New("service is nil")
@@ -161,227 +163,227 @@ func (s *OpenAIGatewayService) proxyOpenAIWSHTTPBridgeTurn(
 	if s.httpUpstream == nil {
 		return nil, errors.New("openai http upstream is nil")
 	}
-	if account == nil {
+	if acct == nil {
 		return nil, errors.New("account is nil")
 	}
-	if writeClientMessage == nil {
+	if sendToClient == nil {
 		return nil, errors.New("client websocket writer is nil")
 	}
 
-	body, err := prepareOpenAIWSHTTPBridgeBody(payload)
-	if err != nil {
-		return nil, fmt.Errorf("prepare http bridge body: %w", err)
+	bridgeBody, prepErr := prepareOpenAIWSHTTPBridgeBody(rawPayload)
+	if prepErr != nil {
+		return nil, fmt.Errorf("prepare http bridge body: %w", prepErr)
 	}
 
-	upstreamCtx, releaseUpstreamCtx := decoupleUpstreamContext(ctx)
-	upstreamReq, err := s.buildUpstreamRequestOpenAIPassthrough(upstreamCtx, c, account, body, token)
-	releaseUpstreamCtx()
-	if err != nil {
-		return nil, err
+	detachedCtx, releaseDetached := decoupleUpstreamContext(reqCtx)
+	httpReq, buildErr := s.buildUpstreamRequestOpenAIPassthrough(detachedCtx, gc, acct, bridgeBody, authToken)
+	releaseDetached()
+	if buildErr != nil {
+		return nil, buildErr
 	}
 
-	proxyURL := ""
-	if account.ProxyID != nil && account.Proxy != nil {
-		proxyURL = account.Proxy.URL()
+	proxyAddr := ""
+	if acct.ProxyID != nil && acct.Proxy != nil {
+		proxyAddr = acct.Proxy.URL()
 	}
-	if c != nil {
-		c.Set("openai_passthrough", true)
-		c.Set("openai_ws_http_bridge", true)
+	if gc != nil {
+		gc.Set("openai_passthrough", true)
+		gc.Set("openai_ws_http_bridge", true)
 	}
 
 	turnStart := time.Now()
-	resp, err := s.httpUpstream.Do(upstreamReq, proxyURL, account.ID, account.Concurrency)
-	if err != nil {
-		safeErr := sanitizeUpstreamErrorMessage(err.Error())
-		_ = writeClientMessage(buildOpenAIWSHTTPBridgeErrorEvent(http.StatusBadGateway, "Upstream request failed"))
-		return nil, fmt.Errorf("upstream http bridge request failed: %s", safeErr)
+	upResp, doErr := s.httpUpstream.Do(httpReq, proxyAddr, acct.ID, acct.Concurrency)
+	if doErr != nil {
+		sanitized := sanitizeUpstreamErrorMessage(doErr.Error())
+		_ = sendToClient(buildOpenAIWSHTTPBridgeErrorEvent(http.StatusBadGateway, "Upstream request failed"))
+		return nil, fmt.Errorf("upstream http bridge request failed: %s", sanitized)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() { _ = upResp.Body.Close() }()
 
-	if resp.StatusCode >= 400 {
-		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, openAIWSHTTPBridgeErrorBodyLimitBytes))
-		upstreamMsg := sanitizeUpstreamErrorMessage(strings.TrimSpace(extractUpstreamErrorMessage(respBody)))
-		if upstreamMsg == "" {
-			upstreamMsg = http.StatusText(resp.StatusCode)
+	if upResp.StatusCode >= 400 {
+		errBytes, _ := io.ReadAll(io.LimitReader(upResp.Body, openAIWSHTTPBridgeErrorBodyLimitBytes))
+		errMsg := sanitizeUpstreamErrorMessage(strings.TrimSpace(extractUpstreamErrorMessage(errBytes)))
+		if errMsg == "" {
+			errMsg = http.StatusText(upResp.StatusCode)
 		}
-		_ = writeClientMessage(buildOpenAIWSHTTPBridgeErrorEvent(resp.StatusCode, upstreamMsg))
-		return nil, fmt.Errorf("upstream http bridge error: status=%d message=%s", resp.StatusCode, upstreamMsg)
+		_ = sendToClient(buildOpenAIWSHTTPBridgeErrorEvent(upResp.StatusCode, errMsg))
+		return nil, fmt.Errorf("upstream http bridge error: status=%d message=%s", upResp.StatusCode, errMsg)
 	}
 
-	responseID := ""
-	usage := OpenAIUsage{}
-	imageCounter := newOpenAIImageOutputCounter()
-	var firstTokenMs *int
-	reqStream := openAIWSPayloadBoolFromRaw(body, "stream", true)
-	eventCount := 0
-	tokenEventCount := 0
-	terminalEventCount := 0
-	replayCollector := &openAIWSToolCallReplayCollector{}
-	firstEventType := ""
-	lastEventType := ""
-	sawDone := false
-	wroteDownstream := false
-	clientDisconnected := false
-	mappedModel := ""
-	needModelReplace := false
-	var mappedModelBytes []byte
-	if originalModel != "" {
-		mappedModel = normalizeOpenAIModelForUpstream(account, account.GetMappedModel(originalModel))
-		needModelReplace = mappedModel != "" && mappedModel != originalModel
-		if needModelReplace {
-			mappedModelBytes = []byte(mappedModel)
+	respID := ""
+	tokenUsage := OpenAIUsage{}
+	imgCounter := newOpenAIImageOutputCounter()
+	var ttft *int
+	isStreaming := openAIWSPayloadBoolFromRaw(bridgeBody, "stream", true)
+	totalEvents := 0
+	tokenEvents := 0
+	terminalEvents := 0
+	replay := &openAIWSToolCallReplayCollector{}
+	firstEvt := ""
+	lastEvt := ""
+	gotDone := false
+	wroteAny := false
+	peerGone := false
+	resolvedModel := ""
+	doModelReplace := false
+	var resolvedModelBytes []byte
+	if srcModel != "" {
+		resolvedModel = normalizeOpenAIModelForUpstream(acct, acct.GetMappedModel(srcModel))
+		doModelReplace = resolvedModel != "" && resolvedModel != srcModel
+		if doModelReplace {
+			resolvedModelBytes = []byte(resolvedModel)
 		}
 	}
 
-	resultWithUsage := func() *OpenAIForwardResult {
-		imageCount := imageCounter.Count()
-		result := &OpenAIForwardResult{
-			RequestID:       responseID,
-			Usage:           usage,
-			Model:           originalModel,
-			UpstreamModel:   mappedModel,
-			ServiceTier:     extractOpenAIServiceTierFromBody(body),
-			ReasoningEffort: extractOpenAIReasoningEffortFromBody(body, originalModel),
-			Stream:          reqStream,
+	buildResult := func() *OpenAIForwardResult {
+		imgCount := imgCounter.Count()
+		out := &OpenAIForwardResult{
+			RequestID:       respID,
+			Usage:           tokenUsage,
+			Model:           srcModel,
+			UpstreamModel:   resolvedModel,
+			ServiceTier:     extractOpenAIServiceTierFromBody(bridgeBody),
+			ReasoningEffort: extractOpenAIReasoningEffortFromBody(bridgeBody, srcModel),
+			Stream:          isStreaming,
 			OpenAIWSMode:    true,
-			ResponseHeaders: cloneHeader(resp.Header),
+			ResponseHeaders: cloneHeader(upResp.Header),
 			Duration:        time.Since(turnStart),
-			FirstTokenMs:    firstTokenMs,
+			FirstTokenMs:    ttft,
 		}
-		if replayInput := replayCollector.Items(); len(replayInput) > 0 {
-			result.wsReplayInput = replayInput
-			result.wsReplayInputExists = true
+		if replayItems := replay.Items(); len(replayItems) > 0 {
+			out.wsReplayInput = replayItems
+			out.wsReplayInputExists = true
 		}
-		if imageCount > 0 {
-			result.ImageCount = imageCount
-			result.ImageSize = imageSizeTier
-			result.ImageInputSize = imageInputSize
-			result.ImageOutputSizes = imageCounter.Sizes()
-			result.BillingModel = imageBillingModel
+		if imgCount > 0 {
+			out.ImageCount = imgCount
+			out.ImageSize = imgSizeTier
+			out.ImageInputSize = imgInputSize
+			out.ImageOutputSizes = imgCounter.Sizes()
+			out.BillingModel = imgBillingModel
 		}
-		return result
+		return out
 	}
 
-	scanner := bufio.NewScanner(resp.Body)
-	maxLineSize := defaultMaxLineSize
+	sc := bufio.NewScanner(upResp.Body)
+	lineCap := defaultMaxLineSize
 	if s.cfg != nil && s.cfg.Gateway.MaxLineSize > 0 {
-		maxLineSize = s.cfg.Gateway.MaxLineSize
+		lineCap = s.cfg.Gateway.MaxLineSize
 	}
 	scanBuf := getSSEScannerBuf64K()
-	scanner.Buffer(scanBuf[:0], maxLineSize)
+	sc.Buffer(scanBuf[:0], lineCap)
 	defer putSSEScannerBuf64K(scanBuf)
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		data, ok := extractOpenAISSEDataLine(line)
-		if !ok {
+	for sc.Scan() {
+		ln := sc.Text()
+		data, matched := extractOpenAISSEDataLine(ln)
+		if !matched {
 			continue
 		}
-		trimmedData := strings.TrimSpace(data)
-		if trimmedData == "" {
+		stripped := strings.TrimSpace(data)
+		if stripped == "" {
 			continue
 		}
-		if trimmedData == "[DONE]" {
-			sawDone = true
+		if stripped == "[DONE]" {
+			gotDone = true
 			continue
 		}
 
-		upstreamMessage := []byte(trimmedData)
-		eventType, eventResponseID, _ := parseOpenAIWSEventEnvelope(upstreamMessage)
-		if responseID == "" && eventResponseID != "" {
-			responseID = eventResponseID
+		evtBytes := []byte(stripped)
+		evtKind, evtRespID, _ := parseOpenAIWSEventEnvelope(evtBytes)
+		if respID == "" && evtRespID != "" {
+			respID = evtRespID
 		}
-		if eventType != "" {
-			eventCount++
-			if firstEventType == "" {
-				firstEventType = eventType
+		if evtKind != "" {
+			totalEvents++
+			if firstEvt == "" {
+				firstEvt = evtKind
 			}
-			lastEventType = eventType
+			lastEvt = evtKind
 		}
-		if isOpenAIWSTokenEvent(eventType) {
-			tokenEventCount++
-			if firstTokenMs == nil {
+		if isOpenAIWSTokenEvent(evtKind) {
+			tokenEvents++
+			if ttft == nil {
 				ms := int(time.Since(turnStart).Milliseconds())
-				firstTokenMs = &ms
+				ttft = &ms
 			}
 		}
-		if openAIWSEventShouldParseUsage(eventType) {
-			parseOpenAIWSResponseUsageFromCompletedEvent(upstreamMessage, &usage)
+		if openAIWSEventShouldParseUsage(evtKind) {
+			parseOpenAIWSResponseUsageFromCompletedEvent(evtBytes, &tokenUsage)
 		}
-		imageCounter.AddSSEData(upstreamMessage)
+		imgCounter.AddSSEData(evtBytes)
 
-		if needModelReplace && len(mappedModelBytes) > 0 && openAIWSEventMayContainModel(eventType) && strings.Contains(trimmedData, mappedModel) {
-			upstreamMessage = replaceOpenAIWSMessageModel(upstreamMessage, mappedModel, originalModel)
+		if doModelReplace && len(resolvedModelBytes) > 0 && openAIWSEventMayContainModel(evtKind) && strings.Contains(stripped, resolvedModel) {
+			evtBytes = replaceOpenAIWSMessageModel(evtBytes, resolvedModel, srcModel)
 		}
-		if s.toolCorrector != nil && openAIWSEventMayContainToolCalls(eventType) && openAIWSMessageLikelyContainsToolCalls(upstreamMessage) {
-			if corrected, changed := s.toolCorrector.CorrectToolCallsInSSEBytes(upstreamMessage); changed {
-				upstreamMessage = corrected
+		if s.toolCorrector != nil && openAIWSEventMayContainToolCalls(evtKind) && openAIWSMessageLikelyContainsToolCalls(evtBytes) {
+			if fixed, changed := s.toolCorrector.CorrectToolCallsInSSEBytes(evtBytes); changed {
+				evtBytes = fixed
 			}
 		}
-		replayCollector.AddEvent(eventType, upstreamMessage)
+		replay.AddEvent(evtKind, evtBytes)
 
-		if !clientDisconnected {
-			if err := writeClientMessage(upstreamMessage); err != nil {
-				if isOpenAIWSClientDisconnectError(err) {
-					clientDisconnected = true
-					closeStatus, closeReason := summarizeOpenAIWSReadCloseError(err)
+		if !peerGone {
+			if sendErr := sendToClient(evtBytes); sendErr != nil {
+				if isOpenAIWSClientDisconnectError(sendErr) {
+					peerGone = true
+					closeCode, closeReason := summarizeOpenAIWSReadCloseError(sendErr)
 					logOpenAIWSModeInfo(
 						"ingress_ws_http_bridge_client_disconnected_drain account_id=%d turn=%d close_status=%s close_reason=%s",
-						account.ID,
-						turn,
-						closeStatus,
+						acct.ID,
+						turnIdx,
+						closeCode,
 						truncateOpenAIWSLogValue(closeReason, openAIWSHeaderValueMaxLen),
 					)
 				} else {
 					return nil, wrapOpenAIWSIngressTurnError(
 						"write_client",
-						fmt.Errorf("write client websocket event: %w", err),
-						wroteDownstream,
+						fmt.Errorf("write client websocket event: %w", sendErr),
+						wroteAny,
 					)
 				}
 			} else {
-				wroteDownstream = true
+				wroteAny = true
 			}
 		}
 
-		if eventType == "error" {
-			errCodeRaw, errTypeRaw, errMsgRaw := parseOpenAIWSErrorEventFields(upstreamMessage)
-			s.persistOpenAIWSRateLimitSignal(ctx, account, resp.Header, upstreamMessage, errCodeRaw, errTypeRaw, errMsgRaw)
-			errMessage := strings.TrimSpace(errMsgRaw)
-			if errMessage == "" {
-				errMessage = "upstream error event"
+		if evtKind == "error" {
+			errCodeVal, errTypeVal, errMsgVal := parseOpenAIWSErrorEventFields(evtBytes)
+			s.persistOpenAIWSRateLimitSignal(reqCtx, acct, upResp.Header, evtBytes, errCodeVal, errTypeVal, errMsgVal)
+			finalMsg := strings.TrimSpace(errMsgVal)
+			if finalMsg == "" {
+				finalMsg = "upstream error event"
 			}
-			return resultWithUsage(), errors.New(errMessage)
+			return buildResult(), errors.New(finalMsg)
 		}
-		if isOpenAIWSTerminalEvent(eventType) {
-			terminalEventCount++
-			firstTokenMsValue := -1
-			if firstTokenMs != nil {
-				firstTokenMsValue = *firstTokenMs
+		if isOpenAIWSTerminalEvent(evtKind) {
+			terminalEvents++
+			ttftVal := -1
+			if ttft != nil {
+				ttftVal = *ttft
 			}
 			logOpenAIWSModeInfo(
 				"ingress_ws_http_bridge_turn_completed account_id=%d turn=%d response_id=%s payload_bytes=%d duration_ms=%d events=%d token_events=%d terminal_events=%d first_event=%s last_event=%s first_token_ms=%d client_disconnected=%v",
-				account.ID,
-				turn,
-				truncateOpenAIWSLogValue(responseID, openAIWSIDValueMaxLen),
-				payloadBytes,
+				acct.ID,
+				turnIdx,
+				truncateOpenAIWSLogValue(respID, openAIWSIDValueMaxLen),
+				payloadLen,
 				time.Since(turnStart).Milliseconds(),
-				eventCount,
-				tokenEventCount,
-				terminalEventCount,
-				truncateOpenAIWSLogValue(firstEventType, openAIWSLogValueMaxLen),
-				truncateOpenAIWSLogValue(lastEventType, openAIWSLogValueMaxLen),
-				firstTokenMsValue,
-				clientDisconnected,
+				totalEvents,
+				tokenEvents,
+				terminalEvents,
+				truncateOpenAIWSLogValue(firstEvt, openAIWSLogValueMaxLen),
+				truncateOpenAIWSLogValue(lastEvt, openAIWSLogValueMaxLen),
+				ttftVal,
+				peerGone,
 			)
-			return resultWithUsage(), nil
+			return buildResult(), nil
 		}
 	}
-	if err := scanner.Err(); err != nil {
-		return resultWithUsage(), fmt.Errorf("read upstream http bridge stream: %w", err)
+	if scanErr := sc.Err(); scanErr != nil {
+		return buildResult(), fmt.Errorf("read upstream http bridge stream: %w", scanErr)
 	}
-	if sawDone && eventCount > 0 {
-		return resultWithUsage(), nil
+	if gotDone && totalEvents > 0 {
+		return buildResult(), nil
 	}
-	return resultWithUsage(), errors.New("upstream http bridge stream ended before terminal event")
+	return buildResult(), errors.New("upstream http bridge stream ended before terminal event")
 }

@@ -18,266 +18,275 @@ const (
 	openAISilentRefusalClientMessage       = "Upstream returned an empty completion without usage; no fallback account was available"
 )
 
+// openAIChatSilentRefusalDetector monitors an SSE stream for the pattern
+// where the upstream emits finish_reason=stop but produces no content,
+// tool calls, or usage — indicating a silent refusal.
 type openAIChatSilentRefusalDetector struct {
-	enabled         bool
-	sawContent      bool
-	sawToolCall     bool
-	sawFunctionCall bool
-	sawUsage        bool
-	sawError        bool
-	sawReasoning    bool
-	sawFinish       bool
+	active          bool
+	gotContent      bool
+	gotToolCall     bool
+	gotFunctionCall bool
+	gotUsage        bool
+	gotError        bool
+	gotReasoning    bool
+	gotFinish       bool
 	finishReason    string
 }
 
-func newOpenAIChatSilentRefusalDetector(requestBodyLen int) *openAIChatSilentRefusalDetector {
+func newOpenAIChatSilentRefusalDetector(bodyLen int) *openAIChatSilentRefusalDetector {
 	return &openAIChatSilentRefusalDetector{
-		enabled: requestBodyLen >= openAISilentRefusalMinRequestBodyBytes,
+		active: bodyLen >= openAISilentRefusalMinRequestBodyBytes,
 	}
 }
 
-func (d *openAIChatSilentRefusalDetector) Enabled() bool {
-	return d != nil && d.enabled
+func (det *openAIChatSilentRefusalDetector) Enabled() bool {
+	return det != nil && det.active
 }
 
-func (d *openAIChatSilentRefusalDetector) ObserveSSELine(line string) {
-	if d == nil || !d.enabled {
+func (det *openAIChatSilentRefusalDetector) ObserveSSELine(ln string) {
+	if det == nil || !det.active {
 		return
 	}
-	if eventType, ok := parseSSEEventLine(line); ok {
-		d.observeEventType(eventType)
+	if evtKind, matched := parseSSEEventLine(ln); matched {
+		det.observeEventType(evtKind)
 		return
 	}
-	if payload, ok := extractOpenAISSEDataLine(line); ok {
-		d.ObservePayload([]byte(payload))
+	if data, matched := extractOpenAISSEDataLine(ln); matched {
+		det.ObservePayload([]byte(data))
 	}
 }
 
-func (d *openAIChatSilentRefusalDetector) ObservePayload(payload []byte) {
-	if d == nil || !d.enabled {
+func (det *openAIChatSilentRefusalDetector) ObservePayload(data []byte) {
+	if det == nil || !det.active {
 		return
 	}
-	payload = bytes.TrimSpace(payload)
-	if len(payload) == 0 || bytes.Equal(payload, []byte("[DONE]")) {
+	data = bytes.TrimSpace(data)
+	if len(data) == 0 || bytes.Equal(data, []byte("[DONE]")) {
 		return
 	}
-	if !gjson.ValidBytes(payload) {
+	if !gjson.ValidBytes(data) {
 		return
 	}
 
-	eventType := strings.TrimSpace(gjson.GetBytes(payload, "type").String())
-	d.observeEventType(eventType)
+	evtKind := strings.TrimSpace(gjson.GetBytes(data, "type").String())
+	det.observeEventType(evtKind)
 
-	if gjson.GetBytes(payload, "error").Exists() {
-		d.sawError = true
+	if gjson.GetBytes(data, "error").Exists() {
+		det.gotError = true
 	}
-	if usage := gjson.GetBytes(payload, "usage"); usage.Exists() && usage.IsObject() {
-		d.sawUsage = true
+	if node := gjson.GetBytes(data, "usage"); node.Exists() && node.IsObject() {
+		det.gotUsage = true
 	}
-	if usage := gjson.GetBytes(payload, "response.usage"); usage.Exists() && usage.IsObject() {
-		d.sawUsage = true
+	if node := gjson.GetBytes(data, "response.usage"); node.Exists() && node.IsObject() {
+		det.gotUsage = true
 	}
 
-	d.observeChatChoicesPayload(payload)
-	d.observeResponsesPayload(payload, eventType)
+	det.observeChatChoicesPayload(data)
+	det.observeResponsesPayload(data, evtKind)
 }
 
-func (d *openAIChatSilentRefusalDetector) ObserveChatChunk(chunk apicompat.ChatCompletionsChunk) {
-	if d == nil || !d.enabled {
+func (det *openAIChatSilentRefusalDetector) ObserveChatChunk(chk apicompat.ChatCompletionsChunk) {
+	if det == nil || !det.active {
 		return
 	}
-	if chunk.Usage != nil {
-		d.sawUsage = true
+	if chk.Usage != nil {
+		det.gotUsage = true
 	}
-	for _, choice := range chunk.Choices {
+	for _, choice := range chk.Choices {
 		if choice.FinishReason != nil {
-			d.observeFinishReason(*choice.FinishReason)
+			det.observeFinishReason(*choice.FinishReason)
 		}
 		delta := choice.Delta
 		if delta.Content != nil && *delta.Content != "" {
-			d.sawContent = true
+			det.gotContent = true
 		}
 		if delta.ReasoningContent != nil {
-			d.sawReasoning = true
+			det.gotReasoning = true
 		}
 		if len(delta.ToolCalls) > 0 {
-			d.sawToolCall = true
+			det.gotToolCall = true
 		}
 	}
 }
 
-func (d *openAIChatSilentRefusalDetector) ShouldReleaseClientOutput() bool {
-	if d == nil || !d.enabled {
+// ShouldReleaseClientOutput indicates whether enough signal has been observed
+// to safely start writing output to the client.
+func (det *openAIChatSilentRefusalDetector) ShouldReleaseClientOutput() bool {
+	if det == nil || !det.active {
 		return true
 	}
-	if d.sawContent || d.sawToolCall || d.sawFunctionCall || d.sawUsage || d.sawError || d.sawReasoning {
+	if det.gotContent || det.gotToolCall || det.gotFunctionCall || det.gotUsage || det.gotError || det.gotReasoning {
 		return true
 	}
-	return d.sawFinish && d.finishReason != "" && d.finishReason != "stop"
+	return det.gotFinish && det.finishReason != "" && det.finishReason != "stop"
 }
 
-func (d *openAIChatSilentRefusalDetector) IsSilentRefusal() bool {
-	if d == nil || !d.enabled {
+// IsSilentRefusal returns true if the stream completed with finish_reason=stop
+// but produced no meaningful output or usage.
+func (det *openAIChatSilentRefusalDetector) IsSilentRefusal() bool {
+	if det == nil || !det.active {
 		return false
 	}
-	return !d.sawContent &&
-		!d.sawToolCall &&
-		!d.sawFunctionCall &&
-		!d.sawUsage &&
-		!d.sawError &&
-		!d.sawReasoning &&
-		d.sawFinish &&
-		d.finishReason == "stop"
+	return !det.gotContent &&
+		!det.gotToolCall &&
+		!det.gotFunctionCall &&
+		!det.gotUsage &&
+		!det.gotError &&
+		!det.gotReasoning &&
+		det.gotFinish &&
+		det.finishReason == "stop"
 }
 
-func (d *openAIChatSilentRefusalDetector) observeEventType(eventType string) {
-	eventType = strings.TrimSpace(eventType)
-	if eventType == "" {
+func (det *openAIChatSilentRefusalDetector) observeEventType(evtKind string) {
+	evtKind = strings.TrimSpace(evtKind)
+	if evtKind == "" {
 		return
 	}
-	if eventType == "error" || eventType == "response.failed" {
-		d.sawError = true
+	if evtKind == "error" || evtKind == "response.failed" {
+		det.gotError = true
 	}
-	if strings.Contains(eventType, "reasoning") || strings.Contains(eventType, "reasoning_summary") {
-		d.sawReasoning = true
+	if strings.Contains(evtKind, "reasoning") || strings.Contains(evtKind, "reasoning_summary") {
+		det.gotReasoning = true
 	}
 }
 
-func (d *openAIChatSilentRefusalDetector) observeFinishReason(reason string) {
+func (det *openAIChatSilentRefusalDetector) observeFinishReason(reason string) {
 	reason = strings.TrimSpace(reason)
 	if reason == "" {
 		return
 	}
-	d.sawFinish = true
-	d.finishReason = reason
+	det.gotFinish = true
+	det.finishReason = reason
 }
 
-func (d *openAIChatSilentRefusalDetector) observeChatChoicesPayload(payload []byte) {
-	choices := gjson.GetBytes(payload, "choices")
-	if !choices.Exists() || !choices.IsArray() {
+func (det *openAIChatSilentRefusalDetector) observeChatChoicesPayload(data []byte) {
+	choiceArr := gjson.GetBytes(data, "choices")
+	if !choiceArr.Exists() || !choiceArr.IsArray() {
 		return
 	}
-	for _, choice := range choices.Array() {
-		if finish := choice.Get("finish_reason"); finish.Exists() {
-			d.observeFinishReason(finish.String())
+	for _, choice := range choiceArr.Array() {
+		if finishNode := choice.Get("finish_reason"); finishNode.Exists() {
+			det.observeFinishReason(finishNode.String())
 		}
-		delta := choice.Get("delta")
-		if !delta.Exists() {
+		deltaNode := choice.Get("delta")
+		if !deltaNode.Exists() {
 			continue
 		}
-		if content := delta.Get("content"); content.Exists() && content.String() != "" {
-			d.sawContent = true
+		if textNode := deltaNode.Get("content"); textNode.Exists() && textNode.String() != "" {
+			det.gotContent = true
 		}
-		if delta.Get("tool_calls").Exists() {
-			d.sawToolCall = true
+		if deltaNode.Get("tool_calls").Exists() {
+			det.gotToolCall = true
 		}
-		if delta.Get("function_call").Exists() {
-			d.sawFunctionCall = true
+		if deltaNode.Get("function_call").Exists() {
+			det.gotFunctionCall = true
 		}
-		if delta.Get("reasoning").Exists() ||
-			delta.Get("reasoning_content").Exists() ||
-			delta.Get("reasoning_summary").Exists() {
-			d.sawReasoning = true
+		if deltaNode.Get("reasoning").Exists() ||
+			deltaNode.Get("reasoning_content").Exists() ||
+			deltaNode.Get("reasoning_summary").Exists() {
+			det.gotReasoning = true
 		}
 	}
 }
 
-func (d *openAIChatSilentRefusalDetector) observeResponsesPayload(payload []byte, eventType string) {
-	switch eventType {
+func (det *openAIChatSilentRefusalDetector) observeResponsesPayload(data []byte, evtKind string) {
+	switch evtKind {
 	case "response.output_text.delta":
-		if gjson.GetBytes(payload, "delta").String() != "" {
-			d.sawContent = true
+		if gjson.GetBytes(data, "delta").String() != "" {
+			det.gotContent = true
 		}
 	case "response.output_item.added":
-		switch strings.TrimSpace(gjson.GetBytes(payload, "item.type").String()) {
+		switch strings.TrimSpace(gjson.GetBytes(data, "item.type").String()) {
 		case "function_call":
-			d.sawToolCall = true
+			det.gotToolCall = true
 		case "reasoning":
-			d.sawReasoning = true
+			det.gotReasoning = true
 		}
 	case "response.function_call_arguments.delta":
-		d.sawToolCall = true
+		det.gotToolCall = true
 	case "response.reasoning_summary_text.delta", "response.reasoning_summary_text.done":
-		d.sawReasoning = true
+		det.gotReasoning = true
 	case "response.completed", "response.done":
-		d.observeFinishReason("stop")
+		det.observeFinishReason("stop")
 	case "response.incomplete":
-		d.observeFinishReason("length")
+		det.observeFinishReason("length")
 	case "response.failed":
-		d.sawError = true
+		det.gotError = true
 	}
 
-	if output := gjson.GetBytes(payload, "response.output"); output.Exists() && output.IsArray() {
-		for _, item := range output.Array() {
-			switch strings.TrimSpace(item.Get("type").String()) {
+	if outputArr := gjson.GetBytes(data, "response.output"); outputArr.Exists() && outputArr.IsArray() {
+		for _, elem := range outputArr.Array() {
+			switch strings.TrimSpace(elem.Get("type").String()) {
 			case "function_call":
-				d.sawToolCall = true
+				det.gotToolCall = true
 			case "reasoning":
-				d.sawReasoning = true
+				det.gotReasoning = true
 			case "message":
-				d.observeResponseMessageItem(item)
+				det.observeResponseMessageItem(elem)
 			}
 		}
 	}
 }
 
-func (d *openAIChatSilentRefusalDetector) observeResponseMessageItem(item gjson.Result) {
-	content := item.Get("content")
-	if !content.Exists() || !content.IsArray() {
+func (det *openAIChatSilentRefusalDetector) observeResponseMessageItem(node gjson.Result) {
+	contentArr := node.Get("content")
+	if !contentArr.Exists() || !contentArr.IsArray() {
 		return
 	}
-	for _, part := range content.Array() {
+	for _, part := range contentArr.Array() {
 		if part.Get("text").String() != "" {
-			d.sawContent = true
+			det.gotContent = true
 			return
 		}
 	}
 }
 
-func newOpenAISilentRefusalFailoverError(c *gin.Context, account *Account, upstreamRequestID string) *UpstreamFailoverError {
-	accountID := int64(0)
-	accountName := ""
-	platform := PlatformOpenAI
-	if account != nil {
-		accountID = account.ID
-		accountName = account.Name
-		platform = account.Platform
+// newOpenAISilentRefusalFailoverError builds a failover error for a silent
+// refusal, recording the event in the ops error log.
+func newOpenAISilentRefusalFailoverError(gc *gin.Context, acct *Account, upstreamReqID string) *UpstreamFailoverError {
+	acctID := int64(0)
+	acctName := ""
+	plat := PlatformOpenAI
+	if acct != nil {
+		acctID = acct.ID
+		acctName = acct.Name
+		plat = acct.Platform
 	}
 
-	setOpsUpstreamError(c, http.StatusBadGateway, openAISilentRefusalUpstreamMessage, "")
-	appendOpsUpstreamError(c, OpsUpstreamErrorEvent{
-		Platform:           platform,
-		AccountID:          accountID,
-		AccountName:        accountName,
+	setOpsUpstreamError(gc, http.StatusBadGateway, openAISilentRefusalUpstreamMessage, "")
+	appendOpsUpstreamError(gc, OpsUpstreamErrorEvent{
+		Platform:           plat,
+		AccountID:          acctID,
+		AccountName:        acctName,
 		UpstreamStatusCode: http.StatusBadGateway,
-		UpstreamRequestID:  upstreamRequestID,
+		UpstreamRequestID:  upstreamReqID,
 		Kind:               "failover",
 		Message:            openAISilentRefusalUpstreamMessage,
 	})
 
-	headers := http.Header{}
-	if strings.TrimSpace(upstreamRequestID) != "" {
-		headers.Set("x-request-id", strings.TrimSpace(upstreamRequestID))
+	hdrs := http.Header{}
+	if strings.TrimSpace(upstreamReqID) != "" {
+		hdrs.Set("x-request-id", strings.TrimSpace(upstreamReqID))
 	}
 	return &UpstreamFailoverError{
 		StatusCode:      http.StatusBadGateway,
 		ResponseBody:    openAISilentRefusalErrorBody(),
-		ResponseHeaders: headers,
+		ResponseHeaders: hdrs,
 	}
 }
 
 func openAISilentRefusalErrorBody() []byte {
-	body, err := json.Marshal(map[string]any{
+	encoded, encErr := json.Marshal(map[string]any{
 		"error": map[string]any{
 			"type":    "upstream_error",
 			"code":    openAISilentRefusalErrorCode,
 			"message": openAISilentRefusalUpstreamMessage,
 		},
 	})
-	if err != nil {
+	if encErr != nil {
 		return []byte(`{"error":{"type":"upstream_error","code":"openai_silent_refusal","message":"OpenAI upstream returned an empty completion stream with finish_reason=stop and no usage"}}`)
 	}
-	return body
+	return encoded
 }
 
 // IsOpenAISilentRefusalErrorBody reports whether a failover body was produced

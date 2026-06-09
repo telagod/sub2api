@@ -22,391 +22,389 @@ import (
 // forwardResponsesViaRawChatCompletions serves /v1/responses clients through an
 // upstream that only supports /v1/chat/completions.
 func (s *OpenAIGatewayService) forwardResponsesViaRawChatCompletions(
-	ctx context.Context,
-	c *gin.Context,
-	account *Account,
-	body []byte,
+	reqCtx context.Context,
+	gc *gin.Context,
+	acct *Account,
+	rawBody []byte,
 ) (*OpenAIForwardResult, error) {
-	startTime := time.Now()
+	tStart := time.Now()
 
-	var responsesReq apicompat.ResponsesRequest
-	if err := json.Unmarshal(body, &responsesReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	var respReq apicompat.ResponsesRequest
+	if parseErr := json.Unmarshal(rawBody, &respReq); parseErr != nil {
+		gc.JSON(http.StatusBadRequest, gin.H{
 			"error": gin.H{
 				"type":    "invalid_request_error",
 				"message": "Failed to parse request body",
 			},
 		})
-		return nil, fmt.Errorf("parse responses request: %w", err)
+		return nil, fmt.Errorf("parse responses request: %w", parseErr)
 	}
-	originalModel := strings.TrimSpace(responsesReq.Model)
-	if originalModel == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
+	srcModel := strings.TrimSpace(respReq.Model)
+	if srcModel == "" {
+		gc.JSON(http.StatusBadRequest, gin.H{
 			"error": gin.H{
 				"type":    "invalid_request_error",
 				"message": "model is required",
 			},
 		})
-		return nil, fmt.Errorf("missing model in request")
+		return nil, fmt.Errorf("request body has no model field")
 	}
 
-	clientStream := responsesReq.Stream
-	reasoningEffort := extractOpenAIReasoningEffortFromBody(body, originalModel)
-	serviceTier := extractOpenAIServiceTierFromBody(body)
+	wantStream := respReq.Stream
+	effort := extractOpenAIReasoningEffortFromBody(rawBody, srcModel)
+	tier := extractOpenAIServiceTierFromBody(rawBody)
 
-	chatReq, err := apicompat.ResponsesToChatCompletionsRequest(&responsesReq)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	ccReq, convErr := apicompat.ResponsesToChatCompletionsRequest(&respReq)
+	if convErr != nil {
+		gc.JSON(http.StatusBadRequest, gin.H{
 			"error": gin.H{
 				"type":    "invalid_request_error",
-				"message": err.Error(),
+				"message": convErr.Error(),
 			},
 		})
-		return nil, fmt.Errorf("convert responses to chat completions: %w", err)
+		return nil, fmt.Errorf("convert responses to chat completions: %w", convErr)
 	}
 
-	billingModel := resolveOpenAIForwardModel(account, originalModel, "")
-	upstreamModel := normalizeOpenAIModelForUpstream(account, billingModel)
-	chatReq.Model = upstreamModel
-	if clientStream {
-		chatReq.StreamOptions = &apicompat.ChatStreamOptions{IncludeUsage: true}
+	billModel := resolveOpenAIForwardModel(acct, srcModel, "")
+	destModel := normalizeOpenAIModelForUpstream(acct, billModel)
+	ccReq.Model = destModel
+	if wantStream {
+		ccReq.StreamOptions = &apicompat.ChatStreamOptions{IncludeUsage: true}
 	}
 
-	chatBody, err := json.Marshal(chatReq)
-	if err != nil {
-		return nil, fmt.Errorf("marshal chat completions fallback request: %w", err)
+	ccBody, marshalErr := json.Marshal(ccReq)
+	if marshalErr != nil {
+		return nil, fmt.Errorf("marshal chat completions fallback request: %w", marshalErr)
 	}
-	chatBody, err = s.applyOpenAIFastPolicyToBody(ctx, account, upstreamModel, chatBody)
-	if err != nil {
-		var blocked *OpenAIFastBlockedError
-		if errors.As(err, &blocked) {
-			writeOpenAIFastPolicyBlockedResponse(c, blocked)
+	ccBody, policyErr := s.applyOpenAIFastPolicyToBody(reqCtx, acct, destModel, ccBody)
+	if policyErr != nil {
+		var blockedErr *OpenAIFastBlockedError
+		if errors.As(policyErr, &blockedErr) {
+			writeOpenAIFastPolicyBlockedResponse(gc, blockedErr)
 		}
-		return nil, err
+		return nil, policyErr
 	}
-	if serviceTier == nil {
-		serviceTier = extractOpenAIServiceTierFromBody(chatBody)
+	if tier == nil {
+		tier = extractOpenAIServiceTierFromBody(ccBody)
 	}
 
 	logger.L().Debug("openai responses: forwarding via raw chat completions",
-		zap.Int64("account_id", account.ID),
-		zap.String("original_model", originalModel),
-		zap.String("billing_model", billingModel),
-		zap.String("upstream_model", upstreamModel),
-		zap.Bool("stream", clientStream),
+		zap.Int64("account_id", acct.ID),
+		zap.String("original_model", srcModel),
+		zap.String("billing_model", billModel),
+		zap.String("upstream_model", destModel),
+		zap.Bool("stream", wantStream),
 	)
 
-	apiKey := account.GetOpenAIApiKey()
-	if apiKey == "" {
-		return nil, fmt.Errorf("account %d missing api_key", account.ID)
+	authKey := acct.GetOpenAIApiKey()
+	if authKey == "" {
+		return nil, fmt.Errorf("account %d has no api_key configured", acct.ID)
 	}
-	baseURL := account.GetOpenAIBaseURL()
-	if baseURL == "" {
-		baseURL = "https://api.openai.com"
+	origin := acct.GetOpenAIBaseURL()
+	if origin == "" {
+		origin = "https://api.openai.com"
 	}
-	validatedURL, err := s.validateUpstreamBaseURL(baseURL)
-	if err != nil {
-		return nil, fmt.Errorf("invalid base_url: %w", err)
+	safeURL, urlErr := s.validateUpstreamBaseURL(origin)
+	if urlErr != nil {
+		return nil, fmt.Errorf("invalid base_url: %w", urlErr)
 	}
-	targetURL := buildOpenAIChatCompletionsURL(validatedURL)
+	endpoint := buildOpenAIChatCompletionsURL(safeURL)
 
-	upstreamCtx, releaseUpstreamCtx := decoupleUpstreamContext(ctx)
-	upstreamReq, err := http.NewRequestWithContext(upstreamCtx, http.MethodPost, targetURL, bytes.NewReader(chatBody))
-	releaseUpstreamCtx()
-	if err != nil {
-		return nil, fmt.Errorf("build upstream request: %w", err)
+	detachedCtx, releaseDetached := decoupleUpstreamContext(reqCtx)
+	httpReq, buildErr := http.NewRequestWithContext(detachedCtx, http.MethodPost, endpoint, bytes.NewReader(ccBody))
+	releaseDetached()
+	if buildErr != nil {
+		return nil, fmt.Errorf("build upstream request: %w", buildErr)
 	}
-	upstreamReq = upstreamReq.WithContext(WithHTTPUpstreamProfile(upstreamReq.Context(), HTTPUpstreamProfileOpenAI))
-	upstreamReq.Header.Set("Content-Type", "application/json")
-	upstreamReq.Header.Set("Authorization", "Bearer "+apiKey)
-	if clientStream {
-		upstreamReq.Header.Set("Accept", "text/event-stream")
+	httpReq = httpReq.WithContext(WithHTTPUpstreamProfile(httpReq.Context(), HTTPUpstreamProfileOpenAI))
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+authKey)
+	if wantStream {
+		httpReq.Header.Set("Accept", "text/event-stream")
 	} else {
-		upstreamReq.Header.Set("Accept", "application/json")
+		httpReq.Header.Set("Accept", "application/json")
 	}
-	for key, values := range c.Request.Header {
-		lowerKey := strings.ToLower(key)
-		if openaiCCRawAllowedHeaders[lowerKey] {
-			for _, v := range values {
-				upstreamReq.Header.Add(key, v)
+	for hdrName, hdrValues := range gc.Request.Header {
+		if openaiCCRawAllowedHeaders[strings.ToLower(hdrName)] {
+			for _, hv := range hdrValues {
+				httpReq.Header.Add(hdrName, hv)
 			}
 		}
 	}
-	if customUA := account.GetOpenAIUserAgent(); customUA != "" {
-		upstreamReq.Header.Set("user-agent", customUA)
+	if overrideUA := acct.GetOpenAIUserAgent(); overrideUA != "" {
+		httpReq.Header.Set("user-agent", overrideUA)
 	}
 
-	proxyURL := ""
-	if account.Proxy != nil {
-		proxyURL = account.Proxy.URL()
+	proxyAddr := ""
+	if acct.Proxy != nil {
+		proxyAddr = acct.Proxy.URL()
 	}
-	resp, err := s.httpUpstream.Do(upstreamReq, proxyURL, account.ID, account.Concurrency)
-	if err != nil {
-		// Transport-level failure (proxy/DNS/TCP/TLS — no HTTP response). Convert to
-		// a failover so the handler switches to a healthy account, and temporarily
-		// unschedule the account on durable faults (e.g. rejected proxy credentials).
-		return nil, s.handleOpenAIUpstreamTransportError(ctx, c, account, err, false)
+	upResp, doErr := s.httpUpstream.Do(httpReq, proxyAddr, acct.ID, acct.Concurrency)
+	if doErr != nil {
+		// Transport-level failure (proxy/DNS/TCP/TLS). Produce a failover error
+		// so the handler can switch to a healthy account.
+		return nil, s.handleOpenAIUpstreamTransportError(reqCtx, gc, acct, doErr, false)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() { _ = upResp.Body.Close() }()
 
-	if resp.StatusCode >= 400 {
-		respBody := s.readUpstreamErrorBody(resp)
-		_ = resp.Body.Close()
-		resp.Body = io.NopCloser(bytes.NewReader(respBody))
+	if upResp.StatusCode >= 400 {
+		errBody := s.readUpstreamErrorBody(upResp)
+		_ = upResp.Body.Close()
+		upResp.Body = io.NopCloser(bytes.NewReader(errBody))
 
-		upstreamMsg := strings.TrimSpace(extractUpstreamErrorMessage(respBody))
-		upstreamMsg = sanitizeUpstreamErrorMessage(upstreamMsg)
-		if s.shouldFailoverOpenAIUpstreamResponse(resp.StatusCode, upstreamMsg, respBody) {
-			upstreamDetail := ""
+		errMsg := sanitizeUpstreamErrorMessage(strings.TrimSpace(extractUpstreamErrorMessage(errBody)))
+		if s.shouldFailoverOpenAIUpstreamResponse(upResp.StatusCode, errMsg, errBody) {
+			detail := ""
 			if s.cfg != nil && s.cfg.Gateway.LogUpstreamErrorBody {
-				maxBytes := s.cfg.Gateway.LogUpstreamErrorBodyMaxBytes
-				if maxBytes <= 0 {
-					maxBytes = 2048
+				maxLen := s.cfg.Gateway.LogUpstreamErrorBodyMaxBytes
+				if maxLen <= 0 {
+					maxLen = 2048
 				}
-				upstreamDetail = truncateString(string(respBody), maxBytes)
+				detail = truncateString(string(errBody), maxLen)
 			}
-			appendOpsUpstreamError(c, OpsUpstreamErrorEvent{
-				Platform:           account.Platform,
-				AccountID:          account.ID,
-				AccountName:        account.Name,
-				UpstreamStatusCode: resp.StatusCode,
-				UpstreamRequestID:  resp.Header.Get("x-request-id"),
+			appendOpsUpstreamError(gc, OpsUpstreamErrorEvent{
+				Platform:           acct.Platform,
+				AccountID:          acct.ID,
+				AccountName:        acct.Name,
+				UpstreamStatusCode: upResp.StatusCode,
+				UpstreamRequestID:  upResp.Header.Get("x-request-id"),
 				Kind:               "failover",
-				Message:            upstreamMsg,
-				Detail:             upstreamDetail,
+				Message:            errMsg,
+				Detail:             detail,
 			})
-			s.handleOpenAIAccountUpstreamError(ctx, account, resp.StatusCode, resp.Header, respBody, upstreamModel)
+			s.handleOpenAIAccountUpstreamError(reqCtx, acct, upResp.StatusCode, upResp.Header, errBody, destModel)
 			return nil, &UpstreamFailoverError{
-				StatusCode:             resp.StatusCode,
-				ResponseBody:           respBody,
-				RetryableOnSameAccount: account.IsPoolMode() && (account.IsPoolModeRetryableStatus(resp.StatusCode) || isOpenAITransientProcessingError(resp.StatusCode, upstreamMsg, respBody)),
+				StatusCode:             upResp.StatusCode,
+				ResponseBody:           errBody,
+				RetryableOnSameAccount: acct.IsPoolMode() && (acct.IsPoolModeRetryableStatus(upResp.StatusCode) || isOpenAITransientProcessingError(upResp.StatusCode, errMsg, errBody)),
 			}
 		}
-		return s.handleErrorResponse(ctx, resp, c, account, chatBody, billingModel)
+		return s.handleErrorResponse(reqCtx, upResp, gc, acct, ccBody, billModel)
 	}
 
-	if clientStream {
-		return s.streamChatCompletionsAsResponses(c, resp, originalModel, billingModel, upstreamModel, reasoningEffort, serviceTier, startTime)
+	if wantStream {
+		return s.streamChatCompletionsAsResponses(gc, upResp, srcModel, billModel, destModel, effort, tier, tStart)
 	}
-	return s.bufferChatCompletionsAsResponses(c, resp, originalModel, billingModel, upstreamModel, reasoningEffort, serviceTier, startTime)
+	return s.bufferChatCompletionsAsResponses(gc, upResp, srcModel, billModel, destModel, effort, tier, tStart)
 }
 
 func (s *OpenAIGatewayService) bufferChatCompletionsAsResponses(
-	c *gin.Context,
-	resp *http.Response,
-	originalModel string,
-	billingModel string,
-	upstreamModel string,
-	reasoningEffort *string,
-	serviceTier *string,
-	startTime time.Time,
+	gc *gin.Context,
+	upResp *http.Response,
+	srcModel string,
+	billModel string,
+	destModel string,
+	effort *string,
+	tier *string,
+	tStart time.Time,
 ) (*OpenAIForwardResult, error) {
-	requestID := resp.Header.Get("x-request-id")
-	respBody, err := ReadUpstreamResponseBody(resp.Body, s.cfg, c, openAITooLargeError)
-	if err != nil {
-		if !errors.Is(err, ErrUpstreamResponseBodyTooLarge) {
-			c.JSON(http.StatusBadGateway, gin.H{
+	reqID := upResp.Header.Get("x-request-id")
+	bodyBytes, readErr := ReadUpstreamResponseBody(upResp.Body, s.cfg, gc, openAITooLargeError)
+	if readErr != nil {
+		if !errors.Is(readErr, ErrUpstreamResponseBodyTooLarge) {
+			gc.JSON(http.StatusBadGateway, gin.H{
 				"error": gin.H{
 					"type":    "api_error",
 					"message": "Failed to read upstream response",
 				},
 			})
 		}
-		return nil, fmt.Errorf("read upstream body: %w", err)
+		return nil, fmt.Errorf("read upstream body: %w", readErr)
 	}
 
-	var ccResp apicompat.ChatCompletionsResponse
-	if err := json.Unmarshal(respBody, &ccResp); err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{
+	var decoded apicompat.ChatCompletionsResponse
+	if parseErr := json.Unmarshal(bodyBytes, &decoded); parseErr != nil {
+		gc.JSON(http.StatusBadGateway, gin.H{
 			"error": gin.H{
 				"type":    "api_error",
 				"message": "Failed to parse upstream response",
 			},
 		})
-		return nil, fmt.Errorf("parse chat completions response: %w", err)
+		return nil, fmt.Errorf("parse chat completions response: %w", parseErr)
 	}
-	responsesResp := apicompat.ChatCompletionsResponseToResponses(&ccResp, originalModel)
+	converted := apicompat.ChatCompletionsResponseToResponses(&decoded, srcModel)
 
-	usage := OpenAIUsage{}
-	if parsed, ok := extractOpenAIUsageFromJSONBytes(respBody); ok {
-		usage = parsed
+	tokenUsage := OpenAIUsage{}
+	if parsed, found := extractOpenAIUsageFromJSONBytes(bodyBytes); found {
+		tokenUsage = parsed
 	}
 
 	if s.responseHeaderFilter != nil {
-		responseheaders.WriteFilteredHeaders(c.Writer.Header(), resp.Header, s.responseHeaderFilter)
+		responseheaders.WriteFilteredHeaders(gc.Writer.Header(), upResp.Header, s.responseHeaderFilter)
 	}
-	c.JSON(http.StatusOK, responsesResp)
+	gc.JSON(http.StatusOK, converted)
 
 	return &OpenAIForwardResult{
-		RequestID:       requestID,
-		Usage:           usage,
-		Model:           originalModel,
-		BillingModel:    billingModel,
-		UpstreamModel:   upstreamModel,
-		ReasoningEffort: reasoningEffort,
-		ServiceTier:     serviceTier,
+		RequestID:       reqID,
+		Usage:           tokenUsage,
+		Model:           srcModel,
+		BillingModel:    billModel,
+		UpstreamModel:   destModel,
+		ReasoningEffort: effort,
+		ServiceTier:     tier,
 		Stream:          false,
-		Duration:        time.Since(startTime),
+		Duration:        time.Since(tStart),
 	}, nil
 }
 
 func (s *OpenAIGatewayService) streamChatCompletionsAsResponses(
-	c *gin.Context,
-	resp *http.Response,
-	originalModel string,
-	billingModel string,
-	upstreamModel string,
-	reasoningEffort *string,
-	serviceTier *string,
-	startTime time.Time,
+	gc *gin.Context,
+	upResp *http.Response,
+	srcModel string,
+	billModel string,
+	destModel string,
+	effort *string,
+	tier *string,
+	tStart time.Time,
 ) (*OpenAIForwardResult, error) {
-	requestID := resp.Header.Get("x-request-id")
-	headersWritten := false
-	writeStreamHeaders := func() {
-		if headersWritten {
+	reqID := upResp.Header.Get("x-request-id")
+	headersSent := false
+	emitHeaders := func() {
+		if headersSent {
 			return
 		}
-		headersWritten = true
+		headersSent = true
 		if s.responseHeaderFilter != nil {
-			responseheaders.WriteFilteredHeaders(c.Writer.Header(), resp.Header, s.responseHeaderFilter)
+			responseheaders.WriteFilteredHeaders(gc.Writer.Header(), upResp.Header, s.responseHeaderFilter)
 		}
-		c.Writer.Header().Set("Content-Type", "text/event-stream")
-		c.Writer.Header().Set("Cache-Control", "no-cache")
-		c.Writer.Header().Set("Connection", "keep-alive")
-		c.Writer.Header().Set("X-Accel-Buffering", "no")
-		c.Writer.WriteHeader(http.StatusOK)
+		gc.Writer.Header().Set("Content-Type", "text/event-stream")
+		gc.Writer.Header().Set("Cache-Control", "no-cache")
+		gc.Writer.Header().Set("Connection", "keep-alive")
+		gc.Writer.Header().Set("X-Accel-Buffering", "no")
+		gc.Writer.WriteHeader(http.StatusOK)
 	}
 
-	state := apicompat.NewChatCompletionsToResponsesStreamState(originalModel)
-	var usage OpenAIUsage
-	var firstTokenMs *int
-	clientDisconnected := false
-	sawDone := false
+	converter := apicompat.NewChatCompletionsToResponsesStreamState(srcModel)
+	var tokenUsage OpenAIUsage
+	var ttft *int
+	peerGone := false
+	gotDone := false
 
-	writeEvents := func(events []apicompat.ResponsesStreamEvent) {
-		if clientDisconnected || len(events) == 0 {
+	emitEvents := func(evts []apicompat.ResponsesStreamEvent) {
+		if peerGone || len(evts) == 0 {
 			return
 		}
-		writeStreamHeaders()
-		for _, event := range events {
-			sse, err := apicompat.ResponsesEventToSSE(event)
-			if err != nil {
+		emitHeaders()
+		for _, evt := range evts {
+			sseBytes, fmtErr := apicompat.ResponsesEventToSSE(evt)
+			if fmtErr != nil {
 				logger.L().Warn("openai responses chat fallback: failed to marshal stream event",
-					zap.Error(err),
-					zap.String("request_id", requestID),
+					zap.Error(fmtErr),
+					zap.String("request_id", reqID),
 				)
 				continue
 			}
-			if _, err := fmt.Fprint(c.Writer, sse); err != nil {
-				clientDisconnected = true
+			if _, wErr := fmt.Fprint(gc.Writer, sseBytes); wErr != nil {
+				peerGone = true
 				logger.L().Debug("openai responses chat fallback: client disconnected, continuing to drain upstream for billing",
-					zap.Error(err),
-					zap.String("request_id", requestID),
+					zap.Error(wErr),
+					zap.String("request_id", reqID),
 				)
 				return
 			}
 		}
-		c.Writer.Flush()
+		gc.Writer.Flush()
 	}
 
-	scanner := bufio.NewScanner(resp.Body)
-	maxLineSize := defaultMaxLineSize
+	sc := bufio.NewScanner(upResp.Body)
+	lineCap := defaultMaxLineSize
 	if s.cfg != nil && s.cfg.Gateway.MaxLineSize > 0 {
-		maxLineSize = s.cfg.Gateway.MaxLineSize
+		lineCap = s.cfg.Gateway.MaxLineSize
 	}
-	scanner.Buffer(make([]byte, 0, 64*1024), maxLineSize)
+	sc.Buffer(make([]byte, 0, 64*1024), lineCap)
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		payload, ok := extractOpenAISSEDataLine(line)
-		if !ok {
+	for sc.Scan() {
+		ln := sc.Text()
+		data, matched := extractOpenAISSEDataLine(ln)
+		if !matched {
 			continue
 		}
-		payload = strings.TrimSpace(payload)
-		if payload == "" {
+		data = strings.TrimSpace(data)
+		if data == "" {
 			continue
 		}
-		if payload == "[DONE]" {
-			sawDone = true
+		if data == "[DONE]" {
+			gotDone = true
 			break
 		}
 
-		if u := extractCCStreamUsage(payload); u != nil {
-			usage = *u
+		if parsed := extractCCStreamUsage(data); parsed != nil {
+			tokenUsage = *parsed
 		}
 
-		var chunk apicompat.ChatCompletionsChunk
-		if err := json.Unmarshal([]byte(payload), &chunk); err != nil {
+		var chk apicompat.ChatCompletionsChunk
+		if unmarshalErr := json.Unmarshal([]byte(data), &chk); unmarshalErr != nil {
 			logger.L().Warn("openai responses chat fallback: failed to parse chat stream chunk",
-				zap.Error(err),
-				zap.String("request_id", requestID),
+				zap.Error(unmarshalErr),
+				zap.String("request_id", reqID),
 			)
 			continue
 		}
-		if firstTokenMs == nil && !isOpenAIChatUsageOnlyStreamChunk(payload) && chatChunkStartsResponsesOutput(&chunk) {
-			ms := int(time.Since(startTime).Milliseconds())
-			firstTokenMs = &ms
+		if ttft == nil && !isOpenAIChatUsageOnlyStreamChunk(data) && chatChunkStartsResponsesOutput(&chk) {
+			ms := int(time.Since(tStart).Milliseconds())
+			ttft = &ms
 		}
-		writeEvents(apicompat.ChatCompletionsChunkToResponsesEvents(&chunk, state))
+		emitEvents(apicompat.ChatCompletionsChunkToResponsesEvents(&chk, converter))
 	}
 
-	if err := scanner.Err(); err != nil {
-		if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+	if scanErr := sc.Err(); scanErr != nil {
+		if !errors.Is(scanErr, context.Canceled) && !errors.Is(scanErr, context.DeadlineExceeded) {
 			logger.L().Warn("openai responses chat fallback: stream read error",
-				zap.Error(err),
-				zap.String("request_id", requestID),
+				zap.Error(scanErr),
+				zap.String("request_id", reqID),
 			)
 		}
 		return &OpenAIForwardResult{
-			RequestID:       requestID,
-			Usage:           usage,
-			Model:           originalModel,
-			BillingModel:    billingModel,
-			UpstreamModel:   upstreamModel,
-			ReasoningEffort: reasoningEffort,
-			ServiceTier:     serviceTier,
+			RequestID:       reqID,
+			Usage:           tokenUsage,
+			Model:           srcModel,
+			BillingModel:    billModel,
+			UpstreamModel:   destModel,
+			ReasoningEffort: effort,
+			ServiceTier:     tier,
 			Stream:          true,
-			Duration:        time.Since(startTime),
-			FirstTokenMs:    firstTokenMs,
-		}, fmt.Errorf("stream usage incomplete: %w", err)
+			Duration:        time.Since(tStart),
+			FirstTokenMs:    ttft,
+		}, fmt.Errorf("stream usage incomplete: %w", scanErr)
 	}
 
-	writeEvents(apicompat.FinalizeChatCompletionsResponsesStream(state))
-	if !clientDisconnected {
-		writeStreamHeaders()
-		if _, err := fmt.Fprint(c.Writer, "data: [DONE]\n\n"); err != nil {
-			clientDisconnected = true
+	emitEvents(apicompat.FinalizeChatCompletionsResponsesStream(converter))
+	if !peerGone {
+		emitHeaders()
+		if _, wErr := fmt.Fprint(gc.Writer, "data: [DONE]\n\n"); wErr != nil {
+			peerGone = true
 		}
-		if !clientDisconnected {
-			c.Writer.Flush()
+		if !peerGone {
+			gc.Writer.Flush()
 		}
 	}
-	if !sawDone {
+	if !gotDone {
 		logger.L().Debug("openai responses chat fallback: upstream stream ended without done sentinel",
-			zap.String("request_id", requestID),
+			zap.String("request_id", reqID),
 		)
 	}
 
 	return &OpenAIForwardResult{
-		RequestID:       requestID,
-		Usage:           usage,
-		Model:           originalModel,
-		BillingModel:    billingModel,
-		UpstreamModel:   upstreamModel,
-		ReasoningEffort: reasoningEffort,
-		ServiceTier:     serviceTier,
+		RequestID:       reqID,
+		Usage:           tokenUsage,
+		Model:           srcModel,
+		BillingModel:    billModel,
+		UpstreamModel:   destModel,
+		ReasoningEffort: effort,
+		ServiceTier:     tier,
 		Stream:          true,
-		Duration:        time.Since(startTime),
-		FirstTokenMs:    firstTokenMs,
+		Duration:        time.Since(tStart),
+		FirstTokenMs:    ttft,
 	}, nil
 }
 
-func chatChunkStartsResponsesOutput(chunk *apicompat.ChatCompletionsChunk) bool {
-	if chunk == nil {
+func chatChunkStartsResponsesOutput(chk *apicompat.ChatCompletionsChunk) bool {
+	if chk == nil {
 		return false
 	}
-	for _, choice := range chunk.Choices {
-		if choice.Delta.Content != nil || choice.Delta.ReasoningContent != nil || len(choice.Delta.ToolCalls) > 0 {
+	for idx := range chk.Choices {
+		delta := chk.Choices[idx].Delta
+		if delta.Content != nil || delta.ReasoningContent != nil || len(delta.ToolCalls) > 0 {
 			return true
 		}
 	}

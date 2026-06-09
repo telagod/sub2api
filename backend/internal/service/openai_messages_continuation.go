@@ -20,312 +20,326 @@ type openAICompatSessionResponseBinding struct {
 	ExpiresAt            time.Time
 }
 
-func openAICompatContinuationEnabled(account *Account, model string) bool {
-	if account == nil || account.Type != AccountTypeAPIKey {
+// openAICompatContinuationEnabled checks whether session-level continuation
+// is available for the given account and model combination.
+func openAICompatContinuationEnabled(acct *Account, modelName string) bool {
+	if acct == nil || acct.Type != AccountTypeAPIKey {
 		return false
 	}
-	return shouldAutoInjectPromptCacheKeyForCompat(model)
+	return shouldAutoInjectPromptCacheKeyForCompat(modelName)
 }
 
+// trimAnthropicCompatResponsesInputToLatestTurn strips earlier turns from
+// the input slice, keeping only the most recent turn boundary.
 func trimAnthropicCompatResponsesInputToLatestTurn(req *apicompat.ResponsesRequest) {
 	if req == nil || len(req.Input) == 0 {
 		return
 	}
 
-	var items []apicompat.ResponsesInputItem
-	if err := json.Unmarshal(req.Input, &items); err != nil || len(items) == 0 {
+	var parsed []apicompat.ResponsesInputItem
+	if unmarshalErr := json.Unmarshal(req.Input, &parsed); unmarshalErr != nil || len(parsed) == 0 {
 		return
 	}
 
-	start := latestAnthropicCompatResponsesInputTurnStart(items)
-	trimmed := append([]apicompat.ResponsesInputItem(nil), items[start:]...)
-	if len(trimmed) == len(items) {
+	boundary := latestAnthropicCompatResponsesInputTurnStart(parsed)
+	kept := append([]apicompat.ResponsesInputItem(nil), parsed[boundary:]...)
+	if len(kept) == len(parsed) {
 		return
 	}
-	if input, err := json.Marshal(trimmed); err == nil {
-		req.Input = input
+	if encoded, encErr := json.Marshal(kept); encErr == nil {
+		req.Input = encoded
 	}
 }
 
-func latestAnthropicCompatResponsesInputTurnStart(items []apicompat.ResponsesInputItem) int {
-	if len(items) == 0 {
+// latestAnthropicCompatResponsesInputTurnStart locates the start index of
+// the most recent logical turn in the input item list.
+func latestAnthropicCompatResponsesInputTurnStart(elems []apicompat.ResponsesInputItem) int {
+	if len(elems) == 0 {
 		return 0
 	}
 
-	start := len(items) - 1
-	last := items[start]
+	idx := len(elems) - 1
+	tail := elems[idx]
 	switch {
-	case last.Type == "function_call_output":
-		for start > 0 && items[start-1].Type == "function_call_output" {
-			start--
+	case tail.Type == "function_call_output":
+		for idx > 0 && elems[idx-1].Type == "function_call_output" {
+			idx--
 		}
-	case last.Type == "message" && last.Role == "user":
-		for start > 0 && items[start-1].Type == "function_call_output" {
-			start--
+	case tail.Type == "message" && tail.Role == "user":
+		for idx > 0 && elems[idx-1].Type == "function_call_output" {
+			idx--
 		}
 	default:
-		return start
+		return idx
 	}
 
-	return expandAnthropicCompatResponsesInputToolCallStart(items, start)
+	return expandAnthropicCompatResponsesInputToolCallStart(elems, idx)
 }
 
-func expandAnthropicCompatResponsesInputToolCallStart(items []apicompat.ResponsesInputItem, start int) int {
-	if start < 0 || start >= len(items) {
-		return start
+// expandAnthropicCompatResponsesInputToolCallStart walks backwards to include
+// any function_call items whose call_id is referenced by downstream
+// function_call_output items.
+func expandAnthropicCompatResponsesInputToolCallStart(elems []apicompat.ResponsesInputItem, pos int) int {
+	if pos < 0 || pos >= len(elems) {
+		return pos
 	}
 
-	needed := make(map[string]struct{})
-	for i := start; i < len(items); i++ {
-		if items[i].Type != "function_call_output" {
+	required := make(map[string]struct{})
+	for i := pos; i < len(elems); i++ {
+		if elems[i].Type != "function_call_output" {
 			continue
 		}
-		callID := strings.TrimSpace(items[i].CallID)
-		if callID != "" {
-			needed[callID] = struct{}{}
+		cid := strings.TrimSpace(elems[i].CallID)
+		if cid != "" {
+			required[cid] = struct{}{}
 		}
 	}
-	if len(needed) == 0 {
-		return start
+	if len(required) == 0 {
+		return pos
 	}
 
-	expandedStart := start
-	for i := start - 1; i >= 0 && len(needed) > 0; i-- {
-		if items[i].Type != "function_call" {
+	expanded := pos
+	for i := pos - 1; i >= 0 && len(required) > 0; i-- {
+		if elems[i].Type != "function_call" {
 			continue
 		}
-		callID := strings.TrimSpace(items[i].CallID)
-		if _, ok := needed[callID]; !ok {
+		cid := strings.TrimSpace(elems[i].CallID)
+		if _, found := required[cid]; !found {
 			continue
 		}
-		delete(needed, callID)
-		expandedStart = i
+		delete(required, cid)
+		expanded = i
 	}
-	return expandedStart
+	return expanded
 }
 
-func isOpenAICompatPreviousResponseNotFound(statusCode int, upstreamMsg string, upstreamBody []byte) bool {
+// isOpenAICompatPreviousResponseNotFound returns true when the upstream
+// reports that the referenced previous_response_id does not exist.
+func isOpenAICompatPreviousResponseNotFound(statusCode int, errMsg string, errBody []byte) bool {
 	if statusCode != http.StatusBadRequest && statusCode != http.StatusNotFound {
 		return false
 	}
-	check := func(s string) bool {
-		lower := strings.ToLower(strings.TrimSpace(s))
-		return strings.Contains(lower, "previous_response_not_found") ||
-			(strings.Contains(lower, "previous response") && strings.Contains(lower, "not found")) ||
-			(strings.Contains(lower, "unsupported parameter") && strings.Contains(lower, "previous_response_id"))
+	probe := func(text string) bool {
+		lo := strings.ToLower(strings.TrimSpace(text))
+		return strings.Contains(lo, "previous_response_not_found") ||
+			(strings.Contains(lo, "previous response") && strings.Contains(lo, "not found")) ||
+			(strings.Contains(lo, "unsupported parameter") && strings.Contains(lo, "previous_response_id"))
 	}
-	if check(upstreamMsg) || check(string(upstreamBody)) {
+	if probe(errMsg) || probe(string(errBody)) {
 		return true
 	}
-	return check(gjson.GetBytes(upstreamBody, "error.code").String()) ||
-		check(gjson.GetBytes(upstreamBody, "error.message").String())
+	return probe(gjson.GetBytes(errBody, "error.code").String()) ||
+		probe(gjson.GetBytes(errBody, "error.message").String())
 }
 
-func isOpenAICompatPreviousResponseUnsupported(statusCode int, upstreamMsg string, upstreamBody []byte) bool {
+// isOpenAICompatPreviousResponseUnsupported returns true when the upstream
+// indicates that previous_response_id is not a supported parameter at all.
+func isOpenAICompatPreviousResponseUnsupported(statusCode int, errMsg string, errBody []byte) bool {
 	if statusCode != http.StatusBadRequest {
 		return false
 	}
-	check := func(s string) bool {
-		lower := strings.ToLower(strings.TrimSpace(s))
-		if !strings.Contains(lower, "previous_response_id") {
+	probe := func(text string) bool {
+		lo := strings.ToLower(strings.TrimSpace(text))
+		if !strings.Contains(lo, "previous_response_id") {
 			return false
 		}
-		return strings.Contains(lower, "unsupported parameter") ||
-			strings.Contains(lower, "only supported on responses websocket") ||
-			strings.Contains(lower, "not supported")
+		return strings.Contains(lo, "unsupported parameter") ||
+			strings.Contains(lo, "only supported on responses websocket") ||
+			strings.Contains(lo, "not supported")
 	}
-	if check(upstreamMsg) || check(string(upstreamBody)) {
+	if probe(errMsg) || probe(string(errBody)) {
 		return true
 	}
-	return check(gjson.GetBytes(upstreamBody, "error.code").String()) ||
-		check(gjson.GetBytes(upstreamBody, "error.message").String())
+	return probe(gjson.GetBytes(errBody, "error.code").String()) ||
+		probe(gjson.GetBytes(errBody, "error.message").String())
 }
 
-func openAICompatSessionResponseKey(c *gin.Context, account *Account, promptCacheKey string) string {
-	key := strings.TrimSpace(promptCacheKey)
-	if account == nil || key == "" {
+func openAICompatSessionResponseKey(gc *gin.Context, acct *Account, cacheKey string) string {
+	ck := strings.TrimSpace(cacheKey)
+	if acct == nil || ck == "" {
 		return ""
 	}
-	apiKeyID := int64(0)
-	if c != nil {
-		apiKeyID = getAPIKeyIDFromContext(c)
+	keyID := int64(0)
+	if gc != nil {
+		keyID = getAPIKeyIDFromContext(gc)
 	}
 	return strings.Join([]string{
-		strconv.FormatInt(account.ID, 10),
-		strconv.FormatInt(apiKeyID, 10),
-		key,
+		strconv.FormatInt(acct.ID, 10),
+		strconv.FormatInt(keyID, 10),
+		ck,
 	}, "\x00")
 }
 
-func (s *OpenAIGatewayService) getOpenAICompatSessionResponseID(_ context.Context, c *gin.Context, account *Account, promptCacheKey string) string {
+func (s *OpenAIGatewayService) getOpenAICompatSessionResponseID(_ context.Context, gc *gin.Context, acct *Account, cacheKey string) string {
 	if s == nil {
 		return ""
 	}
-	key := openAICompatSessionResponseKey(c, account, promptCacheKey)
-	if key == "" {
+	sessionKey := openAICompatSessionResponseKey(gc, acct, cacheKey)
+	if sessionKey == "" {
 		return ""
 	}
-	raw, ok := s.openaiCompatSessionResponses.Load(key)
-	if !ok {
+	val, loaded := s.openaiCompatSessionResponses.Load(sessionKey)
+	if !loaded {
 		return ""
 	}
-	binding, ok := raw.(openAICompatSessionResponseBinding)
-	if !ok {
-		s.openaiCompatSessionResponses.Delete(key)
+	entry, valid := val.(openAICompatSessionResponseBinding)
+	if !valid {
+		s.openaiCompatSessionResponses.Delete(sessionKey)
 		return ""
 	}
-	if !binding.ExpiresAt.IsZero() && time.Now().After(binding.ExpiresAt) {
-		s.openaiCompatSessionResponses.Delete(key)
+	if !entry.ExpiresAt.IsZero() && time.Now().After(entry.ExpiresAt) {
+		s.openaiCompatSessionResponses.Delete(sessionKey)
 		return ""
 	}
-	if binding.ContinuationDisabled {
+	if entry.ContinuationDisabled {
 		return ""
 	}
-	if strings.TrimSpace(binding.ResponseID) == "" {
-		s.openaiCompatSessionResponses.Delete(key)
+	rid := strings.TrimSpace(entry.ResponseID)
+	if rid == "" {
+		s.openaiCompatSessionResponses.Delete(sessionKey)
 		return ""
 	}
-	return strings.TrimSpace(binding.ResponseID)
+	return rid
 }
 
-func (s *OpenAIGatewayService) bindOpenAICompatSessionResponseID(_ context.Context, c *gin.Context, account *Account, promptCacheKey, responseID string) {
+func (s *OpenAIGatewayService) bindOpenAICompatSessionResponseID(_ context.Context, gc *gin.Context, acct *Account, cacheKey, respID string) {
 	if s == nil {
 		return
 	}
-	key := openAICompatSessionResponseKey(c, account, promptCacheKey)
-	id := strings.TrimSpace(responseID)
-	if key == "" || id == "" {
+	sessionKey := openAICompatSessionResponseKey(gc, acct, cacheKey)
+	rid := strings.TrimSpace(respID)
+	if sessionKey == "" || rid == "" {
 		return
 	}
-	binding := openAICompatSessionResponseBinding{
-		ResponseID: id,
+	entry := openAICompatSessionResponseBinding{
+		ResponseID: rid,
 		ExpiresAt:  time.Now().Add(s.openAIWSResponseStickyTTL()),
 	}
-	if raw, ok := s.openaiCompatSessionResponses.Load(key); ok {
-		if existing, ok := raw.(openAICompatSessionResponseBinding); ok {
-			if existing.ContinuationDisabled {
-				existing.ResponseID = ""
-				existing.ExpiresAt = time.Now().Add(s.openAIWSResponseStickyTTL())
-				s.openaiCompatSessionResponses.Store(key, existing)
+	if val, loaded := s.openaiCompatSessionResponses.Load(sessionKey); loaded {
+		if prev, valid := val.(openAICompatSessionResponseBinding); valid {
+			if prev.ContinuationDisabled {
+				prev.ResponseID = ""
+				prev.ExpiresAt = time.Now().Add(s.openAIWSResponseStickyTTL())
+				s.openaiCompatSessionResponses.Store(sessionKey, prev)
 				return
 			}
-			binding.TurnState = existing.TurnState
+			entry.TurnState = prev.TurnState
 		}
 	}
-	s.openaiCompatSessionResponses.Store(key, binding)
+	s.openaiCompatSessionResponses.Store(sessionKey, entry)
 }
 
-func (s *OpenAIGatewayService) deleteOpenAICompatSessionResponseID(_ context.Context, c *gin.Context, account *Account, promptCacheKey string) {
+func (s *OpenAIGatewayService) deleteOpenAICompatSessionResponseID(_ context.Context, gc *gin.Context, acct *Account, cacheKey string) {
 	if s == nil {
 		return
 	}
-	key := openAICompatSessionResponseKey(c, account, promptCacheKey)
-	if key == "" {
+	sessionKey := openAICompatSessionResponseKey(gc, acct, cacheKey)
+	if sessionKey == "" {
 		return
 	}
-	raw, ok := s.openaiCompatSessionResponses.Load(key)
-	if !ok {
+	val, loaded := s.openaiCompatSessionResponses.Load(sessionKey)
+	if !loaded {
 		return
 	}
-	binding, ok := raw.(openAICompatSessionResponseBinding)
-	if !ok {
-		s.openaiCompatSessionResponses.Delete(key)
+	entry, valid := val.(openAICompatSessionResponseBinding)
+	if !valid {
+		s.openaiCompatSessionResponses.Delete(sessionKey)
 		return
 	}
-	binding.ResponseID = ""
-	if strings.TrimSpace(binding.TurnState) == "" && !binding.ContinuationDisabled {
-		s.openaiCompatSessionResponses.Delete(key)
+	entry.ResponseID = ""
+	if strings.TrimSpace(entry.TurnState) == "" && !entry.ContinuationDisabled {
+		s.openaiCompatSessionResponses.Delete(sessionKey)
 		return
 	}
-	binding.ExpiresAt = time.Now().Add(s.openAIWSResponseStickyTTL())
-	s.openaiCompatSessionResponses.Store(key, binding)
+	entry.ExpiresAt = time.Now().Add(s.openAIWSResponseStickyTTL())
+	s.openaiCompatSessionResponses.Store(sessionKey, entry)
 }
 
-func (s *OpenAIGatewayService) disableOpenAICompatSessionContinuation(_ context.Context, c *gin.Context, account *Account, promptCacheKey string) {
+func (s *OpenAIGatewayService) disableOpenAICompatSessionContinuation(_ context.Context, gc *gin.Context, acct *Account, cacheKey string) {
 	if s == nil {
 		return
 	}
-	key := openAICompatSessionResponseKey(c, account, promptCacheKey)
-	if key == "" {
+	sessionKey := openAICompatSessionResponseKey(gc, acct, cacheKey)
+	if sessionKey == "" {
 		return
 	}
-	binding := openAICompatSessionResponseBinding{
+	entry := openAICompatSessionResponseBinding{
 		ContinuationDisabled: true,
 		ExpiresAt:            time.Now().Add(s.openAIWSResponseStickyTTL()),
 	}
-	if raw, ok := s.openaiCompatSessionResponses.Load(key); ok {
-		if existing, ok := raw.(openAICompatSessionResponseBinding); ok {
-			binding.TurnState = existing.TurnState
+	if val, loaded := s.openaiCompatSessionResponses.Load(sessionKey); loaded {
+		if prev, valid := val.(openAICompatSessionResponseBinding); valid {
+			entry.TurnState = prev.TurnState
 		}
 	}
-	s.openaiCompatSessionResponses.Store(key, binding)
+	s.openaiCompatSessionResponses.Store(sessionKey, entry)
 }
 
-func (s *OpenAIGatewayService) isOpenAICompatSessionContinuationDisabled(_ context.Context, c *gin.Context, account *Account, promptCacheKey string) bool {
+func (s *OpenAIGatewayService) isOpenAICompatSessionContinuationDisabled(_ context.Context, gc *gin.Context, acct *Account, cacheKey string) bool {
 	if s == nil {
 		return false
 	}
-	key := openAICompatSessionResponseKey(c, account, promptCacheKey)
-	if key == "" {
+	sessionKey := openAICompatSessionResponseKey(gc, acct, cacheKey)
+	if sessionKey == "" {
 		return false
 	}
-	raw, ok := s.openaiCompatSessionResponses.Load(key)
-	if !ok {
+	val, loaded := s.openaiCompatSessionResponses.Load(sessionKey)
+	if !loaded {
 		return false
 	}
-	binding, ok := raw.(openAICompatSessionResponseBinding)
-	if !ok {
-		s.openaiCompatSessionResponses.Delete(key)
+	entry, valid := val.(openAICompatSessionResponseBinding)
+	if !valid {
+		s.openaiCompatSessionResponses.Delete(sessionKey)
 		return false
 	}
-	if !binding.ExpiresAt.IsZero() && time.Now().After(binding.ExpiresAt) {
-		s.openaiCompatSessionResponses.Delete(key)
+	if !entry.ExpiresAt.IsZero() && time.Now().After(entry.ExpiresAt) {
+		s.openaiCompatSessionResponses.Delete(sessionKey)
 		return false
 	}
-	return binding.ContinuationDisabled
+	return entry.ContinuationDisabled
 }
 
-func (s *OpenAIGatewayService) getOpenAICompatSessionTurnState(_ context.Context, c *gin.Context, account *Account, promptCacheKey string) string {
+func (s *OpenAIGatewayService) getOpenAICompatSessionTurnState(_ context.Context, gc *gin.Context, acct *Account, cacheKey string) string {
 	if s == nil {
 		return ""
 	}
-	key := openAICompatSessionResponseKey(c, account, promptCacheKey)
-	if key == "" {
+	sessionKey := openAICompatSessionResponseKey(gc, acct, cacheKey)
+	if sessionKey == "" {
 		return ""
 	}
-	raw, ok := s.openaiCompatSessionResponses.Load(key)
-	if !ok {
+	val, loaded := s.openaiCompatSessionResponses.Load(sessionKey)
+	if !loaded {
 		return ""
 	}
-	binding, ok := raw.(openAICompatSessionResponseBinding)
-	if !ok || strings.TrimSpace(binding.TurnState) == "" {
+	entry, valid := val.(openAICompatSessionResponseBinding)
+	if !valid || strings.TrimSpace(entry.TurnState) == "" {
 		return ""
 	}
-	if !binding.ExpiresAt.IsZero() && time.Now().After(binding.ExpiresAt) {
-		s.openaiCompatSessionResponses.Delete(key)
+	if !entry.ExpiresAt.IsZero() && time.Now().After(entry.ExpiresAt) {
+		s.openaiCompatSessionResponses.Delete(sessionKey)
 		return ""
 	}
-	return strings.TrimSpace(binding.TurnState)
+	return strings.TrimSpace(entry.TurnState)
 }
 
-func (s *OpenAIGatewayService) bindOpenAICompatSessionTurnState(_ context.Context, c *gin.Context, account *Account, promptCacheKey, turnState string) {
+func (s *OpenAIGatewayService) bindOpenAICompatSessionTurnState(_ context.Context, gc *gin.Context, acct *Account, cacheKey, state string) {
 	if s == nil {
 		return
 	}
-	key := openAICompatSessionResponseKey(c, account, promptCacheKey)
-	state := strings.TrimSpace(turnState)
-	if key == "" || state == "" {
+	sessionKey := openAICompatSessionResponseKey(gc, acct, cacheKey)
+	trimmedState := strings.TrimSpace(state)
+	if sessionKey == "" || trimmedState == "" {
 		return
 	}
-	binding := openAICompatSessionResponseBinding{
-		TurnState: state,
+	entry := openAICompatSessionResponseBinding{
+		TurnState: trimmedState,
 		ExpiresAt: time.Now().Add(s.openAIWSResponseStickyTTL()),
 	}
-	if raw, ok := s.openaiCompatSessionResponses.Load(key); ok {
-		if existing, ok := raw.(openAICompatSessionResponseBinding); ok {
-			binding.ResponseID = existing.ResponseID
-			binding.ContinuationDisabled = existing.ContinuationDisabled
+	if val, loaded := s.openaiCompatSessionResponses.Load(sessionKey); loaded {
+		if prev, valid := val.(openAICompatSessionResponseBinding); valid {
+			entry.ResponseID = prev.ResponseID
+			entry.ContinuationDisabled = prev.ContinuationDisabled
 		}
 	}
-	s.openaiCompatSessionResponses.Store(key, binding)
+	s.openaiCompatSessionResponses.Store(sessionKey, entry)
 }

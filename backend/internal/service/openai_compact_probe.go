@@ -14,18 +14,17 @@ const (
 	AccountTestModeCompact = "compact"
 )
 
-func normalizeAccountTestMode(mode string) string {
-	switch strings.ToLower(strings.TrimSpace(mode)) {
-	case AccountTestModeCompact:
+func normalizeAccountTestMode(raw string) string {
+	cleaned := strings.ToLower(strings.TrimSpace(raw))
+	if cleaned == AccountTestModeCompact {
 		return AccountTestModeCompact
-	default:
-		return AccountTestModeDefault
 	}
+	return AccountTestModeDefault
 }
 
-func createOpenAICompactProbePayload(model string) map[string]any {
+func createOpenAICompactProbePayload(modelName string) map[string]any {
 	return map[string]any{
-		"model":        strings.TrimSpace(model),
+		"model":        strings.TrimSpace(modelName),
 		"instructions": "You are a helpful coding assistant.",
 		"input": []any{
 			map[string]any{
@@ -37,84 +36,96 @@ func createOpenAICompactProbePayload(model string) map[string]any {
 	}
 }
 
-func shouldMarkOpenAICompactUnsupported(status int, body []byte) bool {
-	switch status {
-	case http.StatusNotFound, http.StatusMethodNotAllowed, http.StatusNotImplemented:
+// unsupportedCompactKeywords lists phrases that indicate a compact endpoint is not available.
+var unsupportedCompactKeywords = []string{
+	"unsupported",
+	"not support",
+	"does not support",
+	"not available",
+	"disabled",
+}
+
+func shouldMarkOpenAICompactUnsupported(httpStatus int, respBody []byte) bool {
+	if httpStatus == http.StatusNotFound || httpStatus == http.StatusMethodNotAllowed || httpStatus == http.StatusNotImplemented {
 		return true
-	case http.StatusBadRequest, http.StatusForbidden, http.StatusUnprocessableEntity:
-		lower := strings.ToLower(strings.TrimSpace(extractUpstreamErrorMessage(body) + " " + string(body)))
-		if strings.Contains(lower, "compact") {
-			for _, keyword := range []string{
-				"unsupported",
-				"not support",
-				"does not support",
-				"not available",
-				"disabled",
-			} {
-				if strings.Contains(lower, keyword) {
-					return true
-				}
-			}
+	}
+
+	if httpStatus != http.StatusBadRequest && httpStatus != http.StatusForbidden && httpStatus != http.StatusUnprocessableEntity {
+		return false
+	}
+
+	combined := strings.ToLower(strings.TrimSpace(extractUpstreamErrorMessage(respBody) + " " + string(respBody)))
+	if !strings.Contains(combined, "compact") {
+		return false
+	}
+	for _, kw := range unsupportedCompactKeywords {
+		if strings.Contains(combined, kw) {
+			return true
 		}
 	}
 	return false
 }
 
-func buildOpenAICompactProbeExtraUpdates(resp *http.Response, body []byte, probeErr error, now time.Time) map[string]any {
-	updates := map[string]any{
-		"openai_compact_checked_at":  now.Format(time.RFC3339),
+func buildOpenAICompactProbeExtraUpdates(httpResp *http.Response, respBody []byte, probeFailure error, timestamp time.Time) map[string]any {
+	result := map[string]any{
+		"openai_compact_checked_at":  timestamp.Format(time.RFC3339),
 		"openai_compact_last_status": nil,
 	}
 
-	if resp != nil {
-		updates["openai_compact_last_status"] = resp.StatusCode
+	if httpResp != nil {
+		result["openai_compact_last_status"] = httpResp.StatusCode
 	}
 
-	switch {
-	case probeErr != nil:
-		updates["openai_compact_last_error"] = truncateString(sanitizeUpstreamErrorMessage(probeErr.Error()), 2048)
-	case resp == nil:
-		updates["openai_compact_last_error"] = "compact probe failed"
-	default:
-		errMsg := strings.TrimSpace(extractUpstreamErrorMessage(body))
-		if errMsg == "" && len(body) > 0 {
-			errMsg = strings.TrimSpace(string(body))
-		}
-		if errMsg == "" && (resp.StatusCode < 200 || resp.StatusCode >= 300) {
-			errMsg = "HTTP " + strconv.Itoa(resp.StatusCode)
-		}
-		errMsg = truncateString(sanitizeUpstreamErrorMessage(errMsg), 2048)
-		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			updates["openai_compact_supported"] = true
-			updates["openai_compact_last_error"] = ""
-		} else {
-			if shouldMarkOpenAICompactUnsupported(resp.StatusCode, body) {
-				updates["openai_compact_supported"] = false
-			}
-			updates["openai_compact_last_error"] = errMsg
-		}
+	if probeFailure != nil {
+		result["openai_compact_last_error"] = truncateString(sanitizeUpstreamErrorMessage(probeFailure.Error()), 2048)
+		return result
 	}
 
-	return updates
+	if httpResp == nil {
+		result["openai_compact_last_error"] = "compact probe failed"
+		return result
+	}
+
+	errorText := strings.TrimSpace(extractUpstreamErrorMessage(respBody))
+	if errorText == "" && len(respBody) > 0 {
+		errorText = strings.TrimSpace(string(respBody))
+	}
+	if errorText == "" && (httpResp.StatusCode < 200 || httpResp.StatusCode >= 300) {
+		errorText = "HTTP " + strconv.Itoa(httpResp.StatusCode)
+	}
+	errorText = truncateString(sanitizeUpstreamErrorMessage(errorText), 2048)
+
+	statusOK := httpResp.StatusCode >= 200 && httpResp.StatusCode < 300
+	if statusOK {
+		result["openai_compact_supported"] = true
+		result["openai_compact_last_error"] = ""
+	} else {
+		if shouldMarkOpenAICompactUnsupported(httpResp.StatusCode, respBody) {
+			result["openai_compact_supported"] = false
+		}
+		result["openai_compact_last_error"] = errorText
+	}
+
+	return result
 }
 
-func mergeExtraUpdates(base map[string]any, more map[string]any) map[string]any {
-	if len(base) == 0 && len(more) == 0 {
+func mergeExtraUpdates(primary map[string]any, secondary map[string]any) map[string]any {
+	if len(primary) == 0 && len(secondary) == 0 {
 		return nil
 	}
-	out := make(map[string]any, len(base)+len(more))
-	for key, value := range base {
-		out[key] = value
+	merged := make(map[string]any, len(primary)+len(secondary))
+	for k, v := range primary {
+		merged[k] = v
 	}
-	for key, value := range more {
-		out[key] = value
+	for k, v := range secondary {
+		merged[k] = v
 	}
-	return out
+	return merged
 }
 
-func compactProbeSessionID(accountID int64) string {
-	if accountID <= 0 {
+func compactProbeSessionID(acctID int64) string {
+	if acctID <= 0 {
 		return "probe_compact"
 	}
-	return "probe_compact_" + strconv.FormatInt(accountID, 10)
+	return "probe_compact_" + strconv.FormatInt(acctID, 10)
 }

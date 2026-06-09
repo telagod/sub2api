@@ -7,26 +7,25 @@ import (
 	"strings"
 )
 
-// ChannelMonitorRequestTemplateRepository 模板数据访问接口。
+// ChannelMonitorRequestTemplateRepository defines the data access interface for monitor templates.
 type ChannelMonitorRequestTemplateRepository interface {
 	Create(ctx context.Context, t *ChannelMonitorRequestTemplate) error
 	GetByID(ctx context.Context, id int64) (*ChannelMonitorRequestTemplate, error)
 	Update(ctx context.Context, t *ChannelMonitorRequestTemplate) error
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context, params ChannelMonitorRequestTemplateListParams) ([]*ChannelMonitorRequestTemplate, error)
-	// ApplyToMonitors 把模板当前的 api_mode / extra_headers / body_override_mode / body_override
-	// 批量覆盖到指定 monitorIDs 的监控上（同时还要求这些监控当前 template_id = id，
-	// 防止误覆盖未关联的监控）。monitorIDs 必须非空；空列表直接返回 0 不写库。
-	// 返回被覆盖的监控数量。
+	// ApplyToMonitors batch-copies the template's api_mode / extra_headers / body_override_mode /
+	// body_override onto the specified monitorIDs (only if their current template_id matches).
+	// monitorIDs must be non-empty; empty list returns 0 without writing.
+	// Returns the count of monitors actually updated.
 	ApplyToMonitors(ctx context.Context, id int64, monitorIDs []int64) (int64, error)
-	// CountAssociatedMonitors 统计 template_id = id 的监控数（用于 UI 展示「应用到 N 个配置」）。
+	// CountAssociatedMonitors returns the number of monitors with template_id = id.
 	CountAssociatedMonitors(ctx context.Context, id int64) (int64, error)
-	// ListAssociatedMonitors 列出所有 template_id = id 的监控简略信息（id/name/provider/api_mode/enabled）
-	// 给 apply picker UI 用，避免前端再做一次 list+filter。
+	// ListAssociatedMonitors returns brief info for all monitors associated with the template.
 	ListAssociatedMonitors(ctx context.Context, id int64) ([]*AssociatedMonitorBrief, error)
 }
 
-// AssociatedMonitorBrief 模板关联监控的简略信息（picker / 列表展示用）。
+// AssociatedMonitorBrief contains minimal monitor info for the template picker/list UI.
 type AssociatedMonitorBrief struct {
 	ID       int64
 	Name     string
@@ -35,196 +34,198 @@ type AssociatedMonitorBrief struct {
 	Enabled  bool
 }
 
-// ChannelMonitorRequestTemplateService 模板管理 service。
+// ChannelMonitorRequestTemplateService manages monitor request templates.
 type ChannelMonitorRequestTemplateService struct {
 	repo ChannelMonitorRequestTemplateRepository
 }
 
-// NewChannelMonitorRequestTemplateService 创建模板 service。
+// NewChannelMonitorRequestTemplateService creates a template service instance.
 func NewChannelMonitorRequestTemplateService(repo ChannelMonitorRequestTemplateRepository) *ChannelMonitorRequestTemplateService {
 	return &ChannelMonitorRequestTemplateService{repo: repo}
 }
 
 // ---------- CRUD ----------
 
-// List 按 provider 过滤（空串 = 全部），不分页（模板量级小）。
-func (s *ChannelMonitorRequestTemplateService) List(ctx context.Context, params ChannelMonitorRequestTemplateListParams) ([]*ChannelMonitorRequestTemplate, error) {
+// List returns templates filtered by provider (empty = all). No pagination (template volume is small).
+func (s *ChannelMonitorRequestTemplateService) List(reqCtx context.Context, params ChannelMonitorRequestTemplateListParams) ([]*ChannelMonitorRequestTemplate, error) {
 	if params.Provider != "" {
-		if err := validateProvider(params.Provider); err != nil {
-			return nil, err
+		if validateErr := validateProvider(params.Provider); validateErr != nil {
+			return nil, validateErr
 		}
 	}
 	if params.APIMode != "" {
-		if params.Provider == "" {
-			if err := validateAPIMode(MonitorProviderOpenAI, params.APIMode); err != nil {
-				return nil, err
-			}
-		} else if err := validateAPIMode(params.Provider, params.APIMode); err != nil {
-			return nil, err
+		provForValidation := params.Provider
+		if provForValidation == "" {
+			provForValidation = MonitorProviderOpenAI
+		}
+		if validateErr := validateAPIMode(provForValidation, params.APIMode); validateErr != nil {
+			return nil, validateErr
 		}
 	}
-	return s.repo.List(ctx, params)
+	return s.repo.List(reqCtx, params)
 }
 
-// Get 返回单个模板。
-func (s *ChannelMonitorRequestTemplateService) Get(ctx context.Context, id int64) (*ChannelMonitorRequestTemplate, error) {
-	return s.repo.GetByID(ctx, id)
+// Get returns a single template by ID.
+func (s *ChannelMonitorRequestTemplateService) Get(reqCtx context.Context, templateID int64) (*ChannelMonitorRequestTemplate, error) {
+	return s.repo.GetByID(reqCtx, templateID)
 }
 
-// Create 创建模板（会校验 headers 黑名单和 body 模式匹配）。
-func (s *ChannelMonitorRequestTemplateService) Create(ctx context.Context, p ChannelMonitorRequestTemplateCreateParams) (*ChannelMonitorRequestTemplate, error) {
-	if err := validateTemplateCreateParams(p); err != nil {
-		return nil, err
+// Create creates a new template (validates header blocklist and body mode constraints).
+func (s *ChannelMonitorRequestTemplateService) Create(reqCtx context.Context, params ChannelMonitorRequestTemplateCreateParams) (*ChannelMonitorRequestTemplate, error) {
+	if validationErr := validateTemplateCreateParams(params); validationErr != nil {
+		return nil, validationErr
 	}
-	t := &ChannelMonitorRequestTemplate{
-		Name:             strings.TrimSpace(p.Name),
-		Provider:         p.Provider,
-		APIMode:          defaultAPIMode(p.APIMode),
-		Description:      strings.TrimSpace(p.Description),
-		ExtraHeaders:     emptyHeadersIfNil(p.ExtraHeaders),
-		BodyOverrideMode: defaultBodyMode(p.BodyOverrideMode),
-		BodyOverride:     p.BodyOverride,
+	tpl := &ChannelMonitorRequestTemplate{
+		Name:             strings.TrimSpace(params.Name),
+		Provider:         params.Provider,
+		APIMode:          defaultAPIMode(params.APIMode),
+		Description:      strings.TrimSpace(params.Description),
+		ExtraHeaders:     emptyHeadersIfNil(params.ExtraHeaders),
+		BodyOverrideMode: defaultBodyMode(params.BodyOverrideMode),
+		BodyOverride:     params.BodyOverride,
 	}
-	if err := s.repo.Create(ctx, t); err != nil {
-		return nil, fmt.Errorf("create template: %w", err)
+	if createErr := s.repo.Create(reqCtx, tpl); createErr != nil {
+		return nil, fmt.Errorf("create template: %w", createErr)
 	}
-	return t, nil
+	return tpl, nil
 }
 
-// Update 更新模板（provider 不可改）。
-func (s *ChannelMonitorRequestTemplateService) Update(ctx context.Context, id int64, p ChannelMonitorRequestTemplateUpdateParams) (*ChannelMonitorRequestTemplate, error) {
-	existing, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
+// Update updates an existing template (provider is immutable).
+func (s *ChannelMonitorRequestTemplateService) Update(reqCtx context.Context, templateID int64, params ChannelMonitorRequestTemplateUpdateParams) (*ChannelMonitorRequestTemplate, error) {
+	current, fetchErr := s.repo.GetByID(reqCtx, templateID)
+	if fetchErr != nil {
+		return nil, fetchErr
 	}
-	if err := applyTemplateUpdate(existing, p); err != nil {
-		return nil, err
+	if mergeErr := applyTemplateUpdate(current, params); mergeErr != nil {
+		return nil, mergeErr
 	}
-	if err := s.repo.Update(ctx, existing); err != nil {
-		return nil, fmt.Errorf("update template: %w", err)
+	if saveErr := s.repo.Update(reqCtx, current); saveErr != nil {
+		return nil, fmt.Errorf("update template: %w", saveErr)
 	}
-	return existing, nil
+	return current, nil
 }
 
-// Delete 删除模板。关联监控的 template_id 会被 SET NULL，监控保留快照继续跑。
-func (s *ChannelMonitorRequestTemplateService) Delete(ctx context.Context, id int64) error {
-	if err := s.repo.Delete(ctx, id); err != nil {
-		return fmt.Errorf("delete template: %w", err)
+// Delete removes a template. Associated monitors have their template_id SET NULL
+// and retain their snapshot configuration.
+func (s *ChannelMonitorRequestTemplateService) Delete(reqCtx context.Context, templateID int64) error {
+	if delErr := s.repo.Delete(reqCtx, templateID); delErr != nil {
+		return fmt.Errorf("delete template: %w", delErr)
 	}
 	return nil
 }
 
-// ApplyToMonitors 把模板当前配置应用到 monitorIDs 列表里的关联监控。
-// monitorIDs 必须非空且每个 id 都必须当前 template_id = id；不满足条件的会被 SQL WHERE 过滤掉。
-// 返回实际被覆盖的监控数。
-func (s *ChannelMonitorRequestTemplateService) ApplyToMonitors(ctx context.Context, id int64, monitorIDs []int64) (int64, error) {
-	if _, err := s.repo.GetByID(ctx, id); err != nil {
-		return 0, err
+// ApplyToMonitors copies the template's current configuration to the specified associated monitors.
+// monitorIDs must be non-empty and each must have template_id = id; non-matching IDs are filtered by SQL.
+// Returns the count of monitors actually updated.
+func (s *ChannelMonitorRequestTemplateService) ApplyToMonitors(reqCtx context.Context, templateID int64, monitorIDs []int64) (int64, error) {
+	if _, fetchErr := s.repo.GetByID(reqCtx, templateID); fetchErr != nil {
+		return 0, fetchErr
 	}
 	if len(monitorIDs) == 0 {
 		return 0, ErrChannelMonitorTemplateApplyEmpty
 	}
-	affected, err := s.repo.ApplyToMonitors(ctx, id, monitorIDs)
-	if err != nil {
-		return 0, fmt.Errorf("apply template to monitors: %w", err)
+	affected, applyErr := s.repo.ApplyToMonitors(reqCtx, templateID, monitorIDs)
+	if applyErr != nil {
+		return 0, fmt.Errorf("apply template to monitors: %w", applyErr)
 	}
 	return affected, nil
 }
 
-// CountAssociatedMonitors 返回关联监控数。
-func (s *ChannelMonitorRequestTemplateService) CountAssociatedMonitors(ctx context.Context, id int64) (int64, error) {
-	return s.repo.CountAssociatedMonitors(ctx, id)
+// CountAssociatedMonitors returns the count of monitors linked to the template.
+func (s *ChannelMonitorRequestTemplateService) CountAssociatedMonitors(reqCtx context.Context, templateID int64) (int64, error) {
+	return s.repo.CountAssociatedMonitors(reqCtx, templateID)
 }
 
-// ListAssociatedMonitors 返回模板关联的所有监控简略信息。
-// 给前端 apply picker 用，handler 直接吐 JSON 不再做 join。
-func (s *ChannelMonitorRequestTemplateService) ListAssociatedMonitors(ctx context.Context, id int64) ([]*AssociatedMonitorBrief, error) {
-	if _, err := s.repo.GetByID(ctx, id); err != nil {
-		return nil, err
+// ListAssociatedMonitors returns brief info for all monitors linked to the template.
+// Used by the frontend apply picker to avoid an extra list+filter round trip.
+func (s *ChannelMonitorRequestTemplateService) ListAssociatedMonitors(reqCtx context.Context, templateID int64) ([]*AssociatedMonitorBrief, error) {
+	if _, fetchErr := s.repo.GetByID(reqCtx, templateID); fetchErr != nil {
+		return nil, fetchErr
 	}
-	return s.repo.ListAssociatedMonitors(ctx, id)
+	return s.repo.ListAssociatedMonitors(reqCtx, templateID)
 }
 
-// ---------- 校验 & 工具 ----------
+// ---------- Validation and utilities ----------
 
-// validateTemplateCreateParams 聚合 create 入参校验，避免函数超过 30 行。
-func validateTemplateCreateParams(p ChannelMonitorRequestTemplateCreateParams) error {
-	if strings.TrimSpace(p.Name) == "" {
+// validateTemplateCreateParams aggregates all create-parameter validations.
+func validateTemplateCreateParams(params ChannelMonitorRequestTemplateCreateParams) error {
+	if strings.TrimSpace(params.Name) == "" {
 		return ErrChannelMonitorTemplateMissingName
 	}
-	if err := validateProvider(p.Provider); err != nil {
+	if provErr := validateProvider(params.Provider); provErr != nil {
 		return ErrChannelMonitorTemplateInvalidProvider
 	}
-	if err := validateAPIMode(p.Provider, p.APIMode); err != nil {
+	if modeErr := validateAPIMode(params.Provider, params.APIMode); modeErr != nil {
 		return ErrChannelMonitorTemplateInvalidAPIMode
 	}
-	if err := validateBodyModeForProtocol(p.Provider, p.APIMode, p.BodyOverrideMode, p.BodyOverride); err != nil {
-		return err
+	if bodyErr := validateBodyModeForProtocol(params.Provider, params.APIMode, params.BodyOverrideMode, params.BodyOverride); bodyErr != nil {
+		return bodyErr
 	}
-	if err := validateExtraHeaders(p.ExtraHeaders); err != nil {
-		return err
+	if headerErr := validateExtraHeaders(params.ExtraHeaders); headerErr != nil {
+		return headerErr
 	}
 	return nil
 }
 
-// applyTemplateUpdate 把 update params 中非 nil 字段应用到 existing 上。
-func applyTemplateUpdate(existing *ChannelMonitorRequestTemplate, p ChannelMonitorRequestTemplateUpdateParams) error {
-	if p.Name != nil {
-		name := strings.TrimSpace(*p.Name)
-		if name == "" {
+// applyTemplateUpdate merges non-nil update fields onto the existing template.
+func applyTemplateUpdate(current *ChannelMonitorRequestTemplate, params ChannelMonitorRequestTemplateUpdateParams) error {
+	if params.Name != nil {
+		trimmedName := strings.TrimSpace(*params.Name)
+		if trimmedName == "" {
 			return ErrChannelMonitorTemplateMissingName
 		}
-		existing.Name = name
+		current.Name = trimmedName
 	}
-	if p.Description != nil {
-		existing.Description = strings.TrimSpace(*p.Description)
+	if params.Description != nil {
+		current.Description = strings.TrimSpace(*params.Description)
 	}
-	newAPIMode := defaultAPIMode(existing.APIMode)
-	if p.APIMode != nil {
-		newAPIMode = defaultAPIMode(*p.APIMode)
+	effectiveAPIMode := defaultAPIMode(current.APIMode)
+	if params.APIMode != nil {
+		effectiveAPIMode = defaultAPIMode(*params.APIMode)
 	}
-	if err := validateAPIMode(existing.Provider, newAPIMode); err != nil {
+	if modeErr := validateAPIMode(current.Provider, effectiveAPIMode); modeErr != nil {
 		return ErrChannelMonitorTemplateInvalidAPIMode
 	}
-	if p.ExtraHeaders != nil {
-		if err := validateExtraHeaders(*p.ExtraHeaders); err != nil {
-			return err
+	if params.ExtraHeaders != nil {
+		if headerErr := validateExtraHeaders(*params.ExtraHeaders); headerErr != nil {
+			return headerErr
 		}
-		existing.ExtraHeaders = emptyHeadersIfNil(*p.ExtraHeaders)
+		current.ExtraHeaders = emptyHeadersIfNil(*params.ExtraHeaders)
 	}
-	// BodyOverrideMode / BodyOverride 联合校验：任一变化都用「更新后的值」做校验。
-	newMode := existing.BodyOverrideMode
-	newBody := existing.BodyOverride
-	if p.BodyOverrideMode != nil {
-		newMode = *p.BodyOverrideMode
+	// Body override mode/body are validated together: either may change, so always use effective values.
+	effectiveBodyMode := current.BodyOverrideMode
+	effectiveBody := current.BodyOverride
+	if params.BodyOverrideMode != nil {
+		effectiveBodyMode = *params.BodyOverrideMode
 	}
-	if p.BodyOverride != nil {
-		newBody = *p.BodyOverride
+	if params.BodyOverride != nil {
+		effectiveBody = *params.BodyOverride
 	}
-	if err := validateBodyModeForProtocol(existing.Provider, newAPIMode, newMode, newBody); err != nil {
-		return err
+	if bodyErr := validateBodyModeForProtocol(current.Provider, effectiveAPIMode, effectiveBodyMode, effectiveBody); bodyErr != nil {
+		return bodyErr
 	}
-	existing.APIMode = newAPIMode
-	existing.BodyOverrideMode = defaultBodyMode(newMode)
-	existing.BodyOverride = newBody
+	current.APIMode = effectiveAPIMode
+	current.BodyOverrideMode = defaultBodyMode(effectiveBodyMode)
+	current.BodyOverride = effectiveBody
 	return nil
 }
 
-// validateBodyModeForProtocol 校验 body_override_mode 与 provider/api_mode 的协议特定要求。
-func validateBodyModeForProtocol(provider, apiMode, mode string, body map[string]any) error {
-	if err := validateBodyModeParams(mode, body); err != nil {
-		return err
+// validateBodyModeForProtocol checks body_override_mode against provider/api_mode protocol requirements.
+func validateBodyModeForProtocol(prov, apiMode, mode string, body map[string]any) error {
+	if modeErr := validateBodyModeParams(mode, body); modeErr != nil {
+		return modeErr
 	}
 	if defaultBodyMode(mode) != MonitorBodyOverrideModeReplace {
 		return nil
 	}
-	if err := validateReplaceRequestBody(provider, defaultAPIMode(apiMode), body); err != nil {
+	if replaceErr := validateReplaceRequestBody(prov, defaultAPIMode(apiMode), body); replaceErr != nil {
 		return ErrChannelMonitorInvalidRequestBody
 	}
 	return nil
 }
 
-// validateBodyModeParams 校验 body_override_mode 合法，且 merge/replace 模式下 body_override 非空。
+// validateBodyModeParams checks that the body_override_mode is valid and that
+// merge/replace modes have a non-empty body_override.
 func validateBodyModeParams(mode string, body map[string]any) error {
 	switch mode {
 	case "", MonitorBodyOverrideModeOff:
@@ -239,11 +240,10 @@ func validateBodyModeParams(mode string, body map[string]any) error {
 	}
 }
 
-// headerNameRegex 合法 header 名：RFC 7230 token（ASCII 可见字符减特殊符号）。
+// headerNameRegex matches valid HTTP header names per RFC 7230 token production.
 var headerNameRegex = regexp.MustCompile(`^[A-Za-z0-9!#$%&'*+\-.^_` + "`" + `|~]+$`)
 
-// forbiddenHeaderNames hop-by-hop + HTTP 客户端自管的 header；禁止用户覆盖，
-// 否则会让 Go http.Client 行为异常（双重 Content-Length、连接复用错乱等）。
+// forbiddenHeaderNames lists hop-by-hop and client-managed headers that must not be overridden.
 var forbiddenHeaderNames = map[string]bool{
 	"host":              true,
 	"content-length":    true,
@@ -252,33 +252,34 @@ var forbiddenHeaderNames = map[string]bool{
 	"connection":        true,
 }
 
-// IsForbiddenHeaderName 对外暴露，checker 运行时也会再过滤一次做兜底。
-func IsForbiddenHeaderName(name string) bool {
-	return forbiddenHeaderNames[strings.ToLower(strings.TrimSpace(name))]
+// IsForbiddenHeaderName checks whether the header name is in the deny list.
+// Exported so the checker can also filter at runtime as a safety net.
+func IsForbiddenHeaderName(headerName string) bool {
+	return forbiddenHeaderNames[strings.ToLower(strings.TrimSpace(headerName))]
 }
 
-// validateExtraHeaders 校验 header 名字格式 + 黑名单。保存时就拒绝非法 header，早失败。
-func validateExtraHeaders(h map[string]string) error {
-	for k := range h {
-		if !headerNameRegex.MatchString(k) {
+// validateExtraHeaders checks header name format and deny list. Early rejection at save time.
+func validateExtraHeaders(headers map[string]string) error {
+	for headerKey := range headers {
+		if !headerNameRegex.MatchString(headerKey) {
 			return ErrChannelMonitorTemplateHeaderInvalidName
 		}
-		if IsForbiddenHeaderName(k) {
+		if IsForbiddenHeaderName(headerKey) {
 			return ErrChannelMonitorTemplateHeaderForbidden
 		}
 	}
 	return nil
 }
 
-// emptyHeadersIfNil 把 nil map 归一成空 map（repo 层写库时 JSONB 需要非 nil）。
-func emptyHeadersIfNil(h map[string]string) map[string]string {
-	if h == nil {
+// emptyHeadersIfNil normalizes nil map to empty map (repo layer needs non-nil for JSONB).
+func emptyHeadersIfNil(headers map[string]string) map[string]string {
+	if headers == nil {
 		return map[string]string{}
 	}
-	return h
+	return headers
 }
 
-// defaultBodyMode 空串归一为 off。
+// defaultBodyMode normalizes empty string to "off".
 func defaultBodyMode(mode string) string {
 	if mode == "" {
 		return MonitorBodyOverrideModeOff

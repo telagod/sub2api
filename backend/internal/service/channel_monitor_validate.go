@@ -6,119 +6,119 @@ import (
 	"strings"
 )
 
-// 渠道监控参数校验与归一化辅助函数。
-// 校验失败一律返回 channel_monitor_const.go 中预定义的 Err* 错误，错误信息不含具体 IP/hostname，避免泄露内网拓扑。
+// Channel monitor parameter validation and normalization helpers.
+// Validation failures return pre-defined Err* sentinel errors from channel_monitor_const.go.
+// Error messages intentionally omit specific IP/hostname to avoid leaking internal topology.
 
-// validateProvider 校验 provider 字符串。
-// 唯一来源于 providerAdapters：新增 provider 只需要在 channel_monitor_checker.go 注册 adapter。
-func validateProvider(p string) error {
-	if !isSupportedProvider(p) {
+// validateProvider checks whether the given provider string is registered in the adapter table.
+// Adding a new provider only requires registering an adapter in channel_monitor_checker.go.
+func validateProvider(prov string) error {
+	if !isSupportedProvider(prov) {
 		return ErrChannelMonitorInvalidProvider
 	}
 	return nil
 }
 
-// validateAPIMode 校验 provider 与 api_mode 的组合。
-// responses 只对 OpenAI 有意义；其它 provider 使用 chat_completions 作为默认占位。
-func validateAPIMode(provider, apiMode string) error {
-	apiMode = defaultAPIMode(apiMode)
-	switch apiMode {
-	case MonitorAPIModeChatCompletions:
+// validateAPIMode checks the combination of provider and api_mode.
+// The "responses" mode is only valid for the OpenAI provider; other providers use chat_completions.
+func validateAPIMode(prov, mode string) error {
+	normalized := defaultAPIMode(mode)
+	if normalized == MonitorAPIModeChatCompletions {
 		return nil
-	case MonitorAPIModeResponses:
-		if provider == "" || provider == MonitorProviderOpenAI {
+	}
+	if normalized == MonitorAPIModeResponses {
+		if prov == "" || prov == MonitorProviderOpenAI {
 			return nil
 		}
 		return ErrChannelMonitorInvalidAPIMode
-	default:
-		return ErrChannelMonitorInvalidAPIMode
 	}
+	return ErrChannelMonitorInvalidAPIMode
 }
 
-// validateInterval 校验 interval_seconds 范围。
-func validateInterval(sec int) error {
-	if sec < monitorMinIntervalSeconds || sec > monitorMaxIntervalSeconds {
+// validateInterval checks that interval_seconds falls within the allowed range.
+func validateInterval(seconds int) error {
+	if seconds < monitorMinIntervalSeconds || seconds > monitorMaxIntervalSeconds {
 		return ErrChannelMonitorInvalidInterval
 	}
 	return nil
 }
 
-// validateEndpoint 校验 endpoint：
-//   - scheme 强制 https（拒绝 http，避免明文凭证 + 部分 SSRF 利用面）
-//   - 必须为 origin（无 path/query/fragment），防止用户填 https://api.openai.com/v1
-//     导致 joinURL 拼出 /v1/v1/chat/completions
-//   - hostname 不能是 localhost/metadata 等已知元数据 hostname
-//   - 解析所有 IP，任一落在 loopback/RFC1918/link-local/ULA 段即拒绝（防 SSRF）
+// validateEndpoint checks the endpoint URL:
+//   - scheme must be https (rejects http to avoid plaintext credentials and SSRF surface)
+//   - must be origin-only (no path/query/fragment) to prevent path duplication
+//   - hostname must not be localhost/metadata or other known metadata hostnames
+//   - all resolved IPs must be public (rejects loopback/RFC1918/link-local/ULA for SSRF defense)
 //
-// 错误信息不暴露具体 IP / hostname，避免泄露内网拓扑。
-func validateEndpoint(ep string) error {
-	ep = strings.TrimSpace(ep)
-	if ep == "" {
+// Error messages do not expose specific IP/hostname to avoid leaking internal topology.
+func validateEndpoint(rawEP string) error {
+	trimmed := strings.TrimSpace(rawEP)
+	if trimmed == "" {
 		return ErrChannelMonitorInvalidEndpoint
 	}
-	u, err := url.Parse(ep)
-	if err != nil {
+	parsed, parseErr := url.Parse(trimmed)
+	if parseErr != nil {
 		return ErrChannelMonitorInvalidEndpoint
 	}
-	if u.Scheme != "https" {
+	if parsed.Scheme != "https" {
 		return ErrChannelMonitorEndpointScheme
 	}
-	if u.Host == "" {
+	if parsed.Host == "" {
 		return ErrChannelMonitorInvalidEndpoint
 	}
-	if u.Path != "" && u.Path != "/" {
+	if parsed.Path != "" && parsed.Path != "/" {
 		return ErrChannelMonitorEndpointPath
 	}
-	if u.RawQuery != "" || u.Fragment != "" {
+	if parsed.RawQuery != "" || parsed.Fragment != "" {
 		return ErrChannelMonitorEndpointPath
 	}
 
-	hostname := u.Hostname()
-	ctx, cancel := context.WithTimeout(context.Background(), monitorEndpointResolveTimeout)
-	defer cancel()
-	blocked, err := isPrivateOrLoopbackHost(ctx, hostname)
-	if err != nil {
+	host := parsed.Hostname()
+	resolveCtx, resolveCancel := context.WithTimeout(context.Background(), monitorEndpointResolveTimeout)
+	defer resolveCancel()
+	isBlocked, resolveErr := isPrivateOrLoopbackHost(resolveCtx, host)
+	if resolveErr != nil {
 		return ErrChannelMonitorEndpointUnreachable
 	}
-	if blocked {
+	if isBlocked {
 		return ErrChannelMonitorEndpointPrivate
 	}
 	return nil
 }
 
-// normalizeEndpoint 去除前后空白与末尾 `/`，保证存储统一为 origin。
-// validateEndpoint 已确保格式合法（仅 origin），这里只做最终归一化。
-func normalizeEndpoint(ep string) string {
-	ep = strings.TrimSpace(ep)
-	ep = strings.TrimRight(ep, "/")
-	return ep
+// normalizeEndpoint strips surrounding whitespace and trailing slashes to ensure
+// consistent origin storage. validateEndpoint must have already verified format.
+func normalizeEndpoint(rawEP string) string {
+	cleaned := strings.TrimSpace(rawEP)
+	cleaned = strings.TrimRight(cleaned, "/")
+	return cleaned
 }
 
-// normalizeModels 去除空白、重复模型名。保留输入顺序（map 的迭代顺序无关）。
-func normalizeModels(in []string) []string {
-	if len(in) == 0 {
+// normalizeModels deduplicates and trims model names while preserving input order.
+func normalizeModels(items []string) []string {
+	if len(items) == 0 {
 		return []string{}
 	}
-	seen := make(map[string]struct{}, len(in))
-	out := make([]string, 0, len(in))
-	for _, m := range in {
-		m = strings.TrimSpace(m)
-		if m == "" {
+	visited := make(map[string]struct{}, len(items))
+	deduped := make([]string, 0, len(items))
+	for idx := 0; idx < len(items); idx++ {
+		trimmed := strings.TrimSpace(items[idx])
+		if trimmed == "" {
 			continue
 		}
-		if _, ok := seen[m]; ok {
+		if _, exists := visited[trimmed]; exists {
 			continue
 		}
-		seen[m] = struct{}{}
-		out = append(out, m)
+		visited[trimmed] = struct{}{}
+		deduped = append(deduped, trimmed)
 	}
-	return out
+	return deduped
 }
 
-// defaultAPIMode 空串归一为 chat_completions，保证历史数据与旧客户端兼容。
-func defaultAPIMode(apiMode string) string {
-	if strings.TrimSpace(apiMode) == "" {
+// defaultAPIMode normalizes an empty api_mode to chat_completions for backward compatibility.
+func defaultAPIMode(mode string) string {
+	stripped := strings.TrimSpace(mode)
+	if stripped == "" {
 		return MonitorAPIModeChatCompletions
 	}
-	return strings.TrimSpace(apiMode)
+	return stripped
 }

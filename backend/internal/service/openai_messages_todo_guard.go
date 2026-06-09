@@ -17,56 +17,64 @@ func appendOpenAICompatClaudeCodeTodoGuard(req *apicompat.ResponsesRequest) bool
 		return false
 	}
 
-	var items []apicompat.ResponsesInputItem
-	if err := json.Unmarshal(req.Input, &items); err != nil {
+	var parsed []apicompat.ResponsesInputItem
+	if unmarshalErr := json.Unmarshal(req.Input, &parsed); unmarshalErr != nil {
 		return false
 	}
-	if len(items) == 0 || responsesInputItemsContainText(items, openAICompatClaudeCodeTodoGuardMarker) {
+	if len(parsed) == 0 {
+		return false
+	}
+	if responsesInputItemsContainText(parsed, openAICompatClaudeCodeTodoGuardMarker) {
 		return false
 	}
 
-	content, err := json.Marshal([]apicompat.ResponsesContentPart{{
+	guardContent, marshalErr := json.Marshal([]apicompat.ResponsesContentPart{{
 		Type: "input_text",
 		Text: openAICompatClaudeCodeTodoGuardText,
 	}})
-	if err != nil {
+	if marshalErr != nil {
 		return false
 	}
 
-	guard := apicompat.ResponsesInputItem{
+	guardItem := apicompat.ResponsesInputItem{
 		Type:    "message",
 		Role:    "developer",
-		Content: content,
+		Content: guardContent,
 	}
 
-	insertAt := 0
-	for insertAt < len(items) && items[insertAt].Type == "message" && items[insertAt].Role == "developer" {
-		insertAt++
+	// Find the position right after leading developer messages.
+	pos := 0
+	for pos < len(parsed) && parsed[pos].Type == "message" && parsed[pos].Role == "developer" {
+		pos++
 	}
 
-	items = append(items, apicompat.ResponsesInputItem{})
-	copy(items[insertAt+1:], items[insertAt:])
-	items[insertAt] = guard
+	// Insert at pos: grow slice then shift tail.
+	parsed = append(parsed, apicompat.ResponsesInputItem{})
+	copy(parsed[pos+1:], parsed[pos:])
+	parsed[pos] = guardItem
 
-	input, err := json.Marshal(items)
-	if err != nil {
+	encoded, encodeErr := json.Marshal(parsed)
+	if encodeErr != nil {
 		return false
 	}
-	req.Input = input
+	req.Input = encoded
 	return true
 }
 
-func appendOpenAICompatClaudeCodeTodoGuardToRequestBody(reqBody map[string]any) bool {
-	if reqBody == nil {
+func appendOpenAICompatClaudeCodeTodoGuardToRequestBody(body map[string]any) bool {
+	if body == nil {
 		return false
 	}
 
-	input, ok := reqBody["input"].([]any)
-	if !ok || len(input) == 0 || inputContainsText(input, openAICompatClaudeCodeTodoGuardMarker) {
+	inputSlice, ok := body["input"].([]any)
+	if !ok || len(inputSlice) == 0 {
+		return false
+	}
+	if inputContainsText(inputSlice, openAICompatClaudeCodeTodoGuardMarker) {
 		return false
 	}
 
-	guard := map[string]any{
+	guardMsg := map[string]any{
 		"type": "message",
 		"role": "developer",
 		"content": []any{
@@ -77,43 +85,53 @@ func appendOpenAICompatClaudeCodeTodoGuardToRequestBody(reqBody map[string]any) 
 		},
 	}
 
-	insertAt := 0
-	for insertAt < len(input) {
-		item, ok := input[insertAt].(map[string]any)
-		if !ok || strings.TrimSpace(firstNonEmptyString(item["type"])) != "message" || strings.TrimSpace(firstNonEmptyString(item["role"])) != "developer" {
+	// Advance past leading developer messages.
+	pos := 0
+	for pos < len(inputSlice) {
+		entry, entryOK := inputSlice[pos].(map[string]any)
+		if !entryOK {
 			break
 		}
-		insertAt++
+		if strings.TrimSpace(firstNonEmptyString(entry["type"])) != "message" {
+			break
+		}
+		if strings.TrimSpace(firstNonEmptyString(entry["role"])) != "developer" {
+			break
+		}
+		pos++
 	}
 
-	input = append(input, nil)
-	copy(input[insertAt+1:], input[insertAt:])
-	input[insertAt] = guard
-	reqBody["input"] = input
+	inputSlice = append(inputSlice, nil)
+	copy(inputSlice[pos+1:], inputSlice[pos:])
+	inputSlice[pos] = guardMsg
+	body["input"] = inputSlice
 	return true
 }
 
-func responsesInputItemsContainText(items []apicompat.ResponsesInputItem, needle string) bool {
-	needle = strings.TrimSpace(needle)
-	if needle == "" {
+func responsesInputItemsContainText(entries []apicompat.ResponsesInputItem, target string) bool {
+	target = strings.TrimSpace(target)
+	if target == "" {
 		return false
 	}
-	for _, item := range items {
-		if strings.Contains(string(item.Content), needle) {
+	for idx := range entries {
+		if strings.Contains(string(entries[idx].Content), target) {
 			return true
 		}
 	}
 	return false
 }
 
-func inputContainsText(input []any, needle string) bool {
-	needle = strings.TrimSpace(needle)
-	if needle == "" {
+func inputContainsText(entries []any, target string) bool {
+	target = strings.TrimSpace(target)
+	if target == "" {
 		return false
 	}
-	for _, item := range input {
-		b, err := json.Marshal(item)
-		if err == nil && strings.Contains(string(b), needle) {
+	for _, entry := range entries {
+		serialized, serErr := json.Marshal(entry)
+		if serErr != nil {
+			continue
+		}
+		if strings.Contains(string(serialized), target) {
 			return true
 		}
 	}

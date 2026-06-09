@@ -24,181 +24,188 @@ func newOpenAIImageOutputCounter() *openAIImageOutputCounter {
 	}
 }
 
-func (c *openAIImageOutputCounter) Count() int {
-	if c == nil {
+func (ctr *openAIImageOutputCounter) Count() int {
+	if ctr == nil {
 		return 0
 	}
-	if c.maxDataCount > c.count {
-		return c.maxDataCount
+	if ctr.maxDataCount > ctr.count {
+		return ctr.maxDataCount
 	}
-	return c.count
+	return ctr.count
 }
 
-func (c *openAIImageOutputCounter) Sizes() []string {
-	if c == nil {
+func (ctr *openAIImageOutputCounter) Sizes() []string {
+	if ctr == nil {
 		return nil
 	}
-	sizes := make([]string, 0, len(c.seenOrder)+len(c.dataSizes))
-	for _, key := range c.seenOrder {
-		if size := strings.TrimSpace(c.seenSizes[key]); size != "" {
-			sizes = append(sizes, size)
+	collected := make([]string, 0, len(ctr.seenOrder)+len(ctr.dataSizes))
+	for _, k := range ctr.seenOrder {
+		if sz := strings.TrimSpace(ctr.seenSizes[k]); sz != "" {
+			collected = append(collected, sz)
 		}
 	}
-	if len(sizes) == 0 && len(c.dataSizes) > 0 {
-		sizes = append(sizes, c.dataSizes...)
+	if len(collected) == 0 && len(ctr.dataSizes) > 0 {
+		collected = append(collected, ctr.dataSizes...)
 	}
-	if len(sizes) == 0 {
+	if len(collected) == 0 {
 		return nil
 	}
-	return sizes
+	return collected
 }
 
-func (c *openAIImageOutputCounter) AddJSONResponse(body []byte) {
-	if c == nil || len(body) == 0 || !gjson.ValidBytes(body) {
+func (ctr *openAIImageOutputCounter) AddJSONResponse(payload []byte) {
+	if ctr == nil || len(payload) == 0 || !gjson.ValidBytes(payload) {
 		return
 	}
-	c.addDataArray(gjson.GetBytes(body, "data"))
-	c.addOutputArray(gjson.GetBytes(body, "output"))
-	c.addOutputArray(gjson.GetBytes(body, "response.output"))
+	ctr.addDataArray(gjson.GetBytes(payload, "data"))
+	ctr.addOutputArray(gjson.GetBytes(payload, "output"))
+	ctr.addOutputArray(gjson.GetBytes(payload, "response.output"))
 }
 
-func (c *openAIImageOutputCounter) AddSSEData(data []byte) {
-	if c == nil || len(data) == 0 || strings.TrimSpace(string(data)) == "[DONE]" || !gjson.ValidBytes(data) {
+func (ctr *openAIImageOutputCounter) AddSSEData(event []byte) {
+	if ctr == nil || len(event) == 0 {
 		return
 	}
-	root := gjson.ParseBytes(data)
-	c.addDataArray(root.Get("data"))
-	eventType := strings.TrimSpace(root.Get("type").String())
-	switch eventType {
+	if strings.TrimSpace(string(event)) == "[DONE]" || !gjson.ValidBytes(event) {
+		return
+	}
+	parsed := gjson.ParseBytes(event)
+	ctr.addDataArray(parsed.Get("data"))
+
+	evtType := strings.TrimSpace(parsed.Get("type").String())
+	switch evtType {
 	case "response.output_item.done":
-		c.addImageOutputItem(root.Get("item"))
+		ctr.addImageOutputItem(parsed.Get("item"))
 	case "response.completed", "response.done":
-		c.addOutputArray(root.Get("response.output"))
+		ctr.addOutputArray(parsed.Get("response.output"))
 	case "image_generation.completed":
-		if item := root.Get("item"); item.Exists() {
-			c.addImageOutputItem(item)
+		if itemResult := parsed.Get("item"); itemResult.Exists() {
+			ctr.addImageOutputItem(itemResult)
 			return
 		}
-		if output := root.Get("output"); output.Exists() {
-			c.addImageOutputItem(output)
+		if outResult := parsed.Get("output"); outResult.Exists() {
+			ctr.addImageOutputItem(outResult)
 			return
 		}
-		c.addImageOutputItem(root)
+		ctr.addImageOutputItem(parsed)
 	}
 }
 
-func (c *openAIImageOutputCounter) AddSSEBody(body string) {
-	if c == nil || strings.TrimSpace(body) == "" {
+func (ctr *openAIImageOutputCounter) AddSSEBody(raw string) {
+	if ctr == nil || strings.TrimSpace(raw) == "" {
 		return
 	}
-	forEachOpenAISSEDataPayload(body, c.AddSSEData)
+	forEachOpenAISSEDataPayload(raw, ctr.AddSSEData)
 }
 
-func (c *openAIImageOutputCounter) addDataArray(data gjson.Result) {
-	if !data.IsArray() {
+func (ctr *openAIImageOutputCounter) addDataArray(dataResult gjson.Result) {
+	if !dataResult.IsArray() {
 		return
 	}
-	items := data.Array()
-	count := len(items)
-	if count > c.maxDataCount {
-		c.maxDataCount = count
+	elements := dataResult.Array()
+	n := len(elements)
+	if n > ctr.maxDataCount {
+		ctr.maxDataCount = n
 	}
-	sizes := make([]string, 0, len(items))
-	for _, item := range items {
-		if size := strings.TrimSpace(item.Get("size").String()); size != "" {
-			sizes = append(sizes, size)
+	dims := make([]string, 0, n)
+	for _, el := range elements {
+		if sz := strings.TrimSpace(el.Get("size").String()); sz != "" {
+			dims = append(dims, sz)
 		}
 	}
-	if len(sizes) > 0 {
-		c.dataSizes = sizes
+	if len(dims) > 0 {
+		ctr.dataSizes = dims
 	}
 }
 
-func (c *openAIImageOutputCounter) addOutputArray(output gjson.Result) {
-	if !output.IsArray() {
+func (ctr *openAIImageOutputCounter) addOutputArray(outputResult gjson.Result) {
+	if !outputResult.IsArray() {
 		return
 	}
-	output.ForEach(func(_, item gjson.Result) bool {
-		c.addImageOutputItem(item)
+	outputResult.ForEach(func(_, el gjson.Result) bool {
+		ctr.addImageOutputItem(el)
 		return true
 	})
 }
 
-func (c *openAIImageOutputCounter) addImageOutputItem(item gjson.Result) {
-	if !item.Exists() || !item.IsObject() {
+func (ctr *openAIImageOutputCounter) addImageOutputItem(entry gjson.Result) {
+	if !entry.Exists() || !entry.IsObject() {
 		return
 	}
-	itemType := strings.TrimSpace(item.Get("type").String())
-	if itemType != "" && itemType != "image_generation_call" && itemType != "image_generation.completed" {
+	kind := strings.TrimSpace(entry.Get("type").String())
+	if kind != "" && kind != "image_generation_call" && kind != "image_generation.completed" {
 		return
 	}
-	if strings.Contains(strings.ToLower(item.Raw), "partial_image") {
+	if strings.Contains(strings.ToLower(entry.Raw), "partial_image") {
 		return
 	}
-	result := strings.TrimSpace(item.Get("result").String())
-	if result == "" {
-		result = strings.TrimSpace(item.Get("b64_json").String())
+
+	content := strings.TrimSpace(entry.Get("result").String())
+	if content == "" {
+		content = strings.TrimSpace(entry.Get("b64_json").String())
 	}
-	if result == "" {
-		result = strings.TrimSpace(item.Get("url").String())
+	if content == "" {
+		content = strings.TrimSpace(entry.Get("url").String())
 	}
-	if result == "" && itemType != "image_generation.completed" {
+	if content == "" && kind != "image_generation.completed" {
 		return
 	}
-	key := strings.TrimSpace(item.Get("id").String())
-	if key == "" {
-		key = strings.TrimSpace(item.Get("call_id").String())
+
+	dedupKey := strings.TrimSpace(entry.Get("id").String())
+	if dedupKey == "" {
+		dedupKey = strings.TrimSpace(entry.Get("call_id").String())
 	}
-	if key == "" {
-		key = hashOpenAIImageOutputResult(result)
+	if dedupKey == "" {
+		dedupKey = hashOpenAIImageOutputResult(content)
 	}
-	if key == "" {
+	if dedupKey == "" {
 		return
 	}
-	size := strings.TrimSpace(item.Get("size").String())
-	if _, exists := c.seen[key]; exists {
-		if size != "" && strings.TrimSpace(c.seenSizes[key]) == "" {
-			c.seenSizes[key] = size
+
+	dim := strings.TrimSpace(entry.Get("size").String())
+	if _, already := ctr.seen[dedupKey]; already {
+		if dim != "" && strings.TrimSpace(ctr.seenSizes[dedupKey]) == "" {
+			ctr.seenSizes[dedupKey] = dim
 		}
 		return
 	}
-	c.seen[key] = struct{}{}
-	c.seenOrder = append(c.seenOrder, key)
-	if size != "" {
-		c.seenSizes[key] = size
+	ctr.seen[dedupKey] = struct{}{}
+	ctr.seenOrder = append(ctr.seenOrder, dedupKey)
+	if dim != "" {
+		ctr.seenSizes[dedupKey] = dim
 	}
-	c.count++
+	ctr.count++
 }
 
-func hashOpenAIImageOutputResult(result string) string {
-	result = strings.TrimSpace(result)
-	if result == "" {
+func hashOpenAIImageOutputResult(data string) string {
+	data = strings.TrimSpace(data)
+	if data == "" {
 		return ""
 	}
-	sum := sha256.Sum256([]byte(result))
-	return hex.EncodeToString(sum[:])
+	digest := sha256.Sum256([]byte(data))
+	return hex.EncodeToString(digest[:])
 }
 
-func countOpenAIResponseImageOutputsFromJSONBytes(body []byte) int {
-	counter := newOpenAIImageOutputCounter()
-	counter.AddJSONResponse(body)
-	return counter.Count()
+func countOpenAIResponseImageOutputsFromJSONBytes(payload []byte) int {
+	ctr := newOpenAIImageOutputCounter()
+	ctr.AddJSONResponse(payload)
+	return ctr.Count()
 }
 
-func collectOpenAIResponseImageOutputSizesFromJSONBytes(body []byte) []string {
-	counter := newOpenAIImageOutputCounter()
-	counter.AddJSONResponse(body)
-	return counter.Sizes()
+func collectOpenAIResponseImageOutputSizesFromJSONBytes(payload []byte) []string {
+	ctr := newOpenAIImageOutputCounter()
+	ctr.AddJSONResponse(payload)
+	return ctr.Sizes()
 }
 
-func countOpenAIImageOutputsFromSSEBody(body string) int {
-	counter := newOpenAIImageOutputCounter()
-	counter.AddSSEBody(body)
-	return counter.Count()
+func countOpenAIImageOutputsFromSSEBody(raw string) int {
+	ctr := newOpenAIImageOutputCounter()
+	ctr.AddSSEBody(raw)
+	return ctr.Count()
 }
 
-func collectOpenAIImageOutputSizesFromSSEBody(body string) []string {
-	counter := newOpenAIImageOutputCounter()
-	counter.AddSSEBody(body)
-	return counter.Sizes()
+func collectOpenAIImageOutputSizesFromSSEBody(raw string) []string {
+	ctr := newOpenAIImageOutputCounter()
+	ctr.AddSSEBody(raw)
+	return ctr.Sizes()
 }

@@ -34,23 +34,23 @@ type opsCleanupDeletedCounts struct {
 	dailyPreagg   int64
 }
 
-func (c opsCleanupDeletedCounts) String() string {
+func (dc opsCleanupDeletedCounts) String() string {
 	return fmt.Sprintf(
 		"error_logs=%d alert_events=%d system_logs=%d log_audits=%d system_metrics=%d hourly_preagg=%d daily_preagg=%d",
-		c.errorLogs,
-		c.alertEvents,
-		c.systemLogs,
-		c.logAudits,
-		c.systemMetrics,
-		c.hourlyPreagg,
-		c.dailyPreagg,
+		dc.errorLogs,
+		dc.alertEvents,
+		dc.systemLogs,
+		dc.logAudits,
+		dc.systemMetrics,
+		dc.hourlyPreagg,
+		dc.dailyPreagg,
 	)
 }
 
-// opsCleanupPlan 把"保留天数"翻译成具体的清理动作。
-//   - days < 0  → 跳过该项清理（ok=false），保留兼容老数据
-//   - days == 0 → TRUNCATE TABLE（O(1) 全清），truncate=true
-//   - days > 0  → 批量 DELETE 早于 now-N天 的行，cutoff = now - N 天
+// opsCleanupPlan translates a retention-day count into a cleanup action.
+//   - days < 0  => skip (ok=false), keep backward-compatible data
+//   - days == 0 => TRUNCATE TABLE (O(1) full wipe), truncate=true
+//   - days > 0  => batched DELETE for rows older than now-N days, cutoff = now - N days
 func opsCleanupPlan(now time.Time, days int) (cutoff time.Time, truncate, ok bool) {
 	if days < 0 {
 		return time.Time{}, false, false
@@ -63,41 +63,41 @@ func opsCleanupPlan(now time.Time, days int) (cutoff time.Time, truncate, ok boo
 
 func opsCleanupRunOne(
 	ctx context.Context,
-	db *sql.DB,
-	truncate bool,
-	cutoff time.Time,
-	table, timeCol string,
-	castDate bool,
-	batchSize int,
+	conn *sql.DB,
+	doTruncate bool,
+	threshold time.Time,
+	tableName, timeColumn string,
+	useDateCast bool,
+	chunkSize int,
 ) (int64, error) {
-	if truncate {
-		return truncateOpsTable(ctx, db, table)
+	if doTruncate {
+		return truncateOpsTable(ctx, conn, tableName)
 	}
-	return deleteOldRowsByID(ctx, db, table, timeCol, cutoff, batchSize, castDate)
+	return deleteOldRowsByID(ctx, conn, tableName, timeColumn, threshold, chunkSize, useDateCast)
 }
 
 func deleteOldRowsByID(
 	ctx context.Context,
-	db *sql.DB,
-	table string,
-	timeColumn string,
-	cutoff time.Time,
-	batchSize int,
-	castCutoffToDate bool,
+	conn *sql.DB,
+	tableName string,
+	colName string,
+	threshold time.Time,
+	chunkSize int,
+	useDateCast bool,
 ) (int64, error) {
-	if db == nil {
+	if conn == nil {
 		return 0, nil
 	}
-	if batchSize <= 0 {
-		batchSize = opsCleanupBatchSize
+	if chunkSize <= 0 {
+		chunkSize = opsCleanupBatchSize
 	}
 
-	where := fmt.Sprintf("%s < $1", timeColumn)
-	if castCutoffToDate {
-		where = fmt.Sprintf("%s < $1::date", timeColumn)
+	condition := fmt.Sprintf("%s < $1", colName)
+	if useDateCast {
+		condition = fmt.Sprintf("%s < $1::date", colName)
 	}
 
-	q := fmt.Sprintf(`
+	stmt := fmt.Sprintf(`
 WITH batch AS (
   SELECT id FROM %s
   WHERE %s
@@ -106,57 +106,59 @@ WITH batch AS (
 )
 DELETE FROM %s
 WHERE id IN (SELECT id FROM batch)
-`, table, where, table)
+`, tableName, condition, tableName)
 
-	var total int64
+	var removed int64
 	for {
-		res, err := db.ExecContext(ctx, q, cutoff, batchSize)
-		if err != nil {
-			if isMissingRelationError(err) {
-				return total, nil
+		execResult, execErr := conn.ExecContext(ctx, stmt, threshold, chunkSize)
+		if execErr != nil {
+			if isMissingRelationError(execErr) {
+				return removed, nil
 			}
-			return total, err
+			return removed, execErr
 		}
-		affected, err := res.RowsAffected()
-		if err != nil {
-			return total, err
+		rowCount, countErr := execResult.RowsAffected()
+		if countErr != nil {
+			return removed, countErr
 		}
-		total += affected
-		if affected == 0 {
+		removed += rowCount
+		if rowCount == 0 {
 			break
 		}
 	}
-	return total, nil
+	return removed, nil
 }
 
-// truncateOpsTable 用 TRUNCATE TABLE 清空指定表，先 SELECT COUNT(*) 取得清空前行数用于 heartbeat。
-func truncateOpsTable(ctx context.Context, db *sql.DB, table string) (int64, error) {
-	if db == nil {
+// truncateOpsTable wipes a table using TRUNCATE TABLE, returning the pre-truncate row count for logging.
+func truncateOpsTable(ctx context.Context, conn *sql.DB, tableName string) (int64, error) {
+	if conn == nil {
 		return 0, nil
 	}
-	var count int64
-	if err := db.QueryRowContext(ctx, fmt.Sprintf("SELECT COUNT(*) FROM %s", table)).Scan(&count); err != nil {
-		if isMissingRelationError(err) {
+	var rowCount int64
+	scanErr := conn.QueryRowContext(ctx, fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)).Scan(&rowCount)
+	if scanErr != nil {
+		if isMissingRelationError(scanErr) {
 			return 0, nil
 		}
-		return 0, fmt.Errorf("count %s: %w", table, err)
+		return 0, fmt.Errorf("count %s: %w", tableName, scanErr)
 	}
-	if count == 0 {
+	if rowCount == 0 {
 		return 0, nil
 	}
-	if _, err := db.ExecContext(ctx, fmt.Sprintf("TRUNCATE TABLE %s", table)); err != nil {
-		if isMissingRelationError(err) {
+	_, execErr := conn.ExecContext(ctx, fmt.Sprintf("TRUNCATE TABLE %s", tableName))
+	if execErr != nil {
+		if isMissingRelationError(execErr) {
 			return 0, nil
 		}
-		return 0, fmt.Errorf("truncate %s: %w", table, err)
+		return 0, fmt.Errorf("truncate %s: %w", tableName, execErr)
 	}
-	return count, nil
+	return rowCount, nil
 }
 
 func isMissingRelationError(err error) bool {
 	if err == nil {
 		return false
 	}
-	s := strings.ToLower(err.Error())
-	return strings.Contains(s, "does not exist") && strings.Contains(s, "relation")
+	lower := strings.ToLower(err.Error())
+	return strings.Contains(lower, "relation") && strings.Contains(lower, "does not exist")
 }

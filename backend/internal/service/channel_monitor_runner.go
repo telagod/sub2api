@@ -9,61 +9,59 @@ import (
 	"github.com/alitto/pond/v2"
 )
 
-// MonitorScheduler 调度器接口，供 ChannelMonitorService 在 CRUD 时回调，
-// 用 setter 注入避免 service ↔ runner 的 wire 依赖环。
+// MonitorScheduler is the scheduler interface for ChannelMonitorService CRUD callbacks.
+// Injected via setter to avoid service <-> runner wire dependency cycle.
 type MonitorScheduler interface {
-	// Schedule 为指定监控创建（或重置）独立定时任务。
-	// 当 m.Enabled=false 时等同于 Unschedule(m.ID)。
+	// Schedule creates (or resets) an independent timer task for the given monitor.
+	// When m.Enabled=false, this is equivalent to Unschedule(m.ID).
 	Schedule(m *ChannelMonitor)
-	// Unschedule 取消指定监控的定时任务（若存在）。
+	// Unschedule cancels the timer task for the given monitor (if one exists).
 	Unschedule(id int64)
 }
 
-// monitorRunnerSvc 抽出 runner 实际依赖的两个 service 方法：
-//   - 启动时加载 enabled monitor
-//   - 每次 ticker 触发执行检测
+// monitorRunnerSvc defines the minimal service interface the runner depends on:
+//   - loading enabled monitors at startup
+//   - executing a check on each ticker fire
 //
-// 用接口而非 *ChannelMonitorService 是为了让 runner 单元测试可注入轻量 stub，
-// 避免依赖完整的 repo + encryptor 链路。生产实现 *ChannelMonitorService 自然满足。
+// Using an interface instead of *ChannelMonitorService allows lightweight stub injection
+// in unit tests without requiring the full repo + encryptor chain.
 type monitorRunnerSvc interface {
-	ListEnabledMonitors(ctx context.Context) ([]*ChannelMonitor, error)
-	RunCheck(ctx context.Context, id int64) ([]*CheckResult, error)
+	ListEnabledMonitors(reqCtx context.Context) ([]*ChannelMonitor, error)
+	RunCheck(reqCtx context.Context, monitorID int64) ([]*CheckResult, error)
 }
 
-// ChannelMonitorRunner 渠道监控调度器。
+// ChannelMonitorRunner is the channel monitor scheduler.
 //
-// 设计：
-//   - 每个 enabled monitor 对应一个独立 goroutine + ticker（按各自 IntervalSeconds）
-//   - Start 时一次性加载所有 enabled monitor 并为每个建立任务
-//   - Service 在 Create/Update/Delete 后通过 MonitorScheduler 接口回调，
-//     即时重建/取消对应任务（无需轮询 DB）
-//   - 实际 HTTP 检测交给 pond 池（容量 monitorWorkerConcurrency），
-//     防止突发并发拖垮上游
+// Design:
+//   - Each enabled monitor gets its own goroutine + ticker (per IntervalSeconds)
+//   - Start loads all enabled monitors and creates tasks for each
+//   - Service calls Schedule/Unschedule via MonitorScheduler after CRUD operations
+//   - Actual HTTP checks are submitted to a pond pool (capped at monitorWorkerConcurrency)
 //
-// 历史清理与日聚合维护由 OpsCleanupService 的 cron 触发
-// ChannelMonitorService.RunDailyMaintenance（复用 leader lock + heartbeat），
-// 不在 runner 职责内。
+// History cleanup and daily aggregation are handled by OpsCleanupService via
+// ChannelMonitorService.RunDailyMaintenance (shared leader lock + heartbeat).
 type ChannelMonitorRunner struct {
 	svc            monitorRunnerSvc
 	settingService *SettingService
 
-	pool         pond.Pool
-	parentCtx    context.Context
-	parentCancel context.CancelFunc
+	workerPool   pond.Pool
+	rootCtx      context.Context
+	rootCancel   context.CancelFunc
 
-	mu      sync.Mutex
-	tasks   map[int64]*scheduledMonitor
-	wg      sync.WaitGroup
-	started bool
-	stopped bool
+	guard    sync.Mutex
+	taskMap  map[int64]*scheduledMonitor
+	waitGrp  sync.WaitGroup
+	launched bool
+	halted   bool
 
-	// inFlight 跟踪正在执行的 monitor.ID。fire 调度前会检查避免重复提交，
-	// 防止单次检测耗时 > interval 时同一 monitor 被并发执行。
-	inFlight   map[int64]struct{}
-	inFlightMu sync.Mutex
+	// activeJobs tracks monitor IDs currently executing. The fire method checks
+	// this before submitting to prevent duplicate concurrent checks when a single
+	// check takes longer than the interval.
+	activeJobs   map[int64]struct{}
+	activeJobsMu sync.Mutex
 }
 
-// scheduledMonitor 单个监控的运行时上下文。
+// scheduledMonitor holds the runtime context for a single monitor's timer loop.
 type scheduledMonitor struct {
 	id       int64
 	name     string
@@ -71,60 +69,60 @@ type scheduledMonitor struct {
 	cancel   context.CancelFunc
 }
 
-// NewChannelMonitorRunner 构造调度器。Start 在 wire 中调用一次。
-// settingService 用于在每次 fire 前读取功能开关；传 nil 时视为总是启用（兼容测试）。
+// NewChannelMonitorRunner constructs the scheduler. Start is called once from wire.
+// settingService is used to check the feature toggle before each fire; pass nil to always enable (test compat).
 //
-// pool 在构造时即建好：避免 Start 在 mu 内赋值、fire/Stop 在 mu 外读取的竞态隐患，
-// 且 pond.NewPool 创建本身近似零开销，提前建池不会浪费资源。
+// The pool is created at construction time to avoid race conditions between Start (inside guard)
+// and fire/Stop (outside guard). pond.NewPool is near-zero overhead so this is safe.
 func NewChannelMonitorRunner(svc *ChannelMonitorService, settingService *SettingService) *ChannelMonitorRunner {
 	return newChannelMonitorRunner(svc, settingService)
 }
 
-// newChannelMonitorRunner 内部构造，接受最小化接口，便于单元测试注入 stub。
+// newChannelMonitorRunner is the internal constructor accepting the minimal interface for testability.
 func newChannelMonitorRunner(svc monitorRunnerSvc, settingService *SettingService) *ChannelMonitorRunner {
-	ctx, cancel := context.WithCancel(context.Background())
+	bgCtx, bgCancel := context.WithCancel(context.Background())
 	return &ChannelMonitorRunner{
 		svc:            svc,
 		settingService: settingService,
-		pool:           pond.NewPool(monitorWorkerConcurrency),
-		parentCtx:      ctx,
-		parentCancel:   cancel,
-		tasks:          make(map[int64]*scheduledMonitor),
-		inFlight:       make(map[int64]struct{}),
+		workerPool:     pond.NewPool(monitorWorkerConcurrency),
+		rootCtx:        bgCtx,
+		rootCancel:     bgCancel,
+		taskMap:        make(map[int64]*scheduledMonitor),
+		activeJobs:     make(map[int64]struct{}),
 	}
 }
 
-// Start 加载所有 enabled monitor 并为每个建立独立定时任务。
-// 调用方需保证只调一次（wire ProvideChannelMonitorRunner 内只调一次）。
+// Start loads all enabled monitors and creates an independent timer task for each.
+// Callers must ensure this is invoked exactly once (enforced by the wire provider).
 func (r *ChannelMonitorRunner) Start() {
 	if r == nil || r.svc == nil {
 		return
 	}
-	r.mu.Lock()
-	if r.started || r.stopped {
-		r.mu.Unlock()
+	r.guard.Lock()
+	if r.launched || r.halted {
+		r.guard.Unlock()
 		return
 	}
-	r.started = true
-	r.mu.Unlock()
+	r.launched = true
+	r.guard.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), monitorStartupLoadTimeout)
-	defer cancel()
-	enabled, err := r.svc.ListEnabledMonitors(ctx)
-	if err != nil {
-		slog.Error("channel_monitor: load enabled monitors failed at startup", "error", err)
+	loadCtx, loadCancel := context.WithTimeout(context.Background(), monitorStartupLoadTimeout)
+	defer loadCancel()
+	enabledMonitors, loadErr := r.svc.ListEnabledMonitors(loadCtx)
+	if loadErr != nil {
+		slog.Error("channel_monitor: startup load of enabled monitors failed", "error", loadErr)
 		return
 	}
-	for _, m := range enabled {
-		r.Schedule(m)
+	for idx := 0; idx < len(enabledMonitors); idx++ {
+		r.Schedule(enabledMonitors[idx])
 	}
-	slog.Info("channel_monitor: runner started", "scheduled_tasks", len(enabled))
+	slog.Info("channel_monitor: runner started", "scheduled_tasks", len(enabledMonitors))
 }
 
-// Schedule 为指定监控创建（或重置）独立定时任务。
-//   - m.Enabled=false → 等同于 Unschedule(m.ID)
-//   - 已存在的任务会先被取消再重建（适用于 IntervalSeconds 变更场景）
-//   - 新任务立即触发首次检测，之后按 IntervalSeconds 周期触发
+// Schedule creates (or resets) an independent timer task for the given monitor.
+//   - m.Enabled=false -> equivalent to Unschedule(m.ID)
+//   - Existing tasks are cancelled and recreated (handles IntervalSeconds changes)
+//   - New tasks fire immediately, then repeat at IntervalSeconds
 func (r *ChannelMonitorRunner) Schedule(m *ChannelMonitor) {
 	if r == nil || m == nil {
 		return
@@ -133,159 +131,153 @@ func (r *ChannelMonitorRunner) Schedule(m *ChannelMonitor) {
 		r.Unschedule(m.ID)
 		return
 	}
-	interval := time.Duration(m.IntervalSeconds) * time.Second
-	if interval <= 0 {
-		// Create/Update 已通过 validateInterval 校验区间，正常路径不可能到这里。
-		// 真触发说明数据库中存在违反约束的数据或校验链路有 bug，记 Error 暴露问题。
-		slog.Error("channel_monitor: skip schedule for invalid interval",
+	tickInterval := time.Duration(m.IntervalSeconds) * time.Second
+	if tickInterval <= 0 {
+		slog.Error("channel_monitor: skipping schedule due to non-positive interval",
 			"monitor_id", m.ID, "interval_seconds", m.IntervalSeconds)
 		return
 	}
 
-	r.mu.Lock()
-	if r.stopped {
-		r.mu.Unlock()
+	r.guard.Lock()
+	if r.halted {
+		r.guard.Unlock()
 		return
 	}
-	if !r.started {
-		// Start 之前调用 Schedule 通常意味着 wire 顺序错乱：
-		// 当前 wire 顺序是 SetScheduler → Start，CRUD 钩子最早也只能在请求到达时触发，
-		// 此时 Start 早已完成。出现此分支时把 monitor 信息打出来便于排查，
-		// 不入队、不缓存——交给运维通过重启或修复 wire 解决。
-		r.mu.Unlock()
-		slog.Warn("channel_monitor: schedule before runner started, skip",
+	if !r.launched {
+		r.guard.Unlock()
+		slog.Warn("channel_monitor: schedule called before runner started, ignoring",
 			"monitor_id", m.ID, "name", m.Name)
 		return
 	}
-	if existing, ok := r.tasks[m.ID]; ok {
-		existing.cancel()
+	if prev, exists := r.taskMap[m.ID]; exists {
+		prev.cancel()
 	}
-	ctx, cancel := context.WithCancel(r.parentCtx)
-	task := &scheduledMonitor{
+	taskCtx, taskCancel := context.WithCancel(r.rootCtx)
+	entry := &scheduledMonitor{
 		id:       m.ID,
 		name:     m.Name,
-		interval: interval,
-		cancel:   cancel,
+		interval: tickInterval,
+		cancel:   taskCancel,
 	}
-	r.tasks[m.ID] = task
-	r.wg.Add(1)
-	r.mu.Unlock()
+	r.taskMap[m.ID] = entry
+	r.waitGrp.Add(1)
+	r.guard.Unlock()
 
-	go r.runScheduled(ctx, task)
+	go r.runScheduled(taskCtx, entry)
 }
 
-// Unschedule 取消指定监控的定时任务（若存在）。
-// 已经在执行中的检测会通过 ctx 取消信号传递。
-func (r *ChannelMonitorRunner) Unschedule(id int64) {
+// Unschedule cancels the timer task for the given monitor (if one exists).
+// In-flight checks receive the cancellation signal through context.
+func (r *ChannelMonitorRunner) Unschedule(monitorID int64) {
 	if r == nil {
 		return
 	}
-	r.mu.Lock()
-	task, ok := r.tasks[id]
-	if ok {
-		delete(r.tasks, id)
+	r.guard.Lock()
+	entry, exists := r.taskMap[monitorID]
+	if exists {
+		delete(r.taskMap, monitorID)
 	}
-	r.mu.Unlock()
-	if ok {
-		task.cancel()
+	r.guard.Unlock()
+	if exists {
+		entry.cancel()
 	}
 }
 
-// Stop 优雅停止：取消所有任务、关闭池。
+// Stop gracefully shuts down: cancels all tasks and drains the pool.
 func (r *ChannelMonitorRunner) Stop() {
 	if r == nil {
 		return
 	}
-	r.mu.Lock()
-	if r.stopped {
-		r.mu.Unlock()
+	r.guard.Lock()
+	if r.halted {
+		r.guard.Unlock()
 		return
 	}
-	r.stopped = true
-	r.parentCancel()
-	r.tasks = nil
-	r.mu.Unlock()
+	r.halted = true
+	r.rootCancel()
+	r.taskMap = nil
+	r.guard.Unlock()
 
-	r.wg.Wait()
-	r.pool.StopAndWait()
+	r.waitGrp.Wait()
+	r.workerPool.StopAndWait()
 }
 
-// runScheduled 单个监控的循环：立即触发首次（满足"新建/启用即跑"），
-// 之后按 interval 周期触发；ctx 取消即退出。
-func (r *ChannelMonitorRunner) runScheduled(ctx context.Context, task *scheduledMonitor) {
-	defer r.wg.Done()
+// runScheduled is the per-monitor loop: fires immediately (so new/enabled monitors run at once),
+// then repeats at the configured interval; exits when context is cancelled.
+func (r *ChannelMonitorRunner) runScheduled(taskCtx context.Context, entry *scheduledMonitor) {
+	defer r.waitGrp.Done()
 
-	r.fire(ctx, task)
+	r.fire(taskCtx, entry)
 
-	ticker := time.NewTicker(task.interval)
-	defer ticker.Stop()
+	tick := time.NewTicker(entry.interval)
+	defer tick.Stop()
 	for {
 		select {
-		case <-ctx.Done():
+		case <-taskCtx.Done():
 			return
-		case <-ticker.C:
-			r.fire(ctx, task)
+		case <-tick.C:
+			r.fire(taskCtx, entry)
 		}
 	}
 }
 
-// fire 提交一次检测到 worker 池。功能开关关闭时跳过本次（不取消任务，
-// 重新启用时立即恢复）；池满或重复在飞时也跳过。
-func (r *ChannelMonitorRunner) fire(ctx context.Context, task *scheduledMonitor) {
-	if r.settingService != nil && !r.settingService.GetChannelMonitorRuntime(ctx).Enabled {
+// fire submits a single check to the worker pool. Skips if the feature toggle is off,
+// if the monitor is already in-flight, or if the pool is full.
+func (r *ChannelMonitorRunner) fire(taskCtx context.Context, entry *scheduledMonitor) {
+	if r.settingService != nil && !r.settingService.GetChannelMonitorRuntime(taskCtx).Enabled {
 		return
 	}
-	if !r.tryAcquireInFlight(task.id) {
-		slog.Debug("channel_monitor: skip already in-flight",
-			"monitor_id", task.id, "name", task.name)
+	if !r.tryAcquireInFlight(entry.id) {
+		slog.Debug("channel_monitor: skipping already in-flight check",
+			"monitor_id", entry.id, "name", entry.name)
 		return
 	}
-	if _, ok := r.pool.TrySubmit(func() {
-		r.runOne(task.id, task.name)
-	}); !ok {
-		// 池满：丢弃本次检测，但必须释放已占用的 inFlight 槽，否则该 monitor 会被永久卡住。
-		r.releaseInFlight(task.id)
-		slog.Warn("channel_monitor: worker pool full, skip submission",
-			"monitor_id", task.id, "name", task.name)
+	if _, submitted := r.workerPool.TrySubmit(func() {
+		r.runOne(entry.id, entry.name)
+	}); !submitted {
+		// Pool full: release the in-flight slot to avoid permanently blocking this monitor.
+		r.releaseInFlight(entry.id)
+		slog.Warn("channel_monitor: worker pool full, dropping check submission",
+			"monitor_id", entry.id, "name", entry.name)
 	}
 }
 
-// tryAcquireInFlight 原子地占用 monitor 的 in-flight 槽。
-// 已被占用返回 false（调用方应跳过本次提交）。
-func (r *ChannelMonitorRunner) tryAcquireInFlight(id int64) bool {
-	r.inFlightMu.Lock()
-	defer r.inFlightMu.Unlock()
-	if _, exists := r.inFlight[id]; exists {
+// tryAcquireInFlight atomically reserves the in-flight slot for a monitor.
+// Returns false if already reserved (caller should skip this submission).
+func (r *ChannelMonitorRunner) tryAcquireInFlight(monitorID int64) bool {
+	r.activeJobsMu.Lock()
+	defer r.activeJobsMu.Unlock()
+	if _, occupied := r.activeJobs[monitorID]; occupied {
 		return false
 	}
-	r.inFlight[id] = struct{}{}
+	r.activeJobs[monitorID] = struct{}{}
 	return true
 }
 
-// releaseInFlight 释放 in-flight 槽。runOne 完成（含 panic recover）后必须调用。
-func (r *ChannelMonitorRunner) releaseInFlight(id int64) {
-	r.inFlightMu.Lock()
-	delete(r.inFlight, id)
-	r.inFlightMu.Unlock()
+// releaseInFlight frees the in-flight slot. Must be called after runOne completes (including panic recovery).
+func (r *ChannelMonitorRunner) releaseInFlight(monitorID int64) {
+	r.activeJobsMu.Lock()
+	delete(r.activeJobs, monitorID)
+	r.activeJobsMu.Unlock()
 }
 
-// runOne 执行单个监控的检测。所有错误只记日志，不熔断。
-// 任务结束时（含 panic recover）必须释放 in-flight 槽。
-func (r *ChannelMonitorRunner) runOne(id int64, name string) {
-	ctx, cancel := context.WithTimeout(context.Background(), monitorRequestTimeout+monitorPingTimeout+monitorRunOneBuffer)
-	defer cancel()
+// runOne executes a single monitor check. All errors are logged only, never propagated.
+// The in-flight slot is always released on exit (including panic recovery).
+func (r *ChannelMonitorRunner) runOne(monitorID int64, monitorName string) {
+	checkCtx, checkCancel := context.WithTimeout(context.Background(), monitorRequestTimeout+monitorPingTimeout+monitorRunOneBuffer)
+	defer checkCancel()
 
-	defer r.releaseInFlight(id)
+	defer r.releaseInFlight(monitorID)
 
 	defer func() {
-		if rec := recover(); rec != nil {
-			slog.Error("channel_monitor: runner panic",
-				"monitor_id", id, "name", name, "panic", rec)
+		if recovered := recover(); recovered != nil {
+			slog.Error("channel_monitor: runner panicked",
+				"monitor_id", monitorID, "name", monitorName, "panic", recovered)
 		}
 	}()
 
-	if _, err := r.svc.RunCheck(ctx, id); err != nil {
-		slog.Warn("channel_monitor: run check failed",
-			"monitor_id", id, "name", name, "error", err)
+	if _, checkErr := r.svc.RunCheck(checkCtx, monitorID); checkErr != nil {
+		slog.Warn("channel_monitor: check execution failed",
+			"monitor_id", monitorID, "name", monitorName, "error", checkErr)
 	}
 }

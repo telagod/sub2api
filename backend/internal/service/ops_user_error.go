@@ -2,11 +2,12 @@ package service
 
 import "time"
 
-// UserErrorRequest 是面向终端用户的"错误请求"精简脱敏视图（白名单）。
-// 严禁包含 client_ip / user_agent / account / api_key_prefix / upstream_endpoint /
-// user_email 等敏感或内部字段。注：message（网关标准化错误描述）与 key_name
-// （用户自有 API Key 名称，KeysView 中本就可见）经产品决策对该用户开放；
-// error_body 仅在详情接口（GetUserErrorRequestDetail）按归属校验后返回。
+// UserErrorRequest is the sanitized, end-user-facing view of a failed request (allowlist only).
+// Fields like client_ip, user_agent, account, api_key_prefix, upstream_endpoint,
+// and user_email are intentionally excluded. The message field (standardized gateway
+// error description) and key_name (user-owned API Key name, already visible in KeysView)
+// are exposed by product decision; error_body is only returned through
+// GetUserErrorRequestDetail after ownership verification.
 type UserErrorRequest struct {
 	ID              int64     `json:"id"`
 	CreatedAt       time.Time `json:"created_at"`
@@ -20,7 +21,7 @@ type UserErrorRequest struct {
 	KeyDeleted      bool      `json:"key_deleted"`
 }
 
-// UserErrorRequestList 是用户错误请求分页结果。
+// UserErrorRequestList holds a paginated set of user error requests.
 type UserErrorRequestList struct {
 	Items    []*UserErrorRequest `json:"items"`
 	Total    int                 `json:"total"`
@@ -28,20 +29,23 @@ type UserErrorRequestList struct {
 	PageSize int                 `json:"page_size"`
 }
 
-// MapUserErrorCategory 把后端 error_phase + error_type 映射为用户侧粗分类码。
-// 返回的是稳定的分类 code（前端做 i18n），不是展示文案。
-func MapUserErrorCategory(phase, errType string) string {
-	switch phase {
-	case "auth":
+// MapUserErrorCategory maps backend error_phase + error_type into a stable user-facing
+// category code (for frontend i18n), not a display label.
+func MapUserErrorCategory(phase, errKind string) string {
+	if phase == "auth" {
 		return "auth"
-	case "routing":
+	}
+	if phase == "routing" {
 		return "service_unavailable"
-	case "upstream", "network":
+	}
+	if phase == "upstream" || phase == "network" {
 		return "upstream"
-	case "internal":
+	}
+	if phase == "internal" {
 		return "internal"
-	case "request":
-		switch errType {
+	}
+	if phase == "request" {
+		switch errKind {
 		case "rate_limit_error":
 			return "rate_limit"
 		case "billing_error", "subscription_error":
@@ -53,11 +57,11 @@ func MapUserErrorCategory(phase, errType string) string {
 	return "other"
 }
 
-// CategoryToFilter 把用户侧分类码反向映射为后端过滤条件（plain ANY）。
-// 未知分类返回两个空切片（即不施加分类过滤）。
-// 注意："other" 与未知分类都走 default 返回空切片——"other" 无对应的 phase/type 组合，无法精确反查，因此等价于不过滤。
-func CategoryToFilter(category string) (phases []string, errorTypes []string) {
-	switch category {
+// CategoryToFilter reverse-maps a user-facing category code to backend filter criteria
+// (plain ANY). Unknown categories return empty slices (no category filter applied).
+// Note: "other" also returns empty slices because it has no precise phase/type combination.
+func CategoryToFilter(cat string) (phases []string, errorTypes []string) {
+	switch cat {
 	case "auth":
 		return []string{"auth"}, nil
 	case "service_unavailable":
@@ -77,47 +81,48 @@ func CategoryToFilter(category string) (phases []string, errorTypes []string) {
 	}
 }
 
-// ToUserErrorRequest 把内部 OpsErrorLog 裁剪为用户安全视图。
-func ToUserErrorRequest(e *OpsErrorLog) *UserErrorRequest {
-	if e == nil {
+// ToUserErrorRequest converts an internal OpsErrorLog into the user-safe view.
+func ToUserErrorRequest(src *OpsErrorLog) *UserErrorRequest {
+	if src == nil {
 		return nil
 	}
-	model := e.RequestedModel
-	if model == "" {
-		model = e.Model
+	displayModel := src.RequestedModel
+	if displayModel == "" {
+		displayModel = src.Model
 	}
 	return &UserErrorRequest{
-		ID:              e.ID,
-		CreatedAt:       e.CreatedAt,
-		Model:           model,
-		InboundEndpoint: e.InboundEndpoint,
-		StatusCode:      e.StatusCode,
-		Category:        MapUserErrorCategory(e.Phase, e.Type),
-		Platform:        e.Platform,
-		Message:         e.Message,
-		KeyName:         e.APIKeyName,
-		KeyDeleted:      e.APIKeyDeleted,
+		ID:              src.ID,
+		CreatedAt:       src.CreatedAt,
+		Model:           displayModel,
+		InboundEndpoint: src.InboundEndpoint,
+		StatusCode:      src.StatusCode,
+		Category:        MapUserErrorCategory(src.Phase, src.Type),
+		Platform:        src.Platform,
+		Message:         src.Message,
+		KeyName:         src.APIKeyName,
+		KeyDeleted:      src.APIKeyDeleted,
 	}
 }
 
-// UserErrorRequestDetail 是错误请求详情的脱敏视图(点击单行查看)。
-// 在 UserErrorRequest 基础上额外暴露 error_body(上游错误响应正文)与 upstream_status_code;
-// 仍严禁任何内部/敏感字段。
+// UserErrorRequestDetail extends UserErrorRequest with the upstream error body and
+// status code, shown when a user clicks a single row. Internal/sensitive fields
+// remain excluded.
 type UserErrorRequestDetail struct {
 	UserErrorRequest
 	ErrorBody          string `json:"error_body"`
 	UpstreamStatusCode *int   `json:"upstream_status_code,omitempty"`
 }
 
-// ToUserErrorRequestDetail 把内部 OpsErrorLogDetail 裁剪为用户安全详情视图。
-func ToUserErrorRequestDetail(e *OpsErrorLogDetail) *UserErrorRequestDetail {
-	if e == nil {
+// ToUserErrorRequestDetail converts an internal OpsErrorLogDetail into the
+// user-safe detail view.
+func ToUserErrorRequestDetail(src *OpsErrorLogDetail) *UserErrorRequestDetail {
+	if src == nil {
 		return nil
 	}
-	base := ToUserErrorRequest(&e.OpsErrorLog)
+	baseView := ToUserErrorRequest(&src.OpsErrorLog)
 	return &UserErrorRequestDetail{
-		UserErrorRequest:   *base,
-		ErrorBody:          e.ErrorBody,
-		UpstreamStatusCode: e.UpstreamStatusCode,
+		UserErrorRequest:   *baseView,
+		ErrorBody:          src.ErrorBody,
+		UpstreamStatusCode: src.UpstreamStatusCode,
 	}
 }

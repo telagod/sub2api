@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-// SSRF 防护 helper：
-//   - validateEndpoint 在 admin 提交时阻止 http/loopback/私网/云元数据 URL
-//   - safeDialContext 在 socket 层再次校验真实 IP，防止 DNS rebinding
-//
-// 已知 cloud metadata hostname 拒绝列表（小写比较）。
+// SSRF defense helpers:
+//   - validateEndpoint blocks http/loopback/private/cloud-metadata URLs at admin submission time
+//   - safeDialContext re-validates the real IP at socket level to prevent DNS rebinding
+
+// Blocked cloud metadata hostnames (compared in lowercase).
 var monitorBlockedHostnames = map[string]struct{}{
 	"localhost":                  {},
 	"localhost.localdomain":      {},
@@ -21,14 +21,14 @@ var monitorBlockedHostnames = map[string]struct{}{
 	"instance-data.ec2.internal": {},
 }
 
-// CIDR 列表：包含所有需要拒绝的 IPv4/IPv6 段。
-// 解析时只 panic 一次（启动时确认），生产路径只做 Contains。
+// Blocked CIDR ranges covering all private/reserved address spaces.
+// Parsed once at init; production path only calls Contains.
 var monitorBlockedCIDRs = mustParseCIDRs([]string{
 	"127.0.0.0/8",    // IPv4 loopback
 	"10.0.0.0/8",     // RFC1918
 	"172.16.0.0/12",  // RFC1918
 	"192.168.0.0/16", // RFC1918
-	"169.254.0.0/16", // link-local（含云元数据 169.254.169.254）
+	"169.254.0.0/16", // link-local (including cloud metadata 169.254.169.254)
 	"100.64.0.0/10",  // CGNAT
 	"0.0.0.0/8",      // "this network"
 	"::1/128",        // IPv6 loopback
@@ -37,116 +37,116 @@ var monitorBlockedCIDRs = mustParseCIDRs([]string{
 	"::/128",         // IPv6 unspecified
 })
 
-// monitorDialer 共享 Dialer，与 net/http 默认值对齐。
+// Shared dialer aligned with net/http defaults.
 var monitorDialer = &net.Dialer{
 	Timeout:   monitorDialTimeout,
 	KeepAlive: monitorDialKeepAlive,
 }
 
-// mustParseCIDRs 在包初始化时解析 CIDR 字符串，失败 panic。
-func mustParseCIDRs(cidrs []string) []*net.IPNet {
-	out := make([]*net.IPNet, 0, len(cidrs))
-	for _, c := range cidrs {
-		_, n, err := net.ParseCIDR(c)
-		if err != nil {
-			panic("channel_monitor_ssrf: invalid CIDR " + c + ": " + err.Error())
+// mustParseCIDRs parses CIDR strings at package init time; panics on invalid input.
+func mustParseCIDRs(rawCIDRs []string) []*net.IPNet {
+	networks := make([]*net.IPNet, 0, len(rawCIDRs))
+	for idx := 0; idx < len(rawCIDRs); idx++ {
+		_, subnet, parseErr := net.ParseCIDR(rawCIDRs[idx])
+		if parseErr != nil {
+			panic("channel_monitor_ssrf: bad CIDR " + rawCIDRs[idx] + ": " + parseErr.Error())
 		}
-		out = append(out, n)
+		networks = append(networks, subnet)
 	}
-	return out
+	return networks
 }
 
-// isBlockedHostname 判断 hostname 是否命中黑名单。
-func isBlockedHostname(hostname string) bool {
-	if hostname == "" {
+// isBlockedHostname returns true if the hostname matches the deny list.
+func isBlockedHostname(host string) bool {
+	if host == "" {
 		return true
 	}
-	_, blocked := monitorBlockedHostnames[strings.ToLower(hostname)]
-	return blocked
+	_, found := monitorBlockedHostnames[strings.ToLower(host)]
+	return found
 }
 
-// isPrivateIP 判断 IP 是否落在禁止段（loopback/RFC1918/link-local/ULA 等）。
-func isPrivateIP(ip net.IP) bool {
-	if ip == nil {
+// isPrivateIP returns true if the IP falls within any blocked range.
+func isPrivateIP(addr net.IP) bool {
+	if addr == nil {
 		return true
 	}
-	if ip.IsUnspecified() || ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsInterfaceLocalMulticast() {
+	if addr.IsUnspecified() || addr.IsLoopback() || addr.IsLinkLocalUnicast() || addr.IsLinkLocalMulticast() || addr.IsInterfaceLocalMulticast() {
 		return true
 	}
-	for _, n := range monitorBlockedCIDRs {
-		if n.Contains(ip) {
+	for idx := 0; idx < len(monitorBlockedCIDRs); idx++ {
+		if monitorBlockedCIDRs[idx].Contains(addr) {
 			return true
 		}
 	}
 	return false
 }
 
-// isPrivateOrLoopbackHost 解析 hostname 的所有 A/AAAA 记录，
-// 任一 IP 落在私网/loopback 段即认为不安全。
-//
-// hostname 是 IP 字面量时也走同一路径。
-func isPrivateOrLoopbackHost(ctx context.Context, hostname string) (bool, error) {
-	if isBlockedHostname(hostname) {
+// isPrivateOrLoopbackHost resolves all A/AAAA records for the given hostname
+// and returns true if any resolved IP falls within a private/loopback range.
+// IP literals are checked directly.
+func isPrivateOrLoopbackHost(reqCtx context.Context, host string) (bool, error) {
+	if isBlockedHostname(host) {
 		return true, nil
 	}
-	// IP 字面量直接判断。
-	if ip := net.ParseIP(hostname); ip != nil {
-		return isPrivateIP(ip), nil
+	// Handle IP literal directly.
+	if literal := net.ParseIP(host); literal != nil {
+		return isPrivateIP(literal), nil
 	}
-	resolver := net.DefaultResolver
-	addrs, err := resolver.LookupIPAddr(ctx, hostname)
-	if err != nil {
-		return false, err
+	resolved, lookupErr := net.DefaultResolver.LookupIPAddr(reqCtx, host)
+	if lookupErr != nil {
+		return false, lookupErr
 	}
-	if len(addrs) == 0 {
+	if len(resolved) == 0 {
 		return true, nil
 	}
-	for _, a := range addrs {
-		if isPrivateIP(a.IP) {
+	for idx := 0; idx < len(resolved); idx++ {
+		if isPrivateIP(resolved[idx].IP) {
 			return true, nil
 		}
 	}
 	return false, nil
 }
 
-// safeDialContext 在真实 dial 前再次校验目标 IP，防止 DNS rebinding。
-// 解析 hostname 后逐个 IP 尝试连接，命中私网即拒绝（即便 validateEndpoint 时返回的是公网 IP）。
-func safeDialContext(ctx context.Context, network, address string) (net.Conn, error) {
-	host, port, err := net.SplitHostPort(address)
-	if err != nil {
-		return nil, err
+// safeDialContext re-validates the target IP at dial time to defend against DNS rebinding.
+// It resolves the hostname, checks each IP against the blocklist, and attempts connection
+// only to public addresses.
+func safeDialContext(reqCtx context.Context, network, addr string) (net.Conn, error) {
+	host, port, splitErr := net.SplitHostPort(addr)
+	if splitErr != nil {
+		return nil, splitErr
 	}
-	// 字面量 IP 走快速路径。
-	if ip := net.ParseIP(host); ip != nil {
-		if isPrivateIP(ip) {
-			return nil, &net.AddrError{Err: "blocked by SSRF policy", Addr: address}
+	// Fast path for IP literals.
+	if literal := net.ParseIP(host); literal != nil {
+		if isPrivateIP(literal) {
+			return nil, &net.AddrError{Err: "blocked by SSRF policy", Addr: addr}
 		}
-		return monitorDialer.DialContext(ctx, network, address)
+		return monitorDialer.DialContext(reqCtx, network, addr)
 	}
 	if isBlockedHostname(host) {
-		return nil, &net.AddrError{Err: "blocked by SSRF policy", Addr: address}
+		return nil, &net.AddrError{Err: "blocked by SSRF policy", Addr: addr}
 	}
-	addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
-	if err != nil {
-		return nil, err
+	resolved, lookupErr := net.DefaultResolver.LookupIPAddr(reqCtx, host)
+	if lookupErr != nil {
+		return nil, lookupErr
 	}
-	if len(addrs) == 0 {
+	if len(resolved) == 0 {
 		return nil, &net.AddrError{Err: "no addresses for host", Addr: host}
 	}
-	var lastErr error
-	for _, a := range addrs {
-		if isPrivateIP(a.IP) {
-			lastErr = &net.AddrError{Err: "blocked by SSRF policy", Addr: a.IP.String()}
+	var dialErr error
+	for idx := 0; idx < len(resolved); idx++ {
+		resolvedIP := resolved[idx].IP
+		if isPrivateIP(resolvedIP) {
+			dialErr = &net.AddrError{Err: "blocked by SSRF policy", Addr: resolvedIP.String()}
 			continue
 		}
-		conn, err := monitorDialer.DialContext(ctx, network, net.JoinHostPort(a.IP.String(), port))
-		if err == nil {
+		conn, connErr := monitorDialer.DialContext(reqCtx, network, net.JoinHostPort(resolvedIP.String(), port))
+		if connErr == nil {
 			return conn, nil
 		}
-		lastErr = err
+		dialErr = connErr
 	}
-	if lastErr == nil {
-		lastErr = &net.AddrError{Err: "no usable addresses", Addr: host}
+	if dialErr == nil {
+		dialErr = &net.AddrError{Err: "no usable addresses", Addr: host}
 	}
-	return nil, lastErr
+	return nil, dialErr
 }

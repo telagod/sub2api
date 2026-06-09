@@ -18,13 +18,13 @@ func ImageGenerationPermissionMessage() string {
 }
 
 // GroupAllowsImageGeneration preserves ungrouped-key behavior and enforces the flag when a group is present.
-func GroupAllowsImageGeneration(group *Group) bool {
-	return group == nil || group.AllowImageGeneration
+func GroupAllowsImageGeneration(grp *Group) bool {
+	return grp == nil || grp.AllowImageGeneration
 }
 
 // IsImageGenerationIntent classifies requests that can produce generated images.
-func IsImageGenerationIntent(endpoint string, requestedModel string, body []byte) bool {
-	if IsImageGenerationEndpoint(endpoint) {
+func IsImageGenerationIntent(ep string, requestedModel string, body []byte) bool {
+	if IsImageGenerationEndpoint(ep) {
 		return true
 	}
 	if isOpenAIImageGenerationModel(requestedModel) {
@@ -33,7 +33,8 @@ func IsImageGenerationIntent(endpoint string, requestedModel string, body []byte
 	if len(body) == 0 || !gjson.ValidBytes(body) {
 		return false
 	}
-	if model := strings.TrimSpace(gjson.GetBytes(body, "model").String()); isOpenAIImageGenerationModel(model) {
+	bodyModel := strings.TrimSpace(gjson.GetBytes(body, "model").String())
+	if isOpenAIImageGenerationModel(bodyModel) {
 		return true
 	}
 	if openAIJSONToolsContainImageGeneration(gjson.GetBytes(body, "tools")) {
@@ -43,149 +44,149 @@ func IsImageGenerationIntent(endpoint string, requestedModel string, body []byte
 }
 
 // IsImageGenerationIntentMap is the map-backed variant used after service-side request mutation.
-func IsImageGenerationIntentMap(endpoint string, requestedModel string, reqBody map[string]any) bool {
-	if IsImageGenerationEndpoint(endpoint) {
+func IsImageGenerationIntentMap(ep string, requestedModel string, reqMap map[string]any) bool {
+	if IsImageGenerationEndpoint(ep) {
 		return true
 	}
 	if isOpenAIImageGenerationModel(requestedModel) {
 		return true
 	}
-	if reqBody == nil {
+	if reqMap == nil {
 		return false
 	}
-	if isOpenAIImageGenerationModel(firstNonEmptyString(reqBody["model"])) {
+	if isOpenAIImageGenerationModel(firstNonEmptyString(reqMap["model"])) {
 		return true
 	}
-	if hasOpenAIImageGenerationToolV2(reqBody) {
+	if hasOpenAIImageGenerationToolV2(reqMap) {
 		return true
 	}
-	return openAIAnyToolChoiceSelectsImageGeneration(reqBody["tool_choice"])
+	return openAIAnyToolChoiceSelectsImageGeneration(reqMap["tool_choice"])
 }
 
 // IsImageGenerationEndpoint identifies dedicated generated-image endpoints.
-func IsImageGenerationEndpoint(endpoint string) bool {
-	switch normalizeImageGenerationEndpoint(endpoint) {
-	case "/v1/images/generations", "/v1/images/edits", "/images/generations", "/images/edits":
-		return true
-	default:
-		return false
-	}
+func IsImageGenerationEndpoint(ep string) bool {
+	normalized := normalizeImageGenerationEndpoint(ep)
+	return normalized == "/v1/images/generations" ||
+		normalized == "/v1/images/edits" ||
+		normalized == "/images/generations" ||
+		normalized == "/images/edits"
 }
 
-func normalizeImageGenerationEndpoint(endpoint string) string {
-	endpoint = strings.TrimSpace(strings.ToLower(endpoint))
-	if endpoint == "" {
+func normalizeImageGenerationEndpoint(ep string) string {
+	ep = strings.TrimSpace(strings.ToLower(ep))
+	if ep == "" {
 		return ""
 	}
-	endpoint = strings.TrimPrefix(endpoint, "https://api.openai.com")
-	if idx := strings.IndexByte(endpoint, '?'); idx >= 0 {
-		endpoint = endpoint[:idx]
+	ep = strings.TrimPrefix(ep, "https://api.openai.com")
+	if qmark := strings.IndexByte(ep, '?'); qmark >= 0 {
+		ep = ep[:qmark]
 	}
-	return strings.TrimRight(endpoint, "/")
+	return strings.TrimRight(ep, "/")
 }
 
-func openAIJSONToolsContainImageGeneration(tools gjson.Result) bool {
-	if !tools.IsArray() {
+func openAIJSONToolsContainImageGeneration(toolsArr gjson.Result) bool {
+	if !toolsArr.IsArray() {
 		return false
 	}
-	found := false
-	tools.ForEach(func(_, item gjson.Result) bool {
-		if openAIJSONString(item.Get("type")) == "image_generation" {
-			found = true
+	matched := false
+	toolsArr.ForEach(func(_, entry gjson.Result) bool {
+		if openAIJSONString(entry.Get("type")) == "image_generation" {
+			matched = true
 			return false
 		}
 		return true
 	})
-	return found
+	return matched
 }
 
-func openAIRequestBodyHasImageGenerationTool(body []byte) bool {
-	if len(body) == 0 || !gjson.ValidBytes(body) {
+func openAIRequestBodyHasImageGenerationTool(payload []byte) bool {
+	if len(payload) == 0 || !gjson.ValidBytes(payload) {
 		return false
 	}
-	return openAIJSONToolsContainImageGeneration(gjson.GetBytes(body, "tools"))
+	return openAIJSONToolsContainImageGeneration(gjson.GetBytes(payload, "tools"))
 }
 
-func openAIRequestBodyImageGenerationToolNeedsNormalization(body []byte) bool {
-	if len(body) == 0 || !gjson.ValidBytes(body) {
+func openAIRequestBodyImageGenerationToolNeedsNormalization(payload []byte) bool {
+	if len(payload) == 0 || !gjson.ValidBytes(payload) {
 		return false
 	}
-	tools := gjson.GetBytes(body, "tools")
-	if !tools.IsArray() {
+	toolsArr := gjson.GetBytes(payload, "tools")
+	if !toolsArr.IsArray() {
 		return false
 	}
-	needsNormalization := false
-	tools.ForEach(func(_, item gjson.Result) bool {
-		if openAIJSONString(item.Get("type")) != "image_generation" {
+	needsFix := false
+	toolsArr.ForEach(func(_, entry gjson.Result) bool {
+		if openAIJSONString(entry.Get("type")) != "image_generation" {
 			return true
 		}
-		// 只有旧字段需要迁移时才进入 map 修改，纯计费读取保持 raw 路径。
-		if item.Get("format").Exists() || item.Get("compression").Exists() {
-			needsNormalization = true
+		// Only enter map-based modification when legacy fields need migration.
+		if entry.Get("format").Exists() || entry.Get("compression").Exists() {
+			needsFix = true
 			return false
 		}
 		return true
 	})
-	return needsNormalization
+	return needsFix
 }
 
-func openAIJSONToolChoiceSelectsImageGeneration(choice gjson.Result) bool {
-	if !choice.Exists() {
+func openAIJSONToolChoiceSelectsImageGeneration(choiceResult gjson.Result) bool {
+	if !choiceResult.Exists() {
 		return false
 	}
-	if choice.Type == gjson.String {
-		return strings.TrimSpace(choice.String()) == "image_generation"
+	if choiceResult.Type == gjson.String {
+		return strings.TrimSpace(choiceResult.String()) == "image_generation"
 	}
-	if !choice.IsObject() {
+	if !choiceResult.IsObject() {
 		return false
 	}
-	if strings.TrimSpace(choice.Get("type").String()) == "image_generation" {
+	if strings.TrimSpace(choiceResult.Get("type").String()) == "image_generation" {
 		return true
 	}
-	if strings.TrimSpace(choice.Get("tool.type").String()) == "image_generation" {
+	if strings.TrimSpace(choiceResult.Get("tool.type").String()) == "image_generation" {
 		return true
 	}
-	if strings.TrimSpace(choice.Get("function.name").String()) == "image_generation" {
-		return true
-	}
-	return false
+	return strings.TrimSpace(choiceResult.Get("function.name").String()) == "image_generation"
 }
 
-func openAIAnyToolChoiceSelectsImageGeneration(choice any) bool {
-	switch v := choice.(type) {
+func openAIAnyToolChoiceSelectsImageGeneration(raw any) bool {
+	switch typed := raw.(type) {
 	case string:
-		return strings.TrimSpace(v) == "image_generation"
+		return strings.TrimSpace(typed) == "image_generation"
 	case map[string]any:
-		if strings.TrimSpace(firstNonEmptyString(v["type"])) == "image_generation" {
+		if strings.TrimSpace(firstNonEmptyString(typed["type"])) == "image_generation" {
 			return true
 		}
-		if tool, ok := v["tool"].(map[string]any); ok && strings.TrimSpace(firstNonEmptyString(tool["type"])) == "image_generation" {
-			return true
+		if toolMap, ok := typed["tool"].(map[string]any); ok {
+			if strings.TrimSpace(firstNonEmptyString(toolMap["type"])) == "image_generation" {
+				return true
+			}
 		}
-		if fn, ok := v["function"].(map[string]any); ok && strings.TrimSpace(firstNonEmptyString(fn["name"])) == "image_generation" {
-			return true
+		if fnMap, ok := typed["function"].(map[string]any); ok {
+			if strings.TrimSpace(firstNonEmptyString(fnMap["name"])) == "image_generation" {
+				return true
+			}
 		}
 	}
 	return false
 }
 
-func getAPIKeyFromContext(c interface{ Get(string) (any, bool) }) *APIKey {
-	if c == nil {
+func getAPIKeyFromContext(ctx interface{ Get(string) (any, bool) }) *APIKey {
+	if ctx == nil {
 		return nil
 	}
-	v, exists := c.Get("api_key")
-	if !exists {
+	raw, found := ctx.Get("api_key")
+	if !found {
 		return nil
 	}
-	apiKey, _ := v.(*APIKey)
-	return apiKey
+	typed, _ := raw.(*APIKey)
+	return typed
 }
 
-func apiKeyGroup(apiKey *APIKey) *Group {
-	if apiKey == nil {
+func apiKeyGroup(ak *APIKey) *Group {
+	if ak == nil {
 		return nil
 	}
-	return apiKey.Group
+	return ak.Group
 }
 
 type OpenAIResponsesImageBillingConfig struct {
@@ -194,105 +195,113 @@ type OpenAIResponsesImageBillingConfig struct {
 	InputSize string
 }
 
-func resolveOpenAIResponsesImageBillingConfigDetailed(reqBody map[string]any, fallbackModel string) (OpenAIResponsesImageBillingConfig, error) {
-	imageModel := ""
-	imageSize := ""
-	hasImageTool := false
-	if reqBody != nil {
-		rawTools, _ := reqBody["tools"].([]any)
-		for _, rawTool := range rawTools {
-			toolMap, ok := rawTool.(map[string]any)
-			if !ok || strings.TrimSpace(firstNonEmptyString(toolMap["type"])) != "image_generation" {
+func resolveOpenAIResponsesImageBillingConfigDetailed(reqMap map[string]any, fallbackModel string) (OpenAIResponsesImageBillingConfig, error) {
+	imgModel := ""
+	imgSize := ""
+	foundImageTool := false
+
+	if reqMap != nil {
+		toolsList, _ := reqMap["tools"].([]any)
+		for _, rawEntry := range toolsList {
+			entry, ok := rawEntry.(map[string]any)
+			if !ok {
 				continue
 			}
-			hasImageTool = true
-			imageModel = strings.TrimSpace(firstNonEmptyString(toolMap["model"]))
-			imageSize = strings.TrimSpace(firstNonEmptyString(toolMap["size"]))
+			if strings.TrimSpace(firstNonEmptyString(entry["type"])) != "image_generation" {
+				continue
+			}
+			foundImageTool = true
+			imgModel = strings.TrimSpace(firstNonEmptyString(entry["model"]))
+			imgSize = strings.TrimSpace(firstNonEmptyString(entry["size"]))
 			break
 		}
-		if imageSize == "" {
-			imageSize = strings.TrimSpace(firstNonEmptyString(reqBody["size"]))
+		if imgSize == "" {
+			imgSize = strings.TrimSpace(firstNonEmptyString(reqMap["size"]))
 		}
 	}
-	if imageModel == "" && reqBody != nil {
-		bodyModel := strings.TrimSpace(firstNonEmptyString(reqBody["model"]))
-		if isOpenAIImageBillingModelAlias(bodyModel) || !hasImageTool {
-			imageModel = bodyModel
+
+	if imgModel == "" && reqMap != nil {
+		topModel := strings.TrimSpace(firstNonEmptyString(reqMap["model"]))
+		if isOpenAIImageBillingModelAlias(topModel) || !foundImageTool {
+			imgModel = topModel
 		}
 	}
-	if imageModel == "" && hasImageTool {
-		imageModel = "gpt-image-2"
+	if imgModel == "" && foundImageTool {
+		imgModel = "gpt-image-2"
 	}
-	if imageModel == "" {
-		imageModel = strings.TrimSpace(fallbackModel)
+	if imgModel == "" {
+		imgModel = strings.TrimSpace(fallbackModel)
 	}
-	sizeTier := normalizeOpenAIImageSizeTier(imageSize)
+
 	return OpenAIResponsesImageBillingConfig{
-		Model:     imageModel,
-		SizeTier:  sizeTier,
-		InputSize: imageSize,
+		Model:     imgModel,
+		SizeTier:  normalizeOpenAIImageSizeTier(imgSize),
+		InputSize: imgSize,
 	}, nil
 }
 
-func resolveOpenAIResponsesImageBillingConfigFromBody(body []byte, fallbackModel string) (string, string, error) {
-	cfg, err := resolveOpenAIResponsesImageBillingConfigDetailedFromBody(body, fallbackModel)
-	if err != nil {
-		return "", "", err
+func resolveOpenAIResponsesImageBillingConfigFromBody(payload []byte, fallbackModel string) (string, string, error) {
+	cfg, cfgErr := resolveOpenAIResponsesImageBillingConfigDetailedFromBody(payload, fallbackModel)
+	if cfgErr != nil {
+		return "", "", cfgErr
 	}
 	return cfg.Model, cfg.SizeTier, nil
 }
 
-func resolveOpenAIResponsesImageBillingConfigDetailedFromBody(body []byte, fallbackModel string) (OpenAIResponsesImageBillingConfig, error) {
-	imageModel := ""
-	imageSize := ""
-	hasImageTool := false
-	if len(body) > 0 && gjson.ValidBytes(body) {
-		tools := gjson.GetBytes(body, "tools")
-		if tools.IsArray() {
-			tools.ForEach(func(_, item gjson.Result) bool {
-				if openAIJSONString(item.Get("type")) != "image_generation" {
+func resolveOpenAIResponsesImageBillingConfigDetailedFromBody(payload []byte, fallbackModel string) (OpenAIResponsesImageBillingConfig, error) {
+	imgModel := ""
+	imgSize := ""
+	foundImageTool := false
+
+	if len(payload) > 0 && gjson.ValidBytes(payload) {
+		toolsArr := gjson.GetBytes(payload, "tools")
+		if toolsArr.IsArray() {
+			toolsArr.ForEach(func(_, entry gjson.Result) bool {
+				if openAIJSONString(entry.Get("type")) != "image_generation" {
 					return true
 				}
-				hasImageTool = true
-				imageModel = openAIJSONString(item.Get("model"))
-				imageSize = openAIJSONString(item.Get("size"))
+				foundImageTool = true
+				imgModel = openAIJSONString(entry.Get("model"))
+				imgSize = openAIJSONString(entry.Get("size"))
 				return false
 			})
 		}
-		if imageSize == "" {
-			imageSize = openAIJSONString(gjson.GetBytes(body, "size"))
+		if imgSize == "" {
+			imgSize = openAIJSONString(gjson.GetBytes(payload, "size"))
 		}
-		if imageModel == "" {
-			bodyModel := openAIJSONString(gjson.GetBytes(body, "model"))
-			if isOpenAIImageBillingModelAlias(bodyModel) || !hasImageTool {
-				imageModel = bodyModel
+		if imgModel == "" {
+			topModel := openAIJSONString(gjson.GetBytes(payload, "model"))
+			if isOpenAIImageBillingModelAlias(topModel) || !foundImageTool {
+				imgModel = topModel
 			}
 		}
 	}
-	if imageModel == "" && hasImageTool {
-		imageModel = "gpt-image-2"
+
+	if imgModel == "" && foundImageTool {
+		imgModel = "gpt-image-2"
 	}
-	if imageModel == "" {
-		imageModel = strings.TrimSpace(fallbackModel)
+	if imgModel == "" {
+		imgModel = strings.TrimSpace(fallbackModel)
 	}
+
 	return OpenAIResponsesImageBillingConfig{
-		Model:     imageModel,
-		SizeTier:  normalizeOpenAIImageSizeTier(imageSize),
-		InputSize: imageSize,
+		Model:     imgModel,
+		SizeTier:  normalizeOpenAIImageSizeTier(imgSize),
+		InputSize: imgSize,
 	}, nil
 }
 
-func isOpenAIImageBillingModelAlias(model string) bool {
-	normalized := strings.ToLower(strings.TrimSpace(model))
-	if normalized == "" {
+func isOpenAIImageBillingModelAlias(mdl string) bool {
+	lower := strings.ToLower(strings.TrimSpace(mdl))
+	if lower == "" {
 		return false
 	}
-	return isOpenAIImageGenerationModel(normalized) || strings.Contains(normalized, "image")
+	return isOpenAIImageGenerationModel(lower) || strings.Contains(lower, "image")
 }
 
-func openAIJSONString(value gjson.Result) string {
-	if value.Type != gjson.String {
+func openAIJSONString(val gjson.Result) string {
+	if val.Type != gjson.String {
 		return ""
 	}
-	return strings.TrimSpace(value.String())
+	return strings.TrimSpace(val.String())
 }
