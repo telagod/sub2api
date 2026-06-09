@@ -102,6 +102,7 @@
         <AccountBulkActionsBar
           :selected-ids="selIds"
           @delete="handleBulkDelete"
+          @delete-filtered="handleBulkDeleteFiltered"
           @reset-status="handleBulkResetStatus"
           @refresh-token="handleBulkRefreshToken"
           @edit-selected="openBulkEditSelected"
@@ -1188,6 +1189,35 @@ const toggleSelectAllVisible = (event: Event) => {
   toggleVisible(target.checked)
 }
 const handleBulkDelete = async () => { if(!confirm(t('common.confirm'))) return; try { await Promise.all(selIds.value.map(id => adminAPI.accounts.delete(id))); clearSelection(); reload() } catch (error) { console.error('Failed to bulk delete accounts:', error) } }
+const handleBulkDeleteFiltered = async () => {
+  try {
+    const filters = buildBulkEditFilterSnapshot()
+    const preview = await adminAPI.accounts.list(1, 1, filters)
+    const totalCount = preview.total
+    if (totalCount === 0) {
+      appStore.showError(t('admin.accounts.bulkActions.noMatchingAccounts'))
+      return
+    }
+    if (!confirm(t('admin.accounts.bulkActions.deleteFilteredConfirm', { count: totalCount }))) return
+    const allPages = await adminAPI.accounts.list(1, totalCount, filters)
+    const ids = allPages.items.map((a: any) => a.id)
+    let success = 0
+    let failed = 0
+    for (const id of ids) {
+      try { await adminAPI.accounts.delete(id); success++ } catch { failed++ }
+    }
+    if (failed > 0) {
+      appStore.showError(t('admin.accounts.bulkActions.partialSuccess', { success, failed }))
+    } else {
+      appStore.showSuccess(t('admin.accounts.bulkActions.deleteSuccess', { count: success }))
+    }
+    clearSelection()
+    reload()
+  } catch (error) {
+    console.error('Failed to bulk delete filtered accounts:', error)
+    appStore.showError(String(error))
+  }
+}
 const handleBulkResetStatus = async () => {
   if (!confirm(t('common.confirm'))) return
   try {

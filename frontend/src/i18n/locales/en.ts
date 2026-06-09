@@ -3278,7 +3278,11 @@ export default {
         refreshToken: 'Refresh Token',
         resetStatusSuccess: 'Successfully reset {count} account(s) status',
         refreshTokenSuccess: 'Successfully refreshed {count} account(s) token',
-        partialSuccess: 'Partially completed: {success} succeeded, {failed} failed'
+        partialSuccess: 'Partially completed: {success} succeeded, {failed} failed',
+        deleteFiltered: 'Delete Filtered',
+        deleteFilteredConfirm: 'Are you sure you want to delete {count} account(s) matching the current filters? This cannot be undone.',
+        deleteSuccess: 'Successfully deleted {count} account(s)',
+        noMatchingAccounts: 'No accounts match the current filters'
       },
       bulkEdit: {
         title: 'Bulk Edit Accounts',
