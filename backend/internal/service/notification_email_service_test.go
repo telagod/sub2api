@@ -62,7 +62,7 @@ func TestNotificationEmailTemplateOverrideAndRestore(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, restored.IsCustom)
 	require.NotEqual(t, updated.Subject, restored.Subject)
-	_, err = repo.GetValue(ctx, notificationEmailTemplateKey(NotificationEmailEventBalanceRechargeSuccess, "zh"))
+	_, err = repo.GetValue(ctx, notifTemplateStorageKey(NotificationEmailEventBalanceRechargeSuccess, "zh"))
 	require.ErrorIs(t, err, ErrSettingNotFound)
 }
 
@@ -78,7 +78,7 @@ func TestNotificationEmailTemplateRejectsUnsupportedPlaceholder(t *testing.T) {
 		"<p>{{subscription_group}}</p>",
 	)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "unsupported placeholder")
+	require.Contains(t, err.Error(), "is not valid for event")
 }
 
 func TestNotificationEmailAuthTemplatesAreListedAndPreviewable(t *testing.T) {
@@ -158,11 +158,11 @@ func TestNotificationEmailAdditionalEventsAreListedAndPreviewable(t *testing.T) 
 }
 
 func TestNotificationEmailRawHTMLVariablesAreTrustedOnlyForHTMLPlaceholders(t *testing.T) {
-	require.True(t, notificationEmailRawHTMLAllowed(NotificationEmailEventOpsScheduledReport, "report_html"))
-	require.False(t, notificationEmailRawHTMLAllowed(NotificationEmailEventOpsScheduledReport, "recipient_name"))
-	require.False(t, notificationEmailRawHTMLAllowed(NotificationEmailEventOpsAlert, "report_html"))
+	require.True(t, isNotifRawHTMLVar(NotificationEmailEventOpsScheduledReport, "report_html"))
+	require.False(t, isNotifRawHTMLVar(NotificationEmailEventOpsScheduledReport, "recipient_name"))
+	require.False(t, isNotifRawHTMLVar(NotificationEmailEventOpsAlert, "report_html"))
 
-	preview, err := renderNotificationEmail(
+	preview, err := renderNotifEmail(
 		NotificationEmailEventOpsScheduledReport,
 		"Report for {{recipient_name}}",
 		`<section>{{report_html}}</section><p>{{recipient_name}}</p>`,
@@ -180,7 +180,7 @@ func TestNotificationEmailRawHTMLVariablesAreTrustedOnlyForHTMLPlaceholders(t *t
 	require.Contains(t, preview.HTML, `&lt;script&gt;alert(&#34;x&#34;)&lt;/script&gt;`)
 	require.Contains(t, preview.Subject, `<script>alert("x")</script>`)
 
-	preview, err = renderNotificationEmail(
+	preview, err = renderNotifEmail(
 		NotificationEmailEventOpsScheduledReport,
 		"Recipient {{recipient_name}}",
 		`<p>{{recipient_name}}</p>`,
@@ -193,9 +193,9 @@ func TestNotificationEmailRawHTMLVariablesAreTrustedOnlyForHTMLPlaceholders(t *t
 }
 
 func TestNotificationEmailFallbackClassification(t *testing.T) {
-	templateErr := notificationEmailTemplateErr(errors.New("bad template"))
-	configErr := notificationEmailConfigErr(errors.New("missing email service"))
-	deliveryErr := notificationEmailDeliveryErr(errors.New("smtp timeout"))
+	templateErr := wrapNotifTemplateError(errors.New("bad template"))
+	configErr := wrapNotifConfigError(errors.New("missing email service"))
+	deliveryErr := wrapNotifTransportError(errors.New("smtp timeout"))
 
 	require.True(t, shouldFallbackNotificationEmail(templateErr))
 	require.True(t, shouldFallbackNotificationEmail(configErr))
@@ -233,7 +233,7 @@ func TestNotificationEmailUnsubscribeOnlyAllowsOptionalEvents(t *testing.T) {
 	ctx := context.Background()
 	svc := NewNotificationEmailService(newNotificationEmailMemorySettingRepo(), nil)
 
-	token, err := svc.createUnsubscribeToken(ctx, "User@Example.com", NotificationEmailEventBalanceLow)
+	token, err := svc.issueUnsubToken(ctx, "User@Example.com", NotificationEmailEventBalanceLow)
 	require.NoError(t, err)
 	result, err := svc.Unsubscribe(ctx, token)
 	require.NoError(t, err)
@@ -243,17 +243,17 @@ func TestNotificationEmailUnsubscribeOnlyAllowsOptionalEvents(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, unsubscribed)
 
-	transactionalToken, err := svc.createUnsubscribeToken(ctx, "user@example.com", NotificationEmailEventBalanceRechargeSuccess)
+	transactionalToken, err := svc.issueUnsubToken(ctx, "user@example.com", NotificationEmailEventBalanceRechargeSuccess)
 	require.NoError(t, err)
 	_, err = svc.Unsubscribe(ctx, transactionalToken)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "transactional")
+	require.Contains(t, err.Error(), "mandatory")
 
-	authToken, err := svc.createUnsubscribeToken(ctx, "user@example.com", NotificationEmailEventAuthVerifyCode)
+	authToken, err := svc.issueUnsubToken(ctx, "user@example.com", NotificationEmailEventAuthVerifyCode)
 	require.NoError(t, err)
 	_, err = svc.Unsubscribe(ctx, authToken)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "transactional")
+	require.Contains(t, err.Error(), "mandatory")
 }
 
 func TestNotificationEmailLocaleMemoryNormalizesAcceptLanguage(t *testing.T) {
@@ -266,7 +266,7 @@ func TestNotificationEmailLocaleMemoryNormalizesAcceptLanguage(t *testing.T) {
 }
 
 func TestNotificationEmailDeliveryKeyUsesShortStableHash(t *testing.T) {
-	key := notificationEmailDeliveryKey(
+	key := computeNotifDeliveryKey(
 		NotificationEmailEventSubscriptionExpiryReminder,
 		"user_subscription",
 		"1234567890",
@@ -276,14 +276,14 @@ func TestNotificationEmailDeliveryKeyUsesShortStableHash(t *testing.T) {
 	require.NotEmpty(t, key)
 	require.LessOrEqual(t, len(key), 100)
 	require.True(t, strings.HasPrefix(key, notificationEmailDeliveryKeyPrefix+"v2:"))
-	require.Equal(t, key, notificationEmailDeliveryKey(
+	require.Equal(t, key, computeNotifDeliveryKey(
 		NotificationEmailEventSubscriptionExpiryReminder,
 		"user_subscription",
 		"1234567890",
 		"user@example.com",
 		"7d",
 	))
-	require.NotEqual(t, key, notificationEmailDeliveryKey(
+	require.NotEqual(t, key, computeNotifDeliveryKey(
 		NotificationEmailEventSubscriptionExpiryReminder,
 		"user_subscription",
 		"1234567890",
@@ -291,7 +291,7 @@ func TestNotificationEmailDeliveryKeyUsesShortStableHash(t *testing.T) {
 		"3d",
 	))
 
-	legacyKey := legacyNotificationEmailDeliveryKey(
+	legacyKey := legacyNotifDeliveryKey(
 		NotificationEmailEventSubscriptionExpiryReminder,
 		"user_subscription",
 		"1234567890",
@@ -306,13 +306,13 @@ func TestNotificationEmailPreferenceKeyUsesShortStableHashAndReadsLegacyKey(t *t
 	repo := newNotificationEmailMemorySettingRepo()
 	svc := NewNotificationEmailService(repo, nil)
 
-	key := notificationEmailPreferenceKey(NotificationEmailEventSubscriptionExpiryReminder, "User@Example.com")
+	key := notifPreferenceStorageKey(NotificationEmailEventSubscriptionExpiryReminder, "User@Example.com")
 	require.NotEmpty(t, key)
 	require.LessOrEqual(t, len(key), 100)
 	require.True(t, strings.HasPrefix(key, notificationEmailPreferenceKeyPrefix+"v2:"))
-	require.Equal(t, key, notificationEmailPreferenceKey(NotificationEmailEventSubscriptionExpiryReminder, "user@example.com"))
+	require.Equal(t, key, notifPreferenceStorageKey(NotificationEmailEventSubscriptionExpiryReminder, "user@example.com"))
 
-	legacyKey := legacyNotificationEmailPreferenceKey(NotificationEmailEventSubscriptionExpiryReminder, "user@example.com")
+	legacyKey := legacyNotifPreferenceKey(NotificationEmailEventSubscriptionExpiryReminder, "user@example.com")
 	require.Greater(t, len(legacyKey), 100)
 	require.NoError(t, repo.Set(ctx, legacyKey, "unsubscribed"))
 
@@ -347,7 +347,7 @@ func TestNotificationEmailSendDeduplicatesSubscriptionExpiryReminder(t *testing.
 	require.NoError(t, svc.Send(ctx, input))
 	require.Equal(t, int64(1), smtpServer.messageCount())
 
-	key := notificationEmailDeliveryKey(input.Event, input.SourceType, input.SourceID, input.RecipientEmail, input.ReminderKey)
+	key := computeNotifDeliveryKey(input.Event, input.SourceType, input.SourceID, input.RecipientEmail, input.ReminderKey)
 	require.LessOrEqual(t, len(key), 100)
 	_, err := repo.GetValue(ctx, key)
 	require.NoError(t, err)
@@ -367,7 +367,7 @@ func TestNotificationEmailSendRespectsLegacyDeliveryKey(t *testing.T) {
 		SourceID:       "1234567890",
 		ReminderKey:    "7d",
 	}
-	legacyKey := legacyNotificationEmailDeliveryKey(input.Event, input.SourceType, input.SourceID, input.RecipientEmail, input.ReminderKey)
+	legacyKey := legacyNotifDeliveryKey(input.Event, input.SourceType, input.SourceID, input.RecipientEmail, input.ReminderKey)
 	require.NoError(t, repo.Set(ctx, legacyKey, "sent"))
 
 	require.NoError(t, svc.Send(ctx, input))
@@ -450,7 +450,7 @@ func (r *notificationEmailMemorySettingRepo) Delete(_ context.Context, key strin
 
 func TestNotificationEmailMemorySettingRepoSatisfiesInterface(t *testing.T) {
 	var _ SettingRepository = (*notificationEmailMemorySettingRepo)(nil)
-	require.False(t, strings.Contains(notificationEmailPreferenceKey(NotificationEmailEventBalanceLow, "User@Example.com"), "User@Example.com"))
+	require.False(t, strings.Contains(notifPreferenceStorageKey(NotificationEmailEventBalanceLow, "User@Example.com"), "User@Example.com"))
 }
 
 type notificationEmailTestSMTPServer struct {

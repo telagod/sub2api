@@ -23,18 +23,18 @@ func upstreamModelSyncTestConfig() *config.Config {
 func TestBuildV1ModelsURL(t *testing.T) {
 	t.Parallel()
 
-	require.Equal(t, "https://api.anthropic.com/v1/models", buildV1ModelsURL("https://api.anthropic.com"))
-	require.Equal(t, "https://api.anthropic.com/v1/models", buildV1ModelsURL("https://api.anthropic.com/v1"))
-	require.Equal(t, "https://api.anthropic.com/v1/models", buildV1ModelsURL("https://api.anthropic.com/v1/models"))
-	require.Equal(t, "https://gateway.example.com/antigravity/v1/models", buildV1ModelsURL("https://gateway.example.com/antigravity/"))
+	require.Equal(t, "https://api.anthropic.com/v1/models", assembleV1ModelsURL("https://api.anthropic.com"))
+	require.Equal(t, "https://api.anthropic.com/v1/models", assembleV1ModelsURL("https://api.anthropic.com/v1"))
+	require.Equal(t, "https://api.anthropic.com/v1/models", assembleV1ModelsURL("https://api.anthropic.com/v1/models"))
+	require.Equal(t, "https://gateway.example.com/antigravity/v1/models", assembleV1ModelsURL("https://gateway.example.com/antigravity/"))
 }
 
 func TestBuildGeminiModelsURL(t *testing.T) {
 	t.Parallel()
 
-	require.Equal(t, "https://generativelanguage.googleapis.com/v1beta/models", buildGeminiModelsURL("https://generativelanguage.googleapis.com"))
-	require.Equal(t, "https://generativelanguage.googleapis.com/v1beta/models", buildGeminiModelsURL("https://generativelanguage.googleapis.com/v1beta"))
-	require.Equal(t, "https://generativelanguage.googleapis.com/v1beta/models", buildGeminiModelsURL("https://generativelanguage.googleapis.com/v1beta/models"))
+	require.Equal(t, "https://generativelanguage.googleapis.com/v1beta/models", assembleGeminiModelsURL("https://generativelanguage.googleapis.com"))
+	require.Equal(t, "https://generativelanguage.googleapis.com/v1beta/models", assembleGeminiModelsURL("https://generativelanguage.googleapis.com/v1beta"))
+	require.Equal(t, "https://generativelanguage.googleapis.com/v1beta/models", assembleGeminiModelsURL("https://generativelanguage.googleapis.com/v1beta/models"))
 }
 
 func TestExtractUpstreamModelIDs(t *testing.T) {
@@ -67,7 +67,7 @@ func TestExtractUpstreamModelIDs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := extractUpstreamModelIDs([]byte(tt.body))
+			got, err := parseUpstreamModelIDs([]byte(tt.body))
 			require.NoError(t, err)
 			require.Equal(t, tt.want, got)
 		})

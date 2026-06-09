@@ -116,7 +116,7 @@ func TestFlusher_PopSnapshotUpsert(t *testing.T) {
 	writer := &mockQuotaSnapshotWriter{}
 	f := newTestFlusher(cache, writer)
 
-	f.flush()
+	f.drainAll()
 
 	if len(writer.receivedSnaps) != 2 {
 		t.Fatalf("expected 2 snaps, got %d", len(writer.receivedSnaps))
@@ -151,7 +151,7 @@ func TestFlusher_MissKeySkipped(t *testing.T) {
 	writer := &mockQuotaSnapshotWriter{}
 	f := newTestFlusher(cache, writer)
 
-	f.flush()
+	f.drainAll()
 
 	if len(writer.receivedSnaps) != 1 {
 		t.Fatalf("expected 1 snap, got %d", len(writer.receivedSnaps))
@@ -187,7 +187,7 @@ func TestFlusher_UpsertFailReadds(t *testing.T) {
 	writer := &mockQuotaSnapshotWriter{returnErr: writeErr}
 	f := newTestFlusher(cache, writer)
 
-	f.flush()
+	f.drainAll()
 
 	if f.metrics.FlushErrorTotal.Load() != 1 {
 		t.Errorf("FlushErrorTotal = %d, want 1", f.metrics.FlushErrorTotal.Load())
@@ -227,7 +227,7 @@ func TestFlusher_FKViolationDropsNoReadd(t *testing.T) {
 	writer := &mockQuotaSnapshotWriter{returnErr: ErrUserPlatformQuotaFKViolation}
 	f := newTestFlusher(cache, writer)
 
-	f.flush()
+	f.drainAll()
 
 	if f.metrics.FlushFKViolationTotal.Load() != 1 {
 		t.Errorf("FlushFKViolationTotal = %d, want 1", f.metrics.FlushFKViolationTotal.Load())
@@ -244,13 +244,13 @@ func TestFlusher_FKViolationDropsNoReadd(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// 场景 5: NilSafe — var f *UserPlatformQuotaUsageFlusher; f.flush(); f.Stop() 不 panic
+// 场景 5: NilSafe — var f *UserPlatformQuotaUsageFlusher; f.drainAll(); f.Stop() 不 panic
 // ---------------------------------------------------------------------------
 
 func TestFlusher_NilSafe(t *testing.T) {
 	var f *UserPlatformQuotaUsageFlusher
 	// 下面两行不应 panic
-	f.flush()
+	f.drainAll()
 	f.Stop()
 }
 
@@ -275,7 +275,7 @@ func TestFlusher_StopPreventsFlush(t *testing.T) {
 	f.stopped.Store(true)
 
 	// tick 应该直接返回，不触发 flush
-	f.tick()
+	f.onTick()
 
 	if len(writer.receivedSnaps) != 0 {
 		t.Errorf("expected 0 snaps after stop, got %d", len(writer.receivedSnaps))
@@ -300,7 +300,7 @@ func TestScenario_ZeroPercentCompany(t *testing.T) {
 	writer := &mockQuotaSnapshotWriter{}
 	f := newTestFlusher(cache, writer)
 
-	f.flush()
+	f.drainAll()
 
 	if len(writer.receivedSnaps) != 0 {
 		t.Errorf("0%% company: expected 0 snaps, got %d", len(writer.receivedSnaps))
@@ -381,7 +381,7 @@ func TestFlusher_ReaddFailCounts(t *testing.T) {
 		}
 		f := newTestFlusher(cache, &mockQuotaSnapshotWriter{})
 
-		f.flush()
+		f.drainAll()
 
 		if f.metrics.DirtyLostTotal.Load() != int64(len(keys)) {
 			t.Errorf("DirtyLostTotal = %d, want %d", f.metrics.DirtyLostTotal.Load(), len(keys))
@@ -399,7 +399,7 @@ func TestFlusher_ReaddFailCounts(t *testing.T) {
 		}
 		f := newTestFlusher(cache, &mockQuotaSnapshotWriter{})
 
-		f.flush()
+		f.drainAll()
 
 		if f.metrics.DirtyReaddTotal.Load() != int64(len(keys)) {
 			t.Errorf("DirtyReaddTotal = %d, want %d", f.metrics.DirtyReaddTotal.Load(), len(keys))
@@ -470,7 +470,7 @@ func TestScenario_NinetyPercentCompany(t *testing.T) {
 	writer := &mockQuotaSnapshotWriter{}
 	f := newTestFlusher(cache, writer)
 
-	f.flush()
+	f.drainAll()
 
 	// 应收到 5 条 snapshot
 	if len(writer.receivedSnaps) != 5 {

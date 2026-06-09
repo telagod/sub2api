@@ -96,9 +96,9 @@ func TestVertexServiceAccountProxyURL(t *testing.T) {
 		},
 	}
 
-	require.Equal(t, "http://proxy.example.com:8080", vertexServiceAccountProxyURL(account))
-	require.Empty(t, vertexServiceAccountProxyURL(&Account{Proxy: account.Proxy}))
-	require.Empty(t, vertexServiceAccountProxyURL(&Account{ProxyID: &proxyID}))
+	require.Equal(t, "http://proxy.example.com:8080", resolveServiceAccountProxy(account))
+	require.Empty(t, resolveServiceAccountProxy(&Account{Proxy: account.Proxy}))
+	require.Empty(t, resolveServiceAccountProxy(&Account{ProxyID: &proxyID}))
 }
 
 func TestExchangeVertexServiceAccountTokenUsesProxy(t *testing.T) {
@@ -132,7 +132,7 @@ func TestExchangeVertexServiceAccountTokenUsesProxy(t *testing.T) {
 		TokenURI:    "http://oauth2.googleapis.com/token",
 	}
 
-	token, ttl, err := exchangeVertexServiceAccountToken(contextWithTestTimeout(t), key, proxy.URL)
+	token, ttl, err := performTokenExchange(contextWithTestTimeout(t), key, proxy.URL)
 	require.NoError(t, err)
 	require.Equal(t, "proxied-token", token)
 	require.Equal(t, 55*time.Minute, ttl)
