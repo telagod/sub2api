@@ -1,0 +1,17 @@
+subme
+Copyright (c) 2026 telagod
+
+This project is a fork of sub2api, originally created by Wei-Shaw
+(https://github.com/Wei-Shaw/sub2api).
+
+The original project was released under the MIT License (up to v0.1.114)
+and subsequently relicensed to the GNU Lesser General Public License v3.0.
+
+This fork is distributed under the GNU Lesser General Public License v3.0
+(or later), in compliance with the upstream license terms.
+
+Substantial modifications in this fork include:
+- Security: field-level AES encryption, API key hashing
+- Performance: batch queries, gzip/ETag, scheduler outbox coalescing
+- Frontend: complete UI redesign (dark-only, Vercel-inspired design system)
+- Go module renamed to github.com/telagod/subme
