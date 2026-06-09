@@ -206,7 +206,7 @@ func TestWeChatOAuthCallbackFallsBackToOpenIDWhenUnionIDMissingInSingleChannelMo
 	require.NoError(t, err)
 	require.Equal(t, oauthIntentLogin, session.Intent)
 	require.Equal(t, "openid-123", session.ProviderSubject)
-	require.Equal(t, wechatSyntheticEmail("openid-123"), session.ResolvedEmail)
+	require.Equal(t, generateWeChatSyntheticEmail("openid-123"), session.ResolvedEmail)
 
 	completion := session.LocalFlowState[oauthCompletionResponseKey].(map[string]any)
 	require.Equal(t, oauthPendingChoiceStep, completion["step"])
@@ -242,7 +242,7 @@ func TestWeChatOAuthCallbackCreatesLoginPendingSessionForExistingIdentityUserWit
 
 	ctx := context.Background()
 	existingUser, err := client.User.Create().
-		SetEmail(wechatSyntheticEmail("union-456")).
+		SetEmail(generateWeChatSyntheticEmail("union-456")).
 		SetUsername("wechat-existing-user").
 		SetPasswordHash("hash").
 		SetRole(service.RoleUser).
@@ -322,7 +322,7 @@ func TestWeChatOAuthCallbackRejectsDisabledExistingIdentityUser(t *testing.T) {
 
 	ctx := context.Background()
 	existingUser, err := client.User.Create().
-		SetEmail(wechatSyntheticEmail("union-disabled")).
+		SetEmail(generateWeChatSyntheticEmail("union-disabled")).
 		SetUsername("disabled-user").
 		SetPasswordHash("hash").
 		SetRole(service.RoleUser).

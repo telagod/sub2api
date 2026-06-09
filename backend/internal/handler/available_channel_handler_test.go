@@ -36,7 +36,7 @@ func TestFilterUserVisibleGroups_IntersectionOnly(t *testing.T) {
 	}
 	allowed := map[int64]struct{}{1: {}, 3: {}}
 
-	visible := filterUserVisibleGroups(groups, allowed)
+	visible := retainAccessibleGroups(groups, allowed)
 	require.Len(t, visible, 2)
 	ids := []int64{visible[0].ID, visible[1].ID}
 	require.ElementsMatch(t, []int64{1, 3}, ids)
@@ -49,7 +49,7 @@ func TestToUserSupportedModels_FiltersByAllowedPlatforms(t *testing.T) {
 		{Name: "gpt-4o", Platform: "openai", Pricing: nil},
 	}
 	allowed := map[string]struct{}{"anthropic": {}}
-	out := toUserSupportedModels(src, allowed)
+	out := convertSupportedModels(src, allowed)
 	require.Len(t, out, 1)
 	require.Equal(t, "claude-sonnet-4-6", out[0].Name)
 }
@@ -60,7 +60,7 @@ func TestToUserSupportedModels_NilAllowedPlatformsKeepsAll(t *testing.T) {
 		{Name: "a", Platform: "anthropic"},
 		{Name: "b", Platform: "openai"},
 	}
-	require.Len(t, toUserSupportedModels(src, nil), 2)
+	require.Len(t, convertSupportedModels(src, nil), 2)
 }
 
 func TestUserAvailableChannel_FieldWhitelist(t *testing.T) {

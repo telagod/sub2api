@@ -420,7 +420,7 @@ func buildAccountsListETag(
 			fmt.Fprintf(h, ":r%d", *items[i].CurrentRPM)
 		}
 		if a.LastUsedAt != nil {
-			fmt.Fprintf(h, ":u%d", *a.LastUsedAt)
+			fmt.Fprintf(h, ":u%d", a.LastUsedAt.Unix())
 		}
 		h.Write([]byte{';'})
 	}

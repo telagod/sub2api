@@ -229,7 +229,7 @@ func TestOpenAIHandleStreamingAwareError_BareResponsesRouteEmitsResponseFailed(t
 // Synthesized response.failed id falls back to uuid when no request_id is present.
 func TestSynthesizeResponseID_FallbackUUID(t *testing.T) {
 	c, _ := newGinContextForEndpoint(t, EndpointResponses)
-	id := synthesizeResponseID(c)
+	id := buildSyntheticResponseID(c)
 	assert.True(t, strings.HasPrefix(id, "resp_"))
 	// uuid 去掉短横线后 32 hex 字符；前缀 "resp_" 共 37。
 	assert.Len(t, id, 37)
@@ -248,6 +248,6 @@ func TestMapResponsesErrorCode(t *testing.T) {
 		{"custom_thing", "custom_thing"},
 	}
 	for _, tc := range cases {
-		assert.Equal(t, tc.out, mapResponsesErrorCode(tc.in), "in=%q", tc.in)
+		assert.Equal(t, tc.out, translateResponsesErrorCode(tc.in), "in=%q", tc.in)
 	}
 }
