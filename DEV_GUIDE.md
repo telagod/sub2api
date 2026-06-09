@@ -1,346 +1,317 @@
-# sub2api 项目开发指南
+# subme 开发指南
 
-> 本文档记录项目环境配置、常见坑点和注意事项，供 Claude Code 和团队成员参考。
+> 项目开发环境、架构决策、上游策略与 MIT 迁移路线图。
 
-## 一、项目基本信息
+## 一、项目信息
 
 | 项目 | 说明 |
 |------|------|
-| **上游仓库** | Wei-Shaw/sub2api |
-| **Fork 仓库** | bayma888/sub2api-bmai |
-| **技术栈** | Go 后端 (Ent ORM + Gin) + Vue3 前端 (pnpm) |
-| **数据库** | PostgreSQL 16 + Redis |
-| **包管理** | 后端: go modules, 前端: **pnpm**（不是 npm） |
+| **仓库** | [telagod/subme](https://github.com/telagod/subme) |
+| **上游** | [Wei-Shaw/sub2api](https://github.com/Wei-Shaw/sub2api)（已断开同步） |
+| **协议** | LGPL v3（上游 v0.1.114 后由 MIT 变更） |
+| **Go module** | `github.com/telagod/subme` |
+| **技术栈** | Go 1.26.4 (Gin + Ent ORM) · Vue 3.4+ (Vite 5 + Tailwind v3.4 + pnpm) |
+| **数据库** | PostgreSQL 15+ · Redis 7+ |
 
-## 二、本地环境配置
+## 二、与上游的关系
 
-### PostgreSQL 16 (Windows 服务)
+### 时间线
 
-| 配置项 | 值 |
-|--------|-----|
-| 端口 | 5432 |
-| psql 路径 | `C:\Program Files\PostgreSQL\16\bin\psql.exe` |
-| pg_hba.conf | `C:\Program Files\PostgreSQL\16\data\pg_hba.conf` |
-| 数据库凭据 | user=`sub2api`, password=`sub2api`, dbname=`sub2api` |
-| 超级用户 | user=`postgres`, password=`postgres` |
-
-### Redis
-
-| 配置项 | 值 |
-|--------|-----|
-| 端口 | 6379 |
-| 密码 | 无 |
-
-### 开发工具
-
-```bash
-# golangci-lint v2.7
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.7
-
-# pnpm (前端包管理)
-npm install -g pnpm
+```
+2025-12       上游初始提交，MIT License
+2026-04-19    上游变更协议为 LGPL v3（commit 23def40b）
+v0.1.114      最后一个 MIT 版本（commit f5ee9379）
+v0.1.135      本 fork 基线版本
+2026-06-09    断开上游同步，LGPL 合规发布
 ```
 
-## 三、CI/CD 流水线
+### 当前策略：选择性跟踪
 
-### GitHub Actions Workflows
+**不再全量同步上游**。只关注：
 
-| Workflow | 触发条件 | 检查内容 |
-|----------|----------|----------|
-| **backend-ci.yml** | push, pull_request | 单元测试 + 集成测试 + golangci-lint v2.7 |
-| **security-scan.yml** | push, pull_request, 每周一 | govulncheck + gosec + pnpm audit |
-| **release.yml** | tag `v*` | 构建发布（PR 不触发） |
+| 关注 | 忽略 |
+|------|------|
+| 安全漏洞修复 | UI/UX 变更（已完全重写） |
+| 核心 gateway 逻辑 bugfix | 新功能模块 |
+| 协议兼容性修复 | 文档/CI 变更 |
+| 关键性能修复 | 上游重构 |
 
-### CI 要求
-
-- Go 版本必须是 **1.25.7**
-- 前端使用 `pnpm install --frozen-lockfile`，必须提交 `pnpm-lock.yaml`
-
-### 本地测试命令
+### 上游监控流程
 
 ```bash
-# 后端单元测试
+# 定期查看上游重要更新
+git fetch upstream
+git log upstream/main --oneline -30 --grep="fix\|security\|vuln"
+
+# 评估后选择性 cherry-pick
+git cherry-pick <commit-hash>
+
+# 如有冲突，优先保留本 fork 的实现
+```
+
+### 本 fork 的差异化
+
+| 领域 | 上游 | subme |
+|------|------|-------|
+| **安全** | 明文存储 | AES 字段加密 + API Key sha256 hash |
+| **性能** | 逐条查询 | batch query、gzip/ETag、outbox 合并 |
+| **前端** | 原版 UI | Vercel-inspired dark-only 设计系统 |
+| **内存** | 无限增长 cache | sync.Map reaper + shallowRef |
+| **导入** | errgroup 逐条 | Ent CreateBulk + 事务 |
+| **调度器** | 全量重建 | 两阶段合并重建 |
+| **CI** | 全平台构建 | amd64-only fast release |
+
+## 三、架构概览
+
+```
+请求 → Gin Router → API Key Auth → Gateway Service → Account Selector
+                                        ↓
+                                   Scheduler (Redis snapshot)
+                                        ↓
+                                   Upstream API (OpenAI / Anthropic / Bedrock)
+                                        ↓
+                                   SSE/WS Stream → 用量记录 → 响应
+```
+
+### 核心模块
+
+| 模块 | 路径 | 职责 |
+|------|------|------|
+| Gateway | `service/openai_gateway_service.go` | 请求代理、failover、SSE 解析 |
+| Scheduler | `service/scheduler_snapshot_service.go` | Redis 快照、账号选择、负载感知 |
+| Account | `service/account_service.go` | 账号 CRUD、凭据加密 |
+| Admin | `service/admin_service.go` | 管理端业务逻辑 |
+| Auth | `handler/auth_*.go` | OAuth / 邮箱 / DingTalk 登录 |
+| Repository | `repository/` | 数据访问层 (Ent) |
+| Outbox | scheduler outbox polling | 变更传播 (1s interval) |
+
+### 数据流
+
+```
+账号变更 → Outbox Event → coalescedHandleEvent
+    → 收集 (groupID, platform) pairs
+    → rebuildCoalesced: 每个 bucket 只重建一次
+```
+
+## 四、开发环境
+
+### Linux (主开发环境)
+
+```bash
+# 依赖
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+npm install -g pnpm
+
+# 后端
+cd backend && go run ./cmd/server/
+
+# 前端
+cd frontend && pnpm install && pnpm dev
+
+# Ent 代码生成（改 schema 后）
+cd backend && go generate ./ent && go generate ./cmd/server
+```
+
+### 测试
+
+```bash
+# 单元测试
 cd backend && go test -tags=unit ./...
 
-# 后端集成测试
+# 集成测试（需要 Docker — PostgreSQL + Redis）
 cd backend && go test -tags=integration ./...
 
-# 代码质量检查
+# 前端构建检查
+cd frontend && pnpm build
+
+# Lint
 cd backend && golangci-lint run ./...
-
-# 前端依赖安装（必须用 pnpm）
-cd frontend && pnpm install
 ```
 
-## 四、常见坑点 & 解决方案
-
-### 坑 1：pnpm-lock.yaml 必须同步提交
-
-**问题**：`package.json` 新增依赖后，CI 的 `pnpm install --frozen-lockfile` 失败。
-
-**原因**：上游 CI 使用 pnpm，lock 文件不同步会报错。
-
-**解决**：
-```bash
-cd frontend
-pnpm install  # 更新 pnpm-lock.yaml
-git add pnpm-lock.yaml
-git commit -m "chore: update pnpm-lock.yaml"
-```
-
----
-
-### 坑 2：npm 和 pnpm 的 node_modules 冲突
-
-**问题**：之前用 npm 装过 `node_modules`，pnpm install 报 `EPERM` 错误。
-
-**解决**：
-```bash
-cd frontend
-rm -rf node_modules  # 或 PowerShell: Remove-Item -Recurse -Force node_modules
-pnpm install
-```
-
----
-
-### 坑 3：PowerShell 中 bcrypt hash 的 `$` 被转义
-
-**问题**：bcrypt hash 格式如 `$2a$10$xxx...`，PowerShell 把 `$2a` 当变量解析，导致数据丢失。
-
-**解决**：将 SQL 写入文件，用 `psql -f` 执行：
-```bash
-# 错误示范（PowerShell 会吃掉 $）
-psql -c "INSERT INTO users ... VALUES ('$2a$10$...')"
-
-# 正确做法
-echo "INSERT INTO users ... VALUES ('\$2a\$10\$...')" > temp.sql
-psql -U sub2api -h 127.0.0.1 -d sub2api -f temp.sql
-```
-
----
-
-### 坑 4：psql 不支持中文路径
-
-**问题**：`psql -f "D:\中文路径\file.sql"` 报错找不到文件。
-
-**解决**：复制到纯英文路径再执行：
-```bash
-cp "D:\中文路径\file.sql" "C:\temp.sql"
-psql -f "C:\temp.sql"
-```
-
----
-
-### 坑 5：PostgreSQL 密码重置流程
-
-**场景**：忘记 PostgreSQL 密码。
-
-**步骤**：
-1. 修改 `C:\Program Files\PostgreSQL\16\data\pg_hba.conf`
-   ```
-   # 将 scram-sha-256 改为 trust
-   host    all    all    127.0.0.1/32    trust
-   ```
-2. 重启 PostgreSQL 服务
-   ```powershell
-   Restart-Service postgresql-x64-16
-   ```
-3. 无密码登录并重置
-   ```bash
-   psql -U postgres -h 127.0.0.1
-   ALTER USER sub2api WITH PASSWORD 'sub2api';
-   ALTER USER postgres WITH PASSWORD 'postgres';
-   ```
-4. 改回 `scram-sha-256` 并重启
-
----
-
-### 坑 6：Go interface 新增方法后 test stub 必须补全
-
-**问题**：给 interface 新增方法后，编译报错 `does not implement interface (missing method XXX)`。
-
-**原因**：所有测试文件中实现该 interface 的 stub/mock 都必须补上新方法。
-
-**解决**：
-```bash
-# 搜索所有实现该 interface 的 struct
-cd backend
-grep -r "type.*Stub.*struct" internal/
-grep -r "type.*Mock.*struct" internal/
-
-# 逐一补全新方法
-```
-
----
-
-### 坑 7：Windows 上 psql 连 localhost 的 IPv6 问题
-
-**问题**：psql 连 `localhost` 先尝试 IPv6 (::1)，可能报错后再回退 IPv4。
-
-**建议**：直接用 `127.0.0.1` 代替 `localhost`。
-
----
-
-### 坑 8：Windows 没有 make 命令
-
-**问题**：CI 里用 `make test-unit`，本地 Windows 没有 make。
-
-**解决**：直接用 Makefile 里的原始命令：
-```bash
-# 代替 make test-unit
-go test -tags=unit ./...
-
-# 代替 make test-integration
-go test -tags=integration ./...
-```
-
----
-
-### 坑 9：Ent Schema 修改后必须重新生成
-
-**问题**：修改 `ent/schema/*.go` 后，代码不生效。
-
-**解决**：
-```bash
-cd backend
-go generate ./ent  # 重新生成 ent 代码
-git add ent/       # 生成的文件也要提交
-```
-
----
-
-### 坑 10：前端测试看似正常，但后端调用失败（模型映射被批量误改）
-
-**典型现象**：
-- 前端按钮点测看起来正常；
-- 实际通过 API/客户端调用时返回 `Service temporarily unavailable` 或提示无可用账号；
-- 常见于 OpenAI 账号（例如 Codex 模型）在批量修改后突然不可用。
-
-**根因**：
-- OpenAI 账号编辑页默认不显式展示映射规则，容易让人误以为“没映射也没关系”；
-- 但在**批量修改同时选中不同平台账号**（OpenAI + Antigravity/Gemini）时，模型白名单/映射可能被跨平台策略覆盖；
-- 结果是 OpenAI 账号的关键模型映射丢失或被改坏，后端选不到可用账号。
-
-**修复方案（按优先级）**：
-1. **快速修复（推荐）**：在批量修改中补回正确的透传映射（例如 `gpt-5.3-codex -> gpt-5.3-codex-spark`）。
-2. **彻底重建**：删除并重新添加全部相关账号（最稳但成本高）。
-
-**关键经验**：
-- 如果某模型已被软件内置默认映射覆盖，通常不需要额外再加透传；
-- 但当上游模型更新快于本仓库默认映射时，**手动批量添加透传映射**是最简单、最低风险的临时兜底方案；
-- 批量操作前尽量按平台分组，不要混选不同平台账号。
-
----
-
-### 坑 11：PR 提交前检查清单
-
-提交 PR 前务必本地验证：
+### PR 提交检查清单
 
 - [ ] `go test -tags=unit ./...` 通过
 - [ ] `go test -tags=integration ./...` 通过
-- [ ] `golangci-lint run ./...` 无新增问题
-- [ ] `pnpm-lock.yaml` 已同步（如果改了 package.json）
-- [ ] 所有 test stub 补全新接口方法（如果改了 interface）
-- [ ] Ent 生成的代码已提交（如果改了 schema）
+- [ ] `golangci-lint run ./...` 无新增
+- [ ] `pnpm-lock.yaml` 已同步（改了 package.json 时）
+- [ ] Ent 生成代码已提交（改了 schema 时）
+- [ ] test stub 补全新接口方法（改了 interface 时）
 
-## 五、常用命令速查
+## 五、常见坑点
 
-### 数据库操作
+### Ent Schema 改后必须 go generate
+
+修改 `ent/schema/*.go` 后代码不生效 → `cd backend && go generate ./ent`，生成的文件也要提交。
+
+### pnpm-lock.yaml 必须同步
+
+`package.json` 新增依赖后 CI 的 `--frozen-lockfile` 会失败 → 先 `pnpm install` 更新 lock 文件再提交。
+
+### Go interface 新增方法
+
+所有 test stub/mock 必须补全新方法，否则编译报错 `does not implement interface`。
+
+### 批量修改账号的模型映射风险
+
+混选不同平台账号做批量修改时，模型白名单可能被跨平台覆盖 → 按平台分组操作。
+
+## 六、Git 工作流
 
 ```bash
-# 连接数据库
-psql -U sub2api -h 127.0.0.1 -d sub2api
+# 功能分支
+git checkout -b feat/xxx
+# ... 开发 ...
+git push -u origin feat/xxx
+gh pr create
 
-# 查看所有用户
-psql -U postgres -h 127.0.0.1 -c "\du"
+# 合并后
+git checkout main && git pull
 
-# 查看所有数据库
-psql -U postgres -h 127.0.0.1 -c "\l"
-
-# 执行 SQL 文件
-psql -U sub2api -h 127.0.0.1 -d sub2api -f migration.sql
-```
-
-### Git 操作
-
-```bash
-# 同步上游
+# 上游 cherry-pick（仅重要修复）
 git fetch upstream
-git checkout main
-git merge upstream/main
-git push origin main
-
-# 创建功能分支
-git checkout -b feature/xxx
-
-# Rebase 到最新 main
-git fetch upstream
-git rebase upstream/main
+git log upstream/main --oneline -20
+git cherry-pick <hash>  # 冲突时优先保留 subme 实现
 ```
 
-### 前端操作
+---
 
-```bash
-# 安装依赖（必须用 pnpm）
-cd frontend
-pnpm install
+## 七、MIT 迁移路线图
 
-# 开发服务器
-pnpm dev
+### 目标
 
-# 构建
-pnpm build
+从 LGPL v3 过渡到 MIT，实现完全自主的代码库。
+
+### 前提
+
+LGPL 代码不能直接换协议，必须用**自己写的代码**逐步替换上游 LGPL 期间的增量。替换完成后，整个代码库只包含 MIT 期间的上游代码 + 自己的原创代码，即可切换到 MIT。
+
+### LGPL 增量分析（v0.1.114 → v0.1.135）
+
+| 类别 | 行数 | 处理方式 |
+|------|------|----------|
+| 测试代码 | ~85K | 自行编写（测试是独立表达，不受 LGPL 约束，但建议重写以确保干净） |
+| Ent 生成代码 | ~74K | 从 schema 重新 `go generate`（自动生成，不算派生作品） |
+| 前端 | ~41K | **已完成** — 全部重写为 cold-steel 设计系统 |
+| Docs/CI | ~1K | 无版权意义 |
+| ⚠ Service 层 | ~43K | 需逐模块重写 |
+| ⚠ Handler 层 | ~17K | 需逐模块重写 |
+| ⚠ Repo/Pkg | ~12K | 需逐模块重写 |
+| Ent Schema | ~1K | 需重写（17 个文件） |
+
+**核心工作量 ≈ service + handler + repo + schema ≈ 74K 行**
+
+### 可剥离模块（不重写，直接删除）
+
+| 模块 | 行数 | 理由 |
+|------|------|------|
+| Channel Monitor | ~5.2K | 完全独立，core 零引用 |
+| Content Moderation | ~3.9K | 独立模块 |
+| DingTalk Auth | ~1.5K | 独立文件 |
+| Affiliate | ~3.0K | 独立模块 |
+| User Platform Quota | ~1.2K | 独立模块 |
+| **小计** | **~14.9K** | 剥离后减少 20% 工作量 |
+
+### 必须重写的硬骨头
+
+| 模块 | LGPL 增量 | 难度 | 说明 |
+|------|-----------|------|------|
+| `openai_gateway_service.go` | +2,571 行 | ★★★★★ | Codex 模拟、failover、image cost、SSE parser、load-aware 选号 |
+| `admin_service.go` | +1,230 行 | ★★★☆☆ | RPM、批量并发、balance history、auth identity binding |
+| `account_handler.go` | +290 行 | ★★☆☆☆ | Codex 导入、额外过滤 |
+| `account_repo.go` | +71 行 | ★☆☆☆☆ | 小量查询方法 |
+| `scheduler_snapshot_service.go` | +3 行 | ★☆☆☆☆ | 微调 |
+| Ent Schema (17 files) | +1,084 行 | ★★☆☆☆ | 字段定义，理解后重写 |
+| 360 个 bugfix | 散布全库 | ★★★☆☆ | 逐个评估，功能修正可 cherry-pick |
+
+### 分阶段计划
+
+```
+Phase 0: 现状（LGPL 合规发布）                     ← 已完成 ✅
+    ├─ LICENSE: LGPL v3
+    ├─ NOTICE: 上游归属
+    ├─ 源码公开
+    └─ 断开上游同步
+
+Phase 1: 剥离不需要的模块                          预计 1-2 天
+    ├─ 删除 Channel Monitor
+    ├─ 删除 Content Moderation
+    ├─ 删除 DingTalk Auth
+    ├─ 删除 Affiliate
+    ├─ 删除 User Platform Quota（如不需要）
+    └─ 清理编译依赖、路由注册、Ent schema
+
+Phase 2: 重写核心增量 — 低难度                     预计 2-3 天
+    ├─ account_repo.go (+71 行)
+    ├─ account_handler.go (+290 行)
+    ├─ Ent Schema (17 files, +1,084 行)
+    └─ go generate 重建 Ent 代码
+
+Phase 3: 重写核心增量 — 中难度                     预计 3-5 天
+    ├─ admin_service.go (+1,230 行)
+    │   ├─ RPM 管理
+    │   ├─ 批量并发控制
+    │   ├─ Balance history 合并
+    │   └─ Auth identity binding
+    └─ 移植/重写 bugfix（360 个逐评估）
+
+Phase 4: 重写核心增量 — 高难度                     预计 5-8 天
+    └─ openai_gateway_service.go (+2,571 行)
+        ├─ SSE frame parser（重写）
+        ├─ Failover 逻辑（重写）
+        ├─ Image cost 计算（重写）
+        ├─ Load-aware 账号选择（重写）
+        ├─ Codex 行为模拟（重写）
+        ├─ Browser UA override（重写）
+        └─ 集成测试验证
+
+Phase 5: 验证与切换                                预计 2-3 天
+    ├─ 全量集成测试
+    ├─ 对比测试：MIT 分支 vs 当前代码行为一致性
+    ├─ 法律审查：确认无 LGPL 残留
+    ├─ LICENSE 切换为 MIT
+    └─ 更新 NOTICE、README
 ```
 
-### 后端操作
+### 总工作量估计
 
-```bash
-# 运行服务器
-cd backend
-go run ./cmd/server/
+| 阶段 | 工时 |
+|------|------|
+| Phase 1: 剥离 | 1-2 天 |
+| Phase 2: 低难度重写 | 2-3 天 |
+| Phase 3: 中难度重写 | 3-5 天 |
+| Phase 4: 高难度重写 | 5-8 天 |
+| Phase 5: 验证切换 | 2-3 天 |
+| **总计** | **13-21 个工作日（3-4 周全职）** |
 
-# 生成 Ent 代码
-go generate ./ent
+### 渐进式执行原则
 
-# 运行测试
-go test -tags=unit ./...
-go test -tags=integration ./...
+1. **每个 Phase 独立可发布** — 不需要一次性完成
+2. **Phase 1 立即可做** — 剥离模块零风险
+3. **Phase 2-4 可穿插日常开发** — 每次重写一个函数/模块
+4. **重写标准**：阅读上游实现理解功能需求，然后关闭上游代码从零实现（clean room）
+5. **验证标准**：每个重写的函数必须通过等价的测试用例
 
-# Lint 检查
-golangci-lint run ./...
-```
+### 重写时的法律注意事项
 
-## 六、项目结构速览
+- **可以做**：阅读上游代码理解功能 → 关闭代码 → 从零实现相同功能
+- **可以做**：复用 API 接口定义（接口不受版权保护）
+- **可以做**：cherry-pick bugfix（功能修正是事实，不是创意表达）
+- **不可以做**：复制粘贴上游代码后改变量名
+- **不可以做**：逐行翻译上游实现
 
-```
-sub2api-bmai/
-├── backend/
-│   ├── cmd/server/          # 主程序入口
-│   ├── ent/                 # Ent ORM 生成代码
-│   │   └── schema/          # 数据库 Schema 定义
-│   ├── internal/
-│   │   ├── handler/         # HTTP 处理器
-│   │   ├── service/         # 业务逻辑
-│   │   ├── repository/      # 数据访问层
-│   │   └── server/          # 服务器配置
-│   ├── migrations/          # 数据库迁移脚本
-│   └── config.yaml          # 配置文件
-├── frontend/
-│   ├── src/
-│   │   ├── api/             # API 调用
-│   │   ├── components/      # Vue 组件
-│   │   ├── views/           # 页面视图
-│   │   ├── types/           # TypeScript 类型
-│   │   └── i18n/            # 国际化
-│   ├── package.json         # 依赖配置
-│   └── pnpm-lock.yaml       # pnpm 锁文件（必须提交）
-└── .claude/
-    └── CLAUDE.md            # 本文档
-```
+### MIT 切换条件
 
-## 七、参考资源
+当以下全部满足时，可以将 LICENSE 从 LGPL v3 切换为 MIT：
 
-- [上游仓库](https://github.com/Wei-Shaw/sub2api)
+- [ ] LGPL 期间的上游代码（v0.1.114 → v0.1.135 增量）已全部替换或删除
+- [ ] 代码库只包含：MIT 期间上游代码 + 自己的原创代码
+- [ ] 法律审查通过（无 LGPL 代码残留）
+- [ ] 所有测试通过
+
+## 八、参考资源
+
+- [上游仓库](https://github.com/Wei-Shaw/sub2api)（溯源，不再同步）
 - [Ent 文档](https://entgo.io/docs/getting-started)
-- [Vue3 文档](https://vuejs.org/)
+- [Vue 3 文档](https://vuejs.org/)
 - [pnpm 文档](https://pnpm.io/)
+- [LGPL v3 全文](https://www.gnu.org/licenses/lgpl-3.0.html)
