@@ -587,7 +587,7 @@ func (s *OpenAIGatewayService) readOpenAICompatBufferedTerminal(
 		case ev, ok := <-events:
 			if !ok {
 				if frame, ok := parser.Finish(); ok {
-					payload := openAICompatPayloadWithEventType(frame.Data, frame.EventType)
+					payload := payloadWithEventTag(frame.Data, frame.EventType)
 					var event apicompat.ResponsesStreamEvent
 					if err := json.Unmarshal([]byte(payload), &event); err == nil {
 						acc.ProcessEvent(&event)
@@ -625,7 +625,7 @@ func (s *OpenAIGatewayService) readOpenAICompatBufferedTerminal(
 			if !ok {
 				continue
 			}
-			payload := openAICompatPayloadWithEventType(frame.Data, frame.EventType)
+			payload := payloadWithEventTag(frame.Data, frame.EventType)
 
 			var event apicompat.ResponsesStreamEvent
 			if err := json.Unmarshal([]byte(payload), &event); err != nil {
@@ -848,7 +848,7 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 		return result, fmt.Errorf("stream usage incomplete: missing terminal event")
 	}
 	processFrame := func(frame openAICompatSSEFrame) bool {
-		payload := openAICompatPayloadWithEventType(frame.Data, frame.EventType)
+		payload := payloadWithEventTag(frame.Data, frame.EventType)
 		return processDataLine(payload)
 	}
 

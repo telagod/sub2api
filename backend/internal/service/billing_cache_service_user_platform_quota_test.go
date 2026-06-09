@@ -307,7 +307,7 @@ func TestCheckUserPlatformQuotaEligibility_NoRecordMeansUnlimited(t *testing.T) 
 
 // TestCheckUserPlatformQuotaEligibility_OldSchemaCacheMissTriggersDB 验证旧版 entry（SchemaVersion=0）
 // 触发 DB 回退路径，并在 DB 数据判断配额是否超限。
-// DB record 需设置有效的 window_start，否则 quotaWindowExpired 会将 usage 归零（nil 窗口视为已过期）。
+// DB record 需设置有效的 window_start，否则 quotaWindowHasReset 会将 usage 归零（nil 窗口视为已过期）。
 func TestCheckUserPlatformQuotaEligibility_OldSchemaCacheMissTriggersDB(t *testing.T) {
 	daily := 5.0
 	dayStart := currentDayStart()
@@ -351,7 +351,7 @@ func TestCheckUserPlatformQuotaEligibility_WindowExpiredInCache(t *testing.T) {
 //     limit 保留;这样并发 IncrUserPlatformQuotaUsage 的 Lua INCR 可正确累加到新窗口。
 func TestCheckUserPlatformQuotaEligibility_WindowExpiredRefreshesCache(t *testing.T) {
 	daily := 5.0
-	// 远古窗口起始,确保 quotaWindowExpired 返回 true
+	// 远古窗口起始,确保 quotaWindowHasReset 返回 true
 	past := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 	repo := &fakeQuotaRepo{rec: &UserPlatformQuotaRecord{
 		UserID: 1, Platform: "anthropic", DailyLimitUSD: &daily,

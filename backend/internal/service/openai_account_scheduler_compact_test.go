@@ -187,8 +187,8 @@ func TestOpenAICompactSupportTier(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := openAICompactSupportTier(tt.account); got != tt.want {
-				t.Fatalf("openAICompactSupportTier(...) = %d, want %d", got, tt.want)
+			if got := compactSupportTier(tt.account); got != tt.want {
+				t.Fatalf("compactSupportTier(...) = %d, want %d", got, tt.want)
 			}
 		})
 	}

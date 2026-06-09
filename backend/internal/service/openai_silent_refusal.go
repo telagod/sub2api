@@ -44,7 +44,7 @@ func (d *openAIChatSilentRefusalDetector) ObserveSSELine(line string) {
 	if d == nil || !d.enabled {
 		return
 	}
-	if eventType, ok := extractOpenAISSEEventLine(line); ok {
+	if eventType, ok := parseSSEEventLine(line); ok {
 		d.observeEventType(eventType)
 		return
 	}

@@ -4279,7 +4279,7 @@ func (s *OpenAIGatewayService) selectAccountByPreviousResponseIDForCapability(
 	// account over its 5h/7d threshold keeps serving the same response chain even though
 	// normal scheduling skips it. Pause is transient, so fall through to normal scheduling
 	// without deleting the binding (the window may reset before the next turn).
-	if paused, _ := shouldAutoPauseOpenAIAccountByQuota(ctx, account); paused {
+	if paused, _ := shouldQuotaAutoPause(ctx, account); paused {
 		return nil, nil
 	}
 	if s.schedulerSnapshot != nil && s.accountRepo != nil {
@@ -4298,7 +4298,7 @@ func (s *OpenAIGatewayService) selectAccountByPreviousResponseIDForCapability(
 		if !latest.SupportsOpenAIEndpointCapability(requiredCapability) {
 			return nil, nil
 		}
-		if paused, _ := shouldAutoPauseOpenAIAccountByQuota(ctx, latest); paused {
+		if paused, _ := shouldQuotaAutoPause(ctx, latest); paused {
 			return nil, nil
 		}
 		if s.isOpenAIAccountRuntimeBlocked(latest) {
@@ -4307,7 +4307,7 @@ func (s *OpenAIGatewayService) selectAccountByPreviousResponseIDForCapability(
 		}
 		account = latest
 	}
-	if requireCompact && openAICompactSupportTier(account) == 0 {
+	if requireCompact && compactSupportTier(account) == 0 {
 		_ = store.DeleteResponseAccount(ctx, derefGroupID(groupID), responseID)
 		return nil, nil
 	}

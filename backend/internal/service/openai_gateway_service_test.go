@@ -252,10 +252,10 @@ func TestOpenAIGatewayService_GenerateSessionHash_AttachesLegacyHashToContext(t 
 }
 
 func TestExtractOpenAIResponseIDFromJSONBytes(t *testing.T) {
-	require.Equal(t, "resp_json", extractOpenAIResponseIDFromJSONBytes([]byte(`{"id":"resp_json"}`)))
-	require.Equal(t, "resp_sse", extractOpenAIResponseIDFromJSONBytes([]byte(`{"type":"response.completed","response":{"id":"resp_sse"}}`)))
-	require.Empty(t, extractOpenAIResponseIDFromJSONBytes([]byte(`{"response":{}}`)))
-	require.Empty(t, extractOpenAIResponseIDFromJSONBytes([]byte(`not-json`)))
+	require.Equal(t, "resp_json", extractResponseID([]byte(`{"id":"resp_json"}`)))
+	require.Equal(t, "resp_sse", extractResponseID([]byte(`{"type":"response.completed","response":{"id":"resp_sse"}}`)))
+	require.Empty(t, extractResponseID([]byte(`{"response":{}}`)))
+	require.Empty(t, extractResponseID([]byte(`not-json`)))
 }
 
 func TestOpenAIGatewayService_BindHTTPResponseAccount(t *testing.T) {
