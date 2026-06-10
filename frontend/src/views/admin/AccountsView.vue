@@ -146,7 +146,7 @@
                 <span class="font-medium text-foreground text-sm truncate shrink">{{ value }}</span>
                 <PlatformTypeBadge :platform="row.platform" :type="row.type" :plan-type="row.credentials?.plan_type" :privacy-mode="row.extra?.privacy_mode" :compact="true" class="shrink-0" />
               </div>
-              <span v-if="row.extra?.email_address || row.extra?.email || row.credentials?.email" class="text-[10px] text-muted-foreground truncate max-w-[140px]">{{ row.extra?.email_address || row.extra?.email || row.credentials?.email }}</span>
+              <span v-if="row.extra?.email_address || row.extra?.email || row.credentials?.email" class="text-[10px] text-muted-foreground">{{ row.extra?.email_address || row.extra?.email || row.credentials?.email }}</span>
             </div>
           </template>
           <template #cell-notes="{ value }">
