@@ -146,10 +146,7 @@
                 <span class="font-medium text-foreground text-sm truncate shrink">{{ value }}</span>
                 <PlatformTypeBadge :platform="row.platform" :type="row.type" :plan-type="row.credentials?.plan_type" :privacy-mode="row.extra?.privacy_mode" :compact="true" class="shrink-0" />
               </div>
-              <div class="flex items-center gap-1 text-[10px] text-muted-foreground min-w-0">
-                <span v-if="row.extra?.email_address || row.extra?.email || row.credentials?.email" class="truncate max-w-[120px]">{{ row.extra?.email_address || row.extra?.email || row.credentials?.email }}</span>
-                <AccountCapacityCell :account="row" />
-              </div>
+              <span v-if="row.extra?.email_address || row.extra?.email || row.credentials?.email" class="text-[10px] text-muted-foreground truncate max-w-[140px]">{{ row.extra?.email_address || row.extra?.email || row.credentials?.email }}</span>
             </div>
           </template>
           <template #cell-notes="{ value }">
@@ -445,7 +442,7 @@ const bulkDeleteProgress = ref<{ current: number; total: number } | null>(null)
 const showAccountToolsDropdown = ref(false)
 const accountToolsDropdownRef = ref<HTMLElement | null>(null)
 const hiddenColumns = reactive<Set<string>>(new Set())
-const DEFAULT_HIDDEN_COLUMNS = ['platform_type', 'capacity', 'today_stats', 'groups', 'proxy', 'notes', 'priority', 'rate_multiplier', 'last_used_at', 'created_at', 'expires_at']
+const DEFAULT_HIDDEN_COLUMNS = ['platform_type', 'today_stats', 'groups', 'proxy', 'notes', 'priority', 'rate_multiplier', 'last_used_at', 'created_at', 'expires_at']
 const HIDDEN_COLUMNS_KEY = 'account-hidden-columns'
 
 // Sorting settings
@@ -1099,6 +1096,7 @@ const allColumns = computed(() => {
   const c = [
     { key: 'select', label: '', sortable: false, class: 'w-9' },
     { key: 'name', label: t('admin.accounts.columns.name'), sortable: true, class: 'min-w-[160px]' },
+    { key: 'capacity', label: t('admin.accounts.columns.capacity'), sortable: false, class: 'min-w-[80px]' },
     { key: 'status', label: t('admin.accounts.columns.status'), sortable: true, class: 'w-[90px]' },
     { key: 'schedulable', label: '⚙', sortable: true, class: 'w-10' },
     { key: 'usage', label: t('admin.accounts.columns.usageWindows'), sortable: false, class: 'min-w-[280px]' },
@@ -1109,7 +1107,6 @@ const allColumns = computed(() => {
   }
   c.push(
     { key: 'platform_type', label: t('admin.accounts.columns.platformType'), sortable: false },
-    { key: 'capacity', label: t('admin.accounts.columns.capacity'), sortable: false },
     { key: 'proxy', label: t('admin.accounts.columns.proxy'), sortable: false },
     { key: 'priority', label: t('admin.accounts.columns.priority'), sortable: true, class: 'w-[80px]' },
     { key: 'rate_multiplier', label: t('admin.accounts.columns.billingRateMultiplier'), sortable: true, class: 'w-[80px]' },
