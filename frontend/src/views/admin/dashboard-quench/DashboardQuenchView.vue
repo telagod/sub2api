@@ -5,9 +5,16 @@
       <div class="dq-head rise">
         <div>
           <h1 class="dq-title">{{ t('admin.dashboardQuench.title') }}</h1>
-          <p class="dq-desc">{{ t('admin.dashboardQuench.desc') }}</p>
+          <p class="dq-desc">
+            <span class="dq-live"><span class="dq-live-dot"></span>{{ t('admin.dashboardQuench.live') }}</span>
+            <span class="dq-desc-sep">·</span>
+            <span>{{ t('admin.dashboardQuench.updatedAt', { time: lastUpdated }) }}</span>
+          </p>
         </div>
-        <button class="dq-btn" :disabled="loading" @click="reload">{{ t('admin.dashboardQuench.refresh') }}</button>
+        <button class="dq-btn" :disabled="loading" @click="reload">
+          <span class="dq-btn-ico" :class="{ 'dq-spinning': loading }">⟳</span>
+          {{ t('admin.dashboardQuench.refresh') }}
+        </button>
       </div>
 
       <div v-if="loading && !stats" class="dq-spin">
@@ -17,15 +24,22 @@
       <template v-else>
         <!-- ═══ 经营行 ═══ -->
         <div class="dq-kpi-row">
-          <div class="dq-kpi rise" style="animation-delay:.04s">
+          <!-- 英雄：今日营收 -->
+          <div class="dq-kpi dq-kpi-hero rise" style="animation-delay:.04s">
             <div class="dq-kpi-glow"></div>
             <div class="dq-kpi-label">{{ t('admin.dashboardQuench.kpiRevenue') }}</div>
-            <div class="dq-kpi-value q-money">${{ fmtMoney(payDash?.today_amount ?? 0) }}</div>
-            <div class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiOrdersSub', { n: payDash?.today_count ?? 0 }) }}</div>
+            <div class="dq-kpi-value dq-hero-value q-money">${{ fmtMoney(tickRevenue) }}</div>
+            <div class="dq-kpi-foot">
+              <span class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiOrdersSub', { n: payDash?.today_count ?? 0 }) }}</span>
+              <span v-if="payDash" class="dq-margin" :class="todayMargin >= 0 ? 'dq-ok' : 'dq-bad'">
+                {{ t('admin.dashboardQuench.kpiMargin') }} <b class="q-money">${{ fmtMoney(todayMargin) }}</b>
+              </span>
+              <span v-else class="dq-kpi-sub dq-muted">{{ t('admin.dashboardQuench.kpiMarginNa') }}</span>
+            </div>
           </div>
           <div class="dq-kpi rise" style="animation-delay:.08s">
             <div class="dq-kpi-label">{{ t('admin.dashboardQuench.kpiRequests') }}</div>
-            <div class="dq-kpi-value">{{ fmtNum(stats?.today_requests ?? 0) }}</div>
+            <div class="dq-kpi-value">{{ fmtNum(tickRequests) }}</div>
             <div class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiAccumRequests', { n: fmtNum(stats?.total_requests ?? 0) }) }}</div>
           </div>
           <div class="dq-kpi rise" style="animation-delay:.12s">
@@ -40,46 +54,47 @@
           </div>
         </div>
 
-        <!-- ═══ 流量行 ═══ -->
-        <div class="dq-traffic-row">
-          <div class="dq-kpi rise" style="animation-delay:.20s">
+        <!-- ═══ 流量行（紧凑 KPI，不再与图表挤压拉伸）═══ -->
+        <div class="dq-traffic-kpis">
+          <div class="dq-kpi dq-kpi-sm rise" style="animation-delay:.20s">
             <div class="dq-kpi-label">{{ t('admin.dashboardQuench.kpiTokenToday') }}</div>
-            <div class="dq-kpi-value">{{ fmtTok(stats?.today_tokens ?? 0) }}</div>
+            <div class="dq-kpi-value dq-val-sm">{{ fmtTok(stats?.today_tokens ?? 0) }}</div>
             <div class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiTokenAccum', { n: fmtTok(stats?.total_tokens ?? 0) }) }}</div>
           </div>
-          <div class="dq-kpi rise dq-kpi-azure" style="animation-delay:.24s">
+          <div class="dq-kpi dq-kpi-sm dq-kpi-azure rise" style="animation-delay:.24s">
             <div class="dq-kpi-label"><span class="dq-live-dot"></span>RPM</div>
-            <div class="dq-kpi-value dq-azure">{{ fmtTok(stats?.rpm ?? 0) }}</div>
+            <div class="dq-kpi-value dq-val-sm dq-azure">{{ fmtTok(stats?.rpm ?? 0) }}</div>
             <div class="dq-kpi-sub">TPM {{ fmtTok(stats?.tpm ?? 0) }}</div>
           </div>
-          <div class="dq-kpi rise" style="animation-delay:.28s">
+          <div class="dq-kpi dq-kpi-sm rise" style="animation-delay:.28s">
             <div class="dq-kpi-label">{{ t('admin.dashboardQuench.kpiAvgResponse') }}</div>
-            <div class="dq-kpi-value">{{ fmtDur(stats?.average_duration_ms ?? 0) }}</div>
+            <div class="dq-kpi-value dq-val-sm">{{ fmtDur(stats?.average_duration_ms ?? 0) }}</div>
             <div class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiActiveUsers', { n: stats?.active_users ?? 0 }) }}</div>
           </div>
-          <!-- 图表面板 -->
-          <div class="dq-charts-panel rise" style="animation-delay:.30s">
-            <div class="dq-chart-filters">
-              <DateRangePicker v-model:start-date="startDate" v-model:end-date="endDate" @change="onRangeChange" />
-              <Select v-model="granularity" :options="granOpts" class="dq-gran-sel" @change="loadCharts" />
-            </div>
-            <div class="dq-charts-grid">
-              <ModelDistributionChart
-                :model-stats="modelStats"
-                :enable-ranking-view="true"
-                :ranking-items="rankingItems"
-                :ranking-total-actual-cost="rankingTotalActualCost"
-                :ranking-total-requests="rankingTotalRequests"
-                :ranking-total-tokens="rankingTotalTokens"
-                :loading="chartsLoading"
-                :ranking-loading="rankingLoading"
-                :ranking-error="rankingError"
-                :start-date="startDate"
-                :end-date="endDate"
-                @ranking-click="goToUsage"
-              />
-              <TokenUsageTrend :trend-data="trendData" :loading="chartsLoading" />
-            </div>
+        </div>
+
+        <!-- ═══ 图表面板（整宽）═══ -->
+        <div class="dq-charts-panel rise" style="animation-delay:.30s">
+          <div class="dq-chart-filters">
+            <DateRangePicker v-model:start-date="startDate" v-model:end-date="endDate" @change="onRangeChange" />
+            <Select v-model="granularity" :options="granOpts" class="dq-gran-sel" @change="loadCharts" />
+          </div>
+          <div class="dq-charts-grid">
+            <ModelDistributionChart
+              :model-stats="modelStats"
+              :enable-ranking-view="true"
+              :ranking-items="rankingItems"
+              :ranking-total-actual-cost="rankingTotalActualCost"
+              :ranking-total-requests="rankingTotalRequests"
+              :ranking-total-tokens="rankingTotalTokens"
+              :loading="chartsLoading"
+              :ranking-loading="rankingLoading"
+              :ranking-error="rankingError"
+              :start-date="startDate"
+              :end-date="endDate"
+              @ranking-click="goToUsage"
+            />
+            <TokenUsageTrend :trend-data="trendData" :loading="chartsLoading" />
           </div>
         </div>
 
@@ -105,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
@@ -155,19 +170,46 @@ const firingAlerts = computed(() => alertEvents.value.filter(e => e.status === '
 const resolvedAlerts = computed(() => alertEvents.value.filter(e => e.status !== 'firing').length)
 const latestAlert = computed(() => alertEvents.value.find(e => e.status === 'firing') ?? null)
 
-function fmtNum(v: number) { return v.toLocaleString() }
+// 今日毛利 = 营收 − 账号成本（运营最关心的派生指标，纯前端聚合）
+const todayMargin = computed(() => (payDash.value?.today_amount ?? 0) - (stats.value?.today_account_cost ?? 0))
+
+// 最近更新时间（心跳可见化）
+const lastUpdated = ref('—')
+function stampUpdated(now: number) {
+  const d = new Date(now)
+  lastUpdated.value = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
+}
+
+function fmtNum(v: number) { return Math.round(v).toLocaleString() }
 function fmtMoney(v: number) {
-  if (v >= 1000) return (v / 1000).toFixed(2) + 'K'
-  if (v >= 1) return v.toFixed(2)
-  if (v >= 0.01) return v.toFixed(3)
+  const n = Math.abs(v)
+  if (n >= 1000) return (v / 1000).toFixed(2) + 'K'
+  if (n >= 0.01 || v === 0) return v.toFixed(2)
   return v.toFixed(4)
 }
 function fmtTok(v: number) {
   if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B'
   if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M'
   if (v >= 1e3) return (v / 1e3).toFixed(2) + 'K'
-  return v.toLocaleString()
+  return Math.round(v).toLocaleString()
 }
+
+// counter-tick：关键数字变化时缓动归位（reduced-motion 直接落位）
+const tickRevenue = ref(0)
+const tickRequests = ref(0)
+const reduceMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+function tweenTo(target: number, from: number, setter: (v: number) => void) {
+  if (reduceMotion || from === target) { setter(target); return }
+  const dur = 650, t0 = performance.now()
+  function step(now: number) {
+    const p = Math.min((now - t0) / dur, 1)
+    setter(from + (target - from) * (1 - Math.pow(1 - p, 3)))
+    if (p < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+watch(() => payDash.value?.today_amount ?? 0, (n) => tweenTo(n, tickRevenue.value, v => (tickRevenue.value = v)))
+watch(() => stats.value?.today_requests ?? 0, (n) => tweenTo(n, tickRequests.value, v => (tickRequests.value = v)))
 function fmtDur(ms: number) { return ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${Math.round(ms)}ms` }
 function goTo(path: string) { void router.push(path) }
 function goToUsage(item: UserSpendingRankingItem) {
@@ -231,7 +273,10 @@ function onRangeChange(r: { startDate: string; endDate: string; preset: string |
   loadCharts()
 }
 async function loadCharts() { await Promise.all([loadSnapshot(false), loadRanking()]) }
-async function reload() { await Promise.all([loadSnapshot(true), loadRanking(), loadPayDash(), loadAlerts()]) }
+async function reload() {
+  await Promise.all([loadSnapshot(true), loadRanking(), loadPayDash(), loadAlerts()])
+  stampUpdated(performance.timeOrigin + performance.now())
+}
 
 let heartbeat: ReturnType<typeof setInterval>
 onMounted(() => { void reload(); heartbeat = setInterval(() => { void reload() }, 5000) })
@@ -243,50 +288,79 @@ onUnmounted(() => clearInterval(heartbeat))
 
 .rise { opacity: 0; transform: translateY(10px); animation: rise .5s cubic-bezier(.22,.68,0,1.2) forwards; }
 @keyframes rise { to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .rise { animation: none; opacity: 1; transform: none; } .dq-live-dot { animation: none; box-shadow: none; } }
+@media (prefers-reduced-motion: reduce) { .rise { animation: none; opacity: 1; transform: none; } .dq-live-dot { animation: none; box-shadow: none; } .dq-btn-ico.dq-spinning { animation: none; } }
 
 .dq-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-.dq-title { font-size: 18px; font-weight: 700; color: var(--foreground); margin: 0; }
-.dq-desc { font-size: 12px; color: var(--muted-foreground); margin: 3px 0 0; }
+.dq-title { font-size: 21px; font-weight: 700; letter-spacing: .01em; color: var(--ink-0, #E8EBF0); margin: 0; }
+.dq-desc { font-size: 12px; color: var(--ink-2, #5C6470); margin: 4px 0 0; display: flex; align-items: center; gap: 7px; }
+.dq-desc-sep { opacity: .5; }
+.dq-live { display: inline-flex; align-items: center; gap: 6px; color: var(--azure, #5CA8FF); font-weight: 600; font-family: var(--font-mono, monospace); letter-spacing: .04em; }
 .dq-btn {
-  padding: 6px 14px; border-radius: 9px; font-size: 12px; font-weight: 500;
-  background: var(--secondary); border: 1px solid var(--border); color: var(--foreground);
-  cursor: pointer; transition: background .15s;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 15px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+  background: var(--metal-raised, linear-gradient(180deg,#272D37,#14171D)); border: 1px solid var(--line-1, #2F3540); color: var(--ink-0, #E8EBF0);
+  box-shadow: var(--edge-hi, inset 0 1px 0 rgba(255,255,255,.06)), 0 2px 8px rgba(0,0,0,.35);
+  cursor: pointer; transition: border-color .18s, box-shadow .18s;
 }
-.dq-btn:hover { background: var(--accent); }
+.dq-btn:hover:not(:disabled) { border-color: rgba(92,168,255,.5); box-shadow: var(--edge-hi), 0 0 14px rgba(92,168,255,.18); }
 .dq-btn:disabled { opacity: .5; cursor: default; }
+.dq-btn-ico { display: inline-block; font-size: 13px; line-height: 1; }
+.dq-btn-ico.dq-spinning { animation: dq-spin 1s linear infinite; }
+@keyframes dq-spin { to { transform: rotate(360deg); } }
 
-.dq-kpi { @apply card p-4; position: relative; overflow: hidden; }
+/* 锻面卡（QUENCH metal surface，替代扁平 card） */
+.dq-kpi {
+  position: relative; overflow: hidden; padding: 15px 16px 13px;
+  background: var(--metal, linear-gradient(180deg,#15181E,#0E1014));
+  border: 1px solid var(--line-0, #20242C); border-radius: var(--q-radius, 12px);
+  box-shadow: var(--edge-hi, inset 0 1px 0 rgba(255,255,255,.04)), 0 8px 22px rgba(0,0,0,.3);
+}
 .dq-kpi-glow {
-  position: absolute; right: -24px; top: -24px; width: 80px; height: 80px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(92,168,255,.12), transparent 70%); pointer-events: none;
+  position: absolute; right: -28px; top: -28px; width: 96px; height: 96px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(92,168,255,.14), transparent 70%); pointer-events: none;
 }
 .dq-kpi-label {
   font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--muted-foreground); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  color: var(--ink-2, #5C6470); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
 }
-.dq-kpi-value { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--foreground); line-height: 1.1; }
-.dq-kpi-sub { font-size: 11px; color: var(--muted-foreground); margin-top: 5px; }
-.dq-ok    { color: var(--ok); }
-.dq-azure { color: var(--azure); }
-.dq-kpi-azure { border-color: rgba(92,168,255,.25); }
+.dq-kpi-value { font-family: var(--font-mono, monospace); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink-0, #E8EBF0); line-height: 1.05; letter-spacing: -.01em; }
+.dq-kpi-sub { font-size: 11px; color: var(--ink-2, #5C6470); margin-top: 6px; }
+.dq-muted { opacity: .85; }
+.dq-ok    { color: var(--ok, #46C98C); }
+.dq-bad   { color: var(--bad, #F25C69); }
+.dq-azure { color: var(--azure, #5CA8FF); }
+.dq-kpi-azure { border-color: rgba(92,168,255,.28); }
+
+/* 英雄卡：今日营收 */
+.dq-kpi-hero { background: linear-gradient(165deg, #181D26, #0E1014 75%); border-color: rgba(92,168,255,.18); }
+.dq-hero-value { font-size: 32px; }
+.dq-kpi-foot { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-top: 7px; }
+.dq-margin { font-size: 11px; }
+.dq-margin b { font-weight: 600; }
+
+/* 紧凑流量 KPI */
+.dq-kpi-sm { padding: 12px 14px; }
+.dq-val-sm { font-size: 20px; }
 
 .dq-live-dot {
   display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-  background: var(--azure); animation: pulse-b 1.8s infinite;
+  background: var(--azure, #5CA8FF); animation: pulse-b 1.8s infinite;
 }
 @keyframes pulse-b { 0%,100%{ box-shadow:0 0 0 0 rgba(92,168,255,.55);} 50%{ box-shadow:0 0 0 5px rgba(92,168,255,0);} }
 
-.dq-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.dq-kpi-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 12px; }
 @media (max-width: 900px) { .dq-kpi-row { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 540px) { .dq-kpi-row { grid-template-columns: 1fr; } }
 
-.dq-traffic-row { display: grid; grid-template-columns: 1fr 1fr 1fr 2.2fr; gap: 12px; }
-@media (max-width: 1100px) { .dq-traffic-row { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 1100px) { .dq-charts-panel { grid-column: 1 / -1; } }
-@media (max-width: 540px) { .dq-traffic-row { grid-template-columns: 1fr; } }
+.dq-traffic-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 540px) { .dq-traffic-kpis { grid-template-columns: 1fr; } }
 
-.dq-charts-panel { @apply card; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.dq-charts-panel {
+  padding: 14px; display: flex; flex-direction: column; gap: 12px;
+  background: var(--metal, linear-gradient(180deg,#15181E,#0E1014));
+  border: 1px solid var(--line-0, #20242C); border-radius: var(--q-radius, 12px);
+  box-shadow: var(--edge-hi, inset 0 1px 0 rgba(255,255,255,.04)), 0 8px 22px rgba(0,0,0,.3);
+}
 .dq-chart-filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .dq-gran-sel { width: 90px; }
 .dq-charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
