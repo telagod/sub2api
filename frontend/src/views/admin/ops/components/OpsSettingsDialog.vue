@@ -270,7 +270,7 @@ async function saveAllSettings() {
             <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;">
               <span v-for="email in emailConfig.alert.recipients" :key="email" class="od-badge od-badge-azure" style="gap:6px;">
                 {{ email }}
-                <button type="button" style="color:inherit;opacity:.7;background:none;border:none;cursor:pointer;padding:0;" @click="removeRecipient('alert', email)">×</button>
+                <button type="button" style="color:inherit;opacity:.7;background:none;border:none;cursor:pointer;padding:0;" :aria-label="`移除 ${email}`" @click="removeRecipient('alert', email)">×</button>
               </span>
             </div>
             <p style="margin-top:4px;font-size:11px;color:var(--ink-2,#5C6470);">{{ t('admin.ops.settings.recipientsHint') }}</p>
@@ -299,7 +299,7 @@ async function saveAllSettings() {
             <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;">
               <span v-for="email in emailConfig.report.recipients" :key="email" class="od-badge od-badge-azure" style="gap:6px;">
                 {{ email }}
-                <button type="button" style="color:inherit;opacity:.7;background:none;border:none;cursor:pointer;padding:0;" @click="removeRecipient('report', email)">×</button>
+                <button type="button" style="color:inherit;opacity:.7;background:none;border:none;cursor:pointer;padding:0;" :aria-label="`移除 ${email}`" @click="removeRecipient('report', email)">×</button>
               </span>
             </div>
             <p style="margin-top:4px;font-size:11px;color:var(--ink-2,#5C6470);">{{ t('admin.ops.settings.recipientsHint') }}</p>

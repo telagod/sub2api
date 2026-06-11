@@ -1,26 +1,19 @@
 <template>
   <AuthLayout>
-    <div class="space-y-6">
-      <!-- Title -->
-      <div class="text-center">
-        <h2 class="text-2xl font-bold text-foreground">
-          {{ t('auth.welcomeBack') }}
-        </h2>
-        <p class="mt-2 text-sm text-muted-foreground">
-          {{ t('auth.signInToAccount') }}
-        </p>
+    <div class="lv-body">
+      <!-- 表单标题 -->
+      <div class="lv-head">
+        <h2 class="lv-title">{{ t('auth.welcomeBack') }}</h2>
+        <p class="lv-sub">{{ t('auth.signInToAccount') }}</p>
       </div>
-      <!-- Login Form -->
-      <form @submit.prevent="handleLogin" class="space-y-5">
-        <!-- Email Input -->
-        <div>
-          <label for="email" class="input-label">
-            {{ t('auth.emailLabel') }}
-          </label>
-          <div class="relative">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="mail" size="md" class="text-muted-foreground" />
-            </div>
+
+      <!-- 登录表单 -->
+      <form @submit.prevent="handleLogin" class="lv-form">
+        <!-- Email -->
+        <div class="lv-field">
+          <label for="email" class="lv-label">{{ t('auth.emailLabel') }}</label>
+          <div class="lv-inp-wrap" :class="{ 'lv-inp-wrap--error': errors.email }">
+            <Icon name="mail" size="md" class="lv-inp-icon" />
             <input
               id="email"
               v-model="formData.email"
@@ -29,22 +22,17 @@
               autofocus
               autocomplete="email"
               :disabled="authActionDisabled"
-              class="input pl-11"
-              :class="{ 'input-error': errors.email }"
+              class="lv-inp"
               :placeholder="t('auth.emailPlaceholder')"
             />
           </div>
         </div>
 
-        <!-- Password Input -->
-        <div>
-          <label for="password" class="input-label">
-            {{ t('auth.passwordLabel') }}
-          </label>
-          <div class="relative">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="lock" size="md" class="text-muted-foreground" />
-            </div>
+        <!-- Password -->
+        <div class="lv-field">
+          <label for="password" class="lv-label">{{ t('auth.passwordLabel') }}</label>
+          <div class="lv-inp-wrap" :class="{ 'lv-inp-wrap--error': errors.password }">
+            <Icon name="lock" size="md" class="lv-inp-icon" />
             <input
               id="password"
               v-model="formData.password"
@@ -52,33 +40,34 @@
               required
               autocomplete="current-password"
               :disabled="authActionDisabled"
-              class="input pl-11 pr-11"
-              :class="{ 'input-error': errors.password }"
+              class="lv-inp"
               :placeholder="t('auth.passwordPlaceholder')"
             />
             <button
               type="button"
               @click="showPassword = !showPassword"
               :disabled="authActionDisabled"
-              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground transition-colors hover:text-foreground"
+              class="lv-eye"
+              :aria-label="showPassword ? '隐藏密码' : '显示密码'"
             >
               <Icon v-if="showPassword" name="eyeOff" size="md" />
               <Icon v-else name="eye" size="md" />
             </button>
           </div>
-          <div class="mt-1 flex items-center justify-between">
+          <!-- 忘记密码 -->
+          <div class="lv-pwd-row">
             <span></span>
             <router-link
               v-if="passwordResetEnabled && !backendModeEnabled"
               to="/forgot-password"
-              class="text-sm font-medium text-primary-400 transition-colors hover:text-primary-500 "
+              class="lv-link"
             >
               {{ t('auth.forgotPassword') }}
             </router-link>
           </div>
         </div>
 
-        <!-- Turnstile Widget -->
+        <!-- Turnstile -->
         <div v-if="turnstileEnabled && turnstileSiteKey">
           <TurnstileWidget
             ref="turnstileRef"
@@ -89,36 +78,26 @@
           />
         </div>
 
-        <!-- Submit Button -->
+        <!-- 主按钮 -->
         <button
           type="submit"
           :disabled="authActionDisabled || (turnstileEnabled && !turnstileToken)"
-          class="btn btn-primary w-full"
+          class="lv-submit"
         >
           <svg
             v-if="isLoading"
-            class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
+            class="lv-spin"
             fill="none"
             viewBox="0 0 24 24"
           >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <Icon v-else name="login" size="md" class="mr-2" />
+          <Icon v-else name="login" size="md" />
           {{ isLoading ? t('auth.signingIn') : t('auth.signIn') }}
         </button>
 
+        <!-- 登录协议 -->
         <LoginAgreementPrompt
           v-if="loginAgreementEnabled"
           :accepted="agreementAccepted"
@@ -131,13 +110,12 @@
           @open="showAgreementModal = true"
         />
 
-        <div v-if="showOAuthLogin" class="space-y-3 pt-1">
-          <div class="flex items-center gap-3">
-            <div class="h-px flex-1 bg-border"></div>
-            <span class="text-xs text-muted-foreground">
-              {{ t('auth.oauthOrContinue') }}
-            </span>
-            <div class="h-px flex-1 bg-border"></div>
+        <!-- OAuth 区 -->
+        <div v-if="showOAuthLogin" class="lv-oauth">
+          <div class="lv-divider">
+            <span class="lv-divider-line"></span>
+            <span class="lv-divider-txt">{{ t('auth.oauthOrContinue') }}</span>
+            <span class="lv-divider-line"></span>
           </div>
 
           <EmailOAuthButtons
@@ -146,7 +124,6 @@
             :google-enabled="googleOAuthEnabled"
             :show-divider="false"
           />
-
           <LinuxDoOAuthSection
             v-if="linuxdoOAuthEnabled"
             :disabled="authActionDisabled"
@@ -172,16 +149,11 @@
       </form>
     </div>
 
-    <!-- Footer -->
+    <!-- 页脚 -->
     <template v-if="!backendModeEnabled" #footer>
-      <p class="text-muted-foreground">
+      <p class="lv-footer-txt">
         {{ t('auth.dontHaveAccount') }}
-        <router-link
-          to="/register"
-          class="font-medium text-primary-400 transition-colors hover:text-primary-500 "
-        >
-          {{ t('auth.signUp') }}
-        </router-link>
+        <router-link to="/register" class="lv-footer-link">{{ t('auth.signUp') }}</router-link>
       </p>
     </template>
   </AuthLayout>
@@ -553,14 +525,247 @@ function handle2FACancel(): void {
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.3s ease;
+/* ── 外层间距 ── */
+.lv-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
+/* ── 标题区 ── */
+.lv-head {
+  margin-bottom: 24px;
+  text-align: center;
+}
+.lv-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink-0);
+  margin-bottom: 4px;
+}
+.lv-sub {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+/* ── 表单 ── */
+.lv-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── 字段 ── */
+.lv-field {
+  margin-bottom: 18px;
+}
+
+.lv-label {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-1);
+  margin-bottom: 7px;
+}
+
+/* ── 输入包裹（mockup .inp） ── */
+.lv-inp-wrap {
+  display: flex;
+  align-items: center;
+  background: #0a0c0f;
+  border: 1px solid var(--line-1);
+  border-radius: 12px;
+  padding: 0 14px;
+  height: 46px;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  gap: 10px;
+}
+.lv-inp-wrap:focus-within {
+  border-color: rgba(92, 168, 255, 0.75);
+  box-shadow: var(--glow-focus);
+}
+.lv-inp-wrap--error {
+  border-color: rgba(242, 92, 105, 0.7);
+}
+.lv-inp-wrap--error:focus-within {
+  border-color: rgba(92, 168, 255, 0.75);
+  box-shadow: var(--glow-focus);
+}
+
+.lv-inp-icon {
+  flex: none;
+  color: var(--ink-2);
+}
+
+.lv-inp {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--ink-0);
+  font: inherit;
+  font-size: 13.5px;
+  min-width: 0;
+}
+.lv-inp::placeholder {
+  color: var(--ink-2);
+}
+.lv-inp:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 眼睛按钮 */
+.lv-eye {
+  flex: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+.lv-eye:hover {
+  color: var(--ink-0);
+}
+.lv-eye:focus-visible {
+  outline: 1.5px solid var(--azure);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.lv-eye:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 忘记密码行 */
+.lv-pwd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+.lv-link {
+  font-size: 12px;
+  color: var(--ink-1);
+  text-decoration: none;
+  transition: color 0.15s ease;
+  border-radius: 4px;
+}
+.lv-link:hover {
+  color: var(--azure);
+}
+.lv-link:focus-visible {
+  outline: 1.5px solid var(--azure);
+  outline-offset: 2px;
+  box-shadow: var(--glow-focus);
+}
+
+/* ── 主按钮（锻面凸面，mockup .btn-metal） ── */
+.lv-submit {
+  width: 100%;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--line-1);
+  background: var(--metal-raised);
+  color: var(--ink-0);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: var(--edge-hi), 0 2px 10px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  margin-bottom: 16px;
+}
+.lv-submit:hover:not(:disabled) {
+  border-color: rgba(92, 168, 255, 0.55);
+  box-shadow: var(--edge-hi), 0 0 16px rgba(92, 168, 255, 0.22), 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+.lv-submit:focus-visible {
+  outline: none;
+  border-color: rgba(92, 168, 255, 0.75);
+  box-shadow: var(--glow-focus), 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+.lv-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.lv-submit:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+/* loading 转圈 */
+.lv-spin {
+  width: 16px;
+  height: 16px;
+  animation: lv-spin 0.8s linear infinite;
+}
+@keyframes lv-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── OAuth 分隔区 ── */
+.lv-oauth {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.lv-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.lv-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--line-0);
+}
+.lv-divider-txt {
+  font-size: 11px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* ── 页脚 ── */
+.lv-footer-txt {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.lv-footer-link {
+  color: var(--ink-1);
+  text-decoration: none;
+  margin-left: 4px;
+  transition: color 0.15s ease;
+  border-radius: 4px;
+}
+.lv-footer-link:hover {
+  color: var(--azure);
+}
+.lv-footer-link:focus-visible {
+  outline: 1.5px solid var(--azure);
+  outline-offset: 2px;
+  box-shadow: var(--glow-focus);
+}
+
+/* ── a11y ── */
+@media (prefers-reduced-motion: reduce) {
+  .lv-spin {
+    animation: none;
+  }
+  .lv-inp-wrap,
+  .lv-submit {
+    transition: none;
+  }
 }
 </style>

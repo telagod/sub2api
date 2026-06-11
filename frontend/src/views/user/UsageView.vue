@@ -6,8 +6,8 @@
           <!-- Total Requests -->
           <div class="card p-4">
           <div class="flex items-center gap-3">
-            <div class="rounded-lg bg-sky-500/10 p-2">
-              <Icon name="document" size="md" class="text-sky-400" />
+            <div class="rounded-md bg-[var(--bg-2)] border border-[var(--line-0)] p-2">
+              <Icon name="document" size="md" class="text-primary-200" />
             </div>
             <div>
               <p class="text-xs font-medium text-muted-foreground">
@@ -26,8 +26,8 @@
         <!-- Total Tokens -->
         <div class="card p-4">
           <div class="flex items-center gap-3">
-            <div class="rounded-lg bg-amber-500/10 p-2">
-              <Icon name="cube" size="md" class="text-amber-400" />
+            <div class="rounded-md bg-[var(--bg-2)] border border-[var(--line-0)] p-2">
+              <Icon name="cube" size="md" class="text-primary-200" />
             </div>
             <div class="min-w-0 flex-1">
               <p class="text-xs font-medium text-muted-foreground">
@@ -62,14 +62,14 @@
         <!-- Total Cost -->
         <div class="card p-4">
           <div class="flex items-center gap-3">
-            <div class="rounded-lg bg-emerald-500/10 p-2">
-              <Icon name="dollar" size="md" class="text-emerald-400" />
+            <div class="rounded-md bg-[var(--bg-2)] border border-[var(--line-0)] p-2">
+              <Icon name="dollar" size="md" class="text-[var(--ok)]" />
             </div>
             <div class="min-w-0 flex-1">
               <p class="text-xs font-medium text-muted-foreground">
                 {{ t('usage.totalCost') }}
               </p>
-              <p class="text-xl font-bold text-emerald-400">
+              <p class="q-money text-xl font-bold text-[var(--ok)]">
                 ${{ (usageStats?.total_actual_cost || 0).toFixed(4) }}
               </p>
               <p class="text-xs text-muted-foreground">
@@ -84,8 +84,8 @@
         <!-- Average Duration -->
         <div class="card p-4">
           <div class="flex items-center gap-3">
-            <div class="rounded-lg bg-purple-900/30 p-2 ">
-              <Icon name="clock" size="md" class="text-purple-400" />
+            <div class="rounded-md bg-[var(--bg-2)] border border-[var(--line-0)] p-2">
+              <Icon name="clock" size="md" class="text-primary-200" />
             </div>
             <div>
               <p class="text-xs font-medium text-muted-foreground">
@@ -302,12 +302,12 @@
                 @mouseleave="hideTokenTooltip"
               >
                 <div
-                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-blue-900/50"
+                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-[var(--azure-dim)]"
                 >
                   <Icon
                     name="infoCircle"
                     size="xs"
-                    class="text-muted-foreground group-hover:text-blue-400"
+                    class="text-muted-foreground group-hover:text-[var(--azure)]"
                   />
                 </div>
               </div>
@@ -316,7 +316,7 @@
 
           <template #cell-cost="{ row }">
             <div class="flex items-center gap-1.5 text-sm">
-              <span class="font-medium text-emerald-400">
+              <span class="q-money font-medium text-[var(--ok)]">
                 ${{ (row.actual_cost ?? 0).toFixed(6) }}
               </span>
               <!-- Cost Detail Tooltip -->
@@ -326,12 +326,12 @@
                 @mouseleave="hideTooltip"
               >
                 <div
-                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-blue-900/50"
+                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-[var(--azure-dim)]"
                 >
                   <Icon
                     name="infoCircle"
                     size="xs"
-                    class="text-muted-foreground group-hover:text-blue-400"
+                    class="text-muted-foreground group-hover:text-[var(--azure)]"
                   />
                 </div>
               </div>
@@ -472,7 +472,7 @@
           <!-- Total -->
           <div class="flex items-center justify-between gap-6 border-t border-border pt-1.5">
             <span class="text-muted-foreground">{{ t('usage.totalTokens') }}</span>
-            <span class="font-semibold text-blue-400">{{ ((tokenTooltipData?.input_tokens || 0) + (tokenTooltipData?.output_tokens || 0) + (tokenTooltipData?.cache_creation_tokens || 0) + (tokenTooltipData?.cache_read_tokens || 0)).toLocaleString() }}</span>
+            <span class="q-money font-semibold text-[var(--azure)]">{{ ((tokenTooltipData?.input_tokens || 0) + (tokenTooltipData?.output_tokens || 0) + (tokenTooltipData?.cache_creation_tokens || 0) + (tokenTooltipData?.cache_read_tokens || 0)).toLocaleString() }}</span>
           </div>
         </div>
         <!-- Tooltip Arrow (left side) -->
@@ -578,11 +578,11 @@
           <!-- Rate and Summary -->
           <div class="flex items-center justify-between gap-6">
             <span class="text-muted-foreground">{{ t('usage.serviceTier') }}</span>
-            <span class="font-semibold text-cyan-300">{{ getUsageServiceTierLabel(tooltipData?.service_tier, t) }}</span>
+            <span class="font-semibold text-[var(--info)]">{{ getUsageServiceTierLabel(tooltipData?.service_tier, t) }}</span>
           </div>
           <div class="flex items-center justify-between gap-6">
             <span class="text-muted-foreground">{{ t('usage.rate') }}</span>
-            <span class="font-semibold text-blue-400"
+            <span class="font-semibold text-[var(--azure)]"
               >{{ formatMultiplier(tooltipData?.rate_multiplier || 1) }}x</span
             >
           </div>
@@ -592,7 +592,7 @@
           </div>
           <div class="flex items-center justify-between gap-6 border-t border-border pt-1.5">
             <span class="text-muted-foreground">{{ t('usage.billed') }}</span>
-            <span class="font-semibold text-green-400"
+            <span class="q-money font-semibold text-[var(--ok)]"
               >${{ tooltipData?.actual_cost.toFixed(6) }}</span
             >
           </div>

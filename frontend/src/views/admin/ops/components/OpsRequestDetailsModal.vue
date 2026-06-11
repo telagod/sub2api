@@ -158,9 +158,9 @@ const kindBadgeClass = (kind: string) => {
         </div>
 
         <!-- Loading -->
-        <div v-if="loading" style="display:flex;flex:1;align-items:center;justify-content:center;padding:48px 0;flex-direction:column;gap:10px;">
-          <svg width="24" height="24" class="animate-spin" fill="none" viewBox="0 0 24 24" style="color:var(--ops-azure,#5CA8FF);"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <span style="font-size:13px;color:var(--ink-2,#5C6470);">{{ t('common.loading') }}</span>
+        <div v-if="loading" style="display:flex;flex:1;align-items:center;justify-content:center;padding:48px 0;flex-direction:column;gap:10px;" role="status" :aria-label="t('common.loading')">
+          <svg width="24" height="24" class="animate-spin" fill="none" viewBox="0 0 24 24" style="color:var(--ops-azure,#5CA8FF);" aria-hidden="true"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <span style="font-size:13px;color:var(--ink-2,#5C6470);" aria-hidden="true">{{ t('common.loading') }}</span>
         </div>
 
         <!-- Table -->

@@ -4,8 +4,8 @@
       <!-- Header -->
       <div class="pc-head">
         <div>
-          <h1 class="pc-title">套餐目录</h1>
-          <p class="pc-desc">运营侧镜像 · 所见即所卖，卡片顺序即售卖页顺序</p>
+          <h1 class="pc-title">{{ t('admin.plansCatalog.title') }}</h1>
+          <p class="pc-desc">{{ t('admin.plansCatalog.desc') }}</p>
         </div>
         <div class="pc-head-acts">
           <button class="pc-btn" @click="loadAll" :disabled="loading" :title="t('common.refresh')">
@@ -22,17 +22,17 @@
       <div class="pc-stats">
         <div class="pc-stat">
           <span class="pc-stat-val">{{ plans.length }}</span>
-          <span class="pc-stat-lbl">套餐总数</span>
+          <span class="pc-stat-lbl">{{ t('admin.plansCatalog.statTotal') }}</span>
         </div>
         <div class="pc-stat-div" />
         <div class="pc-stat">
           <span class="pc-stat-val pc-stat-ok">{{ activePlans }}</span>
-          <span class="pc-stat-lbl">在售中</span>
+          <span class="pc-stat-lbl">{{ t('admin.plansCatalog.statOnSale') }}</span>
         </div>
         <div class="pc-stat-div" />
         <div class="pc-stat">
           <span class="pc-stat-val pc-stat-dim">{{ plans.length - activePlans }}</span>
-          <span class="pc-stat-lbl">已下架</span>
+          <span class="pc-stat-lbl">{{ t('admin.plansCatalog.statOffSale') }}</span>
         </div>
       </div>
 
@@ -67,7 +67,7 @@
       <!-- Empty state -->
       <div v-else class="pc-empty">
         <div class="pc-empty-icon">📦</div>
-        <p class="pc-empty-text">暂无套餐，点击「新建套餐」开始配置</p>
+        <p class="pc-empty-text">{{ t('admin.plansCatalog.emptyText') }}</p>
       </div>
     </div>
 

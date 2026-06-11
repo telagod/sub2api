@@ -3,70 +3,70 @@
     <div class="apv-root">
       <!-- ── 工具栏 ── -->
       <div class="apv-toolbar">
-        <input v-model="params.search" class="apv-search" placeholder="搜索账号名 / email..." @input="debouncedReload" />
+        <input v-model="params.search" class="apv-search" :placeholder="t('admin.accountsQuench.searchPlaceholder')" @input="debouncedReload" />
         <select v-model="params.platform" class="apv-select" @change="debouncedReload">
-          <option value="">全部平台</option>
+          <option value="">{{ t('admin.accountsQuench.allPlatforms') }}</option>
           <option value="anthropic">Anthropic</option>
           <option value="openai">OpenAI</option>
           <option value="gemini">Gemini</option>
           <option value="antigravity">Antigravity</option>
         </select>
         <select v-model="params.status" class="apv-select" @change="debouncedReload">
-          <option value="">全部状态</option>
-          <option value="active">活跃</option>
-          <option value="inactive">禁用</option>
-          <option value="error">错误</option>
-          <option value="rate_limited">限流</option>
+          <option value="">{{ t('admin.accountsQuench.allStatuses') }}</option>
+          <option value="active">{{ t('admin.accountsQuench.statusActive') }}</option>
+          <option value="inactive">{{ t('admin.accountsQuench.statusInactive') }}</option>
+          <option value="error">{{ t('admin.accountsQuench.statusError') }}</option>
+          <option value="rate_limited">{{ t('admin.accountsQuench.statusRateLimited') }}</option>
         </select>
         <select v-model="params.group" class="apv-select" @change="debouncedReload">
-          <option value="">全部分组</option>
-          <option value="ungrouped">未分组</option>
+          <option value="">{{ t('admin.accountsQuench.allGroups') }}</option>
+          <option value="ungrouped">{{ t('admin.accountsQuench.ungrouped') }}</option>
           <option v-for="g in groups" :key="g.id" :value="String(g.id)">{{ g.name }}</option>
         </select>
 
-        <button class="apv-icon-btn" :class="{ 'apv-spin': loading }" title="刷新" @click="handleManualRefresh">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+        <button class="apv-icon-btn" :class="{ 'apv-spin': loading }" :title="t('admin.accountsQuench.refresh')" :aria-label="t('admin.accountsQuench.refresh')" @click="handleManualRefresh">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
         </button>
 
         <!-- 工具菜单 -->
         <div class="apv-menu-wrap" ref="toolsMenuRef">
-          <button class="apv-icon-btn" @click="showToolsMenu = !showToolsMenu">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+          <button class="apv-icon-btn" :aria-label="t('admin.accountsQuench.moreTools')" :aria-expanded="showToolsMenu" aria-haspopup="menu" @click="showToolsMenu = !showToolsMenu">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
           </button>
           <div v-if="showToolsMenu" class="apv-dropdown">
-            <button class="apv-ditem" @click="showToolsMenu=false; showSync=true">CRS 同步</button>
-            <button class="apv-ditem" @click="showToolsMenu=false; showImportData=true">导入数据</button>
-            <button class="apv-ditem" @click="showToolsMenu=false; showExportDialog=true">导出数据</button>
+            <button class="apv-ditem" @click="showToolsMenu=false; showSync=true">{{ t('admin.accountsQuench.toolsSync') }}</button>
+            <button class="apv-ditem" @click="showToolsMenu=false; showImportData=true">{{ t('admin.accountsQuench.toolsImport') }}</button>
+            <button class="apv-ditem" @click="showToolsMenu=false; showExportDialog=true">{{ t('admin.accountsQuench.toolsExport') }}</button>
             <div class="apv-dsep"></div>
-            <button class="apv-ditem" @click="showToolsMenu=false; showErrorPassthrough=true">错误透传规则</button>
-            <button class="apv-ditem" @click="showToolsMenu=false; showTLSProfiles=true">TLS 指纹配置</button>
+            <button class="apv-ditem" @click="showToolsMenu=false; showErrorPassthrough=true">{{ t('admin.accountsQuench.toolsErrorPassthrough') }}</button>
+            <button class="apv-ditem" @click="showToolsMenu=false; showTLSProfiles=true">{{ t('admin.accountsQuench.toolsTLSProfiles') }}</button>
           </div>
         </div>
 
         <!-- 视图模式 -->
-        <div class="apv-seg">
-          <button class="apv-seg-btn" :class="{ 'apv-seg-on': viewMode === 'matrix' }" title="健康矩阵" @click="viewMode = 'matrix'">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <div class="apv-seg" role="group" :aria-label="t('admin.accountsQuench.viewModeLabel')">
+          <button class="apv-seg-btn" :class="{ 'apv-seg-on': viewMode === 'matrix' }" :title="t('admin.accountsQuench.viewMatrix')" :aria-label="t('admin.accountsQuench.viewMatrix')" :aria-pressed="viewMode === 'matrix'" @click="viewMode = 'matrix'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           </button>
-          <button class="apv-seg-btn" :class="{ 'apv-seg-on': viewMode === 'table' }" title="表格模式" @click="viewMode = 'table'">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25M3.375 4.5h17.25M6 12h12"/></svg>
+          <button class="apv-seg-btn" :class="{ 'apv-seg-on': viewMode === 'table' }" :title="t('admin.accountsQuench.viewTable')" :aria-label="t('admin.accountsQuench.viewTable')" :aria-pressed="viewMode === 'table'" @click="viewMode = 'table'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25M3.375 4.5h17.25M6 12h12"/></svg>
           </button>
         </div>
 
         <button class="apv-btn-primary" @click="router.push('/admin/accounts/legacy')">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-          接入账号
+          {{ t('admin.accountsQuench.addAccountBtn') }}
         </button>
       </div>
 
       <!-- ── 供给总览条 ── -->
       <div class="apv-summary">
-        <div class="apv-stat"><span class="apv-num">{{ summary.total }}</span><span class="apv-lbl">总计</span></div>
+        <div class="apv-stat"><span class="apv-num">{{ summary.total }}</span><span class="apv-lbl">{{ t('admin.accountsQuench.summaryTotal') }}</span></div>
         <div class="apv-div"></div>
-        <div class="apv-stat"><span class="apv-num apv-ok">{{ summary.active }}</span><span class="apv-lbl">活跃</span></div>
-        <div class="apv-stat"><span class="apv-num apv-off">{{ summary.inactive }}</span><span class="apv-lbl">禁用</span></div>
-        <div class="apv-stat"><span class="apv-num apv-bad">{{ summary.error }}</span><span class="apv-lbl">错误</span></div>
-        <div class="apv-stat"><span class="apv-num apv-warn">{{ summary.rate_limited }}</span><span class="apv-lbl">限流</span></div>
+        <div class="apv-stat"><span class="apv-num apv-ok">{{ summary.active }}</span><span class="apv-lbl">{{ t('admin.accountsQuench.summaryActive') }}</span></div>
+        <div class="apv-stat"><span class="apv-num apv-off">{{ summary.inactive }}</span><span class="apv-lbl">{{ t('admin.accountsQuench.summaryInactive') }}</span></div>
+        <div class="apv-stat"><span class="apv-num apv-bad">{{ summary.error }}</span><span class="apv-lbl">{{ t('admin.accountsQuench.summaryError') }}</span></div>
+        <div class="apv-stat"><span class="apv-num apv-warn">{{ summary.rate_limited }}</span><span class="apv-lbl">{{ t('admin.accountsQuench.summaryRateLimited') }}</span></div>
       </div>
 
       <!-- ── 主体 ── -->
@@ -133,8 +133,8 @@
     <AccountActionMenu   :show="actionMenu.show" :account="actionMenu.acc" :position="actionMenu.pos" @close="actionMenu.show=false" @test="a=>{testingAcc=a;showTest=true}" @stats="a=>{statsAcc=a;showStats=true}" @reauth="a=>{reAuthAcc=a;showReAuth=true}" @refresh-token="handleRefreshOne" @recover-state="handleRecoverState" @reset-quota="handleResetQuota" @set-privacy="handleSetPrivacy" @schedule="a=>router.push({ path:'/admin/accounts/legacy', query:{ schedule_id: a.id } })" />
     <SyncFromCrsModal    v-if="showSync"     :show="showSync"     @close="showSync=false"  @synced="reload" />
     <ImportDataModal     v-if="showImportData" :show="showImportData" @close="showImportData=false" @imported="() => { showImportData=false; reload() }" />
-    <ConfirmDialog :show="showDeleteDialog" title="删除账号" :message="`确认删除账号「${deletingAcc?.name}」？`" confirm-text="删除" cancel-text="取消" :danger="true" @confirm="confirmDelete" @cancel="showDeleteDialog=false" />
-    <ConfirmDialog :show="showExportDialog" title="导出数据" message="将导出当前筛选账号数据。" confirm-text="确认导出" cancel-text="取消" @confirm="doExport" @cancel="showExportDialog=false" />
+    <ConfirmDialog :show="showDeleteDialog" :title="t('admin.accountsQuench.deleteTitle')" :message="t('admin.accountsQuench.deleteConfirmFmt', { name: deletingAcc?.name })" :confirm-text="t('common.delete')" :cancel-text="t('admin.accountsQuench.cancelBtn')" :danger="true" @confirm="confirmDelete" @cancel="showDeleteDialog=false" />
+    <ConfirmDialog :show="showExportDialog" :title="t('admin.accountsQuench.exportTitle')" :message="t('admin.accountsQuench.exportMsg')" :confirm-text="t('admin.accountsQuench.exportConfirmBtn')" :cancel-text="t('admin.accountsQuench.cancelBtn')" @confirm="doExport" @cancel="showExportDialog=false" />
     <ErrorPassthroughRulesModal v-if="showErrorPassthrough" :show="showErrorPassthrough" @close="showErrorPassthrough=false" />
     <TLSFingerprintProfilesModal v-if="showTLSProfiles" :show="showTLSProfiles" @close="showTLSProfiles=false" />
   </AppLayout>
@@ -142,6 +142,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { adminAPI } from '@/api/admin'
 import { useTableLoader } from '@/composables/useTableLoader'
@@ -163,6 +164,7 @@ const ImportDataModal             = defineAsyncComponent(() => import('@/compone
 const ErrorPassthroughRulesModal  = defineAsyncComponent(() => import('@/components/admin/ErrorPassthroughRulesModal.vue'))
 const TLSFingerprintProfilesModal = defineAsyncComponent(() => import('@/components/admin/TLSFingerprintProfilesModal.vue'))
 
+const { t } = useI18n()
 const router = useRouter()
 const viewMode = ref<'matrix' | 'table'>('matrix')
 const proxies = ref<AccountProxy[]>([]), groups = ref<AdminGroup[]>([])
@@ -294,4 +296,5 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside))
 .apv-pg { width:28px; height:28px; border-radius:6px; border:1px solid var(--line-0); background:var(--bg-1); color:var(--ink-1); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
 .apv-pg:hover:not(:disabled) { background:var(--bg-2); } .apv-pg:disabled { opacity:.35; cursor:not-allowed; }
 .apv-pg-info { font-size:12px; color:var(--ink-2); font-family:monospace; }
+@media (prefers-reduced-motion: reduce) { .apv-spin svg { animation:none; } }
 </style>

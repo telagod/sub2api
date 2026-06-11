@@ -1,8 +1,8 @@
 <template>
   <div class="ud-tab-content">
-    <div v-if="loading" class="ud-loading">加载中…</div>
+    <div v-if="loading" class="ud-loading">{{ t('admin.userTabs.loading') }}</div>
     <div v-else-if="error" class="ud-error">{{ error }}</div>
-    <div v-else-if="!items.length" class="ud-empty">暂无订阅记录</div>
+    <div v-else-if="!items.length" class="ud-empty">{{ t('admin.userTabs.noSubscriptions') }}</div>
     <div v-else class="ud-list">
       <div v-for="sub in items" :key="sub.id" class="ud-sub-card">
         <div class="ud-sub-header">
@@ -20,26 +20,28 @@
           >{{ statusLabel(sub.status) }}</span>
         </div>
         <div class="ud-sub-meta">
-          <span class="ud-meta-item">开始：{{ fmt(sub.starts_at) }}</span>
-          <span class="ud-meta-item" v-if="sub.expires_at">到期：{{ fmt(sub.expires_at) }}</span>
-          <span class="ud-meta-item" v-else>永久有效</span>
+          <span class="ud-meta-item">{{ t('admin.userTabs.subStart') }}{{ fmt(sub.starts_at) }}</span>
+          <span class="ud-meta-item" v-if="sub.expires_at">{{ t('admin.userTabs.subExpires') }}{{ fmt(sub.expires_at) }}</span>
+          <span class="ud-meta-item" v-else>{{ t('admin.userTabs.subPermanent') }}</span>
         </div>
         <div class="ud-sub-usage">
-          <span class="ud-meta-item">日消耗 ${{ fmtCost(sub.daily_usage_usd) }}</span>
-          <span class="ud-meta-item">月消耗 ${{ fmtCost(sub.monthly_usage_usd) }}</span>
+          <span class="ud-meta-item">{{ t('admin.userTabs.subDailyCost') }} ${{ fmtCost(sub.daily_usage_usd) }}</span>
+          <span class="ud-meta-item">{{ t('admin.userTabs.subMonthlyCost') }} ${{ fmtCost(sub.monthly_usage_usd) }}</span>
         </div>
       </div>
     </div>
-    <div v-if="total > items.length" class="ud-more">共 {{ total }} 条，仅展示前 {{ items.length }} 条</div>
+    <div v-if="total > items.length" class="ud-more">{{ t('admin.userTabs.totalCountPartial', { total, shown: items.length }) }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser, UserSubscription } from '@/types'
 import { formatDateTime } from '@/utils/format'
 
+const { t } = useI18n()
 const props = defineProps<{ user: AdminUser; active: boolean }>()
 
 const loading = ref(false)
@@ -51,7 +53,7 @@ const loaded = ref(false)
 function fmt(iso: string | null | undefined) { return iso ? formatDateTime(iso) : '-' }
 function fmtCost(v: number) { return v.toFixed(4) }
 function statusLabel(s: string) {
-  return s === 'active' ? '活跃' : s === 'expired' ? '已过期' : '已撤销'
+  return s === 'active' ? t('admin.userTabs.subStatusActive') : s === 'expired' ? t('admin.userTabs.subStatusExpired') : t('admin.userTabs.subStatusRevoked')
 }
 
 async function load() {
@@ -60,7 +62,7 @@ async function load() {
   try {
     const res = await adminAPI.subscriptions.listByUser(props.user.id, 1, 20)
     items.value = res.items; total.value = res.total; loaded.value = true
-  } catch { error.value = '加载失败' } finally { loading.value = false }
+  } catch { error.value = t('admin.userTabs.loadFailed') } finally { loading.value = false }
 }
 
 watch(() => props.active, (v) => { if (v) load() })

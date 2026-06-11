@@ -140,7 +140,14 @@ const emit = defineEmits<{
   background: var(--bad-dim, rgba(242, 92, 105, 0.12));
 }
 
+/* 键盘焦点：清除按钮 */
+.q-bulk-clear:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1.5px rgba(92, 168, 255, 0.65), 0 0 14px rgba(92, 168, 255, 0.2);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .q-bulkbar { transition: none; }
+  .q-bulk-clear { transition: none; }
 }
 </style>

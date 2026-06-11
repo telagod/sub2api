@@ -12,7 +12,7 @@
         {{ scanHint }}
       </p>
       <div v-if="expired" class="text-center">
-        <p class="text-lg font-medium text-red-400">{{ t('payment.qr.expired') }}</p>
+        <p class="text-lg font-medium text-[var(--bad)]">{{ t('payment.qr.expired') }}</p>
         <button class="btn btn-primary mt-4" @click="router.push('/purchase')">{{ t('payment.result.backToRecharge') }}</button>
       </div>
       <div v-else class="text-center">

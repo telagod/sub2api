@@ -926,9 +926,10 @@ function handleToolbarRefresh() {
           class="od-btn od-btn-icon"
           :disabled="loading"
           :title="t('common.refresh')"
+          :aria-label="t('common.refresh')"
           @click="handleToolbarRefresh"
         >
-          <svg width="15" height="15" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg width="15" height="15" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
         </button>
@@ -970,9 +971,10 @@ function handleToolbarRefresh() {
           type="button"
           class="od-btn od-btn-icon"
           :title="t('admin.ops.fullscreen.enter')"
+          :aria-label="t('admin.ops.fullscreen.enter')"
           @click="emit('enterFullscreen')"
         >
-          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
           </svg>
         </button>

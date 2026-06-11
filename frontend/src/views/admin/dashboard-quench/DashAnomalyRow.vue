@@ -3,34 +3,34 @@
     <!-- 账号池异常 -->
     <div class="dq-alert-card rise" :style="`animation-delay:${baseDelay ?? 0}s`" role="button" tabindex="0" @click="$emit('nav', '/admin/accounts')" @keyup.enter="$emit('nav', '/admin/accounts')">
       <div class="dq-ac-head">
-        <span class="dq-ac-title">账号池</span>
-        <span class="dq-ac-more">查看 →</span>
+        <span class="dq-ac-title">{{ t('admin.dashboardQuench.anomalyAccountPool') }}</span>
+        <span class="dq-ac-more">{{ t('admin.dashboardQuench.anomalyViewMore') }}</span>
       </div>
       <div class="dq-ac-nums">
         <div class="dq-ac-num">
           <span class="sdot" :class="(errorAccounts ?? 0) > 0 ? 'bad' : 'ok'"></span>
           <span class="dq-ac-val" :class="(errorAccounts ?? 0) > 0 ? 'dq-bad' : ''">{{ errorAccounts ?? 0 }}</span>
-          <span class="dq-ac-lbl">错误</span>
+          <span class="dq-ac-lbl">{{ t('admin.dashboardQuench.anomalyErrors') }}</span>
         </div>
         <div class="dq-ac-num">
           <span class="sdot" :class="(ratelimitAccounts ?? 0) > 0 ? 'warn' : 'ok'"></span>
           <span class="dq-ac-val" :class="(ratelimitAccounts ?? 0) > 0 ? 'dq-warn' : ''">{{ ratelimitAccounts ?? 0 }}</span>
-          <span class="dq-ac-lbl">限流</span>
+          <span class="dq-ac-lbl">{{ t('admin.dashboardQuench.anomalyRateLimit') }}</span>
         </div>
         <div class="dq-ac-num">
           <span class="sdot ok"></span>
           <span class="dq-ac-val dq-ok">{{ normalAccounts ?? 0 }}</span>
-          <span class="dq-ac-lbl">正常</span>
+          <span class="dq-ac-lbl">{{ t('admin.dashboardQuench.anomalyNormal') }}</span>
         </div>
       </div>
-      <div class="dq-ac-total">共 {{ totalAccounts ?? 0 }} 个账号</div>
+      <div class="dq-ac-total">{{ t('admin.dashboardQuench.anomalyTotalAccounts', { n: totalAccounts ?? 0 }) }}</div>
     </div>
 
     <!-- 未处理告警 -->
     <div class="dq-alert-card rise" :style="`animation-delay:${(baseDelay ?? 0) + 0.04}s`" role="button" tabindex="0" @click="$emit('nav', '/admin/ops')" @keyup.enter="$emit('nav', '/admin/ops')">
       <div class="dq-ac-head">
-        <span class="dq-ac-title">告警事件</span>
-        <span class="dq-ac-more">查看 →</span>
+        <span class="dq-ac-title">{{ t('admin.dashboardQuench.anomalyAlerts') }}</span>
+        <span class="dq-ac-more">{{ t('admin.dashboardQuench.anomalyViewMore') }}</span>
       </div>
       <div v-if="alertsLoading" class="dq-ac-spin"><LoadingSpinner size="sm" /></div>
       <template v-else>
@@ -38,19 +38,19 @@
           <div class="dq-ac-num">
             <span class="sdot" :class="(firingCount ?? 0) > 0 ? 'bad' : 'ok'"></span>
             <span class="dq-ac-val" :class="(firingCount ?? 0) > 0 ? 'dq-bad' : ''">{{ firingCount ?? 0 }}</span>
-            <span class="dq-ac-lbl">告警中</span>
+            <span class="dq-ac-lbl">{{ t('admin.dashboardQuench.anomalyFiring') }}</span>
           </div>
           <div class="dq-ac-num">
             <span class="sdot dim"></span>
             <span class="dq-ac-val">{{ resolvedCount }}</span>
-            <span class="dq-ac-lbl">已解决</span>
+            <span class="dq-ac-lbl">{{ t('admin.dashboardQuench.anomalyResolved') }}</span>
           </div>
         </div>
         <div v-if="latestTitle" class="dq-ac-latest">
           <span class="dq-al-sev" :class="`sev-${latestSeverity}`">{{ latestSeverity }}</span>
           <span class="dq-al-title">{{ latestTitle }}</span>
         </div>
-        <div v-else class="dq-ac-ok">无未处理告警</div>
+        <div v-else class="dq-ac-ok">{{ t('admin.dashboardQuench.anomalyNoAlerts') }}</div>
       </template>
     </div>
 
@@ -58,28 +58,31 @@
     <div class="dq-alert-card rise" :style="`animation-delay:${(baseDelay ?? 0) + 0.08}s`" role="button" tabindex="0" @click="$emit('nav', '/admin/users')" @keyup.enter="$emit('nav', '/admin/users')">
       <div class="dq-ac-head">
         <span class="dq-ac-title">API Keys</span>
-        <span class="dq-ac-more">查看 →</span>
+        <span class="dq-ac-more">{{ t('admin.dashboardQuench.anomalyViewMore') }}</span>
       </div>
       <div class="dq-ac-nums">
         <div class="dq-ac-num">
           <span class="sdot ok"></span>
           <span class="dq-ac-val dq-ok">{{ activeKeys ?? 0 }}</span>
-          <span class="dq-ac-lbl">活跃</span>
+          <span class="dq-ac-lbl">{{ t('admin.dashboardQuench.anomalyKeyActive') }}</span>
         </div>
         <div class="dq-ac-num">
           <span class="sdot dim"></span>
           <span class="dq-ac-val">{{ inactiveKeys }}</span>
-          <span class="dq-ac-lbl">非活跃</span>
+          <span class="dq-ac-lbl">{{ t('admin.dashboardQuench.anomalyKeyInactive') }}</span>
         </div>
       </div>
-      <div class="dq-ac-total">共 {{ totalKeys ?? 0 }} 个密钥</div>
+      <div class="dq-ac-total">{{ t('admin.dashboardQuench.anomalyTotalKeys', { n: totalKeys ?? 0 }) }}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   baseDelay?: number

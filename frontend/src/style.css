@@ -677,3 +677,10 @@
     transition: none;
   }
 }
+
+/* Global reduced-motion: stop Tailwind animate-spin for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin {
+    animation: none;
+  }
+}

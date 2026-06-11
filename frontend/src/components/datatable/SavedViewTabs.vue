@@ -8,7 +8,7 @@
       :aria-selected="activeId === '__all__'"
       @click="applyAll"
     >
-      全部
+      {{ t('datatable.savedViews.all') }}
       <span v-if="totalCount != null" class="q-vtab-n">{{ totalCount.toLocaleString() }}</span>
     </button>
 
@@ -26,7 +26,7 @@
       <span
         class="q-vtab-del"
         role="button"
-        :aria-label="`删除视图 ${view.name}`"
+        :aria-label="t('datatable.savedViews.delete', { name: view.name })"
         tabindex="0"
         @click.stop="deleteView(view.id)"
         @keydown.enter.stop="deleteView(view.id)"
@@ -36,17 +36,20 @@
     <!-- 保存当前视图按钮 -->
     <button
       class="q-vtab q-vtab-add"
-      :aria-label="'保存当前视图'"
+      :aria-label="t('datatable.savedViews.save')"
       @click="saveCurrentView"
     >
-      + 保存当前视图
+      + {{ t('datatable.savedViews.save') }}
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { SavedView, TableQueryState } from './types'
+
+const { t } = useI18n()
 
 // ── Props ──────────────────────────────────────────────────────────────
 const props = withDefaults(defineProps<{
@@ -120,7 +123,7 @@ function deleteView(id: string) {
 }
 
 function saveCurrentView() {
-  const name = window.prompt('请输入视图名称：')
+  const name = window.prompt(t('datatable.savedViews.namePrompt'))
   if (!name || !name.trim()) return
   const newView: SavedView = {
     id: `view_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -209,7 +212,22 @@ function saveCurrentView() {
   color: var(--bad, #F25C69);
 }
 
+/* 键盘焦点：页签按钮 */
+.q-vtab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1.5px rgba(92, 168, 255, 0.65), 0 0 14px rgba(92, 168, 255, 0.2);
+}
+
+/* 删除小按钮焦点 */
+.q-vtab-del:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1.5px rgba(92, 168, 255, 0.65);
+  border-radius: 3px;
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .q-vtab { transition: none; }
+  .q-vtab-del { transition: none; }
 }
 </style>

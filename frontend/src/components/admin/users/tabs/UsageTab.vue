@@ -3,30 +3,30 @@
     <!-- 汇总卡 -->
     <div class="ud-stats-row" v-if="!statsLoading && !statsError">
       <div class="ud-stat-card">
-        <span class="ud-stat-label">总请求</span>
+        <span class="ud-stat-label">{{ t('admin.userTabs.usageTotalRequests') }}</span>
         <span class="ud-stat-val">{{ stats.total_requests.toLocaleString() }}</span>
       </div>
       <div class="ud-stat-card">
-        <span class="ud-stat-label">总费用</span>
+        <span class="ud-stat-label">{{ t('admin.userTabs.usageTotalCost') }}</span>
         <span class="ud-stat-val q-money">${{ stats.total_cost.toFixed(4) }}</span>
       </div>
       <div class="ud-stat-card">
-        <span class="ud-stat-label">总 Token</span>
+        <span class="ud-stat-label">{{ t('admin.userTabs.usageTotalTokens') }}</span>
         <span class="ud-stat-val">{{ stats.total_tokens.toLocaleString() }}</span>
       </div>
     </div>
 
-    <div v-if="loading" class="ud-loading">加载中…</div>
+    <div v-if="loading" class="ud-loading">{{ t('admin.userTabs.loading') }}</div>
     <div v-else-if="error" class="ud-error">{{ error }}</div>
-    <div v-else-if="!items.length" class="ud-empty">暂无用量记录</div>
+    <div v-else-if="!items.length" class="ud-empty">{{ t('admin.userTabs.usageNoRecords') }}</div>
     <div v-else class="ud-table-wrap">
       <table class="ud-table">
         <thead>
           <tr>
-            <th>时间</th>
-            <th>模型</th>
-            <th>费用</th>
-            <th>Token</th>
+            <th>{{ t('admin.userTabs.usageColTime') }}</th>
+            <th>{{ t('admin.userTabs.usageColModel') }}</th>
+            <th>{{ t('admin.userTabs.usageColCost') }}</th>
+            <th>{{ t('admin.userTabs.usageColToken') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -39,17 +39,19 @@
         </tbody>
       </table>
     </div>
-    <div v-if="total > items.length" class="ud-more">共 {{ total }} 条，仅展示前 {{ items.length }} 条</div>
+    <div v-if="total > items.length" class="ud-more">{{ t('admin.userTabs.totalCountPartial', { total, shown: items.length }) }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser, AdminUsageLog } from '@/types'
 import type { AdminUsageStatsResponse } from '@/api/admin/usage'
 import { formatDateTime } from '@/utils/format'
 
+const { t } = useI18n()
 const props = defineProps<{ user: AdminUser; active: boolean }>()
 
 const loading = ref(false)
@@ -79,7 +81,7 @@ async function load() {
     items.value = listRes.items; total.value = listRes.total
     stats.value = statsRes
     loaded.value = true
-  } catch { error.value = '加载失败'; statsError.value = '统计失败' } finally {
+  } catch { error.value = t('admin.userTabs.loadFailed'); statsError.value = t('admin.userTabs.usageStatsFailed') } finally {
     loading.value = false; statsLoading.value = false
   }
 }

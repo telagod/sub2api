@@ -7,41 +7,41 @@
       class="apt-bulk"
     >
       <div class="apt-bulk-info">
-        已选 <b>{{ selectedIds.length }}</b> 项
-        <button class="apt-bulk-link" @click="$emit('select-page')">选本页</button>
-        <button class="apt-bulk-link" @click="$emit('clear-selection')">清除</button>
+        {{ t('admin.accountTablePanel.bulkSelected', { n: selectedIds.length }) }}
+        <button class="apt-bulk-link" @click="$emit('select-page')">{{ t('admin.accountTablePanel.bulkSelectPage') }}</button>
+        <button class="apt-bulk-link" @click="$emit('clear-selection')">{{ t('admin.accountTablePanel.bulkClear') }}</button>
       </div>
       <div class="apt-bulk-actions">
         <button
           class="apt-btn apt-btn-danger"
           :disabled="!!bulkDeleteProgress"
           @click="$emit('bulk-delete')"
-        >批量删除</button>
+        >{{ t('admin.accountTablePanel.bulkDelete') }}</button>
         <button
           class="apt-btn"
           :disabled="!!bulkDeleteProgress"
           @click="$emit('bulk-reset-status')"
-        >重置状态</button>
+        >{{ t('admin.accountTablePanel.bulkResetStatus') }}</button>
         <button
           class="apt-btn"
           :disabled="!!bulkDeleteProgress"
           @click="$emit('bulk-refresh-token')"
-        >刷新凭证</button>
+        >{{ t('admin.accountTablePanel.bulkRefreshToken') }}</button>
         <button
           class="apt-btn"
           :disabled="!!bulkDeleteProgress"
           @click="$emit('bulk-toggle-schedulable', true)"
-        >启用调度</button>
+        >{{ t('admin.accountTablePanel.bulkEnableSchedule') }}</button>
         <button
           class="apt-btn"
           :disabled="!!bulkDeleteProgress"
           @click="$emit('bulk-toggle-schedulable', false)"
-        >禁用调度</button>
+        >{{ t('admin.accountTablePanel.bulkDisableSchedule') }}</button>
         <button
           class="apt-btn apt-btn-primary"
           :disabled="!!bulkDeleteProgress"
           @click="$emit('bulk-edit-selected')"
-        >批量编辑</button>
+        >{{ t('admin.accountTablePanel.bulkEdit') }}</button>
       </div>
       <!-- 进度条 -->
       <div v-if="bulkDeleteProgress" class="apt-progress">
@@ -57,7 +57,7 @@
 
     <!-- DataTableV2 -->
     <DataTableV2
-      :columns="columns"
+      :columns="(columns as any)"
       :rows="(accounts as any[])"
       :total="total"
       :loading="loading"
@@ -107,7 +107,7 @@
         <button
           class="apt-toggle"
           :class="row.schedulable ? 'apt-toggle-on' : 'apt-toggle-off'"
-          :title="row.schedulable ? '调度已启用' : '调度已禁用'"
+          :title="row.schedulable ? t('admin.accountTablePanel.scheduleEnabled') : t('admin.accountTablePanel.scheduleDisabled')"
           :disabled="togglingSchedulable === row.id"
           @click="$emit('toggle-schedulable', row)"
         >
@@ -171,14 +171,14 @@
       <!-- 操作列 -->
       <template #cell-actions="{ row }">
         <div class="apt-row-actions">
-          <button class="apt-icon-btn" title="编辑" @click="$emit('edit', row)">
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+          <button class="apt-icon-btn" :title="t('admin.accountTablePanel.editBtn')" :aria-label="t('admin.accountTablePanel.editBtn')" @click="$emit('edit', row)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
           </button>
-          <button class="apt-icon-btn apt-icon-btn-danger" title="删除" @click="$emit('delete', row)">
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+          <button class="apt-icon-btn apt-icon-btn-danger" :title="t('admin.accountTablePanel.deleteBtn')" :aria-label="t('admin.accountTablePanel.deleteBtn')" @click="$emit('delete', row)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
           </button>
-          <button class="apt-icon-btn" title="更多" @click="$emit('more', row, $event)">
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+          <button class="apt-icon-btn" :title="t('admin.accountTablePanel.moreBtn')" :aria-label="t('admin.accountTablePanel.moreBtn')" @click="$emit('more', row, $event)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
           </button>
         </div>
       </template>
@@ -188,6 +188,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Account, AdminGroup, WindowStats } from '@/types'
 import { DataTableV2 } from '@/components/datatable'
 import type { ColumnDef } from '@/components/datatable'
@@ -235,21 +236,23 @@ const emit = defineEmits<{
   'clear-selection': []
 }>()
 
-const columns: ColumnDef<Record<string, unknown>>[] = [
-  { key: 'name',            title: '名称',     sortable: true  },
-  { key: 'capacity',        title: '容量'                      },
-  { key: 'status',          title: '状态',     sortable: true,  width: '90px' },
-  { key: 'schedulable',     title: '⚙',        sortable: true,  width: '44px' },
-  { key: 'groups',          title: '分组'                      },
-  { key: 'usage',           title: '用量窗口',                  width: '280px' },
-  { key: 'today_stats',     title: '今日统计'                  },
-  { key: 'proxy',           title: '代理'                      },
-  { key: 'priority',        title: '优先级',   sortable: true,  width: '70px', align: 'right' },
-  { key: 'rate_multiplier', title: '倍率',     sortable: true,  width: '70px', align: 'right' },
-  { key: 'last_used_at',    title: '最后使用', sortable: true,  width: '110px' },
-  { key: 'created_at',      title: '创建时间', sortable: true,  width: '110px' },
-  { key: 'actions',         title: '',                          width: '88px' },
-]
+const { t } = useI18n()
+
+const columns = computed<ColumnDef<Record<string, unknown>>[]>(() => [
+  { key: 'name',            title: t('admin.accountTablePanel.colName'),        sortable: true  },
+  { key: 'capacity',        title: t('admin.accountTablePanel.colCapacity')                     },
+  { key: 'status',          title: t('admin.accountTablePanel.colStatus'),      sortable: true,  width: '90px' },
+  { key: 'schedulable',     title: '⚙',                                         sortable: true,  width: '44px' },
+  { key: 'groups',          title: t('admin.accountTablePanel.colGroups')                       },
+  { key: 'usage',           title: t('admin.accountTablePanel.colUsage'),                       width: '280px' },
+  { key: 'today_stats',     title: t('admin.accountTablePanel.colTodayStats')                   },
+  { key: 'proxy',           title: t('admin.accountTablePanel.colProxy')                        },
+  { key: 'priority',        title: t('admin.accountTablePanel.colPriority'),    sortable: true,  width: '70px', align: 'right' },
+  { key: 'rate_multiplier', title: t('admin.accountTablePanel.colMultiplier'),  sortable: true,  width: '70px', align: 'right' },
+  { key: 'last_used_at',    title: t('admin.accountTablePanel.colLastUsed'),    sortable: true,  width: '110px' },
+  { key: 'created_at',      title: t('admin.accountTablePanel.colCreatedAt'),   sortable: true,  width: '110px' },
+  { key: 'actions',         title: '',                                                           width: '88px' },
+])
 
 const progressPercent = computed(() => {
   if (!props.bulkDeleteProgress) return 0

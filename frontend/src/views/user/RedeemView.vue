@@ -82,20 +82,20 @@
       <transition name="fade">
         <div
           v-if="redeemResult"
-          class="card border-emerald-500/30 bg-emerald-500/10"
+          class="card border-[var(--ok)]/30 bg-[var(--ok-dim)]"
         >
           <div class="p-6">
             <div class="flex items-start gap-4">
               <div
-                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-emerald-500/30 bg-emerald-500/10"
+                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-[var(--ok)]/30 bg-[var(--ok-dim)]"
               >
-                <Icon name="checkCircle" size="md" class="text-emerald-400" />
+                <Icon name="checkCircle" size="md" class="text-[var(--ok)]" />
               </div>
               <div class="flex-1">
-                <h3 class="text-sm font-semibold text-emerald-400">
+                <h3 class="text-sm font-semibold text-[var(--ok)]">
                   {{ t('redeem.redeemSuccess') }}
                 </h3>
-                <div class="mt-2 text-sm text-emerald-400/85">
+                <div class="mt-2 text-sm text-[var(--ok)]/85">
                   <p>{{ redeemResult.message }}</p>
                   <div class="mt-3 space-y-1">
                     <p v-if="redeemResult.type === 'balance'" class="font-medium">
@@ -136,24 +136,24 @@
       <transition name="fade">
         <div
           v-if="errorMessage"
-          class="card border-red-500/30 bg-red-500/10"
+          class="card border-[var(--bad)]/30 bg-[var(--bad-dim)]"
         >
           <div class="p-6">
             <div class="flex items-start gap-4">
               <div
-                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-red-500/30 bg-red-500/10"
+                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-[var(--bad)]/30 bg-[var(--bad-dim)]"
               >
                 <Icon
                   name="exclamationCircle"
                   size="md"
-                  class="text-red-400"
+                  class="text-[var(--bad)]"
                 />
               </div>
               <div class="flex-1">
-                <h3 class="text-sm font-semibold text-red-400">
+                <h3 class="text-sm font-semibold text-[var(--bad)]">
                   {{ t('redeem.redeemFailed') }}
                 </h3>
-                <p class="mt-2 text-sm text-red-400/85">
+                <p class="mt-2 text-sm text-[var(--bad)]/85">
                   {{ errorMessage }}
                 </p>
               </div>
@@ -254,8 +254,8 @@
                     size="md"
                     :class="
                       item.value >= 0
-                        ? 'text-emerald-400'
-                        : 'text-red-400'
+                        ? 'text-[var(--ok)]'
+                        : 'text-[var(--bad)]'
                     "
                   />
                   <!-- 订阅类型图标 -->
@@ -273,7 +273,7 @@
                     :class="
                       item.value >= 0
                         ? 'text-primary-200'
-                        : 'text-amber-400'
+                        : 'text-[var(--warn)]'
                     "
                   />
                 </div>
@@ -292,13 +292,13 @@
                     'text-sm font-semibold',
                     isBalanceType(item.type)
                       ? item.value >= 0
-                        ? 'text-emerald-400'
-                        : 'text-red-400'
+                        ? 'text-[var(--ok)]'
+                        : 'text-[var(--bad)]'
                       : isSubscriptionType(item.type)
                         ? 'text-foreground'
                         : item.value >= 0
                           ? 'text-foreground'
-                          : 'text-amber-400'
+                          : 'text-[var(--warn)]'
                   ]"
                 >
                   {{ formatHistoryValue(item) }}

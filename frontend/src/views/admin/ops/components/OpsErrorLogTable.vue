@@ -1,7 +1,7 @@
 <template>
   <div style="display:flex;height:100%;min-height:0;flex-direction:column;background:var(--bg-1,#13161C);">
-    <div v-if="loading" style="display:flex;flex:1;align-items:center;justify-content:center;padding:28px 0;">
-      <div style="width:24px;height:24px;border-radius:50%;border-bottom:2px solid var(--ops-azure,#5CA8FF);" class="animate-spin"></div>
+    <div v-if="loading" style="display:flex;flex:1;align-items:center;justify-content:center;padding:28px 0;" role="status" aria-label="加载中">
+      <div style="width:24px;height:24px;border-radius:50%;border-bottom:2px solid var(--ops-azure,#5CA8FF);" class="animate-spin" aria-hidden="true"></div>
     </div>
 
     <div v-else style="display:flex;min-height:0;flex:1;flex-direction:column;">

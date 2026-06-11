@@ -54,15 +54,16 @@ const props = defineProps<{
   loading?: boolean
 }>()
 
+// QUENCH chart palette: azure primary + steel secondary + semantic accents
 const chartColors = {
-  text: '#ededed',
-  grid: '#262626',
-  muted: '#737373',
-  input: '#3b82f6',
-  output: '#10b981',
-  cacheCreation: '#f59e0b',
-  cacheRead: '#06b6d4',
-  cacheHitRate: '#8b5cf6'
+  text: '#E8EBF0',      // --ink-0
+  grid: '#20242C',      // --line-0
+  muted: '#5C6470',     // --ink-2
+  input: '#5CA8FF',     // --azure (input = primary azure)
+  output: '#46C98C',    // --ok (output = green positive)
+  cacheCreation: '#E0B34E', // --warn (cache write = amber)
+  cacheRead: '#8CC4FF', // azure-300 (cache read = lighter azure)
+  cacheHitRate: '#97A0AF' // --ink-1 (hit rate = steel gray)
 }
 
 const chartData = computed(() => {

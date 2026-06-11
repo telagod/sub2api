@@ -46,7 +46,7 @@
               inputmode="numeric"
               pattern="[0-9]"
               autocomplete="off"
-              class="h-12 w-10 rounded-md border border-border bg-secondary text-center text-lg font-semibold text-foreground focus:border-ring focus:ring-ring"
+              class="totp-cell h-12 w-10 rounded-md border border-border bg-secondary text-center text-lg font-semibold text-foreground"
               :disabled="verifying"
               @input="handleCodeInput($event, index)"
               @keydown="handleKeydown($event, index)"
@@ -210,3 +210,20 @@ onMounted(() => {
   })
 })
 </script>
+
+<style scoped>
+/* TOTP 输入格 — QUENCH azure glow 焦点 */
+.totp-cell:focus,
+.totp-cell:focus-visible {
+  outline: none;
+  border-color: rgba(92, 168, 255, 0.75);
+  box-shadow: var(--glow-focus);
+}
+
+/* 验证中旋转动画降级 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin {
+    animation: none;
+  }
+}
+</style>

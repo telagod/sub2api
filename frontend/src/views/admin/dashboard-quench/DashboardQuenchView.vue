@@ -4,10 +4,10 @@
       <!-- 页头 -->
       <div class="dq-head rise">
         <div>
-          <h1 class="dq-title">驾驶舱</h1>
-          <p class="dq-desc">运营第一屏 · 数据 5s 心跳刷新</p>
+          <h1 class="dq-title">{{ t('admin.dashboardQuench.title') }}</h1>
+          <p class="dq-desc">{{ t('admin.dashboardQuench.desc') }}</p>
         </div>
-        <button class="dq-btn" :disabled="loading" @click="reload">刷新</button>
+        <button class="dq-btn" :disabled="loading" @click="reload">{{ t('admin.dashboardQuench.refresh') }}</button>
       </div>
 
       <div v-if="loading && !stats" class="dq-spin">
@@ -19,33 +19,33 @@
         <div class="dq-kpi-row">
           <div class="dq-kpi rise" style="animation-delay:.04s">
             <div class="dq-kpi-glow"></div>
-            <div class="dq-kpi-label">今日营收</div>
+            <div class="dq-kpi-label">{{ t('admin.dashboardQuench.kpiRevenue') }}</div>
             <div class="dq-kpi-value q-money">${{ fmtMoney(payDash?.today_amount ?? 0) }}</div>
-            <div class="dq-kpi-sub">{{ payDash?.today_count ?? 0 }} 笔订单</div>
+            <div class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiOrdersSub', { n: payDash?.today_count ?? 0 }) }}</div>
           </div>
           <div class="dq-kpi rise" style="animation-delay:.08s">
-            <div class="dq-kpi-label">今日请求</div>
+            <div class="dq-kpi-label">{{ t('admin.dashboardQuench.kpiRequests') }}</div>
             <div class="dq-kpi-value">{{ fmtNum(stats?.today_requests ?? 0) }}</div>
-            <div class="dq-kpi-sub">累计 {{ fmtNum(stats?.total_requests ?? 0) }}</div>
+            <div class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiAccumRequests', { n: fmtNum(stats?.total_requests ?? 0) }) }}</div>
           </div>
           <div class="dq-kpi rise" style="animation-delay:.12s">
-            <div class="dq-kpi-label">新增用户</div>
+            <div class="dq-kpi-label">{{ t('admin.dashboardQuench.kpiNewUsers') }}</div>
             <div class="dq-kpi-value dq-ok">+{{ stats?.today_new_users ?? 0 }}</div>
-            <div class="dq-kpi-sub">总计 {{ fmtNum(stats?.total_users ?? 0) }}</div>
+            <div class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiTotalUsers', { n: fmtNum(stats?.total_users ?? 0) }) }}</div>
           </div>
           <div class="dq-kpi rise" style="animation-delay:.16s">
-            <div class="dq-kpi-label">今日消耗</div>
+            <div class="dq-kpi-label">{{ t('admin.dashboardQuench.kpiCostToday') }}</div>
             <div class="dq-kpi-value q-money">${{ fmtMoney(stats?.today_actual_cost ?? 0) }}</div>
-            <div class="dq-kpi-sub">成本 <span class="q-money">${{ fmtMoney(stats?.today_account_cost ?? 0) }}</span></div>
+            <div class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiCostSub') }} <span class="q-money">${{ fmtMoney(stats?.today_account_cost ?? 0) }}</span></div>
           </div>
         </div>
 
         <!-- ═══ 流量行 ═══ -->
         <div class="dq-traffic-row">
           <div class="dq-kpi rise" style="animation-delay:.20s">
-            <div class="dq-kpi-label">今日 Token</div>
+            <div class="dq-kpi-label">{{ t('admin.dashboardQuench.kpiTokenToday') }}</div>
             <div class="dq-kpi-value">{{ fmtTok(stats?.today_tokens ?? 0) }}</div>
-            <div class="dq-kpi-sub">累计 {{ fmtTok(stats?.total_tokens ?? 0) }}</div>
+            <div class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiTokenAccum', { n: fmtTok(stats?.total_tokens ?? 0) }) }}</div>
           </div>
           <div class="dq-kpi rise dq-kpi-azure" style="animation-delay:.24s">
             <div class="dq-kpi-label"><span class="dq-live-dot"></span>RPM</div>
@@ -53,9 +53,9 @@
             <div class="dq-kpi-sub">TPM {{ fmtTok(stats?.tpm ?? 0) }}</div>
           </div>
           <div class="dq-kpi rise" style="animation-delay:.28s">
-            <div class="dq-kpi-label">平均响应</div>
+            <div class="dq-kpi-label">{{ t('admin.dashboardQuench.kpiAvgResponse') }}</div>
             <div class="dq-kpi-value">{{ fmtDur(stats?.average_duration_ms ?? 0) }}</div>
-            <div class="dq-kpi-sub">{{ stats?.active_users ?? 0 }} 活跃用户</div>
+            <div class="dq-kpi-sub">{{ t('admin.dashboardQuench.kpiActiveUsers', { n: stats?.active_users ?? 0 }) }}</div>
           </div>
           <!-- 图表面板 -->
           <div class="dq-charts-panel rise" style="animation-delay:.30s">
@@ -189,7 +189,7 @@ async function loadSnapshot(withStats: boolean) {
     modelStats.value = res.models ?? []
   } catch (e) {
     if (seq !== chartSeq) return
-    appStore.showError('驾驶舱数据加载失败')
+    appStore.showError(t('admin.dashboardQuench.loadFailed'))
   } finally {
     if (seq === chartSeq) { loading.value = false; chartsLoading.value = false }
   }
@@ -243,7 +243,7 @@ onUnmounted(() => clearInterval(heartbeat))
 
 .rise { opacity: 0; transform: translateY(10px); animation: rise .5s cubic-bezier(.22,.68,0,1.2) forwards; }
 @keyframes rise { to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .rise { animation: none; opacity: 1; transform: none; } .dq-live-dot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rise { animation: none; opacity: 1; transform: none; } .dq-live-dot { animation: none; box-shadow: none; } }
 
 .dq-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .dq-title { font-size: 18px; font-weight: 700; color: var(--foreground); margin: 0; }

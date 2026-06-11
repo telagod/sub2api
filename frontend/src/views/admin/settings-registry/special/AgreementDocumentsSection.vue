@@ -3,10 +3,7 @@
     <!-- Document list -->
     <div class="flex items-center justify-between">
       <p class="text-xs text-muted-foreground">
-        {{ localText(
-          '可参考：服务条款、使用政策、支持的国家和地区、服务特定条款。',
-          'Example documents: Terms of Service, Usage Policy, Supported Regions, Service Terms.'
-        ) }}
+        {{ t('admin.settings.agreement.docsHint') }}
       </p>
       <button
         type="button"
@@ -14,7 +11,7 @@
         @click="addDocument"
       >
         <Icon name="plus" size="sm" />
-        {{ localText('添加文档', 'Add document') }}
+        {{ t('admin.settings.agreement.addDoc') }}
       </button>
     </div>
 
@@ -34,7 +31,7 @@
             </span>
             <div class="min-w-0">
               <p class="truncate text-sm font-semibold text-foreground">
-                {{ doc.title || localText('未命名文档', 'Untitled document') }}
+                {{ doc.title || t('admin.settings.agreement.unnamedDoc') }}
               </p>
               <p class="truncate text-xs text-muted-foreground">/legal/{{ doc.id || '…' }}</p>
             </div>
@@ -52,19 +49,19 @@
         <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <div>
             <label class="mb-1 block text-xs font-medium text-muted-foreground">
-              {{ localText('文档名称', 'Document title') }}
+              {{ t('admin.settings.agreement.docTitle') }}
             </label>
             <input
               v-model="doc.title"
               type="text"
               class="input text-sm"
-              :placeholder="localText('例如：服务条款', 'Example: Terms of Service')"
+              :placeholder="t('admin.settings.agreement.docTitlePlaceholder')"
               @input="emitUpdate"
             />
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-muted-foreground">
-              {{ localText('路由标识', 'Route slug') }}
+              {{ t('admin.settings.agreement.docSlug') }}
             </label>
             <div class="flex overflow-hidden rounded-lg border border-border bg-card focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
               <span class="inline-flex flex-shrink-0 items-center border-r border-border bg-muted px-3 text-sm text-muted-foreground">
@@ -82,13 +79,13 @@
         </div>
         <div class="mt-3">
           <label class="mb-1 block text-xs font-medium text-muted-foreground">
-            {{ localText('Markdown 内容', 'Markdown content') }}
+            {{ t('admin.settings.agreement.docContent') }}
           </label>
           <textarea
             v-model="doc.content_md"
             rows="8"
             class="input font-mono text-sm"
-            :placeholder="localText('在这里填写正式 Markdown 内容。', 'Write the final Markdown content here.')"
+            :placeholder="t('admin.settings.agreement.docContentPlaceholder')"
             @input="emitUpdate"
           ></textarea>
         </div>
@@ -96,14 +93,17 @@
     </div>
 
     <p v-if="localDocs.length === 0" class="text-sm text-muted-foreground">
-      {{ localText('暂无协议文档，点击「添加文档」创建第一个。', 'No documents yet. Click "Add document" to create one.') }}
+      {{ t('admin.settings.agreement.noDocs') }}
     </p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
+
+const { t } = useI18n()
 
 interface AgreementDoc {
   id: string
@@ -145,10 +145,6 @@ watch(
 )
 
 const agreementEnabled = computed(() => !!activeSource.value['login_agreement_enabled'])
-
-function localText(zh: string, _en: string): string {
-  return zh
-}
 
 function emitUpdate() {
   emit('update:field', 'login_agreement_documents', localDocs.value.map((d) => ({ ...d })))

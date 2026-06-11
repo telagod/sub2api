@@ -22,7 +22,7 @@
       >
         <div class="flex items-center gap-2">
           <CalculatorIcon class="h-5 w-5" :style="{ color: 'var(--azure)' }" />
-          <h2 class="text-base font-semibold" :style="{ color: 'var(--ink-0)' }">价格模拟器</h2>
+          <h2 class="text-base font-semibold" :style="{ color: 'var(--ink-0)' }">{{ t('admin.pricingDesk.simTitle') }}</h2>
         </div>
         <button
           class="rounded-lg p-1.5 transition-colors"
@@ -37,7 +37,7 @@
       <div class="space-y-5 px-6 py-5">
         <!-- 选模型 -->
         <div>
-          <label class="mb-1.5 block text-sm font-medium" :style="{ color: 'var(--ink-1)' }">模型</label>
+          <label class="mb-1.5 block text-sm font-medium" :style="{ color: 'var(--ink-1)' }">{{ t('admin.pricingDesk.simModelLabel') }}</label>
           <select
             v-model="selectedModel"
             class="w-full rounded-lg px-3 py-2 text-sm"
@@ -47,7 +47,7 @@
               color: 'var(--ink-0)'
             }"
           >
-            <option value="">— 请选择模型 —</option>
+            <option value="">{{ t('admin.pricingDesk.simModelPlaceholder') }}</option>
             <optgroup v-for="platform in platforms" :key="platform" :label="platform">
               <option
                 v-for="model in modelsByPlatform[platform]"
@@ -62,7 +62,7 @@
 
         <!-- 选分组 -->
         <div>
-          <label class="mb-1.5 block text-sm font-medium" :style="{ color: 'var(--ink-1)' }">分组</label>
+          <label class="mb-1.5 block text-sm font-medium" :style="{ color: 'var(--ink-1)' }">{{ t('admin.pricingDesk.simGroupLabel') }}</label>
           <select
             v-model="selectedGroupId"
             class="w-full rounded-lg px-3 py-2 text-sm"
@@ -72,7 +72,7 @@
               color: 'var(--ink-0)'
             }"
           >
-            <option :value="null">— 请选择分组 —</option>
+            <option :value="null">{{ t('admin.pricingDesk.simGroupPlaceholder') }}</option>
             <option v-for="g in activeGroups" :key="g.id" :value="g.id">
               {{ g.name }} (×{{ g.rate_multiplier.toFixed(2) }})
             </option>
@@ -116,7 +116,7 @@
         <!-- Cache 命中滑杆 -->
         <div>
           <label class="mb-1.5 flex items-center justify-between text-sm font-medium" :style="{ color: 'var(--ink-1)' }">
-            <span>Cache 命中比例</span>
+            <span>{{ t('admin.pricingDesk.simCacheHit') }}</span>
             <span :style="{ color: 'var(--azure)' }">{{ (cacheHitRatio * 100).toFixed(0) }}%</span>
           </label>
           <input
@@ -139,13 +139,13 @@
           class="rounded-xl p-4 space-y-3"
           :style="{ background: 'var(--bg-2)', border: '1px solid var(--line-0)' }"
         >
-          <div class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{ color: 'var(--ink-2)' }">计算结果</div>
+          <div class="text-xs font-semibold uppercase tracking-wider mb-3" :style="{ color: 'var(--ink-2)' }">{{ t('admin.pricingDesk.simResultTitle') }}</div>
           <div class="space-y-2">
-            <SimResultRow label="Input 费用" :value="inputCost" />
-            <SimResultRow label="Output 费用" :value="outputCost" />
-            <SimResultRow v-if="cacheHitRatio > 0" label="Cache 读取费用" :value="cacheCost" />
+            <SimResultRow :label="t('admin.pricingDesk.simInputCost')" :value="inputCost" />
+            <SimResultRow :label="t('admin.pricingDesk.simOutputCost')" :value="outputCost" />
+            <SimResultRow v-if="cacheHitRatio > 0" :label="t('admin.pricingDesk.simCacheCost')" :value="cacheCost" />
             <div class="border-t pt-2" :style="{ borderColor: 'var(--line-1)' }">
-              <SimResultRow label="总计" :value="totalCost" :large="true" />
+              <SimResultRow :label="t('admin.pricingDesk.simTotal')" :value="totalCost" :large="true" />
             </div>
           </div>
 
@@ -157,15 +157,15 @@
               ? { background: 'var(--ok-dim)' }
               : { background: 'var(--bad-dim)' }"
           >
-            <div class="text-xs" :style="{ color: 'var(--ink-1)' }">官方价合计：<span class="q-money">{{ fmtUSD(officialTotal) }}</span></div>
+            <div class="text-xs" :style="{ color: 'var(--ink-1)' }">{{ t('admin.pricingDesk.simOfficialTotal') }}<span class="q-money">{{ fmtUSD(officialTotal) }}</span></div>
             <div
               class="mt-1 text-sm font-medium"
               :style="totalCost <= officialTotal ? { color: 'var(--ok)' } : { color: 'var(--bad)' }"
             >
-              {{ totalCost <= officialTotal ? `便宜 ${fmtUSD(officialTotal - totalCost)}（${((1 - totalCost / officialTotal) * 100).toFixed(1)}%）` : `贵 ${fmtUSD(totalCost - officialTotal)}（${((totalCost / officialTotal - 1) * 100).toFixed(1)}%）` }}
+              {{ totalCost <= officialTotal ? t('admin.pricingDesk.simCheaper', { diff: fmtUSD(officialTotal - totalCost), pct: ((1 - totalCost / officialTotal) * 100).toFixed(1) }) : t('admin.pricingDesk.simDearer', { diff: fmtUSD(totalCost - officialTotal), pct: ((totalCost / officialTotal - 1) * 100).toFixed(1) }) }}
             </div>
           </div>
-          <p v-else class="text-xs" :style="{ color: 'var(--ink-2)' }">暂无官方参考价，无法对比</p>
+          <p v-else class="text-xs" :style="{ color: 'var(--ink-2)' }">{{ t('admin.pricingDesk.simNoOfficialRef') }}</p>
         </div>
 
         <!-- 未选模型/分组提示 -->
@@ -175,7 +175,7 @@
           :style="{ background: 'var(--bg-2)', color: 'var(--ink-2)' }"
         >
           <CalculatorIcon class="mx-auto mb-2 h-8 w-8 opacity-40" />
-          <p class="text-sm">请选择模型与分组后查看计价</p>
+          <p class="text-sm">{{ t('admin.pricingDesk.simSelectHint') }}</p>
         </div>
       </div>
     </div>
@@ -184,6 +184,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { CalculatorIcon, XIcon } from 'lucide-vue-next'
 import SimResultRow from './SimResultRow.vue'
 import type { MatrixRow, OfficialPricing } from './usePricingMatrix'
@@ -202,6 +203,7 @@ const emit = defineEmits<{
   (e: 'need-official-pricing', model: string): void
 }>()
 
+const { t } = useI18n()
 const selectedModel = ref('')
 const selectedGroupId = ref<number | null>(null)
 const inputTokens = ref(1_000_000)

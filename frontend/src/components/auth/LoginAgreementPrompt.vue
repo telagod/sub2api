@@ -8,7 +8,7 @@
         id="login-agreement-consent"
         type="checkbox"
         :checked="accepted"
-        class="mt-[2px] h-4 w-4 flex-shrink-0 rounded border-border bg-card text-primary-600 focus:ring-ring"
+        class="agreement-cb mt-[2px] h-4 w-4 flex-shrink-0 rounded border-border bg-card"
         @change="handleCheckboxChange"
       />
       <div class="min-w-0 flex-1">
@@ -198,6 +198,16 @@ function documentIcon(index: number, title: string): 'document' | 'shield' | 'gl
 </script>
 
 <style scoped>
+/* Checkbox — QUENCH azure accent + glow-focus */
+.agreement-cb {
+  accent-color: var(--azure);
+}
+.agreement-cb:focus-visible {
+  outline: 1.5px solid var(--azure);
+  outline-offset: 2px;
+  box-shadow: var(--glow-focus);
+}
+
 .agreement-fade-enter-active,
 .agreement-fade-leave-active {
   transition: opacity 0.18s ease;

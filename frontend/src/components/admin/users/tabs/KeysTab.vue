@@ -1,8 +1,8 @@
 <template>
   <div class="ud-tab-content">
-    <div v-if="loading" class="ud-loading">加载中…</div>
+    <div v-if="loading" class="ud-loading">{{ t('admin.userTabs.loading') }}</div>
     <div v-else-if="error" class="ud-error">{{ error }}</div>
-    <div v-else-if="!items.length" class="ud-empty">暂无 API Key</div>
+    <div v-else-if="!items.length" class="ud-empty">{{ t('admin.userTabs.noKeys') }}</div>
     <div v-else class="ud-list">
       <div v-for="key in items" :key="key.id" class="ud-key-card">
         <div class="ud-key-header">
@@ -13,30 +13,32 @@
               'ud-badge-ok': key.status === 'active',
               'ud-badge-bad': key.status !== 'active'
             }"
-          >{{ key.status === 'active' ? '活跃' : key.status }}</span>
+          >{{ key.status === 'active' ? t('admin.userTabs.keyActive') : key.status }}</span>
         </div>
         <div class="ud-key-value ud-mono">
           {{ key.key.substring(0, 20) }}…{{ key.key.substring(key.key.length - 6) }}
         </div>
         <div class="ud-key-meta">
-          <span class="ud-meta-item" v-if="key.group?.name">组：{{ key.group.name }}</span>
-          <span class="ud-meta-item">配额：{{ key.quota === 0 ? '不限' : ('$' + key.quota.toFixed(2)) }}</span>
-          <span class="ud-meta-item">已用：${{ key.quota_used.toFixed(4) }}</span>
-          <span class="ud-meta-item">创建：{{ fmt(key.created_at) }}</span>
-          <span class="ud-meta-item" v-if="key.last_used_at">末用：{{ fmt(key.last_used_at) }}</span>
+          <span class="ud-meta-item" v-if="key.group?.name">{{ t('admin.userTabs.keyGroup', { name: key.group.name }) }}</span>
+          <span class="ud-meta-item">{{ t('admin.userTabs.keyQuota') }}{{ key.quota === 0 ? t('admin.userTabs.keyQuotaUnlimited') : ('$' + key.quota.toFixed(2)) }}</span>
+          <span class="ud-meta-item">{{ t('admin.userTabs.keyUsed') }}${{ key.quota_used.toFixed(4) }}</span>
+          <span class="ud-meta-item">{{ t('admin.userTabs.keyCreated') }}{{ fmt(key.created_at) }}</span>
+          <span class="ud-meta-item" v-if="key.last_used_at">{{ t('admin.userTabs.keyLastUsed') }}{{ fmt(key.last_used_at) }}</span>
         </div>
       </div>
     </div>
-    <div v-if="total > items.length" class="ud-more">共 {{ total }} 条</div>
+    <div v-if="total > items.length" class="ud-more">{{ t('admin.userTabs.totalCount', { total }) }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser, ApiKey } from '@/types'
 import { formatDateTime } from '@/utils/format'
 
+const { t } = useI18n()
 const props = defineProps<{ user: AdminUser; active: boolean }>()
 
 const loading = ref(false)
@@ -53,7 +55,7 @@ async function load() {
   try {
     const res = await adminAPI.users.getUserApiKeys(props.user.id)
     items.value = res.items; total.value = res.total; loaded.value = true
-  } catch { error.value = '加载失败' } finally { loading.value = false }
+  } catch { error.value = t('admin.userTabs.loadFailed') } finally { loading.value = false }
 }
 
 watch(() => props.active, (v) => { if (v) load() })

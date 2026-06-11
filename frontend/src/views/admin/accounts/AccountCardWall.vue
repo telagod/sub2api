@@ -8,7 +8,7 @@
         <line x1="12" y1="16" x2="28" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         <line x1="12" y1="22" x2="22" y2="22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
-      <span>暂无账号</span>
+      <span>{{ t('admin.accountCardWall.noAccounts') }}</span>
     </div>
 
     <!-- 骨架 -->
@@ -79,7 +79,7 @@
             <div class="acp-card-actions">
               <button
                 class="acp-btn"
-                :title="account.status === 'active' ? '禁用' : '启用'"
+                :title="account.status === 'active' ? t('admin.accountCardWall.toggleDisable') : t('admin.accountCardWall.toggleEnable')"
                 :disabled="operating.has(account.id)"
                 @click.stop="$emit('toggle-status', account)"
               >
@@ -88,7 +88,7 @@
               </button>
               <button
                 class="acp-btn"
-                title="刷新凭证"
+                :title="t('admin.accountCardWall.refreshToken')"
                 :disabled="operating.has(account.id)"
                 @click.stop="$emit('refresh', account)"
               >
@@ -96,7 +96,7 @@
               </button>
               <button
                 class="acp-btn acp-btn-danger"
-                title="删除"
+                :title="t('admin.accountCardWall.deleteBtn')"
                 :disabled="operating.has(account.id)"
                 @click.stop="$emit('delete', account)"
               >
@@ -112,6 +112,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Account, AdminGroup } from '@/types'
 import PlatformTypeBadge from '@/components/common/PlatformTypeBadge.vue'
 
@@ -128,6 +129,8 @@ defineEmits<{
   'delete': [account: Account]
 }>()
 
+const { t } = useI18n()
+
 /** 按分组聚合账号，无分组的归入"未分组" */
 const groupedAccounts = computed(() => {
   const groupMap = new Map<string, { label: string; accounts: Account[] }>()
@@ -136,7 +139,7 @@ const groupedAccounts = computed(() => {
     const accountGroups = account.groups ?? []
     if (accountGroups.length === 0) {
       const key = '__ungrouped__'
-      if (!groupMap.has(key)) groupMap.set(key, { label: '未分组', accounts: [] })
+      if (!groupMap.has(key)) groupMap.set(key, { label: t('admin.accountCardWall.ungrouped'), accounts: [] })
       groupMap.get(key)!.accounts.push(account)
     } else {
       for (const g of accountGroups) {
@@ -178,7 +181,7 @@ function breathClass(account: Account): string {
 
 function statusTitle(account: Account): string {
   if (account.error_message) return account.error_message
-  if (isRateLimited(account)) return '限流中'
+  if (isRateLimited(account)) return t('admin.accountCardWall.rateLimited')
   return account.status
 }
 
@@ -440,5 +443,10 @@ function utilBarClass(account: Account): string {
 @keyframes shimmer {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acp-breath-ok { animation: none; }
+  .acp-skel { animation: none; opacity: 0.7; }
 }
 </style>

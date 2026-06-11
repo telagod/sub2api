@@ -48,7 +48,7 @@
                   <td class="max-w-[100px] truncate py-1.5 font-medium text-foreground" :title="model.model">{{ model.model }}</td>
                   <td class="py-1.5 text-right text-muted-foreground">{{ formatNumber(model.requests) }}</td>
                   <td class="py-1.5 text-right text-muted-foreground">{{ formatTokens(model.total_tokens) }}</td>
-                  <td class="py-1.5 text-right text-emerald-400">${{ formatCost(model.actual_cost) }}</td>
+                  <td class="q-money py-1.5 text-right text-[var(--ok)]">${{ formatCost(model.actual_cost) }}</td>
                   <td class="py-1.5 text-right text-muted-foreground/60">${{ formatCost(model.cost) }}</td>
                 </tr>
               </tbody>
@@ -84,7 +84,7 @@ const modelData = computed(() => !props.models?.length ? null : {
   labels: props.models.map((m: ModelStat) => m.model),
   datasets: [{
     data: props.models.map((m: ModelStat) => m.total_tokens),
-    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
+    backgroundColor: ['#5CA8FF', '#46C98C', '#E0B34E', '#F25C69', '#8CC4FF', '#97A0AF', '#3D91F0', '#c0c4cc']
   }]
 })
 

@@ -3,16 +3,16 @@
     <!-- KPI 三格 -->
     <div class="ud-kpi-row">
       <div class="ud-kpi-card">
-        <span class="ud-kpi-label">余额</span>
+        <span class="ud-kpi-label">{{ t('admin.userTabs.kpiBalance') }}</span>
         <span class="ud-kpi-value q-money">${{ formatBal(user.balance) }}</span>
       </div>
       <div class="ud-kpi-card">
-        <span class="ud-kpi-label">本月消耗</span>
+        <span class="ud-kpi-label">{{ t('admin.userTabs.kpiMonthCost') }}</span>
         <span class="ud-kpi-value q-money" v-if="!statsLoading">${{ formatBal(monthStats.total_cost) }}</span>
         <span class="ud-kpi-value ud-muted" v-else>…</span>
       </div>
       <div class="ud-kpi-card">
-        <span class="ud-kpi-label">本月请求</span>
+        <span class="ud-kpi-label">{{ t('admin.userTabs.kpiMonthRequests') }}</span>
         <span class="ud-kpi-value" v-if="!statsLoading">{{ monthStats.total_requests.toLocaleString() }}</span>
         <span class="ud-kpi-value ud-muted" v-else>…</span>
       </div>
@@ -20,15 +20,15 @@
 
     <!-- 近 30 日消耗折线图（SVG 简版） -->
     <div class="ud-chart-wrap">
-      <p class="ud-section-label">近 30 日消耗趋势</p>
-      <div v-if="chartLoading" class="ud-chart-placeholder">加载中…</div>
+      <p class="ud-section-label">{{ t('admin.userTabs.chart30dTitle') }}</p>
+      <div v-if="chartLoading" class="ud-chart-placeholder">{{ t('admin.userTabs.loading') }}</div>
       <div v-else-if="chartError" class="ud-chart-placeholder ud-muted">{{ chartError }}</div>
       <svg
         v-else
         class="ud-chart-svg"
         viewBox="0 0 480 100"
         preserveAspectRatio="none"
-        aria-label="近 30 日消耗折线图"
+        :aria-label="t('admin.userTabs.chart30dTitle')"
       >
         <!-- 网格线 -->
         <line x1="0" y1="25" x2="480" y2="25" stroke="var(--line-0)" stroke-width="1"/>
@@ -39,42 +39,42 @@
         <!-- 折线 -->
         <path v-if="chartPath" :d="chartPath" fill="none" stroke="var(--azure)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
         <!-- 无数据占位 -->
-        <text v-if="!chartPath" x="240" y="55" text-anchor="middle" fill="var(--ink-2)" font-size="11">暂无数据</text>
+        <text v-if="!chartPath" x="240" y="55" text-anchor="middle" fill="var(--ink-2)" font-size="11">{{ t('admin.userTabs.chartNoData') }}</text>
       </svg>
     </div>
 
     <!-- 基础信息 -->
     <div class="ud-info-grid">
       <div class="ud-info-row">
-        <span class="ud-info-key">用户 ID</span>
+        <span class="ud-info-key">{{ t('admin.userTabs.infoUserId') }}</span>
         <span class="ud-info-val ud-mono">#{{ user.id }}</span>
       </div>
       <div class="ud-info-row">
-        <span class="ud-info-key">邮箱</span>
+        <span class="ud-info-key">{{ t('admin.userTabs.infoEmail') }}</span>
         <span class="ud-info-val">{{ user.email }}</span>
       </div>
       <div class="ud-info-row" v-if="user.username">
-        <span class="ud-info-key">用户名</span>
+        <span class="ud-info-key">{{ t('admin.userTabs.infoUsername') }}</span>
         <span class="ud-info-val">{{ user.username }}</span>
       </div>
       <div class="ud-info-row">
-        <span class="ud-info-key">并发上限</span>
+        <span class="ud-info-key">{{ t('admin.userTabs.infoConcurrency') }}</span>
         <span class="ud-info-val ud-mono">{{ user.concurrency }}</span>
       </div>
       <div class="ud-info-row" v-if="user.rpm_limit !== undefined">
-        <span class="ud-info-key">RPM 上限</span>
-        <span class="ud-info-val ud-mono">{{ user.rpm_limit === 0 ? '不限' : user.rpm_limit }}</span>
+        <span class="ud-info-key">{{ t('admin.userTabs.infoRpm') }}</span>
+        <span class="ud-info-val ud-mono">{{ user.rpm_limit === 0 ? t('admin.userTabs.infoRpmUnlimited') : user.rpm_limit }}</span>
       </div>
       <div class="ud-info-row">
-        <span class="ud-info-key">注册时间</span>
+        <span class="ud-info-key">{{ t('admin.userTabs.infoRegistered') }}</span>
         <span class="ud-info-val ud-muted">{{ fmt(user.created_at) }}</span>
       </div>
       <div class="ud-info-row" v-if="user.last_active_at">
-        <span class="ud-info-key">最近活跃</span>
+        <span class="ud-info-key">{{ t('admin.userTabs.infoLastActive') }}</span>
         <span class="ud-info-val ud-muted">{{ fmt(user.last_active_at) }}</span>
       </div>
       <div class="ud-info-row" v-if="user.notes">
-        <span class="ud-info-key">备注</span>
+        <span class="ud-info-key">{{ t('admin.userTabs.infoNotes') }}</span>
         <span class="ud-info-val">{{ user.notes }}</span>
       </div>
     </div>
@@ -83,10 +83,12 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser } from '@/types'
 import { formatDateTime } from '@/utils/format'
 
+const { t } = useI18n()
 const props = defineProps<{ user: AdminUser }>()
 
 const statsLoading = ref(false)
@@ -172,7 +174,7 @@ async function loadChart() {
     const results = await Promise.all(promises)
     dailyPoints.value = results.sort((a, b) => a.date.localeCompare(b.date))
   } catch (e) {
-    chartError.value = '图表数据加载失败'
+    chartError.value = t('admin.userTabs.chartLoadError')
   } finally {
     chartLoading.value = false
   }

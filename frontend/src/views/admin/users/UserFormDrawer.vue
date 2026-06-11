@@ -1,12 +1,12 @@
 <template>
   <Teleport to="body">
     <Transition name="ufd-slide">
-      <div v-if="open" class="ufd-overlay" @click.self="$emit('close')" role="dialog" :aria-label="isEdit ? '编辑用户' : '新建用户'">
+      <div v-if="open" class="ufd-overlay" @click.self="$emit('close')" role="dialog" :aria-label="isEdit ? t('admin.userFormDrawer.titleEdit') : t('admin.userFormDrawer.titleCreate')">
         <div class="ufd-panel">
           <!-- 头部 -->
           <div class="ufd-head">
-            <div class="ufd-title">{{ isEdit ? '编辑用户' : '新建用户' }}</div>
-            <button class="ufd-close" aria-label="关闭" @click="$emit('close')">
+            <div class="ufd-title">{{ isEdit ? t('admin.userFormDrawer.titleEdit') : t('admin.userFormDrawer.titleCreate') }}</div>
+            <button class="ufd-close" :aria-label="t('admin.userFormDrawer.ariaClose')" @click="$emit('close')">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <path d="M2 2L12 12M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
@@ -17,7 +17,7 @@
           <form class="ufd-body" @submit.prevent="handleSubmit">
             <!-- 邮箱 -->
             <div class="ufd-field">
-              <label class="ufd-label">邮箱 <span class="ufd-req">*</span></label>
+              <label class="ufd-label">{{ t('admin.userFormDrawer.emailLabel') }} <span class="ufd-req">*</span></label>
               <input
                 v-model="form.email"
                 type="email"
@@ -30,17 +30,17 @@
 
             <!-- 密码 -->
             <div class="ufd-field">
-              <label class="ufd-label">{{ isEdit ? '新密码（留空不修改）' : '密码 *' }}</label>
+              <label class="ufd-label">{{ isEdit ? t('admin.userFormDrawer.passwordEditLabel') : t('admin.userFormDrawer.passwordLabel') }}</label>
               <div class="ufd-row">
                 <input
                   v-model="form.password"
                   type="text"
                   class="ufd-input"
                   :required="!isEdit"
-                  placeholder="至少 8 位"
+                  :placeholder="t('admin.userFormDrawer.passwordPlaceholder')"
                   autocomplete="new-password"
                 />
-                <button type="button" class="ufd-gen-btn" title="随机生成" @click="generatePassword">
+                <button type="button" class="ufd-gen-btn" :title="t('admin.userFormDrawer.passwordGenTitle')" @click="generatePassword">
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
                     <path d="M11.5 6.5A5 5 0 1 1 6.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
                     <path d="M9 1.5v3h-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -51,32 +51,32 @@
 
             <!-- 用户名 -->
             <div class="ufd-field">
-              <label class="ufd-label">用户名</label>
-              <input v-model="form.username" type="text" class="ufd-input" placeholder="可选" autocomplete="off" />
+              <label class="ufd-label">{{ t('admin.userFormDrawer.usernameLabel') }}</label>
+              <input v-model="form.username" type="text" class="ufd-input" :placeholder="t('admin.userFormDrawer.usernamePlaceholder')" autocomplete="off" />
             </div>
 
             <!-- 初始余额（仅创建时） -->
             <div v-if="!isEdit" class="ufd-field">
-              <label class="ufd-label">初始余额</label>
+              <label class="ufd-label">{{ t('admin.userFormDrawer.balanceLabel') }}</label>
               <input v-model="form.balance" type="number" step="0.01" min="0" class="ufd-input" placeholder="0.00" />
             </div>
 
             <!-- 并发上限 -->
             <div class="ufd-field">
-              <label class="ufd-label">并发上限</label>
+              <label class="ufd-label">{{ t('admin.userFormDrawer.concurrencyLabel') }}</label>
               <input v-model.number="form.concurrency" type="number" min="1" class="ufd-input" />
             </div>
 
             <!-- RPM 限速 -->
             <div class="ufd-field">
-              <label class="ufd-label">RPM 限速 <span class="ufd-hint-inline">（0 = 不限制）</span></label>
+              <label class="ufd-label">{{ t('admin.userFormDrawer.rpmLabel') }} <span class="ufd-hint-inline">{{ t('admin.userFormDrawer.rpmHint') }}</span></label>
               <input v-model.number="form.rpm_limit" type="number" min="0" step="1" class="ufd-input" />
             </div>
 
             <!-- 备注（仅编辑时） -->
             <div v-if="isEdit" class="ufd-field">
-              <label class="ufd-label">备注</label>
-              <textarea v-model="form.notes" rows="3" class="ufd-input ufd-textarea" placeholder="管理员内部备注"></textarea>
+              <label class="ufd-label">{{ t('admin.userFormDrawer.notesLabel') }}</label>
+              <textarea v-model="form.notes" rows="3" class="ufd-input ufd-textarea" :placeholder="t('admin.userFormDrawer.notesPlaceholder')"></textarea>
             </div>
 
             <!-- 错误提示 -->
@@ -84,9 +84,9 @@
 
             <!-- 底部操作 -->
             <div class="ufd-footer">
-              <button type="button" class="ufd-btn" @click="$emit('close')">取消</button>
+              <button type="button" class="ufd-btn" @click="$emit('close')">{{ t('admin.userFormDrawer.cancelBtn') }}</button>
               <button type="submit" class="ufd-btn ufd-btn-primary" :disabled="submitting">
-                {{ submitting ? (isEdit ? '保存中…' : '创建中…') : (isEdit ? '保存更改' : '创建用户') }}
+                {{ submitting ? (isEdit ? t('admin.userFormDrawer.saving') : t('admin.userFormDrawer.creating')) : (isEdit ? t('admin.userFormDrawer.saveChanges') : t('admin.userFormDrawer.createUser')) }}
               </button>
             </div>
           </form>
@@ -98,9 +98,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser } from '@/types'
 import { useAppStore } from '@/stores/app'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   open: boolean
@@ -163,9 +166,9 @@ function generatePassword() {
 
 async function handleSubmit() {
   errorMsg.value = ''
-  if (!form.email.trim()) { errorMsg.value = '邮箱不能为空'; return }
-  if (!isEdit.value && !form.password.trim()) { errorMsg.value = '密码不能为空'; return }
-  if (form.concurrency < 1) { errorMsg.value = '并发上限至少为 1'; return }
+  if (!form.email.trim()) { errorMsg.value = t('admin.userFormDrawer.validEmailRequired'); return }
+  if (!isEdit.value && !form.password.trim()) { errorMsg.value = t('admin.userFormDrawer.validPasswordRequired'); return }
+  if (form.concurrency < 1) { errorMsg.value = t('admin.userFormDrawer.validConcurrencyMin'); return }
 
   submitting.value = true
   try {
@@ -179,7 +182,7 @@ async function handleSubmit() {
       }
       if (form.password.trim()) data.password = form.password.trim()
       await adminAPI.users.update(props.user.id, data as any)
-      appStore.showSuccess('用户已更新')
+      appStore.showSuccess(t('admin.userFormDrawer.userUpdated'))
     } else {
       const balanceStr = String(form.balance).trim()
       const payload: Parameters<typeof adminAPI.users.create>[0] = {
@@ -191,11 +194,11 @@ async function handleSubmit() {
       }
       if (balanceStr !== '') payload.balance = Number(balanceStr)
       await adminAPI.users.create(payload)
-      appStore.showSuccess('用户已创建')
+      appStore.showSuccess(t('admin.userFormDrawer.userCreated'))
     }
     emit('success')
   } catch (e: any) {
-    errorMsg.value = e?.response?.data?.detail || e?.message || '操作失败'
+    errorMsg.value = e?.response?.data?.detail || e?.message || t('admin.userFormDrawer.operationFailed')
   } finally {
     submitting.value = false
   }

@@ -4,7 +4,7 @@
       <div class="card flex-1 min-h-0 overflow-hidden">
         <div v-if="loading" class="flex h-full items-center justify-center py-12">
           <div
-            class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"
+            class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--azure)] border-t-transparent"
           ></div>
         </div>
 
@@ -229,7 +229,7 @@ async function fetchAndRenderMarkdown(slug: string) {
       headers: authStore.token ? { Authorization: `Bearer ${authStore.token}` } : {},
     })
     if (!resp.ok) {
-      renderedHtml.value = '<p class="text-red-400">Page not found</p>'
+      renderedHtml.value = '<p style="color:var(--bad)">Page not found</p>'
       return
     }
     let raw = await resp.text()
@@ -262,7 +262,7 @@ async function fetchAndRenderMarkdown(slug: string) {
     renderedHtml.value = withIds
     tocItems.value = toc
   } catch {
-    renderedHtml.value = '<p class="text-red-400">Failed to load page</p>'
+    renderedHtml.value = '<p style="color:var(--bad)">Failed to load page</p>'
   } finally {
     loading.value = false
     await nextTick()

@@ -402,4 +402,28 @@ onBeforeUnmount(() => {
   opacity: 0;
   transform: scale(0.96) translateY(-4px);
 }
+
+/* 键盘焦点：topbar 所有交互按钮 */
+.quench-topbar__cmdk:focus-visible,
+.quench-topbar__icon-btn:focus-visible,
+.quench-topbar__avatar:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1.5px rgba(92, 168, 255, 0.65), 0 0 16px rgba(92, 168, 255, 0.25);
+}
+
+.quench-topbar__dropdown-item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1.5px rgba(92, 168, 255, 0.5);
+  border-radius: 7px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quench-topbar__cmdk,
+  .quench-topbar__icon-btn,
+  .quench-topbar__dropdown-item { transition: none; }
+  .quench-dropdown-enter-active,
+  .quench-dropdown-leave-active { transition: none; }
+  .quench-dropdown-enter-from,
+  .quench-dropdown-leave-to { transform: none; }
+}
 </style>

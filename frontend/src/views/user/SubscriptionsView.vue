@@ -4,14 +4,14 @@
       <!-- Loading State -->
       <div v-if="loading" class="flex justify-center py-12">
         <div
-          class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"
+          class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--azure)] border-t-transparent"
         ></div>
       </div>
 
       <!-- Empty State -->
       <div v-else-if="subscriptions.length === 0" class="card p-12 text-center">
         <div
-          class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-md border border-border bg-secondary "
+          class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-secondary"
         >
           <Icon name="creditCard" size="xl" class="text-primary-200" />
         </div>
@@ -54,12 +54,11 @@
             <div class="flex items-center gap-2">
               <span
                 :class="[
-                  'rounded-full px-2 py-0.5 text-xs font-medium',
                   subscription.status === 'active'
-                    ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                    ? 'badge badge-success'
                     : subscription.status === 'expired'
-                      ? 'border border-border bg-muted text-muted-foreground'
-                      : 'border border-red-500/30 bg-red-500/10 text-red-400'
+                      ? 'badge badge-gray'
+                      : 'badge badge-danger'
                 ]"
               >
                 {{ t(`userSubscriptions.status.${subscription.status}`) }}
@@ -100,7 +99,7 @@
                 <span class="text-sm font-medium text-foreground/85">
                   {{ t('userSubscriptions.daily') }}
                 </span>
-                <span class="text-sm text-muted-foreground">
+                <span class="q-money text-sm">
                   ${{ (subscription.daily_usage_usd || 0).toFixed(2) }} / ${{
                     subscription.group.daily_limit_usd.toFixed(2)
                   }}
@@ -137,7 +136,7 @@
                 <span class="text-sm font-medium text-foreground/85">
                   {{ t('userSubscriptions.weekly') }}
                 </span>
-                <span class="text-sm text-muted-foreground">
+                <span class="q-money text-sm">
                   ${{ (subscription.weekly_usage_usd || 0).toFixed(2) }} / ${{
                     subscription.group.weekly_limit_usd.toFixed(2)
                   }}
@@ -178,7 +177,7 @@
                 <span class="text-sm font-medium text-foreground/85">
                   {{ t('userSubscriptions.monthly') }}
                 </span>
-                <span class="text-sm text-muted-foreground">
+                <span class="q-money text-sm">
                   ${{ (subscription.monthly_usage_usd || 0).toFixed(2) }} / ${{
                     subscription.group.monthly_limit_usd.toFixed(2)
                   }}
@@ -292,9 +291,9 @@ function getProgressWidth(used: number | undefined, limit: number | null | undef
 function getProgressBarClass(used: number | undefined, limit: number | null | undefined): string {
   if (!limit || limit === 0) return 'bg-muted-foreground'
   const percentage = ((used || 0) / limit) * 100
-  if (percentage >= 90) return 'bg-red-500'
-  if (percentage >= 70) return 'bg-orange-500'
-  return 'bg-green-500'
+  if (percentage >= 90) return 'bg-[var(--bad)]'
+  if (percentage >= 70) return 'bg-[var(--warn)]'
+  return 'bg-[var(--ok)]'
 }
 
 function formatExpirationDate(expiresAt: string): string {
@@ -325,9 +324,9 @@ function getExpirationClass(expiresAt: string): string {
   const diff = expires.getTime() - now.getTime()
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
 
-  if (days <= 0) return 'text-red-400 font-medium'
-  if (days <= 3) return 'text-red-400'
-  if (days <= 7) return 'text-orange-400'
+  if (days <= 0) return 'text-[var(--bad)] font-medium'
+  if (days <= 3) return 'text-[var(--bad)]'
+  if (days <= 7) return 'text-[var(--warn)]'
   return 'text-foreground/85'
 }
 

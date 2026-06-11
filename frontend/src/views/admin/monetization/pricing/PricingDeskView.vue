@@ -4,9 +4,9 @@
       <!-- 页面头部：标题 + 操作 -->
       <div class="flex items-center justify-between gap-4">
         <div>
-          <h1 class="text-xl font-semibold" :style="{ color: 'var(--ink-0)' }">PayGo 计价台</h1>
+          <h1 class="text-xl font-semibold" :style="{ color: 'var(--ink-0)' }">{{ t('admin.pricingDesk.title') }}</h1>
           <p class="mt-0.5 text-sm" :style="{ color: 'var(--ink-2)' }">
-            渠道售价 × 分组倍率 → 用户实际单价矩阵
+            {{ t('admin.pricingDesk.desc') }}
           </p>
         </div>
         <div class="flex items-center gap-2">
@@ -23,7 +23,7 @@
             @click="fetchAll"
           >
             <RefreshCwIcon class="h-4 w-4" :class="loading ? 'animate-spin' : ''" />
-            刷新
+            {{ t('admin.pricingDesk.refresh') }}
           </button>
 
           <!-- 价格模拟器 -->
@@ -38,7 +38,7 @@
             @click="simulatorVisible = true"
           >
             <CalculatorIcon class="h-4 w-4" :style="{ color: 'var(--azure)' }" />
-            价格模拟器
+            {{ t('admin.pricingDesk.simulatorBtn') }}
           </button>
         </div>
       </div>
@@ -49,7 +49,7 @@
         class="rounded-lg px-4 py-3 text-sm"
         :style="{ background: 'var(--bad-dim)', border: '1px solid var(--bad)', color: 'var(--bad)' }"
       >
-        加载失败：{{ error }}
+        {{ t('admin.pricingDesk.loadFailed') }}{{ error }}
       </div>
 
       <!-- 矩阵表格 -->
@@ -79,6 +79,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RefreshCwIcon, CalculatorIcon } from 'lucide-vue-next'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import MatrixTable from './MatrixTable.vue'
@@ -86,6 +87,7 @@ import PriceSimulator from './PriceSimulator.vue'
 import { usePricingMatrix } from './usePricingMatrix'
 import type { OfficialPricing } from './usePricingMatrix'
 
+const { t } = useI18n()
 const {
   loading,
   error,

@@ -1,8 +1,8 @@
 <template>
   <div class="ud-tab-content">
-    <div v-if="loading" class="ud-loading">加载中…</div>
+    <div v-if="loading" class="ud-loading">{{ t('admin.userTabs.loading') }}</div>
     <div v-else-if="error" class="ud-error">{{ error }}</div>
-    <div v-else-if="!items.length" class="ud-empty">暂无订单记录</div>
+    <div v-else-if="!items.length" class="ud-empty">{{ t('admin.userTabs.noOrders') }}</div>
     <div v-else class="ud-list">
       <div v-for="order in items" :key="order.id" class="ud-order-card">
         <div class="ud-order-header">
@@ -19,17 +19,19 @@
         </div>
       </div>
     </div>
-    <div v-if="total > items.length" class="ud-more">共 {{ total }} 条，仅展示前 {{ items.length }} 条</div>
+    <div v-if="total > items.length" class="ud-more">{{ t('admin.userTabs.totalCountPartial', { total, shown: items.length }) }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser } from '@/types'
 import type { PaymentOrder } from '@/types/payment'
 import { formatDateTime } from '@/utils/format'
 
+const { t } = useI18n()
 const props = defineProps<{ user: AdminUser; active: boolean }>()
 
 const loading = ref(false)
@@ -53,7 +55,7 @@ async function load() {
     // getOrders returns AxiosResponse — unwrap .data
     const payload = (res as any).data ?? res
     items.value = payload?.items ?? []; total.value = payload?.total ?? 0; loaded.value = true
-  } catch { error.value = '加载失败' } finally { loading.value = false }
+  } catch { error.value = t('admin.userTabs.loadFailed') } finally { loading.value = false }
 }
 
 watch(() => props.active, (v) => { if (v) load() })

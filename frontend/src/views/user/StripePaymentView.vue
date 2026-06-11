@@ -2,11 +2,11 @@
   <component :is="isPopup ? 'div' : AppLayout" :class="isPopup ? 'min-h-screen bg-muted' : ''">
     <div class="mx-auto max-w-lg space-y-6 py-8" :class="isPopup ? 'px-4' : ''">
       <div v-if="loading" class="flex items-center justify-center py-20">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--azure)] border-t-transparent"></div>
       </div>
       <div v-else-if="initError" class="card p-8 text-center">
-        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10">
-          <Icon name="exclamationCircle" size="xl" class="text-red-400" />
+        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[var(--bad)]/30 bg-[var(--bad-dim)]">
+          <Icon name="exclamationCircle" size="xl" class="text-[var(--bad)]" />
         </div>
         <h3 class="text-lg font-semibold text-foreground">{{ t('payment.stripeLoadFailed') }}</h3>
         <p class="mt-2 text-sm text-muted-foreground">{{ initError }}</p>
@@ -56,8 +56,8 @@
         <template v-else-if="stripeSuccess">
           <div class="card p-6 text-center">
             <div class="flex flex-col items-center gap-3 py-4">
-              <div class="flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
-                <Icon name="check" size="lg" class="text-emerald-400" />
+              <div class="flex h-16 w-16 items-center justify-center rounded-full border border-[var(--ok)]/30 bg-[var(--ok-dim)]">
+                <Icon name="check" size="lg" class="text-[var(--ok)]" />
               </div>
               <p class="text-lg font-bold text-foreground">{{ t('payment.result.success') }}</p>
               <p class="text-sm text-muted-foreground">{{ t('payment.stripeSuccessProcessing') }}</p>
@@ -69,7 +69,7 @@
         <template v-else-if="showPaymentElement">
           <div class="card p-6">
             <div id="stripe-payment-element" class="min-h-[200px]"></div>
-            <p v-if="stripeError" class="mt-4 text-sm text-red-400">{{ stripeError }}</p>
+            <p v-if="stripeError" class="mt-4 text-sm text-[var(--bad)]">{{ stripeError }}</p>
             <button class="btn btn-stripe mt-6 w-full py-3 text-base" :disabled="stripeSubmitting || !stripeReady" @click="handleGenericPay">
               <span v-if="stripeSubmitting" class="flex items-center justify-center gap-2">
                 <span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
@@ -85,7 +85,7 @@
 
         <!-- 错误状态 -->
         <div v-if="stripeError && !showPaymentElement" class="card p-4">
-          <p class="text-sm text-red-400">{{ stripeError }}</p>
+          <p class="text-sm text-[var(--bad)]">{{ stripeError }}</p>
           <button class="btn btn-secondary mt-3 w-full" @click="router.push('/purchase')">{{ t('payment.result.backToRecharge') }}</button>
         </div>
       </template>

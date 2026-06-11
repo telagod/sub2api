@@ -136,7 +136,7 @@ const passwordPlaceholder = computed(() => {
   }
   if (props.field.sensitive) {
     const configuredKey = `${props.field.key}_configured`
-    if (props.formValues[configuredKey]) return '已配置，留空则不修改'
+    if (props.formValues[configuredKey]) return t('admin.settingsRegistry.fieldPasswordConfigured')
   }
   return props.field.placeholder ? resolveLabel(props.field.placeholder) : ''
 })

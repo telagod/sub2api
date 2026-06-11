@@ -68,7 +68,7 @@
                 class="rounded-md p-1 transition-colors hover:bg-accent"
                 :class="
                   copiedKeyId === row.id
-                    ? 'text-emerald-400'
+                    ? 'text-[var(--ok)]'
                     : 'text-muted-foreground hover:text-foreground'
                 "
                 :title="copiedKeyId === row.id ? t('keys.copied') : t('keys.copyToClipboard')"
@@ -138,13 +138,13 @@
             <div class="text-sm">
               <div class="flex items-center gap-1.5">
                 <span class="text-muted-foreground">{{ t('keys.today') }}:</span>
-                <span class="font-medium text-foreground">
+                <span class="q-money font-medium text-sm">
                   ${{ (usageStats[row.id]?.today_actual_cost ?? 0).toFixed(4) }}
                 </span>
               </div>
               <div class="mt-0.5 flex items-center gap-1.5">
                 <span class="text-muted-foreground">{{ t('keys.total') }}:</span>
-                <span class="font-medium text-foreground">
+                <span class="q-money font-medium text-sm">
                   ${{ (usageStats[row.id]?.total_actual_cost ?? 0).toFixed(4) }}
                 </span>
               </div>
@@ -153,10 +153,10 @@
                 <div class="flex items-center gap-1.5">
                   <span class="text-muted-foreground">{{ t('keys.quota') }}:</span>
                   <span :class="[
-                    'font-medium',
-                    row.quota_used >= row.quota ? 'text-red-400' :
-                    row.quota_used >= row.quota * 0.8 ? 'text-yellow-500' :
-                    'text-foreground'
+                    'q-money font-medium text-sm',
+                    row.quota_used >= row.quota ? 'text-[var(--bad)]' :
+                    row.quota_used >= row.quota * 0.8 ? 'text-[var(--warn)]' :
+                    ''
                   ]">
                     ${{ row.quota_used?.toFixed(2) || '0.00' }} / ${{ row.quota?.toFixed(2) }}
                   </span>
@@ -165,9 +165,9 @@
                   <div
                     :class="[
                       'h-full rounded-full transition-all',
-                      row.quota_used >= row.quota ? 'bg-red-500' :
-                      row.quota_used >= row.quota * 0.8 ? 'bg-yellow-500' :
-                      'bg-primary-500'
+                      row.quota_used >= row.quota ? 'bg-[var(--bad)]' :
+                      row.quota_used >= row.quota * 0.8 ? 'bg-[var(--warn)]' :
+                      'bg-[var(--ok)]'
                     ]"
                     :style="{ width: Math.min((row.quota_used / row.quota) * 100, 100) + '%' }"
                   />
@@ -184,8 +184,8 @@
                   <span class="text-muted-foreground">5h</span>
                   <span :class="[
                     'font-medium tabular-nums',
-                    row.usage_5h >= row.rate_limit_5h ? 'text-red-400' :
-                    row.usage_5h >= row.rate_limit_5h * 0.8 ? 'text-yellow-500' :
+                    row.usage_5h >= row.rate_limit_5h ? 'text-[var(--bad)]' :
+                    row.usage_5h >= row.rate_limit_5h * 0.8 ? 'text-[var(--warn)]' :
                     'text-foreground/85'
                   ]">
                     ${{ row.usage_5h?.toFixed(2) || '0.00' }}/${{ row.rate_limit_5h?.toFixed(2) }}
@@ -195,9 +195,9 @@
                   <div
                     :class="[
                       'h-full rounded-full transition-all',
-                      row.usage_5h >= row.rate_limit_5h ? 'bg-red-500' :
-                      row.usage_5h >= row.rate_limit_5h * 0.8 ? 'bg-yellow-500' :
-                      'bg-emerald-500'
+                      row.usage_5h >= row.rate_limit_5h ? 'bg-[var(--bad)]' :
+                      row.usage_5h >= row.rate_limit_5h * 0.8 ? 'bg-[var(--warn)]' :
+                      'bg-[var(--ok)]'
                     ]"
                     :style="{ width: Math.min((row.usage_5h / row.rate_limit_5h) * 100, 100) + '%' }"
                   />
@@ -212,8 +212,8 @@
                   <span class="text-muted-foreground">1d</span>
                   <span :class="[
                     'font-medium tabular-nums',
-                    row.usage_1d >= row.rate_limit_1d ? 'text-red-400' :
-                    row.usage_1d >= row.rate_limit_1d * 0.8 ? 'text-yellow-500' :
+                    row.usage_1d >= row.rate_limit_1d ? 'text-[var(--bad)]' :
+                    row.usage_1d >= row.rate_limit_1d * 0.8 ? 'text-[var(--warn)]' :
                     'text-foreground/85'
                   ]">
                     ${{ row.usage_1d?.toFixed(2) || '0.00' }}/${{ row.rate_limit_1d?.toFixed(2) }}
@@ -223,9 +223,9 @@
                   <div
                     :class="[
                       'h-full rounded-full transition-all',
-                      row.usage_1d >= row.rate_limit_1d ? 'bg-red-500' :
-                      row.usage_1d >= row.rate_limit_1d * 0.8 ? 'bg-yellow-500' :
-                      'bg-emerald-500'
+                      row.usage_1d >= row.rate_limit_1d ? 'bg-[var(--bad)]' :
+                      row.usage_1d >= row.rate_limit_1d * 0.8 ? 'bg-[var(--warn)]' :
+                      'bg-[var(--ok)]'
                     ]"
                     :style="{ width: Math.min((row.usage_1d / row.rate_limit_1d) * 100, 100) + '%' }"
                   />
@@ -240,8 +240,8 @@
                   <span class="text-muted-foreground">7d</span>
                   <span :class="[
                     'font-medium tabular-nums',
-                    row.usage_7d >= row.rate_limit_7d ? 'text-red-400' :
-                    row.usage_7d >= row.rate_limit_7d * 0.8 ? 'text-yellow-500' :
+                    row.usage_7d >= row.rate_limit_7d ? 'text-[var(--bad)]' :
+                    row.usage_7d >= row.rate_limit_7d * 0.8 ? 'text-[var(--warn)]' :
                     'text-foreground/85'
                   ]">
                     ${{ row.usage_7d?.toFixed(2) || '0.00' }}/${{ row.rate_limit_7d?.toFixed(2) }}
@@ -251,9 +251,9 @@
                   <div
                     :class="[
                       'h-full rounded-full transition-all',
-                      row.usage_7d >= row.rate_limit_7d ? 'bg-red-500' :
-                      row.usage_7d >= row.rate_limit_7d * 0.8 ? 'bg-yellow-500' :
-                      'bg-emerald-500'
+                      row.usage_7d >= row.rate_limit_7d ? 'bg-[var(--bad)]' :
+                      row.usage_7d >= row.rate_limit_7d * 0.8 ? 'bg-[var(--warn)]' :
+                      'bg-[var(--ok)]'
                     ]"
                     :style="{ width: Math.min((row.usage_7d / row.rate_limit_7d) * 100, 100) + '%' }"
                   />
@@ -279,7 +279,7 @@
           <template #cell-expires_at="{ value }">
             <span v-if="value" :class="[
               'text-sm',
-              new Date(value) < new Date() ? 'text-red-400' : 'text-muted-foreground'
+              new Date(value) < new Date() ? 'text-[var(--bad)]' : 'text-muted-foreground'
             ]">
               {{ formatDateTime(value) }}
             </span>
@@ -314,7 +314,7 @@
               <!-- Use Key Button -->
               <button
                 @click="openUseKeyModal(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-green-50 hover:text-emerald-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-[var(--ok-dim)] hover:text-[var(--ok)]"
               >
                 <Icon name="terminal" size="sm" />
                 <span class="text-xs">{{ t('keys.useKey') }}</span>
@@ -323,7 +323,7 @@
               <button
                 v-if="!publicSettings?.hide_ccs_import_button"
                 @click="importToCcswitch(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-blue-50 hover:text-sky-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-[var(--azure-dim)] hover:text-[var(--azure)]"
               >
                 <Icon name="upload" size="sm" />
                 <span class="text-xs">{{ t('keys.importToCcSwitch') }}</span>
@@ -334,8 +334,8 @@
                 :class="[
                   'flex flex-col items-center gap-0.5 rounded-lg p-1.5 transition-colors',
                   row.status === 'active'
-                    ? 'text-muted-foreground hover:bg-yellow-50 hover:text-amber-400'
-                    : 'text-muted-foreground hover:bg-green-50 hover:text-emerald-400'
+                    ? 'text-muted-foreground hover:bg-[var(--warn-dim)] hover:text-[var(--warn)]'
+                    : 'text-muted-foreground hover:bg-[var(--ok-dim)] hover:text-[var(--ok)]'
                 ]"
               >
                 <Icon v-if="row.status === 'active'" name="ban" size="sm" />
@@ -353,7 +353,7 @@
               <!-- Delete Button -->
               <button
                 @click="confirmDelete(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-[var(--bad-dim)] hover:text-[var(--bad)]"
               >
                 <Icon name="trash" size="sm" />
                 <span class="text-xs">{{ t('common.delete') }}</span>
@@ -448,7 +448,7 @@
               @click="formData.use_custom_key = !formData.use_custom_key"
               :class="[
                 'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
-                formData.use_custom_key ? 'bg-primary-600' : 'bg-accent'
+                formData.use_custom_key ? 'bg-azure' : 'bg-accent'
               ]"
             >
               <span
@@ -465,9 +465,9 @@
               type="text"
               class="input font-mono"
               :placeholder="t('keys.customKeyPlaceholder')"
-              :class="{ 'border-red-500': customKeyError }"
+              :class="{ 'border-[var(--bad)]': customKeyError }"
             />
-            <p v-if="customKeyError" class="mt-1 text-sm text-red-400">{{ customKeyError }}</p>
+            <p v-if="customKeyError" class="mt-1 text-sm text-[var(--bad)]">{{ customKeyError }}</p>
             <p v-else class="input-hint">{{ t('keys.customKeyHint') }}</p>
           </div>
         </div>
@@ -490,7 +490,7 @@
               @click="formData.enable_ip_restriction = !formData.enable_ip_restriction"
               :class="[
                 'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
-                formData.enable_ip_restriction ? 'bg-primary-600' : 'bg-accent'
+                formData.enable_ip_restriction ? 'bg-azure' : 'bg-accent'
               ]"
             >
               <span
@@ -538,7 +538,7 @@
               @click="formData.enable_quota = !formData.enable_quota"
               :class="[
                 'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
-                formData.enable_quota ? 'bg-primary-600' : 'bg-accent'
+                formData.enable_quota ? 'bg-azure' : 'bg-accent'
               ]"
             >
               <span
@@ -602,7 +602,7 @@
               @click="formData.enable_rate_limit = !formData.enable_rate_limit"
               :class="[
                 'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
-                formData.enable_rate_limit ? 'bg-primary-600' : 'bg-accent'
+                formData.enable_rate_limit ? 'bg-azure' : 'bg-accent'
               ]"
             >
               <span
@@ -636,8 +636,8 @@
                   <div class="flex-1 rounded-lg bg-muted px-3 py-2 text-sm">
                     <span :class="[
                       'font-medium',
-                      selectedKey.usage_5h >= selectedKey.rate_limit_5h ? 'text-red-400' :
-                      selectedKey.usage_5h >= selectedKey.rate_limit_5h * 0.8 ? 'text-yellow-500' :
+                      selectedKey.usage_5h >= selectedKey.rate_limit_5h ? 'text-[var(--bad)]' :
+                      selectedKey.usage_5h >= selectedKey.rate_limit_5h * 0.8 ? 'text-[var(--warn)]' :
                       'text-foreground'
                     ]">
                       ${{ selectedKey.usage_5h?.toFixed(4) || '0.0000' }}
@@ -652,9 +652,9 @@
                   <div
                     :class="[
                       'h-full rounded-full transition-all',
-                      selectedKey.usage_5h >= selectedKey.rate_limit_5h ? 'bg-red-500' :
-                      selectedKey.usage_5h >= selectedKey.rate_limit_5h * 0.8 ? 'bg-yellow-500' :
-                      'bg-green-500'
+                      selectedKey.usage_5h >= selectedKey.rate_limit_5h ? 'bg-[var(--bad)]' :
+                      selectedKey.usage_5h >= selectedKey.rate_limit_5h * 0.8 ? 'bg-[var(--warn)]' :
+                      'bg-[var(--ok)]'
                     ]"
                     :style="{ width: Math.min((selectedKey.usage_5h / selectedKey.rate_limit_5h) * 100, 100) + '%' }"
                   />
@@ -682,8 +682,8 @@
                   <div class="flex-1 rounded-lg bg-muted px-3 py-2 text-sm">
                     <span :class="[
                       'font-medium',
-                      selectedKey.usage_1d >= selectedKey.rate_limit_1d ? 'text-red-400' :
-                      selectedKey.usage_1d >= selectedKey.rate_limit_1d * 0.8 ? 'text-yellow-500' :
+                      selectedKey.usage_1d >= selectedKey.rate_limit_1d ? 'text-[var(--bad)]' :
+                      selectedKey.usage_1d >= selectedKey.rate_limit_1d * 0.8 ? 'text-[var(--warn)]' :
                       'text-foreground'
                     ]">
                       ${{ selectedKey.usage_1d?.toFixed(4) || '0.0000' }}
@@ -698,9 +698,9 @@
                   <div
                     :class="[
                       'h-full rounded-full transition-all',
-                      selectedKey.usage_1d >= selectedKey.rate_limit_1d ? 'bg-red-500' :
-                      selectedKey.usage_1d >= selectedKey.rate_limit_1d * 0.8 ? 'bg-yellow-500' :
-                      'bg-green-500'
+                      selectedKey.usage_1d >= selectedKey.rate_limit_1d ? 'bg-[var(--bad)]' :
+                      selectedKey.usage_1d >= selectedKey.rate_limit_1d * 0.8 ? 'bg-[var(--warn)]' :
+                      'bg-[var(--ok)]'
                     ]"
                     :style="{ width: Math.min((selectedKey.usage_1d / selectedKey.rate_limit_1d) * 100, 100) + '%' }"
                   />
@@ -728,8 +728,8 @@
                   <div class="flex-1 rounded-lg bg-muted px-3 py-2 text-sm">
                     <span :class="[
                       'font-medium',
-                      selectedKey.usage_7d >= selectedKey.rate_limit_7d ? 'text-red-400' :
-                      selectedKey.usage_7d >= selectedKey.rate_limit_7d * 0.8 ? 'text-yellow-500' :
+                      selectedKey.usage_7d >= selectedKey.rate_limit_7d ? 'text-[var(--bad)]' :
+                      selectedKey.usage_7d >= selectedKey.rate_limit_7d * 0.8 ? 'text-[var(--warn)]' :
                       'text-foreground'
                     ]">
                       ${{ selectedKey.usage_7d?.toFixed(4) || '0.0000' }}
@@ -744,9 +744,9 @@
                   <div
                     :class="[
                       'h-full rounded-full transition-all',
-                      selectedKey.usage_7d >= selectedKey.rate_limit_7d ? 'bg-red-500' :
-                      selectedKey.usage_7d >= selectedKey.rate_limit_7d * 0.8 ? 'bg-yellow-500' :
-                      'bg-green-500'
+                      selectedKey.usage_7d >= selectedKey.rate_limit_7d ? 'bg-[var(--bad)]' :
+                      selectedKey.usage_7d >= selectedKey.rate_limit_7d * 0.8 ? 'bg-[var(--warn)]' :
+                      'bg-[var(--ok)]'
                     ]"
                     :style="{ width: Math.min((selectedKey.usage_7d / selectedKey.rate_limit_7d) * 100, 100) + '%' }"
                   />
@@ -776,7 +776,7 @@
               @click="formData.enable_expiration = !formData.enable_expiration"
               :class="[
                 'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
-                formData.enable_expiration ? 'bg-primary-600' : 'bg-accent'
+                formData.enable_expiration ? 'bg-azure' : 'bg-accent'
               ]"
             >
               <span
@@ -799,7 +799,7 @@
                 :class="[
                   'rounded-lg px-3 py-1.5 text-sm transition-colors',
                   formData.expiration_preset === days
-                    ? 'bg-primary-900/30 text-primary-400'
+                    ? 'bg-[var(--azure-dim)] text-[var(--azure)]'
                     : 'bg-muted text-foreground/75 hover:bg-accent'
                 ]"
               >
@@ -811,7 +811,7 @@
                 :class="[
                   'rounded-lg px-3 py-1.5 text-sm transition-colors',
                   formData.expiration_preset === 'custom'
-                    ? 'bg-primary-900/30 text-primary-400'
+                    ? 'bg-[var(--azure-dim)] text-[var(--azure)]'
                     : 'bg-muted text-foreground/75 hover:bg-accent'
                 ]"
               >
@@ -944,7 +944,7 @@
 	        <div class="grid grid-cols-2 gap-3">
 	          <button
 	            @click="handleCcsClientSelect('claude')"
-	            class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-border hover:border-primary-500 hover:bg-primary-50 transition-all"
+	            class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-border hover:border-azure hover:bg-[var(--azure-dim)] transition-all"
 	          >
 	            <Icon name="terminal" size="xl" class="text-foreground/75" />
 	            <span class="font-medium text-foreground">{{
@@ -956,7 +956,7 @@
 	          </button>
 	          <button
 	            @click="handleCcsClientSelect('gemini')"
-	            class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-border hover:border-primary-500 hover:bg-primary-50 transition-all"
+	            class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 border-border hover:border-azure hover:bg-[var(--azure-dim)] transition-all"
 	          >
 	            <Icon name="sparkles" size="xl" class="text-foreground/75" />
 	            <span class="font-medium text-foreground">{{
@@ -982,7 +982,7 @@
       <div
         v-if="groupSelectorKeyId !== null && dropdownPosition"
         ref="dropdownRef"
-        class="animate-in fade-in slide-in-from-top-2 fixed z-[100000020] w-max min-w-[380px] overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5 duration-200 ring-white/10"
+        class="animate-in fade-in slide-in-from-top-2 fixed z-[100000020] w-max min-w-[380px] overflow-hidden rounded-lg bg-card shadow-lg border border-[var(--line-0)] duration-200"
         style="pointer-events: auto !important;"
         :style="{
           top: dropdownPosition.top !== undefined ? dropdownPosition.top + 'px' : undefined,
@@ -999,7 +999,7 @@
             <input
               v-model="groupSearchQuery"
               type="text"
-              class="w-full rounded-lg border border-border bg-card py-1.5 pl-8 pr-3 text-sm text-foreground placeholder-muted-foreground outline-none focus:border-primary-300 focus:ring-1 focus:ring-primary-300"
+              class="w-full rounded-lg border border-border bg-card py-1.5 pl-8 pr-3 text-sm text-foreground placeholder-muted-foreground outline-none focus:border-azure focus:ring-1 focus:ring-azure/30"
               :placeholder="t('keys.searchGroup')"
               @click.stop
             />
@@ -1016,7 +1016,7 @@
               'border-b border-border last:border-0',
               selectedKeyForGroup?.group_id === option.value ||
               (!selectedKeyForGroup?.group_id && option.value === null)
-                ? 'bg-primary-900/20'
+                ? 'bg-[var(--azure-dim)]'
                 : 'hover:bg-muted'
             ]"
             :title="option.description || undefined"

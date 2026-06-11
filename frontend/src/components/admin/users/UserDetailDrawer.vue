@@ -18,7 +18,7 @@
         class="ud-drawer"
         role="dialog"
         aria-modal="true"
-        :aria-label="user ? `用户详情 - ${user.email}` : '用户详情'"
+        :aria-label="user ? t('admin.userDetailDrawer.ariaLabelUser', { email: user.email }) : t('admin.userDetailDrawer.ariaLabel')"
         @keydown.esc="handleClose"
         tabindex="-1"
       >
@@ -30,7 +30,7 @@
         <!-- 错误态 -->
         <div v-else-if="loadError" class="ud-error-cover">
           <p>{{ loadError }}</p>
-          <button class="ud-btn-ghost" @click="loadUser">重试</button>
+          <button class="ud-btn-ghost" @click="loadUser">{{ t('admin.userDetailDrawer.retryBtn') }}</button>
         </div>
 
         <template v-else-if="user">
@@ -42,18 +42,18 @@
             <div class="ud-head-info">
               <div class="ud-email">{{ user.email }}</div>
               <div class="ud-head-meta">
-                <span class="ud-reg-time">注册 {{ fmtDate(user.created_at) }}</span>
+                <span class="ud-reg-time">{{ t('admin.userDetailDrawer.registered') }} {{ fmtDate(user.created_at) }}</span>
               </div>
             </div>
             <div class="ud-head-badges">
               <span class="ud-badge" :class="user.role === 'admin' ? 'ud-badge-azure' : 'ud-badge-gray'">
-                {{ user.role === 'admin' ? '管理员' : '用户' }}
+                {{ user.role === 'admin' ? t('admin.userDetailDrawer.roleAdmin') : t('admin.userDetailDrawer.roleUser') }}
               </span>
               <span class="ud-badge" :class="user.status === 'active' ? 'ud-badge-ok' : 'ud-badge-bad'">
-                {{ user.status === 'active' ? '活跃' : '禁用' }}
+                {{ user.status === 'active' ? t('admin.userDetailDrawer.statusActive') : t('admin.userDetailDrawer.statusDisabled') }}
               </span>
             </div>
-            <button class="ud-close" @click="handleClose" aria-label="关闭抽屉">
+            <button class="ud-close" @click="handleClose" :aria-label="t('admin.userDetailDrawer.ariaClose')">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M2 2L12 12M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
               </svg>
@@ -63,22 +63,22 @@
           <!-- ── KPI 三格 ── -->
           <div class="ud-kpi-strip">
             <div class="ud-kpi-item">
-              <span class="ud-kpi-label">余额</span>
+              <span class="ud-kpi-label">{{ t('admin.userDetailDrawer.kpiBalance') }}</span>
               <span class="ud-kpi-val q-money">${{ fmtBal(user.balance) }}</span>
             </div>
             <div class="ud-kpi-divider"></div>
             <div class="ud-kpi-item">
-              <span class="ud-kpi-label">本月消耗</span>
+              <span class="ud-kpi-label">{{ t('admin.userDetailDrawer.kpiMonthCost') }}</span>
               <span class="ud-kpi-val q-money" v-if="!monthStatsLoading">${{ fmtBal(monthStats.total_cost) }}</span>
               <span class="ud-kpi-val ud-muted" v-else>…</span>
             </div>
             <div class="ud-kpi-divider"></div>
             <div class="ud-kpi-item">
-              <span class="ud-kpi-label">订阅状态</span>
+              <span class="ud-kpi-label">{{ t('admin.userDetailDrawer.kpiSubscription') }}</span>
               <span class="ud-kpi-val" v-if="activeSub">
-                <span class="ud-badge ud-badge-ok">活跃</span>
+                <span class="ud-badge ud-badge-ok">{{ t('admin.userDetailDrawer.subscriptionActive') }}</span>
               </span>
-              <span class="ud-kpi-val ud-muted" v-else>无</span>
+              <span class="ud-kpi-val ud-muted" v-else>{{ t('admin.userDetailDrawer.subscriptionNone') }}</span>
             </div>
           </div>
 
@@ -111,7 +111,7 @@
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
                 <path d="M6.5 2v9M2 6.5h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
               </svg>
-              调余额
+              {{ t('admin.userDetailDrawer.adjustBalance') }}
             </button>
             <button
               class="ud-foot-btn"
@@ -140,6 +140,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import { useAppStore } from '@/stores/app'
 import type { AdminUser } from '@/types'
@@ -166,7 +167,8 @@ const emit = defineEmits<{
   (e: 'updated'): void
 }>()
 
-// ── Store ──────────────────────────────────────────────────────────────
+// ── i18n / Store ───────────────────────────────────────────────────────
+const { t } = useI18n()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 
@@ -180,14 +182,14 @@ const showBalanceAdj = ref(false)
 const monthStatsLoading = ref(false)
 const monthStats = ref({ total_cost: 0, total_requests: 0, total_tokens: 0 })
 
-const tabs = [
-  { key: 'overview', label: '概览' },
-  { key: 'subscriptions', label: '订阅' },
-  { key: 'keys', label: 'Keys' },
-  { key: 'orders', label: '订单' },
-  { key: 'usage', label: '用量' },
-  { key: 'risk', label: '风控' },
-]
+const tabs = computed(() => [
+  { key: 'overview', label: t('admin.userDetailDrawer.tabOverview') },
+  { key: 'subscriptions', label: t('admin.userDetailDrawer.tabSubscriptions') },
+  { key: 'keys', label: t('admin.userDetailDrawer.tabKeys') },
+  { key: 'orders', label: t('admin.userDetailDrawer.tabOrders') },
+  { key: 'usage', label: t('admin.userDetailDrawer.tabUsage') },
+  { key: 'risk', label: t('admin.userDetailDrawer.tabRisk') },
+])
 
 // ── Computed ──────────────────────────────────────────────────────────
 const activeSub = computed(() =>
@@ -199,7 +201,7 @@ const isCurrentAdmin = computed(() =>
 )
 
 const statusToggleLabel = computed(() =>
-  user.value?.status === 'active' ? '禁用账号' : '启用账号'
+  user.value?.status === 'active' ? t('admin.userDetailDrawer.disableAccount') : t('admin.userDetailDrawer.enableAccount')
 )
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -226,7 +228,7 @@ async function loadUser() {
     activeTab.value = 'overview'
     loadMonthStats()
   } catch (e: any) {
-    loadError.value = e?.response?.data?.detail || '加载用户失败'
+    loadError.value = e?.response?.data?.detail || t('admin.userDetailDrawer.loadFailed')
   } finally { loading.value = false }
 }
 
@@ -243,17 +245,17 @@ async function loadMonthStats() {
 async function toggleStatus() {
   if (!user.value) return
   if (user.value.role === 'admin' && isCurrentAdmin.value) {
-    appStore.showWarning('无法禁用自己的管理员账号')
+    appStore.showWarning(t('admin.userDetailDrawer.cannotDisableSelf'))
     return
   }
   const newStatus = user.value.status === 'active' ? 'disabled' : 'active'
   try {
     const updated = await adminAPI.users.toggleStatus(user.value.id, newStatus)
     user.value = updated
-    appStore.showSuccess(newStatus === 'active' ? '账号已启用' : '账号已禁用')
+    appStore.showSuccess(newStatus === 'active' ? t('admin.userDetailDrawer.accountEnabled') : t('admin.userDetailDrawer.accountDisabled'))
     emit('updated')
   } catch (e: any) {
-    appStore.showError(e?.response?.data?.detail || '操作失败')
+    appStore.showError(e?.response?.data?.detail || t('admin.userDetailDrawer.operationFailed'))
   }
 }
 

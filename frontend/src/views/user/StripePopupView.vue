@@ -14,7 +14,7 @@
       <!-- Error -->
       <div v-if="error" class="space-y-3">
         <div
-          class="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400"
+          class="rounded-md border border-[var(--bad)]/30 bg-[var(--bad-dim)] p-3 text-sm text-[var(--bad)]"
         >
           {{ error }}
         </div>
@@ -29,7 +29,7 @@
 
       <!-- Success -->
       <div v-else-if="success" class="space-y-3 py-4 text-center">
-        <div class="text-5xl text-emerald-400">✓</div>
+        <div class="text-5xl text-[var(--ok)]">✓</div>
         <p class="text-sm text-muted-foreground">{{ t('payment.result.success') }}</p>
         <button
           class="text-sm underline"

@@ -3,7 +3,7 @@
     <div class="space-y-6">
       <div v-if="loading" class="flex justify-center py-12">
         <div
-          class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"
+          class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--azure)] border-t-transparent"
         ></div>
       </div>
 
@@ -29,7 +29,7 @@
           </div>
           <div class="card p-5">
             <p class="text-sm text-muted-foreground">{{ t('affiliate.stats.availableQuota') }}</p>
-            <p class="mt-2 text-2xl font-semibold text-emerald-400">
+            <p class="q-money mt-2 text-2xl font-semibold text-[var(--ok)]">
               {{ formatCurrency(detail.aff_quota) }}
             </p>
           </div>
@@ -38,7 +38,7 @@
             <p class="mt-2 text-2xl font-semibold text-foreground">
               {{ formatCurrency(detail.aff_history_quota) }}
             </p>
-            <p v-if="detail.aff_frozen_quota > 0" class="mt-1 text-xs text-amber-400">
+            <p v-if="detail.aff_frozen_quota > 0" class="mt-1 text-xs text-[var(--warn)]">
               {{ t('affiliate.stats.frozenQuota') }}: {{ formatCurrency(detail.aff_frozen_quota) }}
             </p>
           </div>
@@ -99,7 +99,7 @@
               <span>{{ transferring ? t('affiliate.transfer.transferring') : t('affiliate.transfer.button') }}</span>
             </button>
           </div>
-          <p v-if="detail.aff_quota <= 0" class="mt-3 text-sm text-amber-400">
+          <p v-if="detail.aff_quota <= 0" class="mt-3 text-sm text-[var(--warn)]">
             {{ t('affiliate.transfer.empty') }}
           </p>
         </div>
@@ -127,7 +127,7 @@
                 >
                   <td class="px-3 py-3 text-foreground">{{ item.email || '-' }}</td>
                   <td class="px-3 py-3 text-foreground/85">{{ item.username || '-' }}</td>
-                  <td class="px-3 py-3 text-right font-medium text-emerald-400">{{ formatCurrency(item.total_rebate) }}</td>
+                  <td class="px-3 py-3 text-right font-medium text-[var(--ok)]">{{ formatCurrency(item.total_rebate) }}</td>
                   <td class="px-3 py-3 text-foreground/85">{{ formatDateTime(item.created_at) || '-' }}</td>
                 </tr>
               </tbody>

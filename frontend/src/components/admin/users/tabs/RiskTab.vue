@@ -1,38 +1,40 @@
 <template>
   <div class="ud-tab-content">
-    <div v-if="loading" class="ud-loading">加载中…</div>
+    <div v-if="loading" class="ud-loading">{{ t('admin.userTabs.loading') }}</div>
     <div v-else-if="error" class="ud-error">{{ error }}</div>
-    <div v-else-if="!items.length" class="ud-empty">暂无风控日志</div>
+    <div v-else-if="!items.length" class="ud-empty">{{ t('admin.userTabs.noRiskLogs') }}</div>
     <div v-else class="ud-list">
       <div v-for="log in items" :key="log.id" class="ud-log-card" :class="{ 'ud-log-flagged': log.flagged }">
         <div class="ud-log-header">
           <div class="ud-log-time ud-muted ud-xs">{{ fmt(log.created_at) }}</div>
           <div class="ud-log-badges">
-            <span v-if="log.flagged" class="ud-badge ud-badge-bad">命中</span>
-            <span v-if="log.auto_banned" class="ud-badge ud-badge-bad">自动封禁</span>
-            <span v-if="!log.flagged" class="ud-badge ud-badge-ok">通过</span>
+            <span v-if="log.flagged" class="ud-badge ud-badge-bad">{{ t('admin.userTabs.riskFlagged') }}</span>
+            <span v-if="log.auto_banned" class="ud-badge ud-badge-bad">{{ t('admin.userTabs.riskAutoBanned') }}</span>
+            <span v-if="!log.flagged" class="ud-badge ud-badge-ok">{{ t('admin.userTabs.riskPassed') }}</span>
           </div>
         </div>
         <div class="ud-log-meta">
-          <span class="ud-meta-item">模式：{{ log.mode }}</span>
-          <span class="ud-meta-item" v-if="log.highest_category">类别：{{ log.highest_category }}</span>
-          <span class="ud-meta-item" v-if="log.highest_score">分值：{{ (log.highest_score * 100).toFixed(1) }}%</span>
-          <span class="ud-meta-item">模型：{{ log.model || '-' }}</span>
+          <span class="ud-meta-item">{{ t('admin.userTabs.riskMode') }}{{ log.mode }}</span>
+          <span class="ud-meta-item" v-if="log.highest_category">{{ t('admin.userTabs.riskCategory') }}{{ log.highest_category }}</span>
+          <span class="ud-meta-item" v-if="log.highest_score">{{ t('admin.userTabs.riskScore') }}{{ (log.highest_score * 100).toFixed(1) }}%</span>
+          <span class="ud-meta-item">{{ t('admin.userTabs.riskModel') }}{{ log.model || '-' }}</span>
         </div>
         <div v-if="log.input_excerpt" class="ud-log-excerpt">{{ log.input_excerpt }}</div>
       </div>
     </div>
-    <div v-if="total > items.length" class="ud-more">共 {{ total }} 条，仅展示前 {{ items.length }} 条</div>
+    <div v-if="total > items.length" class="ud-more">{{ t('admin.userTabs.totalCountPartial', { total, shown: items.length }) }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser } from '@/types'
 import type { ContentModerationLog } from '@/api/admin/riskControl'
 import { formatDateTime } from '@/utils/format'
 
+const { t } = useI18n()
 const props = defineProps<{ user: AdminUser; active: boolean }>()
 
 const loading = ref(false)
@@ -52,7 +54,7 @@ async function load() {
     items.value = res.items.filter(l => l.user_id === props.user.id)
     total.value = items.value.length
     loaded.value = true
-  } catch { error.value = '加载失败' } finally { loading.value = false }
+  } catch { error.value = t('admin.userTabs.loadFailed') } finally { loading.value = false }
 }
 
 watch(() => props.active, (v) => { if (v) load() })

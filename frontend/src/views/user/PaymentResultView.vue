@@ -3,25 +3,25 @@
     <div class="w-full max-w-md space-y-6">
       <!-- Loading -->
       <div v-if="loading" class="flex items-center justify-center py-20">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--azure)] border-t-transparent"></div>
       </div>
       <template v-else>
         <!-- Status Icon -->
         <div class="text-center">
           <div v-if="isSuccess"
-            class="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
-            <svg class="h-10 w-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            class="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[var(--ok)]/30 bg-[var(--ok-dim)]">
+            <svg class="h-10 w-10 text-[var(--ok)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
               stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div v-else-if="isPending"
-            class="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10">
-            <div class="h-10 w-10 animate-spin rounded-full border-4 border-amber-400 border-t-transparent"></div>
+            class="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[var(--warn)]/30 bg-[var(--warn-dim)]">
+            <div class="h-10 w-10 animate-spin rounded-full border-4 border-[var(--warn)] border-t-transparent"></div>
           </div>
           <div v-else
-            class="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10">
-            <svg class="h-10 w-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            class="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[var(--bad)]/30 bg-[var(--bad-dim)]">
+            <svg class="h-10 w-10 text-[var(--bad)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>

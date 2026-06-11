@@ -1,20 +1,20 @@
 <template>
   <!-- 小弹窗：调余额 -->
   <Teleport to="body">
-    <div v-if="open" class="bal-backdrop" @click.self="$emit('close')" role="dialog" aria-modal="true" aria-label="调整余额">
+    <div v-if="open" class="bal-backdrop" @click.self="$emit('close')" role="dialog" aria-modal="true" :aria-label="t('admin.balanceAdjustPopover.title')">
       <div class="bal-panel" @keydown.esc.stop="$emit('close')">
         <div class="bal-header">
-          <span class="bal-title">调整余额</span>
-          <button class="bal-close" @click="$emit('close')" aria-label="关闭">
+          <span class="bal-title">{{ t('admin.balanceAdjustPopover.title') }}</span>
+          <button class="bal-close" @click="$emit('close')" :aria-label="t('admin.balanceAdjustPopover.ariaClose')">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2L12 12M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
         </div>
         <div class="bal-body">
           <div class="bal-cur">
-            当前余额：<span class="q-money">${{ fmtBal(currentBalance) }}</span>
+            {{ t('admin.balanceAdjustPopover.currentBalance') }}<span class="q-money">${{ fmtBal(currentBalance) }}</span>
           </div>
           <div class="bal-field">
-            <label class="bal-label">操作</label>
+            <label class="bal-label">{{ t('admin.balanceAdjustPopover.operationLabel') }}</label>
             <div class="bal-ops">
               <button
                 v-for="op in ops"
@@ -26,7 +26,7 @@
             </div>
           </div>
           <div class="bal-field">
-            <label class="bal-label">金额（USD）</label>
+            <label class="bal-label">{{ t('admin.balanceAdjustPopover.amountLabel') }}</label>
             <div class="bal-input-wrap">
               <span class="bal-prefix">$</span>
               <input
@@ -46,17 +46,17 @@
             </div>
           </div>
           <div class="bal-field">
-            <label class="bal-label">备注（选填）</label>
-            <textarea v-model="form.notes" rows="2" class="bal-textarea q-focus-glow" placeholder="备注原因…"></textarea>
+            <label class="bal-label">{{ t('admin.balanceAdjustPopover.notesLabel') }}</label>
+            <textarea v-model="form.notes" rows="2" class="bal-textarea q-focus-glow" :placeholder="t('admin.balanceAdjustPopover.notesPlaceholder')"></textarea>
           </div>
         </div>
         <div class="bal-footer">
-          <button class="bal-btn bal-btn-ghost" @click="$emit('close')">取消</button>
+          <button class="bal-btn bal-btn-ghost" @click="$emit('close')">{{ t('admin.balanceAdjustPopover.cancelBtn') }}</button>
           <button
             class="bal-btn bal-btn-primary"
             :disabled="submitting || !form.amount"
             @click="submit"
-          >{{ submitting ? '提交中…' : '确认' }}</button>
+          >{{ submitting ? t('admin.balanceAdjustPopover.submitting') : t('admin.balanceAdjustPopover.confirmBtn') }}</button>
         </div>
       </div>
     </div>
@@ -65,6 +65,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import { useAppStore } from '@/stores/app'
 
@@ -78,15 +79,16 @@ const emit = defineEmits<{
   (e: 'updated'): void
 }>()
 
+const { t } = useI18n()
 const appStore = useAppStore()
 const amountRef = ref<HTMLInputElement | null>(null)
 const submitting = ref(false)
 const form = reactive({ amount: 0, operation: 'add' as 'add' | 'subtract' | 'set', notes: '' })
-const ops: { value: 'add' | 'subtract' | 'set'; label: string }[] = [
-  { value: 'add', label: '增加' },
-  { value: 'subtract', label: '减少' },
-  { value: 'set', label: '设为' },
-]
+const ops = computed<{ value: 'add' | 'subtract' | 'set'; label: string }[]>(() => [
+  { value: 'add', label: t('admin.balanceAdjustPopover.opAdd') },
+  { value: 'subtract', label: t('admin.balanceAdjustPopover.opSubtract') },
+  { value: 'set', label: t('admin.balanceAdjustPopover.opSet') },
+])
 
 const previewBalance = computed(() => {
   const a = form.amount || 0
@@ -114,17 +116,17 @@ watch(() => props.open, async (v) => {
 
 async function submit() {
   if (!form.amount || form.amount <= 0) {
-    appStore.showError('请输入有效金额')
+    appStore.showError(t('admin.balanceAdjustPopover.invalidAmount'))
     return
   }
   submitting.value = true
   try {
     await adminAPI.users.updateBalance(props.userId, form.amount, form.operation, form.notes)
-    appStore.showSuccess('余额已调整')
+    appStore.showSuccess(t('admin.balanceAdjustPopover.adjusted'))
     emit('updated')
     emit('close')
   } catch (e: any) {
-    appStore.showError(e?.response?.data?.detail || '操作失败')
+    appStore.showError(e?.response?.data?.detail || t('admin.balanceAdjustPopover.operationFailed'))
   } finally { submitting.value = false }
 }
 </script>

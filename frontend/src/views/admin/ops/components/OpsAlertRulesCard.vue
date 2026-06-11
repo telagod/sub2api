@@ -395,8 +395,8 @@ function cancelDelete() {
       </div>
       <div style="display:flex;align-items:center;gap:6px;">
         <button class="od-btn od-btn-azure" style="padding:4px 10px;font-size:11px;" :disabled="loading" @click="openCreate">{{ t('admin.ops.alertRules.create') }}</button>
-        <button class="od-btn od-btn-icon" :disabled="loading" @click="load">
-          <svg width="13" height="13" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <button class="od-btn od-btn-icon" :disabled="loading" :aria-label="t('common.refresh')" @click="load">
+          <svg width="13" height="13" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           {{ t('common.refresh') }}
         </button>
       </div>

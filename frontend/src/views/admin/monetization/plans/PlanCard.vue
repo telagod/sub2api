@@ -14,14 +14,14 @@
       <div class="pcard-hdr-left">
         <span class="pcard-name" :class="nameTextClass">{{ plan.name }}</span>
         <span class="pcard-sale-badge" :class="plan.for_sale ? 'badge-on' : 'badge-off'">
-          {{ plan.for_sale ? '在售' : '已下架' }}
+          {{ plan.for_sale ? t('admin.plansCatalog.onSale') : t('admin.plansCatalog.offSale') }}
         </span>
       </div>
       <div class="pcard-sort">
-        <button class="pcard-sort-btn" :disabled="isFirst" @click="emit('move-up')" title="上移">
+        <button class="pcard-sort-btn" :disabled="isFirst" @click="emit('move-up')" :title="t('admin.plansCatalog.moveUp')">
           <Icon name="chevronUp" size="xs" />
         </button>
-        <button class="pcard-sort-btn" :disabled="isLast" @click="emit('move-down')" title="下移">
+        <button class="pcard-sort-btn" :disabled="isLast" @click="emit('move-down')" :title="t('admin.plansCatalog.moveDown')">
           <Icon name="chevronDown" size="xs" />
         </button>
       </div>
@@ -42,7 +42,7 @@
     <!-- Key config chips -->
     <div class="pcard-chips">
       <template v-if="groupMissing">
-        <span class="pcard-chip pcard-chip-bad">分组 #{{ plan.group_id }} 缺失</span>
+        <span class="pcard-chip pcard-chip-bad">{{ t('admin.plansCatalog.groupMissingFmt', { id: plan.group_id }) }}</span>
       </template>
       <template v-else-if="group">
         <GroupBadge
@@ -54,9 +54,9 @@
       </template>
 
       <span v-if="group?.daily_limit_usd != null" class="pcard-chip">
-        日限 ${{ group.daily_limit_usd }}
+        {{ t('admin.plansCatalog.dailyLimitFmt', { v: group.daily_limit_usd }) }}
       </span>
-      <span v-else-if="group" class="pcard-chip pcard-chip-ok">无限额</span>
+      <span v-else-if="group" class="pcard-chip pcard-chip-ok">{{ t('admin.plansCatalog.unlimited') }}</span>
     </div>
 
     <!-- Features list (top 3 + overflow count) -->
@@ -66,7 +66,7 @@
         {{ f }}
       </li>
       <li v-if="plan.features.length > 3" class="pcard-feature pcard-feature-more">
-        +{{ plan.features.length - 3 }} 项
+        {{ t('admin.plansCatalog.moreFeaturesFmt', { n: plan.features.length - 3 }) }}
       </li>
     </ul>
 
@@ -77,14 +77,14 @@
         class="pcard-toggle"
         :class="plan.for_sale ? 'pcard-toggle--on' : 'pcard-toggle--off'"
         @click="emit('toggle-sale')"
-        :title="plan.for_sale ? '点击下架' : '点击上架'"
+        :title="plan.for_sale ? t('admin.plansCatalog.toggleOnTitle') : t('admin.plansCatalog.toggleOffTitle')"
       >
         <span
           class="pcard-toggle-knob"
           :style="{ transform: plan.for_sale ? 'translateX(16px)' : 'translateX(0)' }"
         />
       </button>
-      <span class="pcard-toggle-lbl">{{ plan.for_sale ? '在售' : '已下架' }}</span>
+      <span class="pcard-toggle-lbl">{{ plan.for_sale ? t('admin.plansCatalog.onSale') : t('admin.plansCatalog.offSale') }}</span>
 
       <div class="pcard-acts">
         <button class="pcard-act" @click="emit('edit')">
@@ -144,8 +144,8 @@ const nameTextClass = computed(() =>
 const periodLabel = computed(() => {
   const unit = props.plan.validity_unit || 'days'
   const n = props.plan.validity_days
-  if (unit === 'months') return `${n} 月`
-  if (unit === 'weeks') return `${n} 周`
-  return `${n} 天`
+  if (unit === 'months') return t('admin.plansCatalog.periodMonths', { n })
+  if (unit === 'weeks') return t('admin.plansCatalog.periodWeeks', { n })
+  return t('admin.plansCatalog.periodDays', { n })
 })
 </script>

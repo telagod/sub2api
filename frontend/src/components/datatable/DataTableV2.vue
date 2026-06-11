@@ -545,6 +545,11 @@ th.q-align-right .q-th-inner { justify-content: flex-end; }
   cursor: default;
 }
 
+.q-pg:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1.5px rgba(92, 168, 255, 0.65), 0 0 12px rgba(92, 168, 255, 0.2);
+}
+
 /* 金额约定 class（工作包 A 提供全局变量，此处兜底） */
 :global(.q-money) {
   font-family: var(--font-mono, "IBM Plex Mono", monospace);

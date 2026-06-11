@@ -1,40 +1,29 @@
 <template>
   <AuthLayout>
-    <div class="space-y-6">
-      <!-- Title -->
-      <div class="text-center">
-        <h2 class="text-2xl font-bold text-foreground">
-          {{ t('auth.verifyYourEmail') }}
-        </h2>
-        <p class="mt-2 text-sm text-muted-foreground">
+    <div class="ev-body">
+      <!-- 标题 -->
+      <div class="ev-head">
+        <h2 class="ev-title">{{ t('auth.verifyYourEmail') }}</h2>
+        <p class="ev-sub">
           {{ t('auth.sendCodeDesc') }}
-          <span class="font-medium text-foreground/85">{{ email }}</span>
+          <span class="ev-email-hi">{{ email }}</span>
         </p>
       </div>
 
-      <!-- No Data Warning -->
-      <div
-        v-if="!hasRegisterData"
-        class="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4"
-      >
-        <div class="flex items-start gap-3">
-          <div class="flex-shrink-0">
-            <Icon name="exclamationCircle" size="md" class="text-amber-400" />
-          </div>
-          <div class="text-sm text-amber-400">
-            <p class="font-medium">{{ t('auth.sessionExpired') }}</p>
-            <p class="mt-1">{{ t('auth.sessionExpiredDesc') }}</p>
-          </div>
+      <!-- 无注册数据警告 -->
+      <div v-if="!hasRegisterData" class="ev-notice ev-notice--warn">
+        <Icon name="exclamationCircle" size="md" class="ev-notice-icon ev-notice-icon--warn" />
+        <div class="ev-notice-text">
+          <p class="ev-notice-title ev-notice-title--warn">{{ t('auth.sessionExpired') }}</p>
+          <p class="ev-notice-desc ev-notice-desc--warn">{{ t('auth.sessionExpiredDesc') }}</p>
         </div>
       </div>
 
-      <!-- Verification Form -->
-      <form v-else @submit.prevent="handleVerify" class="space-y-5">
-        <!-- Verification Code Input -->
-        <div>
-          <label for="code" class="input-label text-center">
-            {{ t('auth.verificationCode') }}
-          </label>
+      <!-- 验证表单 -->
+      <form v-else @submit.prevent="handleVerify" class="ev-form">
+        <!-- 验证码输入 -->
+        <div class="ev-field">
+          <label for="code" class="ev-label ev-label--center">{{ t('auth.verificationCode') }}</label>
           <input
             id="code"
             v-model="verifyCode"
@@ -44,29 +33,20 @@
             inputmode="numeric"
             maxlength="6"
             :disabled="isLoading"
-            class="input py-3 text-center font-mono text-xl tracking-[0.5em]"
-            :class="{ 'input-error': errors.code }"
+            class="ev-code-inp"
+            :class="{ 'ev-code-inp--error': errors.code }"
             placeholder="000000"
           />
-          <p class="input-hint text-center">{{ t('auth.verificationCodeHint') }}</p>
+          <p class="ev-code-hint">{{ t('auth.verificationCodeHint') }}</p>
         </div>
 
-        <!-- Code Status -->
-        <div
-          v-if="codeSent"
-          class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4"
-        >
-          <div class="flex items-start gap-3">
-            <div class="flex-shrink-0">
-              <Icon name="checkCircle" size="md" class="text-emerald-400" />
-            </div>
-            <p class="text-sm text-emerald-400">
-              {{ t('auth.codeSentSuccess') }}
-            </p>
-          </div>
+        <!-- 发送成功提示 -->
+        <div v-if="codeSent" class="ev-sent-ok">
+          <Icon name="checkCircle" size="md" class="ev-icon-ok" />
+          <p class="ev-sent-txt">{{ t('auth.codeSentSuccess') }}</p>
         </div>
 
-        <!-- Turnstile Widget for Resend -->
+        <!-- Turnstile（重发时显示） -->
         <div v-if="turnstileEnabled && turnstileSiteKey && showResendTurnstile">
           <TurnstileWidget
             ref="turnstileRef"
@@ -77,39 +57,23 @@
           />
         </div>
 
-        <!-- Submit Button -->
-        <button type="submit" :disabled="isLoading || !verifyCode" class="btn btn-primary w-full">
-          <svg
-            v-if="isLoading"
-            class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
+        <!-- 验证按钮 -->
+        <button type="submit" :disabled="isLoading || !verifyCode" class="ev-submit">
+          <svg v-if="isLoading" class="ev-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <Icon v-else name="checkCircle" size="md" class="mr-2" />
+          <Icon v-else name="checkCircle" size="md" />
           {{ isLoading ? t('auth.verifying') : t('auth.verifyAndCreate') }}
         </button>
 
-        <!-- Resend Code -->
-        <div class="text-center">
+        <!-- 重发验证码 -->
+        <div class="ev-resend">
           <button
             v-if="countdown > 0"
             type="button"
             disabled
-            class="cursor-not-allowed text-sm text-muted-foreground"
+            class="ev-resend-btn ev-resend-btn--wait"
           >
             {{ t('auth.resendCountdown', { countdown }) }}
           </button>
@@ -117,27 +81,19 @@
             v-else
             type="button"
             @click="handleResendCode"
-            :disabled="
-              isSendingCode || (turnstileEnabled && showResendTurnstile && !resendTurnstileToken)
-            "
-            class="text-sm text-primary-400 transition-colors hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-50 "
+            :disabled="isSendingCode || (turnstileEnabled && showResendTurnstile && !resendTurnstileToken)"
+            class="ev-resend-btn"
           >
             <span v-if="isSendingCode">{{ t('auth.sendingCode') }}</span>
-            <span v-else-if="turnstileEnabled && !showResendTurnstile">
-              {{ t('auth.clickToResend') }}
-            </span>
+            <span v-else-if="turnstileEnabled && !showResendTurnstile">{{ t('auth.clickToResend') }}</span>
             <span v-else>{{ t('auth.resendCode') }}</span>
           </button>
         </div>
       </form>
     </div>
 
-    <!-- Footer -->
     <template #footer>
-      <button
-        @click="handleBack"
-        class="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
-      >
+      <button @click="handleBack" class="ev-back-btn">
         <Icon name="arrowLeft" size="sm" />
         {{ t('auth.backToRegistration') }}
       </button>
@@ -584,14 +540,104 @@ function buildEmailSuffixNotAllowedMessage(): string {
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.3s ease;
-}
+.ev-body { display: flex; flex-direction: column; gap: 0; }
+.ev-head { margin-bottom: 24px; text-align: center; }
+.ev-title { font-size: 17px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink-0); margin-bottom: 6px; }
+.ev-sub { font-size: 12px; color: var(--ink-2); line-height: 1.6; }
+.ev-email-hi { color: var(--ink-1); font-weight: 500; }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
+/* 警告提示 */
+.ev-notice {
+  display: flex; align-items: flex-start; gap: 10px;
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 18px;
+}
+.ev-notice--warn { background: rgba(224,179,78,.08); border: 1px solid rgba(224,179,78,.28); }
+.ev-notice-icon--warn { color: #E0B34E; flex: none; margin-top: 1px; }
+.ev-notice-title--warn { font-size: 13px; font-weight: 600; color: #E0B34E; margin-bottom: 3px; }
+.ev-notice-desc--warn { font-size: 12px; color: #E0B34E; opacity: 0.8; }
+
+/* 表单 */
+.ev-form { display: flex; flex-direction: column; gap: 0; }
+.ev-field { margin-bottom: 18px; }
+.ev-label { display: block; font-size: 12px; color: var(--ink-1); margin-bottom: 7px; }
+.ev-label--center { text-align: center; }
+
+/* 验证码输入（大字 mono 居中） */
+.ev-code-inp {
+  display: block; width: 100%;
+  background: #0a0c0f; border: 1px solid var(--line-1);
+  border-radius: 12px; padding: 12px 16px; height: 54px;
+  font-family: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  font-size: 22px; font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5em; text-indent: 0.25em;
+  color: var(--ink-0); text-align: center;
+  outline: none;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.ev-code-inp::placeholder { color: var(--ink-2); letter-spacing: 0.4em; }
+.ev-code-inp:focus { border-color: rgba(92,168,255,.75); box-shadow: var(--glow-focus); }
+.ev-code-inp--error { border-color: rgba(242,92,105,.6); }
+.ev-code-inp--error:focus { border-color: rgba(92,168,255,.75); box-shadow: var(--glow-focus); }
+.ev-code-inp:disabled { opacity: 0.5; cursor: not-allowed; }
+.ev-code-hint { font-size: 11px; color: var(--ink-2); margin-top: 6px; text-align: center; }
+
+/* 发送成功 */
+.ev-sent-ok {
+  display: flex; align-items: center; gap: 8px;
+  border-radius: 8px; border: 1px solid rgba(70,201,140,.25);
+  background: rgba(70,201,140,.08); padding: 10px 14px; margin-bottom: 14px;
+}
+.ev-icon-ok { color: #46C98C; flex: none; }
+.ev-sent-txt { font-size: 12px; color: #46C98C; }
+
+/* 按钮 */
+.ev-submit {
+  width: 100%; height: 46px; border-radius: 12px;
+  border: 1px solid #3a4250; background: var(--metal-raised);
+  color: var(--ink-0); font: inherit; font-size: 14px; font-weight: 600;
+  letter-spacing: 0.2em; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: var(--edge-hi), 0 2px 10px rgba(0,0,0,.4);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  margin-bottom: 14px;
+}
+.ev-submit:hover:not(:disabled) {
+  border-color: rgba(92,168,255,.55);
+  box-shadow: var(--edge-hi), 0 0 16px rgba(92,168,255,.22), 0 2px 10px rgba(0,0,0,.4);
+}
+.ev-submit:focus-visible { outline: none; border-color: rgba(92,168,255,.75); box-shadow: var(--glow-focus), 0 2px 10px rgba(0,0,0,.4); }
+.ev-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+.ev-submit:active:not(:disabled) { transform: scale(0.985); }
+
+/* 重发 */
+.ev-resend { text-align: center; }
+.ev-resend-btn {
+  background: none; border: none; cursor: pointer; padding: 0;
+  font: inherit; font-size: 13px; color: var(--ink-1);
+  transition: color 0.15s ease;
+}
+.ev-resend-btn:hover:not(:disabled) { color: var(--azure); }
+.ev-resend-btn:focus-visible { outline: 1.5px solid var(--azure); outline-offset: 2px; border-radius: 4px; }
+.ev-resend-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+.ev-resend-btn--wait { color: var(--ink-2); cursor: default; }
+.ev-resend-btn--wait:hover { color: var(--ink-2); }
+
+/* 返回按钮（页脚） */
+.ev-back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer;
+  font: inherit; font-size: 13px; color: var(--ink-2);
+  transition: color 0.15s ease; padding: 0;
+}
+.ev-back-btn:hover { color: var(--ink-0); }
+.ev-back-btn:focus-visible { outline: 1.5px solid var(--azure); outline-offset: 2px; border-radius: 4px; }
+
+/* 转圈 */
+.ev-spin { width: 16px; height: 16px; animation: ev-spin 0.8s linear infinite; flex: none; }
+@keyframes ev-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ev-spin { animation: none; }
+  .ev-code-inp, .ev-submit { transition: none; }
 }
 </style>

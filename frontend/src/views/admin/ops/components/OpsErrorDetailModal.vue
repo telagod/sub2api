@@ -1,8 +1,8 @@
 <template>
   <BaseDialog :show="show" :title="title" width="full" :close-on-click-outside="true" @close="close">
-    <div v-if="loading" style="display:flex;align-items:center;justify-content:center;padding:56px 0;flex-direction:column;gap:10px;">
-      <div style="width:28px;height:28px;border-radius:50%;border-bottom:2px solid var(--ops-azure,#5CA8FF);" class="animate-spin"></div>
-      <div style="font-size:13px;color:var(--ink-2,#5C6470);">{{ t('admin.ops.errorDetail.loading') }}</div>
+    <div v-if="loading" style="display:flex;align-items:center;justify-content:center;padding:56px 0;flex-direction:column;gap:10px;" role="status" :aria-label="t('admin.ops.errorDetail.loading')">
+      <div style="width:28px;height:28px;border-radius:50%;border-bottom:2px solid var(--ops-azure,#5CA8FF);" class="animate-spin" aria-hidden="true"></div>
+      <div style="font-size:13px;color:var(--ink-2,#5C6470);" aria-hidden="true">{{ t('admin.ops.errorDetail.loading') }}</div>
     </div>
 
     <div v-else-if="!detail" style="padding:36px 0;text-align:center;font-size:13px;color:var(--ink-2,#5C6470);">{{ emptyText }}</div>

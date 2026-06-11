@@ -372,8 +372,8 @@ const empty = computed(() => events.value.length === 0 && !loading.value)
       </div>
     </div>
 
-    <div v-if="loading" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2,#5C6470);">
-      <svg width="14" height="14" class="animate-spin" fill="none" viewBox="0 0 24 24"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+    <div v-if="loading" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2,#5C6470);" role="status" :aria-label="t('admin.ops.alertEvents.loading')">
+      <svg width="14" height="14" class="animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
       {{ t('admin.ops.alertEvents.loading') }}
     </div>
 
@@ -430,8 +430,8 @@ const empty = computed(() => events.value.length === 0 && !loading.value)
             </tr>
           </tbody>
         </table>
-        <div v-if="loadingMore" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;font-size:11.5px;color:var(--ink-2,#5C6470);">
-          <svg width="13" height="13" class="animate-spin" fill="none" viewBox="0 0 24 24"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <div v-if="loadingMore" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;font-size:11.5px;color:var(--ink-2,#5C6470);" role="status" :aria-label="t('admin.ops.alertEvents.loading')">
+          <svg width="13" height="13" class="animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
           {{ t('admin.ops.alertEvents.loading') }}
         </div>
         <div v-else-if="!hasMore && events.length > 0" style="padding:10px;text-align:center;font-size:11px;color:var(--ink-2,#5C6470);">-</div>

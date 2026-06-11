@@ -4,12 +4,12 @@
       <!-- 页头 -->
       <div class="uq-head">
         <div>
-          <h1 class="uq-title">用户</h1>
-          <p class="uq-desc">客户域 · 以人为中心，点击行展开用户 360</p>
+          <h1 class="uq-title">{{ t('admin.usersQuench.title') }}</h1>
+          <p class="uq-desc">{{ t('admin.usersQuench.desc') }}</p>
         </div>
         <div class="uq-head-acts">
-          <button class="uq-btn" @click="loadUsers">刷新</button>
-          <button class="uq-btn uq-btn-metal" @click="openCreateDrawer">+ 新建用户</button>
+          <button class="uq-btn" @click="loadUsers">{{ t('admin.usersQuench.refresh') }}</button>
+          <button class="uq-btn uq-btn-metal" @click="openCreateDrawer">{{ t('admin.usersQuench.createBtn') }}</button>
         </div>
       </div>
 
@@ -18,7 +18,7 @@
 
       <!-- 快速内置视图 -->
       <div class="uq-qtabs">
-        <button v-for="qv in QUICK_VIEWS" :key="qv.id" class="uq-qtab" :class="{ on: activeQuickView === qv.id }" @click="applyQuickView(qv)">{{ qv.label }}</button>
+        <button v-for="qv in QUICK_VIEWS" :key="qv.id" class="uq-qtab" :class="{ on: activeQuickView === qv.id }" @click="applyQuickView(qv as any)">{{ qv.label }}</button>
       </div>
 
       <!-- 筛选栏 -->
@@ -34,7 +34,7 @@
       <!-- 表格卡片 -->
       <div class="uq-card">
         <DataTableV2
-          :columns="COLUMNS"
+          :columns="(COLUMNS as any)"
           :rows="(users as unknown as Record<string, unknown>[])"
           :total="pagination.total"
           :loading="loading"
@@ -62,7 +62,7 @@
           </template>
 
           <template #cell-role="{ value }">
-            <span :class="['uq-badge', value === 'admin' ? 'uq-badge-azure' : 'uq-badge-dim']">{{ value === 'admin' ? '管理员' : '用户' }}</span>
+            <span :class="['uq-badge', value === 'admin' ? 'uq-badge-azure' : 'uq-badge-dim']">{{ value === 'admin' ? t('admin.usersQuench.roleAdmin') : t('admin.usersQuench.roleUser') }}</span>
           </template>
 
           <template #cell-balance="{ row }">
@@ -77,7 +77,7 @@
           </template>
 
           <template #cell-status="{ value }">
-            <span class="uq-status"><span class="uq-dot" :class="value === 'active' ? 'ok' : 'bad'"></span>{{ value === 'active' ? '活跃' : '已禁用' }}</span>
+            <span class="uq-status"><span class="uq-dot" :class="value === 'active' ? 'ok' : 'bad'"></span>{{ value === 'active' ? t('admin.usersQuench.statusActive') : t('admin.usersQuench.statusDisabled') }}</span>
           </template>
 
           <template #cell-created_at="{ value }">
@@ -86,13 +86,13 @@
 
           <template #cell-_actions="{ row }">
             <div class="uq-acts">
-              <button class="uq-ib" title="调余额" @click.stop="openBalance(row as unknown as AdminUser, 'add')">
+              <button class="uq-ib" :title="t('admin.usersQuench.actionAdjustBalance')" @click.stop="openBalance(row as unknown as AdminUser, 'add')">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v5M4 6.5h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
               </button>
-              <button class="uq-ib" title="编辑" @click.stop="openEditDrawer(row as unknown as AdminUser)">
+              <button class="uq-ib" :title="t('admin.usersQuench.actionEdit')" @click.stop="openEditDrawer(row as unknown as AdminUser)">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9.5 2L11 3.5L5 9.5H3.5V8L9.5 2Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
-              <button v-if="(row as unknown as AdminUser).role !== 'admin'" class="uq-ib" :class="(row as unknown as AdminUser).status === 'active' ? 'ib-warn' : 'ib-ok'" :title="(row as unknown as AdminUser).status === 'active' ? '禁用' : '启用'" @click.stop="toggleStatus(row as unknown as AdminUser)">
+              <button v-if="(row as unknown as AdminUser).role !== 'admin'" class="uq-ib" :class="(row as unknown as AdminUser).status === 'active' ? 'ib-warn' : 'ib-ok'" :title="(row as unknown as AdminUser).status === 'active' ? t('admin.usersQuench.actionDisable') : t('admin.usersQuench.actionEnable')" @click.stop="toggleStatus(row as unknown as AdminUser)">
                 <svg v-if="(row as unknown as AdminUser).status === 'active'" width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 4.5L8.5 8.5M8.5 4.5L4.5 8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
                 <svg v-else width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 6.5L5.8 7.8L8.5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
@@ -103,20 +103,20 @@
 
       <!-- 批量操作条 -->
       <BulkBar :count="selected.length" @clear="selected = []">
-        <button @click="bulkEnable">启用</button>
-        <button @click="bulkDisable">禁用</button>
-        <button class="q-btn-danger" @click="showBulkDel = true">删除</button>
+        <button @click="bulkEnable">{{ t('admin.usersQuench.bulkEnable') }}</button>
+        <button @click="bulkDisable">{{ t('admin.usersQuench.bulkDisable') }}</button>
+        <button class="q-btn-danger" @click="showBulkDel = true">{{ t('admin.usersQuench.bulkDelete') }}</button>
       </BulkBar>
 
       <!-- 批量删除确认 -->
       <Teleport to="body">
         <div v-if="showBulkDel" class="uq-overlay" @click.self="showBulkDel = false">
           <div class="uq-dialog">
-            <div class="uq-dlg-title">批量删除用户</div>
-            <p class="uq-dlg-body">确认删除选中的 <b>{{ selected.length }}</b> 个用户？此操作不可撤销。</p>
+            <div class="uq-dlg-title">{{ t('admin.usersQuench.bulkDeleteTitle') }}</div>
+            <p class="uq-dlg-body">{{ t('admin.usersQuench.bulkDeleteConfirm', { n: selected.length }) }}</p>
             <div class="uq-dlg-foot">
-              <button class="uq-btn" @click="showBulkDel = false">取消</button>
-              <button class="uq-btn uq-btn-danger" :disabled="bulkDeleting" @click="doBulkDelete">{{ bulkDeleting ? `删除中… (${bulkDelProg}/${selected.length})` : '确认删除' }}</button>
+              <button class="uq-btn" @click="showBulkDel = false">{{ t('admin.usersQuench.bulkDeleteCancel') }}</button>
+              <button class="uq-btn uq-btn-danger" :disabled="bulkDeleting" @click="doBulkDelete">{{ bulkDeleting ? t('admin.usersQuench.bulkDeletingProgress', { current: bulkDelProg, total: selected.length }) : t('admin.usersQuench.bulkDeleteConfirmBtn') }}</button>
             </div>
           </div>
         </div>
@@ -136,6 +136,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { DataTableV2, SavedViewTabs, BulkBar, useTableUrlState } from '@/components/datatable'
 import type { ColumnDef, SavedView } from '@/components/datatable'
@@ -149,26 +150,27 @@ import UserFormDrawer from './UserFormDrawer.vue'
 const UserDetailDrawer = defineAsyncComponent(() => import('@/components/admin/users/UserDetailDrawer.vue'))
 const UserBalanceModal = defineAsyncComponent(() => import('@/components/admin/user/UserBalanceModal.vue'))
 
+const { t } = useI18n()
 const appStore = useAppStore()
 const { state, reset } = useTableUrlState('u')
 
 // ─── 快速视图定义 ───────────────────────────────────────────────
-const QUICK_VIEWS = [
-  { id: 'all', label: '全部', filters: {} as Record<string,string> },
-  { id: 'admin', label: '管理员', filters: { role: 'admin' } },
-  { id: 'disabled', label: '已禁用', filters: { status: 'disabled' } },
-]
+const QUICK_VIEWS = computed(() => [
+  { id: 'all', label: t('admin.usersQuench.viewAll'), filters: {} as Record<string,string> },
+  { id: 'admin', label: t('admin.usersQuench.viewAdmin'), filters: { role: 'admin' } },
+  { id: 'disabled', label: t('admin.usersQuench.viewDisabled'), filters: { status: 'disabled' } },
+])
 
 // ─── 列定义 ─────────────────────────────────────────────────────
-const COLUMNS = [
-  { key: 'email',       title: '用户',   width: '220px' },
-  { key: 'role',        title: '角色',   width: '80px' },
-  { key: 'balance',     title: '余额',   align: 'right', width: '140px', sortable: true },
-  { key: 'concurrency', title: '并发',   align: 'center', width: '80px' },
-  { key: 'status',      title: '状态',   width: '90px',  sortable: true },
-  { key: 'created_at',  title: '注册时间', width: '110px', sortable: true },
-  { key: '_actions',    title: '',       width: '96px' },
-] as unknown as ColumnDef<Record<string, unknown>>[]
+const COLUMNS = computed(() => [
+  { key: 'email',       title: t('admin.usersQuench.colUser'),       width: '220px' },
+  { key: 'role',        title: t('admin.usersQuench.colRole'),        width: '80px' },
+  { key: 'balance',     title: t('admin.usersQuench.colBalance'),     align: 'right', width: '140px', sortable: true },
+  { key: 'concurrency', title: t('admin.usersQuench.colConcurrency'), align: 'center', width: '80px' },
+  { key: 'status',      title: t('admin.usersQuench.colStatus'),      width: '90px',  sortable: true },
+  { key: 'created_at',  title: t('admin.usersQuench.colCreatedAt'),   width: '110px', sortable: true },
+  { key: '_actions',    title: '',                                     width: '96px' },
+] as unknown as ColumnDef<Record<string, unknown>>[])
 
 // ─── 本地状态 ────────────────────────────────────────────────────
 const users = ref<AdminUser[]>([])
@@ -230,7 +232,7 @@ async function loadUsers() {
     users.value = res.items; pagination.total = res.total; pagination.pages = res.pages
   } catch (e: any) {
     if (e?.name === 'AbortError' || e?.code === 'ERR_CANCELED') return
-    appStore.showError(e?.response?.data?.detail || '加载失败')
+    appStore.showError(e?.response?.data?.detail || t('admin.usersQuench.loadFailed'))
   } finally {
     if (!abortCtrl?.signal.aborted) loading.value = false
   }
@@ -239,7 +241,7 @@ async function loadUsers() {
 // ─── 筛选 ────────────────────────────────────────────────────────
 function commitSearch() { state.q = searchInput.value; state.page = 1 }
 function clearFilters() { searchInput.value = ''; filterRole.value = ''; filterStatus.value = ''; state.q = ''; state.page = 1; activeQuickView.value = 'all' }
-function applyQuickView(qv: typeof QUICK_VIEWS[0]) {
+function applyQuickView(qv: typeof QUICK_VIEWS.value[0]) {
   activeQuickView.value = qv.id; filterRole.value = qv.filters.role ?? ''; filterStatus.value = qv.filters.status ?? ''; searchInput.value = ''; state.q = ''; state.page = 1
 }
 function onApplyView(view: SavedView | null) {
@@ -263,29 +265,29 @@ function openBalance(user: AdminUser, op: 'add' | 'subtract') { balanceUser.valu
 
 async function toggleStatus(user: AdminUser) {
   const ns = user.status === 'active' ? 'disabled' : 'active'
-  try { await adminAPI.users.toggleStatus(user.id, ns); appStore.showSuccess(ns === 'active' ? '已启用' : '已禁用'); loadUsers() }
-  catch (e: any) { appStore.showError(e?.response?.data?.detail || '操作失败') }
+  try { await adminAPI.users.toggleStatus(user.id, ns); appStore.showSuccess(ns === 'active' ? t('admin.usersQuench.enabled') : t('admin.usersQuench.disabled')); loadUsers() }
+  catch (e: any) { appStore.showError(e?.response?.data?.detail || t('admin.usersQuench.operationFailed')) }
 }
 
 // ─── 批量操作 ────────────────────────────────────────────────────
 async function bulkEnable() {
-  const t = selected.value.filter(u => u.status !== 'active')
-  if (!t.length) { appStore.showError('无可启用用户'); return }
-  await Promise.allSettled(t.map(u => adminAPI.users.toggleStatus(u.id, 'active')))
-  appStore.showSuccess(`已启用 ${t.length} 个用户`); selected.value = []; loadUsers()
+  const targets = selected.value.filter(u => u.status !== 'active')
+  if (!targets.length) { appStore.showError(t('admin.usersQuench.noEnableTarget')); return }
+  await Promise.allSettled(targets.map(u => adminAPI.users.toggleStatus(u.id, 'active')))
+  appStore.showSuccess(t('admin.usersQuench.bulkEnabledSuccess', { n: targets.length })); selected.value = []; loadUsers()
 }
 async function bulkDisable() {
-  const t = selected.value.filter(u => u.role !== 'admin' && u.status !== 'disabled')
-  if (!t.length) { appStore.showError('无可禁用用户'); return }
-  await Promise.allSettled(t.map(u => adminAPI.users.toggleStatus(u.id, 'disabled')))
-  appStore.showSuccess(`已禁用 ${t.length} 个用户`); selected.value = []; loadUsers()
+  const targets = selected.value.filter(u => u.role !== 'admin' && u.status !== 'disabled')
+  if (!targets.length) { appStore.showError(t('admin.usersQuench.noDisableTarget')); return }
+  await Promise.allSettled(targets.map(u => adminAPI.users.toggleStatus(u.id, 'disabled')))
+  appStore.showSuccess(t('admin.usersQuench.bulkDisabledSuccess', { n: targets.length })); selected.value = []; loadUsers()
 }
 async function doBulkDelete() {
-  const t = selected.value.filter(u => u.role !== 'admin')
+  const targets = selected.value.filter(u => u.role !== 'admin')
   bulkDeleting.value = true; bulkDelProg.value = 0; let done = 0
-  for (const u of t) { try { await adminAPI.users.delete(u.id) } catch { /* continue */ } bulkDelProg.value = ++done }
+  for (const u of targets) { try { await adminAPI.users.delete(u.id) } catch { /* continue */ } bulkDelProg.value = ++done }
   bulkDeleting.value = false; showBulkDel.value = false
-  appStore.showSuccess(`已删除 ${done} 个用户`); selected.value = []; loadUsers()
+  appStore.showSuccess(t('admin.usersQuench.bulkDeletedSuccess', { n: done })); selected.value = []; loadUsers()
 }
 
 // ─── 同步 filterRole/filterStatus → state.filters ────────────────

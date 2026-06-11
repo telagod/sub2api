@@ -15,7 +15,7 @@
                 v-model="searchQuery"
                 type="search"
                 class="srg-search"
-                placeholder="搜索设置..."
+                :placeholder="t('admin.settingsRegistry.searchPlaceholder')"
                 @input="onSearch"
               />
             </div>
@@ -40,10 +40,8 @@
           <main class="srg-main" ref="mainEl" @scroll="onMainScroll">
             <!-- 未迁移配置的 legacy 入口（迁移完成后移除） -->
             <div class="srg-legacy-note">
-              <span>
-                部分高级配置（微信/钉钉/OIDC 接入、网关冷却与限流策略、自定义菜单、Admin API Key 等）尚未迁入新设置中心。
-              </span>
-              <router-link to="/admin/settings/legacy" class="srg-legacy-link">前往旧版设置 →</router-link>
+              <span>{{ t('admin.settingsRegistry.legacyNote') }}</span>
+              <router-link to="/admin/settings/legacy" class="srg-legacy-link">{{ t('admin.settingsRegistry.legacyLink') }}</router-link>
             </div>
             <template v-for="[, sections] in visibleSectionsByTab" :key="sections[0]?.tab">
               <SectionRenderer
@@ -63,12 +61,12 @@
         <!-- Sticky save bar -->
         <Transition name="srg-bar">
           <div v-if="dirtyCount > 0" class="srg-save-bar">
-            <span class="srg-dirty-count">已修改 <b class="srg-mono">{{ dirtyCount }}</b> 项</span>
+            <span class="srg-dirty-count">{{ t('admin.settingsRegistry.dirtyCount', { n: dirtyCount }) }}</span>
             <div class="srg-bar-acts">
-              <button class="srg-btn" :disabled="saving" @click="discardChanges">放弃</button>
+              <button class="srg-btn" :disabled="saving" @click="discardChanges">{{ t('admin.settingsRegistry.discardBtn') }}</button>
               <button class="srg-btn srg-btn-metal" :disabled="saving" @click="saveChanges">
                 <span v-if="saving" class="srg-spinner srg-spinner-sm" />
-                {{ saving ? '保存中…' : '保存更改' }}
+                {{ saving ? t('admin.settingsRegistry.savingBtn') : t('admin.settingsRegistry.saveBtn') }}
               </button>
             </div>
           </div>
@@ -223,20 +221,10 @@ function resolveLabel(key: string): string {
   } catch { return key }
 }
 
-const TAB_LABELS: Record<TabId, string> = {
-  general: '通用',
-  agreement: '协议',
-  features: '功能',
-  security: '安全',
-  users: '用户',
-  gateway: '网关',
-  payment: '支付',
-  email: '邮件',
-  backup: '备份',
-}
-
 function tabLabel(tab: string): string {
-  return TAB_LABELS[tab as TabId] ?? tab
+  const key = `admin.settingsRegistry.tab${tab.charAt(0).toUpperCase() + tab.slice(1)}` as any
+  const result = t(key)
+  return result === key ? tab : result
 }
 </script>
 

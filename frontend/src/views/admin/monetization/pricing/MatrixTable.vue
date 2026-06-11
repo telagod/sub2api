@@ -6,15 +6,15 @@
     :style="{ borderColor: 'var(--line-1)', background: 'var(--bg-1)' }"
   >
     <div class="text-5xl opacity-30">💰</div>
-    <p class="text-base" :style="{ color: 'var(--ink-1)' }">暂无渠道定价数据</p>
-    <p class="text-sm" :style="{ color: 'var(--ink-2)' }">请先在渠道定价页配置渠道与分组定价</p>
+    <p class="text-base" :style="{ color: 'var(--ink-1)' }">{{ t('admin.pricingDesk.noData') }}</p>
+    <p class="text-sm" :style="{ color: 'var(--ink-2)' }">{{ t('admin.pricingDesk.noDataHint') }}</p>
     <RouterLink
       to="/admin/channels/pricing"
       class="mt-2 inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
       :style="{ background: 'var(--metal-raised)', color: 'var(--ink-0)', border: '1px solid var(--line-1)', boxShadow: 'var(--edge-hi)' }"
     >
       <CalculatorIcon class="h-4 w-4" />
-      前往渠道定价配置
+      {{ t('admin.pricingDesk.goConfigBtn') }}
     </RouterLink>
   </div>
 
@@ -28,7 +28,7 @@
             class="sticky left-0 z-10 px-4 py-3 text-left font-medium"
             :style="{ background: 'var(--bg-2)', color: 'var(--ink-1)', minWidth: '200px' }"
           >
-            模型
+            {{ t('admin.pricingDesk.colModel') }}
           </th>
           <th
             v-for="group in activeGroups"
@@ -92,7 +92,7 @@
                 />
                 <span class="text-xs font-semibold uppercase tracking-wider">{{ platform }}</span>
                 <span class="text-xs" :style="{ color: 'var(--ink-2)' }">
-                  {{ rowsByPlatform[platform]?.length ?? 0 }} 个模型
+                  {{ t('admin.pricingDesk.modelCount', { n: rowsByPlatform[platform]?.length ?? 0 }) }}
                 </span>
               </div>
             </td>
@@ -149,6 +149,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { ChevronDownIcon, CalculatorIcon } from 'lucide-vue-next'
 import MatrixCell from './MatrixCell.vue'
@@ -167,6 +168,8 @@ const emit = defineEmits<{
   (e: 'hover-model', model: string): void
   (e: 'update-multiplier', groupId: number, value: number): void
 }>()
+
+const { t } = useI18n()
 
 // platform 折叠状态
 const collapsedPlatforms = ref(new Set<string>())

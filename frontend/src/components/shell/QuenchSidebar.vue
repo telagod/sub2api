@@ -34,6 +34,7 @@
           :to="item.path"
           class="quench-sidebar__item"
           :class="{ 'quench-sidebar__item--active': isActive(item.path) }"
+          :aria-current="isActive(item.path) ? 'page' : undefined"
           :data-tour="`nav-${item.key}`"
         >
           <component :is="item.icon" class="quench-sidebar__item-icon" />
@@ -221,6 +222,16 @@ function isActive(path: string): boolean {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 键盘焦点：azure glow，不被 outline:none 干掉 */
+.quench-sidebar__item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(92, 168, 255, 0.65), 0 0 16px rgba(92, 168, 255, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quench-sidebar__item { transition: none; }
 }
 
 /* Footer */

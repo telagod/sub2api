@@ -2,7 +2,7 @@
   <AppLayout>
     <div class="mx-auto max-w-4xl space-y-6">
       <div v-if="loading" class="flex items-center justify-center py-20">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--azure)] border-t-transparent"></div>
       </div>
       <template v-else>
         <!-- Tab Switcher (hide during payment and subscription confirm) -->
@@ -35,7 +35,7 @@
             <div class="card p-5">
               <p class="text-xs font-medium text-muted-foreground">{{ t('payment.rechargeAccount') }}</p>
               <p class="mt-1 text-base font-semibold text-foreground">{{ user?.username || '' }}</p>
-              <p class="mt-0.5 text-sm font-medium text-emerald-400">{{ t('payment.currentBalance') }}: {{ user?.balance?.toFixed(2) || '0.00' }}</p>
+              <p class="q-money mt-0.5 text-sm font-medium text-[var(--ok)]">{{ t('payment.currentBalance') }}: {{ user?.balance?.toFixed(2) || '0.00' }}</p>
             </div>
             <div v-if="enabledMethods.length === 0" class="card py-16 text-center">
               <p class="text-muted-foreground">{{ t('payment.notAvailable') }}</p>
@@ -48,7 +48,7 @@
                 :min="globalMinAmount"
                 :max="globalMaxAmount"
               />
-              <p v-if="amountError" class="mt-2 text-xs text-amber-400">{{ amountError }}</p>
+              <p v-if="amountError" class="mt-2 text-xs text-[var(--warn)]">{{ amountError }}</p>
             </div>
             <div v-if="enabledMethods.length >= 1" class="card p-6">
               <PaymentMethodSelector

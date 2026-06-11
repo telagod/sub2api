@@ -53,11 +53,11 @@
           left: popoverLeft + 'px'
         }"
       >
-        <div class="mb-2 font-semibold" :style="{ color: 'var(--ink-0)' }">分档定价</div>
+        <div class="mb-2 font-semibold" :style="{ color: 'var(--ink-0)' }">{{ t('admin.pricingDesk.tieredPricingTitle') }}</div>
         <table class="w-full">
           <thead>
             <tr :style="{ color: 'var(--ink-2)' }">
-              <th class="text-left pr-3 pb-1">档位</th>
+              <th class="text-left pr-3 pb-1">{{ t('admin.pricingDesk.tieredColTier') }}</th>
               <th class="text-right pr-2 pb-1">input</th>
               <th class="text-right pb-1">output</th>
             </tr>
@@ -73,7 +73,7 @@
           </tbody>
         </table>
         <div class="mt-2 text-right">
-          <span class="text-[10px]" :style="{ color: 'var(--ink-2)' }">来自渠道：{{ cell.channelName }}</span>
+          <span class="text-[10px]" :style="{ color: 'var(--ink-2)' }">{{ t('admin.pricingDesk.tieredFromChannel') }}{{ cell.channelName }}</span>
         </div>
       </div>
     </Teleport>
@@ -82,6 +82,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { MatrixCell } from './usePricingMatrix'
 import type { OfficialPricing } from './usePricingMatrix'
 
@@ -91,6 +92,7 @@ const props = defineProps<{
   officialPricing?: OfficialPricing | 'loading'
 }>()
 
+const { t } = useI18n()
 const showIntervals = ref(false)
 const popoverTop = ref(0)
 const popoverLeft = ref(0)
@@ -152,6 +154,6 @@ function discountStyle(ratio: number): Record<string, string> {
 function discountLabel(ratio: number): string {
   if (ratio < 1) return `-${((1 - ratio) * 100).toFixed(0)}%`
   if (ratio > 1) return `+${((ratio - 1) * 100).toFixed(0)}%`
-  return '=官价'
+  return t('admin.pricingDesk.officialPrice')
 }
 </script>

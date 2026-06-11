@@ -8,14 +8,14 @@
       </svg>
       <input
         :value="search"
-        placeholder="邮箱 / 用户名 / ID…"
+        :placeholder="t('admin.usersQuench.searchPlaceholder')"
         class="ufb-input"
         @focus="focused = true"
         @blur="focused = false"
         @input="$emit('update:search', ($event.target as HTMLInputElement).value)"
         @keyup.enter="$emit('commit-search')"
       />
-      <button v-if="search" class="ufb-clear-x" @click="$emit('update:search', ''); $emit('commit-search')" aria-label="清空搜索">✕</button>
+      <button v-if="search" class="ufb-clear-x" @click="$emit('update:search', ''); $emit('commit-search')" :aria-label="t('admin.usersQuench.clearSearch')">✕</button>
     </div>
 
     <!-- 角色筛选芯片 -->
@@ -25,7 +25,7 @@
         :class="{ 'ufb-chip-on': role }"
         @click.stop="showRole = !showRole; showStatus = false"
       >
-        角色 <b>{{ roleLabel }}</b>
+        {{ t('admin.usersQuench.filterRole') }} <b>{{ roleLabel }}</b>
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
           <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
         </svg>
@@ -48,7 +48,7 @@
         :class="{ 'ufb-chip-on': status }"
         @click.stop="showStatus = !showStatus; showRole = false"
       >
-        状态 <b>{{ statusLabel }}</b>
+        {{ t('admin.usersQuench.filterStatus') }} <b>{{ statusLabel }}</b>
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
           <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
         </svg>
@@ -65,18 +65,21 @@
     </div>
 
     <!-- 清空筛选 -->
-    <button v-if="hasFilters" class="ufb-clear-all" @click="$emit('clear')">清空筛选</button>
+    <button v-if="hasFilters" class="ufb-clear-all" @click="$emit('clear')">{{ t('admin.usersQuench.clearFilters') }}</button>
 
     <!-- 密度切换 -->
     <div class="ufb-seg">
-      <button :class="{ on: density === 'comfortable' }" @click="$emit('update:density', 'comfortable')">舒适</button>
-      <button :class="{ on: density === 'compact' }" @click="$emit('update:density', 'compact')">紧凑</button>
+      <button :class="{ on: density === 'comfortable' }" @click="$emit('update:density', 'comfortable')">{{ t('admin.usersQuench.densityComfortable') }}</button>
+      <button :class="{ on: density === 'compact' }" @click="$emit('update:density', 'compact')">{{ t('admin.usersQuench.densityCompact') }}</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   search: string
@@ -98,19 +101,19 @@ const focused = ref(false)
 const showRole = ref(false)
 const showStatus = ref(false)
 
-const ROLE_OPTIONS = [
-  { value: '', label: '全部角色' },
-  { value: 'admin', label: '管理员' },
-  { value: 'user', label: '普通用户' },
-]
-const STATUS_OPTIONS = [
-  { value: '', label: '全部状态' },
-  { value: 'active', label: '活跃' },
-  { value: 'disabled', label: '已禁用' },
-]
+const ROLE_OPTIONS = computed(() => [
+  { value: '', label: t('admin.users.allRoles') },
+  { value: 'admin', label: t('admin.usersQuench.roleAdmin') },
+  { value: 'user', label: t('admin.users.roles.user') },
+])
+const STATUS_OPTIONS = computed(() => [
+  { value: '', label: t('admin.users.allStatuses') },
+  { value: 'active', label: t('admin.usersQuench.statusActive') },
+  { value: 'disabled', label: t('admin.usersQuench.statusDisabled') },
+])
 
-const roleLabel = computed(() => ROLE_OPTIONS.find(o => o.value === props.role)?.label ?? '全部')
-const statusLabel = computed(() => STATUS_OPTIONS.find(o => o.value === props.status)?.label ?? '全部')
+const roleLabel = computed(() => ROLE_OPTIONS.value.find(o => o.value === props.role)?.label ?? t('admin.users.allRoles'))
+const statusLabel = computed(() => STATUS_OPTIONS.value.find(o => o.value === props.status)?.label ?? t('admin.users.allStatuses'))
 const hasFilters = computed(() => !!(props.search || props.role || props.status))
 
 // 点击外部关闭

@@ -11,7 +11,7 @@
         </div>
         <div>
           <p class="text-xs font-medium text-muted-foreground">{{ t('dashboard.balance') }}</p>
-          <p class="text-xl font-bold text-emerald-400">${{ formatBalance(balance) }}</p>
+          <p class="q-money text-xl font-bold text-[var(--ok)]">${{ formatBalance(balance) }}</p>
           <p class="text-xs text-muted-foreground">{{ t('common.available') }}</p>
         </div>
       </div>
@@ -26,7 +26,7 @@
         <div>
           <p class="text-xs font-medium text-muted-foreground">{{ t('dashboard.apiKeys') }}</p>
           <p class="text-xl font-bold text-foreground">{{ stats?.total_api_keys || 0 }}</p>
-          <p class="text-xs text-emerald-400">{{ stats?.active_api_keys || 0 }} {{ t('common.active') }}</p>
+          <p class="text-xs text-[var(--ok)]">{{ stats?.active_api_keys || 0 }} {{ t('common.active') }}</p>
         </div>
       </div>
     </div>
@@ -54,12 +54,12 @@
         <div>
           <p class="text-xs font-medium text-muted-foreground">{{ t('dashboard.todayCost') }}</p>
           <p class="text-xl font-bold text-foreground">
-            <span class="text-primary-200" :title="t('dashboard.actual')">${{ formatCost(stats?.today_actual_cost || 0) }}</span>
-            <span class="text-sm font-normal text-muted-foreground" :title="t('dashboard.standard')"> / ${{ formatCost(stats?.today_cost || 0) }}</span>
+            <span class="q-money text-primary-200" :title="t('dashboard.actual')">${{ formatCost(stats?.today_actual_cost || 0) }}</span>
+            <span class="q-money text-sm font-normal text-muted-foreground" :title="t('dashboard.standard')"> / ${{ formatCost(stats?.today_cost || 0) }}</span>
           </p>
           <p class="text-xs">
             <span class="text-muted-foreground">{{ t('common.total') }}: </span>
-            <span class="text-primary-200" :title="t('dashboard.actual')">${{ formatCost(stats?.total_actual_cost || 0) }}</span>
+            <span class="q-money text-primary-200" :title="t('dashboard.actual')">${{ formatCost(stats?.total_actual_cost || 0) }}</span>
             <span class="text-muted-foreground" :title="t('dashboard.standard')"> / ${{ formatCost(stats?.total_cost || 0) }}</span>
           </p>
         </div>
@@ -155,7 +155,7 @@
           <span class="text-sm font-semibold text-foreground">
             {{ item.isOther ? t('dashboard.platformOther') : platformLabel(item.platform) }}
           </span>
-          <span class="font-mono text-sm text-primary-200" :title="t('dashboard.actual')">
+          <span class="q-money text-sm text-primary-200" :title="t('dashboard.actual')">
             ${{ formatCost(item.total_actual_cost) }}
           </span>
         </div>
@@ -189,17 +189,17 @@
               <template v-if="(quotaVal(item.quota, `${w}_limit_usd`) as number) === 0">
                 <div class="flex items-center justify-between text-xs">
                   <span class="text-foreground/85">{{ t(`dashboard.platformQuota.${w}`) }}</span>
-                  <span class="font-mono text-red-400">{{ t('dashboard.platformQuota.disabled') }}</span>
+                  <span class="font-mono text-[var(--bad)]">{{ t('dashboard.platformQuota.disabled') }}</span>
                 </div>
                 <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div class="h-full w-full rounded-full bg-red-500/70" />
+                  <div class="h-full w-full rounded-full bg-[var(--bad)]" style="opacity:0.7" />
                 </div>
               </template>
               <!-- limit>0：正常用量进度条 -->
               <template v-else>
                 <div class="flex items-center justify-between text-xs">
                   <span class="text-foreground/85">{{ t(`dashboard.platformQuota.${w}`) }}</span>
-                  <span class="font-mono text-foreground/85">
+                  <span class="q-money text-foreground/85">
                     ${{ formatUsd((quotaVal(item.quota, `${w}_usage_usd`) as number) ?? 0) }} / ${{ formatUsd(quotaVal(item.quota, `${w}_limit_usd`) as number) }}
                   </span>
                 </div>
@@ -345,9 +345,9 @@ function calcPercent(usage: number, limit: number): number {
 }
 
 function quotaBarClass(p: number): string {
-  if (p >= 95) return 'bg-red-500'
-  if (p >= 75) return 'bg-amber-500'
-  return 'bg-green-500'
+  if (p >= 95) return 'bg-[var(--bad)]'
+  if (p >= 75) return 'bg-[var(--warn)]'
+  return 'bg-[var(--ok)]'
 }
 
 // 与 formatBalance 一致使用 Intl.NumberFormat 做半偶舍入，避免 toFixed 在不同 JS 引擎

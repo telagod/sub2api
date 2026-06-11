@@ -308,4 +308,29 @@ function scrollActiveIntoView() {
   opacity: 0;
   transform: scale(0.96) translateY(-10px);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .cmdk-overlay-enter-active,
+  .cmdk-overlay-leave-active,
+  .cmdk-overlay-enter-active .cmdk-panel,
+  .cmdk-overlay-leave-active .cmdk-panel {
+    transition: none;
+  }
+  .cmdk-overlay-enter-from .cmdk-panel,
+  .cmdk-overlay-leave-to .cmdk-panel {
+    transform: none;
+  }
+  .cmdk-item { transition: none; }
+}
+
+/* 键盘焦点：item 获得 focus-visible 时用 azure glow */
+.cmdk-item:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(92, 168, 255, 0.5),
+    0 0 0 2px rgba(92, 168, 255, 0.35);
+}
+
+/* ⌘K 输入框容器的 focus 环已靠输入框自身 outline:none 消除，
+   由 cmdk-panel border + box-shadow 承担视觉焦点 */
 </style>
