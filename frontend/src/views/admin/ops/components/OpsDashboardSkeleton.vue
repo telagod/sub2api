@@ -9,94 +9,71 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <!-- Header (matches OpsDashboardHeader + overview blocks) -->
-    <div :class="['rounded-lg border border-border bg-card ', props.fullscreen ? 'p-8' : 'p-6']">
-      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
-        <div class="space-y-2">
-          <div class="h-6 w-44 animate-pulse rounded bg-muted"></div>
-          <div class="h-3 w-80 animate-pulse rounded bg-muted/70"></div>
+  <div style="display:flex;flex-direction:column;gap:18px;">
+    <!-- Header skeleton -->
+    <div class="od-card" :style="props.fullscreen ? 'padding:28px;' : 'padding:18px;'">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line-0,#20242C);padding-bottom:14px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="height:20px;width:160px;border-radius:4px;background:var(--bg-2,#171A20);" class="animate-pulse"></div>
+          <div style="height:10px;width:280px;border-radius:4px;background:var(--bg-2,#171A20);opacity:.7;" class="animate-pulse"></div>
         </div>
-        <div v-if="!props.fullscreen" class="flex flex-wrap items-center gap-3">
-          <div class="h-9 w-[140px] animate-pulse rounded-md bg-muted"></div>
-          <div class="h-9 w-[160px] animate-pulse rounded-md bg-muted"></div>
-          <div class="h-9 w-[150px] animate-pulse rounded-md bg-muted"></div>
-          <div class="h-9 w-9 animate-pulse rounded-md bg-muted"></div>
-          <div class="h-9 w-28 animate-pulse rounded-md bg-muted"></div>
-          <div class="h-9 w-28 animate-pulse rounded-md bg-muted"></div>
-          <div class="h-9 w-9 animate-pulse rounded-md bg-muted"></div>
+        <div v-if="!props.fullscreen" style="display:flex;flex-wrap:wrap;gap:8px;">
+          <div v-for="w in [120,140,120,32,96,96,32]" :key="w" :style="`height:32px;width:${w}px;border-radius:6px;background:var(--bg-2,#171A20);`" class="animate-pulse"></div>
         </div>
       </div>
-
-      <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div class="rounded-lg border border-border bg-muted p-4 lg:col-span-5">
-          <div class="grid h-full grid-cols-1 gap-6 md:grid-cols-[200px_1fr] md:items-center">
-            <div class="h-28 animate-pulse rounded-md bg-accent"></div>
-            <div class="space-y-4">
-              <div class="h-4 w-32 animate-pulse rounded bg-accent"></div>
-              <div class="grid grid-cols-2 gap-3">
-                <div v-for="i in 4" :key="i" class="h-14 animate-pulse rounded-md bg-accent"></div>
+      <div style="margin-top:18px;display:grid;grid-template-columns:5fr 7fr;gap:16px;">
+        <div class="od-card" style="padding:14px;background:var(--bg-2,#171A20);">
+          <div style="display:grid;grid-template-columns:180px 1fr;gap:16px;align-items:center;">
+            <div style="height:96px;border-radius:8px;background:var(--bg-3,#0E1014);" class="animate-pulse"></div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="height:14px;width:110px;border-radius:4px;background:var(--bg-3,#0E1014);" class="animate-pulse"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div v-for="i in 4" :key="i" style="height:50px;border-radius:6px;background:var(--bg-3,#0E1014);" class="animate-pulse"></div>
               </div>
             </div>
           </div>
         </div>
-
-        <div class="lg:col-span-7">
-          <div class="grid h-full grid-cols-1 content-center gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div v-for="i in 6" :key="i" class="h-20 animate-pulse rounded-lg border border-border bg-muted"></div>
-          </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:center;">
+          <div v-for="i in 6" :key="i" class="od-card animate-pulse" style="height:72px;background:var(--bg-2,#171A20);"></div>
         </div>
       </div>
     </div>
 
-    <!-- Row: Concurrency + Throughput (matches OpsDashboard.vue) -->
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-4">
-      <div :class="['min-h-[360px] rounded-lg border border-border bg-card  lg:col-span-1', props.fullscreen ? 'p-8' : 'p-6']">
-        <div class="h-4 w-44 animate-pulse rounded bg-muted"></div>
-        <div class="mt-6 h-72 animate-pulse rounded-lg bg-muted/70"></div>
-      </div>
-      <div :class="['min-h-[360px] rounded-lg border border-border bg-card  lg:col-span-1', props.fullscreen ? 'p-8' : 'p-6']">
-        <div class="h-4 w-44 animate-pulse rounded bg-muted"></div>
-        <div class="mt-6 h-72 animate-pulse rounded-lg bg-muted/70"></div>
-      </div>
-      <div :class="['min-h-[360px] rounded-lg border border-border bg-card  lg:col-span-2', props.fullscreen ? 'p-8' : 'p-6']">
-        <div class="h-4 w-56 animate-pulse rounded bg-muted"></div>
-        <div class="mt-6 h-72 animate-pulse rounded-lg bg-muted/70"></div>
+    <!-- Row: Concurrency + Throughput -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:16px;">
+      <div v-for="(_span,i) in [1,1,2]" :key="i" class="od-chart-card animate-pulse" style="min-height:320px;">
+        <div style="height:14px;width:140px;border-radius:4px;background:var(--bg-2,#171A20);margin-bottom:16px;"></div>
+        <div style="flex:1;border-radius:6px;background:var(--bg-2,#171A20);"></div>
       </div>
     </div>
 
-    <!-- Row: Visual Analysis (baseline 3-up grid) -->
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-      <div
-        v-for="i in 3"
-        :key="i"
-        :class="['rounded-lg border border-border bg-card ', props.fullscreen ? 'p-8' : 'p-6']"
-      >
-        <div class="h-4 w-44 animate-pulse rounded bg-muted"></div>
-        <div class="mt-6 h-56 animate-pulse rounded-lg bg-muted/70"></div>
+    <!-- Row: Visual Analysis 3-up -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+      <div v-for="i in 3" :key="i" class="od-chart-card animate-pulse" style="min-height:240px;">
+        <div style="height:14px;width:140px;border-radius:4px;background:var(--bg-2,#171A20);margin-bottom:16px;"></div>
+        <div style="flex:1;border-radius:6px;background:var(--bg-2,#171A20);"></div>
       </div>
     </div>
 
-    <!-- Alert Events -->
-    <div :class="['rounded-lg border border-border bg-card ', props.fullscreen ? 'p-8' : 'p-6']">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="h-4 w-48 animate-pulse rounded bg-muted"></div>
-        <div v-if="!props.fullscreen" class="flex flex-wrap items-center gap-2">
-          <div class="h-9 w-[140px] animate-pulse rounded-md bg-muted"></div>
-          <div class="h-9 w-[120px] animate-pulse rounded-md bg-muted"></div>
-          <div class="h-9 w-[120px] animate-pulse rounded-md bg-muted"></div>
+    <!-- Alert Events skeleton -->
+    <div class="od-card" :style="props.fullscreen ? 'padding:28px;' : 'padding:18px;'">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;">
+        <div style="height:14px;width:180px;border-radius:4px;background:var(--bg-2,#171A20);" class="animate-pulse"></div>
+        <div v-if="!props.fullscreen" style="display:flex;gap:8px;">
+          <div v-for="w in [120,96,96]" :key="w" :style="`height:32px;width:${w}px;border-radius:6px;background:var(--bg-2,#171A20);`" class="animate-pulse"></div>
         </div>
       </div>
-
-      <div class="mt-6 space-y-3">
-        <div v-for="i in 6" :key="i" class="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted p-4">
-          <div class="flex-1 space-y-2">
-            <div class="h-3 w-56 animate-pulse rounded bg-accent"></div>
-            <div class="h-3 w-80 animate-pulse rounded bg-accent/70"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div v-for="i in 5" :key="i" class="od-card animate-pulse" style="padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-2,#171A20);">
+          <div style="display:flex;flex-direction:column;gap:6px;flex:1;">
+            <div style="height:10px;width:200px;border-radius:3px;background:var(--bg-3,#0E1014);"></div>
+            <div style="height:10px;width:280px;border-radius:3px;background:var(--bg-3,#0E1014);opacity:.7;"></div>
           </div>
-          <div class="h-7 w-20 animate-pulse rounded-md bg-accent"></div>
+          <div style="height:26px;width:72px;border-radius:6px;background:var(--bg-3,#0E1014);"></div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style src="../ops-quench.css"></style>

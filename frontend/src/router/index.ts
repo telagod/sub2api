@@ -380,7 +380,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin/dashboard',
     name: 'AdminDashboard',
-    component: () => import('@/views/admin/DashboardView.vue'),
+    component: () => import('@/views/admin/dashboard-quench/DashboardQuenchView.vue'),
     meta: {
       requiresAuth: true,
       requiresAdmin: true,
@@ -563,6 +563,18 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin/settings',
     name: 'AdminSettings',
+    component: () => import('@/views/admin/settings-registry/SettingsRegistryView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'System Settings',
+      titleKey: 'admin.settings.title',
+      descriptionKey: 'admin.settings.description'
+    }
+  },
+  {
+    path: '/admin/settings/legacy',
+    name: 'AdminSettingsLegacy',
     component: () => import('@/views/admin/SettingsView.vue'),
     meta: {
       requiresAuth: true,

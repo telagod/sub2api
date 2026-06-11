@@ -143,142 +143,79 @@ function openErrorDetail(errorId: number | null | undefined) {
 }
 
 const kindBadgeClass = (kind: string) => {
-  if (kind === 'error') return 'bg-red-500/10 text-red-400'
-  return 'bg-emerald-500/10 text-emerald-400'
+  if (kind === 'error') return 'od-badge od-badge-bad'
+  return 'od-badge od-badge-ok'
 }
 </script>
 
 <template>
   <BaseDialog :show="modelValue" :title="props.preset.title || t('admin.ops.requestDetails.title')" width="full" @close="close">
     <template #default>
-      <div class="flex h-full min-h-0 flex-col">
-        <div class="mb-4 flex flex-shrink-0 items-center justify-between">
-          <div class="text-xs text-muted-foreground">
-            {{ t('admin.ops.requestDetails.rangeLabel', { range: rangeLabel }) }}
-          </div>
-          <button
-            type="button"
-            class="btn btn-secondary btn-sm"
-            @click="fetchData"
-          >
-            {{ t('common.refresh') }}
-          </button>
+      <div style="display:flex;height:100%;min-height:0;flex-direction:column;">
+        <div style="margin-bottom:12px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:11px;color:var(--ink-2,#5C6470);">{{ t('admin.ops.requestDetails.rangeLabel', { range: rangeLabel }) }}</div>
+          <button type="button" class="od-btn" style="padding:4px 10px;font-size:11px;" @click="fetchData">{{ t('common.refresh') }}</button>
         </div>
 
         <!-- Loading -->
-        <div v-if="loading" class="flex flex-1 items-center justify-center py-16">
-          <div class="flex flex-col items-center gap-3">
-            <svg class="h-8 w-8 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            <span class="text-sm font-medium text-muted-foreground">{{ t('common.loading') }}</span>
-          </div>
+        <div v-if="loading" style="display:flex;flex:1;align-items:center;justify-content:center;padding:48px 0;flex-direction:column;gap:10px;">
+          <svg width="24" height="24" class="animate-spin" fill="none" viewBox="0 0 24 24" style="color:var(--ops-azure,#5CA8FF);"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <span style="font-size:13px;color:var(--ink-2,#5C6470);">{{ t('common.loading') }}</span>
         </div>
 
         <!-- Table -->
-        <div v-else class="flex min-h-0 flex-1 flex-col">
-          <div v-if="items.length === 0" class="rounded-lg border border-dashed border-border p-10 text-center">
-            <div class="text-sm font-medium text-foreground/75">{{ t('admin.ops.requestDetails.empty') }}</div>
-            <div class="mt-1 text-xs text-muted-foreground">{{ t('admin.ops.requestDetails.emptyHint') }}</div>
+        <div v-else style="display:flex;min-height:0;flex:1;flex-direction:column;">
+          <div v-if="items.length === 0" style="border-radius:8px;border:1px dashed var(--line-0,#20242C);padding:36px;text-align:center;">
+            <div style="font-size:13px;font-weight:500;color:var(--ink-1,#97A0AF);">{{ t('admin.ops.requestDetails.empty') }}</div>
+            <div style="margin-top:4px;font-size:11px;color:var(--ink-2,#5C6470);">{{ t('admin.ops.requestDetails.emptyHint') }}</div>
           </div>
 
-          <div v-else class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border">
-            <div class="min-h-0 flex-1 overflow-auto">
-              <table class="min-w-full divide-y divide-border">
-                <thead class="sticky top-0 z-10 bg-card">
-                <tr>
-                  <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {{ t('admin.ops.requestDetails.table.time') }}
-                  </th>
-                  <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {{ t('admin.ops.requestDetails.table.kind') }}
-                  </th>
-                  <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {{ t('admin.ops.requestDetails.table.platform') }}
-                  </th>
-                  <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {{ t('admin.ops.requestDetails.table.model') }}
-                  </th>
-                  <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {{ t('admin.ops.requestDetails.table.duration') }}
-                  </th>
-                  <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {{ t('admin.ops.requestDetails.table.status') }}
-                  </th>
-                  <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {{ t('admin.ops.requestDetails.table.requestId') }}
-                  </th>
-                  <th class="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {{ t('admin.ops.requestDetails.table.actions') }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-border bg-card">
-                <tr v-for="(row, idx) in items" :key="idx" class="hover:bg-card/50">
-                  <td class="whitespace-nowrap px-4 py-3 text-xs text-foreground/75">
-                    {{ formatDateTime(row.created_at) }}
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3">
-                    <span class="rounded-full px-2 py-1 text-[10px] font-bold" :class="kindBadgeClass(row.kind)">
-                      {{ row.kind === 'error' ? t('admin.ops.requestDetails.kind.error') : t('admin.ops.requestDetails.kind.success') }}
-                    </span>
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-xs font-medium text-foreground/85">
-                    {{ (row.platform || 'unknown').toUpperCase() }}
-                  </td>
-                  <td class="max-w-[240px] truncate px-4 py-3 text-xs text-foreground/75" :title="row.model || ''">
-                    {{ row.model || '-' }}
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-xs text-foreground/75">
-                    {{ typeof row.duration_ms === 'number' ? `${row.duration_ms} ms` : '-' }}
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-xs text-foreground/75">
-                    {{ row.status_code ?? '-' }}
-                  </td>
-                  <td class="px-4 py-3">
-                    <div v-if="row.request_id" class="flex items-center gap-2">
-                      <span class="max-w-[220px] truncate font-mono text-[11px] text-foreground/85" :title="row.request_id">
-                        {{ row.request_id }}
-                      </span>
-                      <button
-                        class="rounded-md bg-muted px-2 py-1 text-[10px] font-bold text-foreground/75 hover:bg-accent"
-                        @click="handleCopyRequestId(row.request_id)"
-                      >
-                        {{ t('admin.ops.requestDetails.copy') }}
-                      </button>
-                    </div>
-                    <span v-else class="text-xs text-muted-foreground">-</span>
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-right">
-                    <button
-                      v-if="row.kind === 'error' && row.error_id"
-                      class="rounded-lg bg-red-900/20 px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/10 "
-                      @click="openErrorDetail(row.error_id)"
-                    >
-                      {{ t('admin.ops.requestDetails.viewError') }}
-                    </button>
-                    <span v-else class="text-xs text-muted-foreground">-</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-else class="od-table-card" style="display:flex;min-height:0;flex:1;flex-direction:column;overflow:hidden;">
+            <div style="min-height:0;flex:1;overflow:auto;">
+              <table style="min-width:100%;border-collapse:collapse;font-size:11.5px;">
+                <thead class="od-table-head-row" style="position:sticky;top:0;z-index:10;">
+                  <tr>
+                    <th style="padding:8px 14px;text-align:left;" class="od-sys-label">{{ t('admin.ops.requestDetails.table.time') }}</th>
+                    <th style="padding:8px 14px;text-align:left;" class="od-sys-label">{{ t('admin.ops.requestDetails.table.kind') }}</th>
+                    <th style="padding:8px 14px;text-align:left;" class="od-sys-label">{{ t('admin.ops.requestDetails.table.platform') }}</th>
+                    <th style="padding:8px 14px;text-align:left;" class="od-sys-label">{{ t('admin.ops.requestDetails.table.model') }}</th>
+                    <th style="padding:8px 14px;text-align:left;" class="od-sys-label">{{ t('admin.ops.requestDetails.table.duration') }}</th>
+                    <th style="padding:8px 14px;text-align:left;" class="od-sys-label">{{ t('admin.ops.requestDetails.table.status') }}</th>
+                    <th style="padding:8px 14px;text-align:left;" class="od-sys-label">{{ t('admin.ops.requestDetails.table.requestId') }}</th>
+                    <th style="padding:8px 14px;text-align:right;" class="od-sys-label">{{ t('admin.ops.requestDetails.table.actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, idx) in items" :key="idx" class="od-tr-border">
+                    <td style="padding:8px 14px;white-space:nowrap;color:var(--ink-1,#97A0AF);">{{ formatDateTime(row.created_at) }}</td>
+                    <td style="padding:8px 14px;white-space:nowrap;">
+                      <span :class="kindBadgeClass(row.kind)">{{ row.kind === 'error' ? t('admin.ops.requestDetails.kind.error') : t('admin.ops.requestDetails.kind.success') }}</span>
+                    </td>
+                    <td style="padding:8px 14px;white-space:nowrap;font-weight:500;color:var(--ink-1,#97A0AF);">{{ (row.platform || 'unknown').toUpperCase() }}</td>
+                    <td style="padding:8px 14px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-1,#97A0AF);" :title="row.model || ''">{{ row.model || '-' }}</td>
+                    <td style="padding:8px 14px;white-space:nowrap;color:var(--ink-1,#97A0AF);">{{ typeof row.duration_ms === 'number' ? `${row.duration_ms} ms` : '-' }}</td>
+                    <td style="padding:8px 14px;white-space:nowrap;color:var(--ink-1,#97A0AF);">{{ row.status_code ?? '-' }}</td>
+                    <td style="padding:8px 14px;">
+                      <div v-if="row.request_id" style="display:flex;align-items:center;gap:6px;">
+                        <span class="od-mono" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px;color:var(--ink-1,#97A0AF);" :title="row.request_id">{{ row.request_id }}</span>
+                        <button class="od-btn" style="padding:2px 7px;font-size:10px;" @click="handleCopyRequestId(row.request_id)">{{ t('admin.ops.requestDetails.copy') }}</button>
+                      </div>
+                      <span v-else style="font-size:11px;color:var(--ink-2,#5C6470);">-</span>
+                    </td>
+                    <td style="padding:8px 14px;white-space:nowrap;text-align:right;">
+                      <button v-if="row.kind === 'error' && row.error_id" class="od-btn" style="padding:3px 9px;font-size:11px;color:var(--ops-bad,#F25C69);border-color:var(--ops-bad-border,rgba(242,92,105,.25));" @click="openErrorDetail(row.error_id)">{{ t('admin.ops.requestDetails.viewError') }}</button>
+                      <span v-else style="font-size:11px;color:var(--ink-2,#5C6470);">-</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-
-            <Pagination
-              :total="total"
-              :page="page"
-              :page-size="pageSize"
-              @update:page="handlePageChange"
-              @update:pageSize="handlePageSizeChange"
-            />
+            <Pagination :total="total" :page="page" :page-size="pageSize" @update:page="handlePageChange" @update:pageSize="handlePageSizeChange" />
           </div>
         </div>
       </div>
     </template>
   </BaseDialog>
 </template>
+
+<style src="../ops-quench.css"></style>

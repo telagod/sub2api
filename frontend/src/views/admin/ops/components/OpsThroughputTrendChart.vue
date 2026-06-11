@@ -44,12 +44,12 @@ watch(
 )
 
 const colors = computed(() => ({
-  blue: '#3b82f6',
-  blueAlpha: '#3b82f620',
-  green: '#10b981',
-  greenAlpha: '#10b98120',
-  grid: '#262626',
-  text: '#737373'
+  blue: '#5CA8FF',              /* azure 主系 */
+  blueAlpha: 'rgba(92,168,255,.12)',
+  green: '#46C98C',             /* ok 次系 */
+  greenAlpha: 'rgba(70,201,140,.12)',
+  grid: '#20242C',              /* line-0 */
+  text: '#5C6470'               /* ink-2 */
 }))
 
 const totalRequests = computed(() => sumNumbers(props.points.map((p) => p.request_count)))
@@ -172,83 +172,69 @@ function downloadChart() {
 </script>
 
 <template>
-  <div class="flex h-full flex-col rounded-lg bg-card p-6  border border-border">
-    <div class="mb-4 flex shrink-0 items-center justify-between">
-      <h3 class="flex items-center gap-2 text-sm font-bold text-foreground">
-        <svg class="h-4 w-4 text-primary-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <div class="od-chart-card">
+    <div class="od-chart-head">
+      <h3 class="od-chart-title">
+        <svg class="od-chart-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
         </svg>
         {{ t('admin.ops.throughputTrend') }}
         <HelpTooltip v-if="!props.fullscreen" :content="t('admin.ops.tooltips.throughputTrend')" />
       </h3>
-      <div class="flex items-center gap-2 text-xs text-muted-foreground">
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-blue-500"></span>QPS</span>
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-green-500"></span>{{ t('admin.ops.tpsK') }}</span>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-2,#5C6470);">
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--ops-azure);display:inline-block;"></span>QPS</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--ops-ok);display:inline-block;"></span>{{ t('admin.ops.tpsK') }}</span>
         <template v-if="!props.fullscreen">
-          <button
-            type="button"
-            class="ml-2 inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent disabled:opacity-50"
-            :disabled="state !== 'ready'"
-            :title="t('admin.ops.requestDetails.title')"
-            @click="emit('openDetails')"
-          >
+          <button type="button" class="od-btn" style="padding:3px 8px;font-size:11px;" :disabled="state !== 'ready'" :title="t('admin.ops.requestDetails.title')" @click="emit('openDetails')">
             {{ t('admin.ops.requestDetails.details') }}
           </button>
-          <button
-            type="button"
-            class="ml-2 inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent disabled:opacity-50"
-            :disabled="state !== 'ready'"
-            :title="t('admin.ops.charts.resetZoomHint')"
-            @click="resetZoom"
-          >
+          <button type="button" class="od-btn" style="padding:3px 8px;font-size:11px;" :disabled="state !== 'ready'" :title="t('admin.ops.charts.resetZoomHint')" @click="resetZoom">
             {{ t('admin.ops.charts.resetZoom') }}
           </button>
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent disabled:opacity-50"
-            :disabled="state !== 'ready'"
-            :title="t('admin.ops.charts.downloadChartHint')"
-            @click="downloadChart"
-          >
+          <button type="button" class="od-btn" style="padding:3px 8px;font-size:11px;" :disabled="state !== 'ready'" :title="t('admin.ops.charts.downloadChartHint')" @click="downloadChart">
             {{ t('admin.ops.charts.downloadChart') }}
           </button>
         </template>
       </div>
     </div>
 
-    <!-- Drilldown chips (baseline interaction: click to set global filter) -->
-    <div v-if="(props.topGroups?.length ?? 0) > 0" class="mb-3 flex flex-wrap gap-2">
+    <!-- Drilldown chips -->
+    <div v-if="(props.topGroups?.length ?? 0) > 0" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
       <button
         v-for="g in props.topGroups"
         :key="g.group_id"
         type="button"
-        class="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent"
+        class="od-badge od-badge-dim"
+        style="cursor:pointer;border-radius:100px;"
         @click="emit('selectGroup', g.group_id)"
       >
-        <span class="max-w-[180px] truncate">{{ g.group_name || `#${g.group_id}` }}</span>
-        <span class="text-muted-foreground">{{ formatNumber(g.request_count) }}</span>
+        <span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ g.group_name || `#${g.group_id}` }}</span>
+        <span style="color:var(--ink-2,#5C6470);">{{ formatNumber(g.request_count) }}</span>
       </button>
     </div>
 
-    <div v-else-if="(props.byPlatform?.length ?? 0) > 0" class="mb-3 flex flex-wrap gap-2">
+    <div v-else-if="(props.byPlatform?.length ?? 0) > 0" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
       <button
         v-for="p in props.byPlatform"
         :key="p.platform"
         type="button"
-        class="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent"
+        class="od-badge od-badge-dim"
+        style="cursor:pointer;border-radius:100px;"
         @click="emit('selectPlatform', p.platform)"
       >
-        <span class="uppercase">{{ p.platform }}</span>
-        <span class="text-muted-foreground">{{ formatNumber(p.request_count) }}</span>
+        <span style="text-transform:uppercase;">{{ p.platform }}</span>
+        <span style="color:var(--ink-2,#5C6470);">{{ formatNumber(p.request_count) }}</span>
       </button>
     </div>
 
-    <div class="min-h-0 flex-1">
+    <div style="flex:1;min-height:0;">
       <Line v-if="state === 'ready' && chartData" ref="throughputChartRef" :data="chartData" :options="options" />
-      <div v-else class="flex h-full items-center justify-center">
-        <div v-if="state === 'loading'" class="animate-pulse text-sm text-muted-foreground">{{ t('common.loading') }}</div>
+      <div v-else style="display:flex;height:100%;align-items:center;justify-content:center;">
+        <div v-if="state === 'loading'" style="font-size:13px;color:var(--ink-2,#5C6470);" class="animate-pulse">{{ t('common.loading') }}</div>
         <EmptyState v-else :title="t('common.noData')" :description="t('admin.ops.charts.emptyRequest')" />
       </div>
     </div>
   </div>
 </template>
+
+<style src="../ops-quench.css"></style>

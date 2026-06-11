@@ -188,83 +188,41 @@ watch(
 
 <template>
   <BaseDialog :show="show" :title="modalTitle" width="full" @close="close">
-    <div class="flex h-full min-h-0 flex-col">
+    <div style="display:flex;height:100%;min-height:0;flex-direction:column;">
       <!-- Filters -->
-      <div class="mb-4 flex-shrink-0 border-b border-border pb-4">
-        <div class="grid grid-cols-8 gap-2">
-          <div class="col-span-2 compact-select">
-            <div class="relative group">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <svg
-                  class="h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-primary-200"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                v-model="q"
-                type="text"
-                class="w-full rounded-md border-border bg-card py-1.5 pl-9 pr-3 text-xs font-medium text-foreground/85 transition-all focus:border-ring focus:ring-2 focus:ring-ring/20"
-                :placeholder="t('admin.ops.errorDetails.searchPlaceholder')"
-              />
+      <div style="margin-bottom:12px;flex-shrink:0;border-bottom:1px solid var(--line-0,#20242C);padding-bottom:12px;">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:center;">
+          <div style="position:relative;">
+            <div style="pointer-events:none;position:absolute;inset-y:0;left:0;display:flex;align-items:center;padding-left:10px;">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:var(--ink-2,#5C6470);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
+            <input v-model="q" type="text" class="input" style="padding-left:30px;height:30px;font-size:11.5px;" :placeholder="t('admin.ops.errorDetails.searchPlaceholder')" />
           </div>
-
-          <div class="compact-select">
-            <Select :model-value="statusCode" :options="statusCodeSelectOptions" @update:model-value="statusCode = $event as any" />
-          </div>
-
-          <div class="compact-select">
-            <Select :model-value="phase" :options="phaseSelectOptions" @update:model-value="phase = String($event ?? '')" />
-          </div>
-
-          <div class="compact-select">
-            <Select :model-value="errorOwner" :options="ownerSelectOptions" @update:model-value="errorOwner = String($event ?? '')" />
-          </div>
-
-
-
-          <div class="compact-select">
-            <Select :model-value="viewMode" :options="viewModeSelectOptions" @update:model-value="viewMode = $event as any" />
-          </div>
-
-          <div class="flex items-center justify-end">
-            <button type="button" class="rounded-md bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground/85 border border-border transition-colors hover:bg-accent" @click="resetFilters">
-              {{ t('common.reset') }}
-            </button>
-          </div>
+          <Select :model-value="statusCode" :options="statusCodeSelectOptions" @update:model-value="statusCode = $event as any" />
+          <Select :model-value="phase" :options="phaseSelectOptions" @update:model-value="phase = String($event ?? '')" />
+          <Select :model-value="errorOwner" :options="ownerSelectOptions" @update:model-value="errorOwner = String($event ?? '')" />
+          <Select :model-value="viewMode" :options="viewModeSelectOptions" @update:model-value="viewMode = $event as any" />
+          <button type="button" class="od-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" @click="resetFilters">{{ t('common.reset') }}</button>
         </div>
       </div>
 
       <!-- Body -->
-      <div class="flex min-h-0 flex-1 flex-col">
-        <div class="mb-2 flex-shrink-0 text-xs text-muted-foreground">
-          {{ t('admin.ops.errorDetails.total') }} {{ total }}
-        </div>
-
-          <OpsErrorLogTable
-            class="min-h-0 flex-1"
-            :rows="rows"
-            :total="total"
-            :loading="loading"
-            :page="page"
-            :page-size="pageSize"
-            @openErrorDetail="emit('openErrorDetail', $event)"
-
-            @update:page="page = $event"
-            @update:pageSize="pageSize = $event"
-          />
-
+      <div style="display:flex;min-height:0;flex:1;flex-direction:column;">
+        <div style="margin-bottom:6px;flex-shrink:0;font-size:11px;color:var(--ink-2,#5C6470);">{{ t('admin.ops.errorDetails.total') }} {{ total }}</div>
+        <OpsErrorLogTable
+          style="min-height:0;flex:1;"
+          :rows="rows"
+          :total="total"
+          :loading="loading"
+          :page="page"
+          :page-size="pageSize"
+          @openErrorDetail="emit('openErrorDetail', $event)"
+          @update:page="page = $event"
+          @update:pageSize="pageSize = $event"
+        />
       </div>
     </div>
   </BaseDialog>
 </template>
 
-<style>
-.compact-select .select-trigger {
-  @apply py-1.5 px-3 text-xs rounded-lg;
-}
-</style>
+<style src="../ops-quench.css"></style>

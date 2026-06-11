@@ -90,10 +90,10 @@ const filterLevelOptions = [
 
 const levelBadgeClass = (level: string) => {
   const v = String(level || '').toLowerCase()
-  if (v === 'error' || v === 'fatal') return 'bg-red-500/10 text-red-400'
-  if (v === 'warn' || v === 'warning') return 'bg-amber-500/10 text-amber-400'
-  if (v === 'debug') return 'bg-accent text-muted-foreground'
-  return 'bg-sky-500/10 text-sky-400'
+  if (v === 'error' || v === 'fatal') return 'od-badge od-badge-bad'
+  if (v === 'warn' || v === 'warning') return 'od-badge od-badge-warn'
+  if (v === 'debug') return 'od-badge od-badge-dim'
+  return 'od-badge od-badge-azure'
 }
 
 const formatTime = (value: string) => {
@@ -357,164 +357,152 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="rounded-lg border border-border bg-card p-4 ">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <section class="od-card od-card-pad">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;">
       <div>
-        <h3 class="text-sm font-bold text-foreground">系统日志</h3>
-        <p class="mt-1 text-xs text-muted-foreground">默认按最新时间倒序，支持筛选搜索与按条件清理。</p>
+        <h3 class="od-chart-title">系统日志</h3>
+        <p style="margin-top:3px;font-size:11.5px;color:var(--ink-2,#5C6470);">默认按最新时间倒序，支持筛选搜索与按条件清理。</p>
       </div>
-      <div class="flex flex-wrap items-center gap-2 text-xs">
-        <span class="rounded-md bg-secondary border border-border px-2 py-1 text-foreground/85">队列 {{ health.queue_depth }}/{{ health.queue_capacity }}</span>
-        <span class="rounded-md bg-secondary border border-border px-2 py-1 text-foreground/85">写入 {{ health.written_count }}</span>
-        <span class="rounded-md bg-amber-500/10 border border-amber-500/30 px-2 py-1 text-amber-400">丢弃 {{ health.dropped_count }}</span>
-        <span class="rounded-md bg-red-500/10 border border-red-500/30 px-2 py-1 text-red-400">失败 {{ health.write_failed_count }}</span>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:11.5px;">
+        <span class="od-badge od-badge-dim">队列 {{ health.queue_depth }}/{{ health.queue_capacity }}</span>
+        <span class="od-badge od-badge-dim">写入 {{ health.written_count }}</span>
+        <span class="od-badge od-badge-warn">丢弃 {{ health.dropped_count }}</span>
+        <span class="od-badge od-badge-bad">失败 {{ health.write_failed_count }}</span>
       </div>
     </div>
 
-    <div class="mb-4 rounded-md border border-border bg-muted p-3">
-      <div class="mb-2 flex items-center justify-between">
-        <div class="text-xs font-semibold text-foreground/85">运行时日志配置（实时生效）</div>
-        <span v-if="runtimeLoading" class="text-xs text-muted-foreground">加载中...</span>
+    <div class="od-card" style="padding:12px;margin-bottom:14px;background:var(--bg-2,#171A20);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:11.5px;font-weight:600;color:var(--ink-1,#97A0AF);">运行时日志配置（实时生效）</div>
+        <span v-if="runtimeLoading" style="font-size:11px;color:var(--ink-2,#5C6470);">加载中...</span>
       </div>
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
-        <label class="text-xs text-muted-foreground">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
+        <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
           级别
-          <Select v-model="runtimeConfig.level" class="mt-1" :options="runtimeLevelOptions" />
+          <Select v-model="runtimeConfig.level" :options="runtimeLevelOptions" />
         </label>
-        <label class="text-xs text-muted-foreground">
+        <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
           堆栈阈值
-          <Select v-model="runtimeConfig.stacktrace_level" class="mt-1" :options="stacktraceLevelOptions" />
+          <Select v-model="runtimeConfig.stacktrace_level" :options="stacktraceLevelOptions" />
         </label>
-        <label class="text-xs text-muted-foreground">
+        <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
           采样初始
-          <input v-model.number="runtimeConfig.sampling_initial" type="number" min="1" class="input mt-1" />
+          <input v-model.number="runtimeConfig.sampling_initial" type="number" min="1" class="input" style="height:32px;font-size:12px;" />
         </label>
-        <label class="text-xs text-muted-foreground">
+        <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
           采样后续
-          <input v-model.number="runtimeConfig.sampling_thereafter" type="number" min="1" class="input mt-1" />
+          <input v-model.number="runtimeConfig.sampling_thereafter" type="number" min="1" class="input" style="height:32px;font-size:12px;" />
         </label>
-        <label class="text-xs text-muted-foreground">
+        <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
           保留天数
-          <input v-model.number="runtimeConfig.retention_days" type="number" min="1" max="3650" class="input mt-1" />
+          <input v-model.number="runtimeConfig.retention_days" type="number" min="1" max="3650" class="input" style="height:32px;font-size:12px;" />
         </label>
-        <div class="md:col-span-2 xl:col-span-6">
-          <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <label class="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                <input v-model="runtimeConfig.caller" type="checkbox" />
-                caller
-              </label>
-              <label class="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                <input v-model="runtimeConfig.enable_sampling" type="checkbox" />
-                sampling
-              </label>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 lg:justify-end">
-              <button type="button" class="btn btn-primary btn-sm" :disabled="runtimeSaving" @click="saveRuntimeConfig">
-                {{ runtimeSaving ? '保存中...' : '保存并生效' }}
-              </button>
-              <button type="button" class="btn btn-secondary btn-sm" :disabled="runtimeSaving" @click="resetRuntimeConfig">
-                回滚默认值
-              </button>
-            </div>
-          </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px;justify-content:space-between;">
+        <div style="display:flex;flex-wrap:wrap;gap:14px;">
+          <label style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2,#5C6470);">
+            <input v-model="runtimeConfig.caller" type="checkbox" />caller
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2,#5C6470);">
+            <input v-model="runtimeConfig.enable_sampling" type="checkbox" />sampling
+          </label>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <button type="button" class="od-btn od-btn-azure" style="padding:4px 12px;font-size:11px;" :disabled="runtimeSaving" @click="saveRuntimeConfig">
+            {{ runtimeSaving ? '保存中...' : '保存并生效' }}
+          </button>
+          <button type="button" class="od-btn" style="padding:4px 10px;font-size:11px;" :disabled="runtimeSaving" @click="resetRuntimeConfig">
+            回滚默认值
+          </button>
         </div>
       </div>
-      <p v-if="health.last_error" class="mt-2 text-xs text-red-400">最近写入错误：{{ health.last_error }}</p>
+      <p v-if="health.last_error" style="margin-top:6px;font-size:11px;color:var(--ops-bad,#F25C69);">最近写入错误：{{ health.last_error }}</p>
     </div>
 
-    <div class="mb-4 grid grid-cols-1 gap-3 md:grid-cols-5">
-      <label class="text-xs text-muted-foreground">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px;">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         时间范围
-        <Select v-model="filters.time_range" class="mt-1" :options="timeRangeOptions" />
+        <Select v-model="filters.time_range" :options="timeRangeOptions" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         开始时间（可选）
-        <input v-model="filters.start_time" type="datetime-local" class="input mt-1" />
+        <input v-model="filters.start_time" type="datetime-local" class="od-input-dt" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         结束时间（可选）
-        <input v-model="filters.end_time" type="datetime-local" class="input mt-1" />
+        <input v-model="filters.end_time" type="datetime-local" class="od-input-dt" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         级别
-        <Select v-model="filters.level" class="mt-1" :options="filterLevelOptions" />
+        <Select v-model="filters.level" :options="filterLevelOptions" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         组件
-        <input v-model="filters.component" type="text" class="input mt-1" placeholder="如 http.access" />
+        <input v-model="filters.component" type="text" class="input" placeholder="如 http.access" style="height:32px;font-size:12px;" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         request_id
-        <input v-model="filters.request_id" type="text" class="input mt-1" />
+        <input v-model="filters.request_id" type="text" class="input" style="height:32px;font-size:12px;" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         client_request_id
-        <input v-model="filters.client_request_id" type="text" class="input mt-1" />
+        <input v-model="filters.client_request_id" type="text" class="input" style="height:32px;font-size:12px;" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         user_id
-        <input v-model="filters.user_id" type="text" class="input mt-1" />
+        <input v-model="filters.user_id" type="text" class="input" style="height:32px;font-size:12px;" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         account_id
-        <input v-model="filters.account_id" type="text" class="input mt-1" />
+        <input v-model="filters.account_id" type="text" class="input" style="height:32px;font-size:12px;" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         平台
-        <input v-model="filters.platform" type="text" class="input mt-1" />
+        <input v-model="filters.platform" type="text" class="input" style="height:32px;font-size:12px;" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         模型
-        <input v-model="filters.model" type="text" class="input mt-1" />
+        <input v-model="filters.model" type="text" class="input" style="height:32px;font-size:12px;" />
       </label>
-      <label class="text-xs text-muted-foreground">
+      <label class="od-form-label" style="display:flex;flex-direction:column;gap:4px;">
         关键词
-        <input v-model="filters.q" type="text" class="input mt-1" placeholder="消息/request_id" />
+        <input v-model="filters.q" type="text" class="input" placeholder="消息/request_id" style="height:32px;font-size:12px;" />
       </label>
     </div>
 
-    <div class="mb-3 flex flex-wrap gap-2">
-      <button type="button" class="btn btn-primary btn-sm" @click="applyFilters">查询</button>
-      <button type="button" class="btn btn-secondary btn-sm" @click="resetFilters">重置</button>
-      <button type="button" class="btn btn-danger btn-sm" @click="cleanupCurrentFilter">按当前筛选清理</button>
-      <button type="button" class="btn btn-secondary btn-sm" @click="fetchHealth">刷新健康指标</button>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+      <button type="button" class="od-btn od-btn-azure" style="padding:4px 12px;font-size:11px;" @click="applyFilters">查询</button>
+      <button type="button" class="od-btn" style="padding:4px 10px;font-size:11px;" @click="resetFilters">重置</button>
+      <button type="button" class="od-btn" style="padding:4px 10px;font-size:11px;color:var(--ops-bad,#F25C69);border-color:var(--ops-bad-border,rgba(242,92,105,.25));" @click="cleanupCurrentFilter">按当前筛选清理</button>
+      <button type="button" class="od-btn" style="padding:4px 10px;font-size:11px;" @click="fetchHealth">刷新健康指标</button>
     </div>
 
-    <div class="overflow-hidden rounded-md border border-border">
-      <div v-if="loading" class="px-4 py-8 text-center text-sm text-muted-foreground">加载中...</div>
-      <div v-else-if="!hasData" class="px-4 py-8 text-center text-sm text-muted-foreground">暂无系统日志</div>
-      <div v-else class="overflow-auto">
-        <table class="min-w-full table-fixed divide-y divide-border">
-          <thead class="bg-muted">
+    <div class="od-table-card">
+      <div v-if="loading" style="padding:28px;text-align:center;font-size:13px;color:var(--ink-2,#5C6470);">加载中...</div>
+      <div v-else-if="!hasData" style="padding:28px;text-align:center;font-size:13px;color:var(--ink-2,#5C6470);">暂无系统日志</div>
+      <div v-else style="overflow:auto;">
+        <table style="min-width:100%;border-collapse:collapse;table-layout:fixed;">
+          <thead class="od-table-head-row">
             <tr>
-              <th class="w-[170px] px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">时间</th>
-              <th class="w-[80px] px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">级别</th>
-              <th class="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">日志详细信息</th>
+              <th style="width:180px;padding:7px 12px;text-align:left;" class="od-sys-label">时间</th>
+              <th style="width:80px;padding:7px 12px;text-align:left;" class="od-sys-label">级别</th>
+              <th style="padding:7px 12px;text-align:left;" class="od-sys-label">日志详细信息</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-border">
-            <tr v-for="row in logs" :key="row.id" class="align-top">
-              <td class="px-3 py-2 text-xs text-foreground/85">{{ formatTime(row.created_at) }}</td>
-              <td class="px-3 py-2 text-xs">
-                <span class="inline-flex rounded-full px-2 py-0.5 font-semibold" :class="levelBadgeClass(row.level)">
-                  {{ row.level }}
-                </span>
+          <tbody>
+            <tr v-for="row in logs" :key="row.id" class="od-tr-border" style="vertical-align:top;">
+              <td style="padding:7px 12px;font-size:11.5px;color:var(--ink-1,#97A0AF);">{{ formatTime(row.created_at) }}</td>
+              <td style="padding:7px 12px;">
+                <span :class="levelBadgeClass(row.level)">{{ row.level }}</span>
               </td>
-              <td class="px-3 py-2 text-xs text-foreground/85 whitespace-normal break-all">
-                {{ formatSystemLogDetail(row) }}
-              </td>
+              <td style="padding:7px 12px;font-size:11.5px;color:var(--ink-1,#97A0AF);white-space:normal;word-break:break-all;">{{ formatSystemLogDetail(row) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <Pagination
-        :total="total"
-        :page="page"
-        :page-size="pageSize"
-        @update:page="onPageChange"
-        @update:page-size="onPageSizeChange"
-      />
+      <Pagination :total="total" :page="page" :page-size="pageSize" @update:page="onPageChange" @update:page-size="onPageSizeChange" />
     </div>
   </section>
 </template>
+
+<style src="../ops-quench.css"></style>

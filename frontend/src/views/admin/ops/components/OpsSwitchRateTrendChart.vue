@@ -32,10 +32,10 @@ const props = defineProps<Props>()
 const { t } = useI18n()
 
 const colors = computed(() => ({
-  teal: '#14b8a6',
-  tealAlpha: '#14b8a620',
-  grid: '#262626',
-  text: '#737373'
+  teal: '#5CA8FF',              /* azure 主系（切换率用 azure 替代 teal）*/
+  tealAlpha: 'rgba(92,168,255,.12)',
+  grid: '#20242C',              /* line-0 */
+  text: '#5C6470'               /* ink-2 */
 }))
 
 const totalRequests = computed(() => sumNumbers(props.points.map((p) => p.request_count)))
@@ -127,10 +127,10 @@ const options = computed(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col rounded-lg border border-border bg-card p-6 ">
-    <div class="mb-4 flex shrink-0 items-center justify-between">
-      <h3 class="flex items-center gap-2 text-sm font-bold text-foreground">
-        <svg class="h-4 w-4 text-primary-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <div class="od-chart-card">
+    <div class="od-chart-head">
+      <h3 class="od-chart-title">
+        <svg class="od-chart-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h6m-6 5h3" />
         </svg>
         {{ t('admin.ops.switchRateTrend') }}
@@ -138,12 +138,14 @@ const options = computed(() => {
       </h3>
     </div>
 
-    <div class="min-h-0 flex-1">
+    <div style="flex:1;min-height:0;">
       <Line v-if="state === 'ready' && chartData" :data="chartData" :options="options" />
-      <div v-else class="flex h-full items-center justify-center">
-        <div v-if="state === 'loading'" class="animate-pulse text-sm text-muted-foreground">{{ t('common.loading') }}</div>
+      <div v-else style="display:flex;height:100%;align-items:center;justify-content:center;">
+        <div v-if="state === 'loading'" style="font-size:13px;color:var(--ink-2,#5C6470);" class="animate-pulse">{{ t('common.loading') }}</div>
         <EmptyState v-else :title="t('common.noData')" :description="t('admin.ops.charts.emptyRequest')" />
       </div>
     </div>
   </div>
 </template>
+
+<style src="../ops-quench.css"></style>

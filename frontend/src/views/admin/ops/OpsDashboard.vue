@@ -1,10 +1,7 @@
 <template>
-  <component :is="isFullscreen ? 'div' : AppLayout" :class="isFullscreen ? 'flex min-h-screen flex-col justify-center bg-background' : ''">
-    <div :class="[isFullscreen ? 'p-4 md:p-6' : '', 'space-y-6 pb-12']">
-      <div
-        v-if="errorMessage"
-        class="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400"
-      >
+  <component :is="isFullscreen ? 'div' : AppLayout" :class="isFullscreen ? 'od-root flex min-h-screen flex-col justify-center' : 'od-root'">
+    <div :class="[isFullscreen ? 'p-4 md:p-6' : 'space-y-6 pb-12']">
+      <div v-if="errorMessage" class="od-error-bar" style="margin-bottom:16px;">
         {{ errorMessage }}
       </div>
 
@@ -40,7 +37,7 @@
       />
 
       <!-- Row: Concurrency + Throughput -->
-      <div v-if="opsEnabled && !(loading && !hasLoadedOnce)" class="grid grid-cols-1 gap-6 lg:grid-cols-4">
+      <div v-if="opsEnabled && !(loading && !hasLoadedOnce)" class="grid grid-cols-1 gap-6 lg:grid-cols-4" style="margin-top:20px;">
         <div class="lg:col-span-1 min-h-[360px]">
           <OpsConcurrencyCard :platform-filter="platform" :group-id-filter="groupId" :refresh-token="dashboardRefreshToken" />
         </div>
@@ -832,3 +829,5 @@ watch(showSettingsDialog, async (show) => {
   }
 })
 </script>
+
+<style src="./ops-quench.css"></style>

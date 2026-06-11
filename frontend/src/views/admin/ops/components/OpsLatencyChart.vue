@@ -19,9 +19,9 @@ const props = defineProps<Props>()
 const { t } = useI18n()
 
 const colors = computed(() => ({
-  blue: '#3b82f6',
-  grid: '#262626',
-  text: '#737373'
+  blue: '#5CA8FF',   /* od-azure */
+  grid: '#20242C',   /* line-0 */
+  text: '#5C6470'    /* ink-2 */
 }))
 
 const hasData = computed(() => (props.latencyData?.total_requests ?? 0) > 0)
@@ -73,28 +73,25 @@ const options = computed(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col rounded-lg border border-border bg-card p-6 ">
-    <div class="mb-4 flex items-center justify-between">
-      <h3 class="flex items-center gap-2 text-sm font-bold text-foreground">
-        <svg class="h-4 w-4 text-primary-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
+  <div class="od-chart-card">
+    <div class="od-chart-head">
+      <h3 class="od-chart-title">
+        <svg class="od-chart-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         {{ t('admin.ops.latencyHistogram') }}
         <HelpTooltip :content="t('admin.ops.tooltips.latencyHistogram')" />
       </h3>
     </div>
 
-    <div class="min-h-0 flex-1">
+    <div style="flex:1;min-height:0;">
       <Bar v-if="state === 'ready' && chartData" :data="chartData" :options="options" />
-      <div v-else class="flex h-full items-center justify-center">
-        <div v-if="state === 'loading'" class="animate-pulse text-sm text-muted-foreground">{{ t('common.loading') }}</div>
+      <div v-else style="display:flex;height:100%;align-items:center;justify-content:center;">
+        <div v-if="state === 'loading'" style="font-size:13px;color:var(--ink-2,#5C6470);" class="animate-pulse">{{ t('common.loading') }}</div>
         <EmptyState v-else :title="t('common.noData')" :description="t('admin.ops.charts.emptyRequest')" />
       </div>
     </div>
   </div>
+
+<style src="../ops-quench.css"></style>
 </template>

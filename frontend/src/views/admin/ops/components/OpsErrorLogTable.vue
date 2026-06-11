@@ -1,236 +1,134 @@
 <template>
-  <div class="flex h-full min-h-0 flex-col bg-card">
-    <!-- Loading State -->
-    <div v-if="loading" class="flex flex-1 items-center justify-center py-10">
-      <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-200"></div>
+  <div style="display:flex;height:100%;min-height:0;flex-direction:column;background:var(--bg-1,#13161C);">
+    <div v-if="loading" style="display:flex;flex:1;align-items:center;justify-content:center;padding:28px 0;">
+      <div style="width:24px;height:24px;border-radius:50%;border-bottom:2px solid var(--ops-azure,#5CA8FF);" class="animate-spin"></div>
     </div>
 
-    <!-- Table Container -->
-    <div v-else class="flex min-h-0 flex-1 flex-col">
-      <div class="min-h-0 flex-1 overflow-auto border-b border-border">
-        <table class="w-full border-separate border-spacing-0">
-          <thead class="sticky top-0 z-10 bg-muted">
+    <div v-else style="display:flex;min-height:0;flex:1;flex-direction:column;">
+      <div style="min-height:0;flex:1;overflow:auto;border-bottom:1px solid var(--line-0,#20242C);">
+        <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+          <thead class="od-table-head-row" style="position:sticky;top:0;z-index:10;">
             <tr>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.time') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.type') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.endpoint') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.platform') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.model') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.group') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.user') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.apiKey') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.account') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.status') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.message') }}
-              </th>
-              <th class="border-b border-border px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ t('admin.ops.errorLog.action') }}
-              </th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.time') }}</th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.type') }}</th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.endpoint') }}</th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.platform') }}</th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.model') }}</th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.group') }}</th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.user') }}</th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.apiKey') }}</th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.account') }}</th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.status') }}</th>
+              <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.message') }}</th>
+              <th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--line-0,#20242C);" class="od-sys-label">{{ t('admin.ops.errorLog.action') }}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-border">
+          <tbody>
             <tr v-if="rows.length === 0">
-              <td colspan="12" class="py-12 text-center text-sm text-muted-foreground">
-                {{ t('admin.ops.errorLog.noErrors') }}
-              </td>
+              <td colspan="12" style="padding:36px;text-align:center;font-size:13px;color:var(--ink-2,#5C6470);">{{ t('admin.ops.errorLog.noErrors') }}</td>
             </tr>
-
-            <tr
-              v-for="log in rows"
-              :key="log.id"
-              class="group cursor-pointer transition-colors hover:bg-accent"
-              @click="emit('openErrorDetail', log.id)"
-            >
+            <tr v-for="log in rows" :key="log.id" class="od-tr-border" style="cursor:pointer;" @click="emit('openErrorDetail', log.id)">
               <!-- Time -->
-              <td class="whitespace-nowrap px-4 py-2">
+              <td style="padding:7px 12px;white-space:nowrap;">
                 <el-tooltip :content="log.request_id || log.client_request_id" placement="top" :show-after="500">
-                  <span class="font-mono text-xs font-medium text-foreground">
-                    {{ formatDateTime(log.created_at).split(' ')[1] }}
-                  </span>
+                  <span class="od-mono" style="font-size:11px;color:var(--ink-0,#E8EBF0);">{{ formatDateTime(log.created_at).split(' ')[1] }}</span>
                 </el-tooltip>
               </td>
-
               <!-- Type -->
-              <td class="whitespace-nowrap px-4 py-2">
-                <span
-                  :class="[
-                    'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset',
-                    getTypeBadge(log).className
-                  ]"
-                >
-                  {{ getTypeBadge(log).label }}
-                </span>
+              <td style="padding:7px 12px;white-space:nowrap;">
+                <span :class="getTypeBadge(log).className">{{ getTypeBadge(log).label }}</span>
               </td>
-
               <!-- Endpoint -->
-              <td class="px-4 py-2">
-                <div class="max-w-[160px]">
+              <td style="padding:7px 12px;">
+                <div style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                   <el-tooltip v-if="log.inbound_endpoint" :content="formatEndpointTooltip(log)" placement="top" :show-after="500">
-                    <span class="truncate font-mono text-[11px] text-foreground/85">
-                      {{ log.inbound_endpoint }}
-                    </span>
+                    <span class="od-mono" style="font-size:10.5px;color:var(--ink-1,#97A0AF);">{{ log.inbound_endpoint }}</span>
                   </el-tooltip>
-                  <span v-else class="text-xs text-muted-foreground">-</span>
+                  <span v-else style="color:var(--ink-2,#5C6470);">-</span>
                 </div>
               </td>
-
               <!-- Platform -->
-              <td class="whitespace-nowrap px-4 py-2">
-                <span class="inline-flex items-center rounded bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase text-foreground/85 border border-border">
-                  {{ log.platform || '-' }}
-                </span>
+              <td style="padding:7px 12px;white-space:nowrap;">
+                <span class="od-badge od-badge-dim" style="text-transform:uppercase;font-size:9.5px;">{{ log.platform || '-' }}</span>
               </td>
-
               <!-- Model -->
-              <td class="px-4 py-2">
-                <div class="max-w-[160px]">
+              <td style="padding:7px 12px;">
+                <div style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                   <template v-if="hasModelMapping(log)">
                     <el-tooltip :content="modelMappingTooltip(log)" placement="top" :show-after="500">
-                      <span class="flex items-center gap-1 truncate font-mono text-[11px] text-foreground/85">
-                        <span class="truncate">{{ log.requested_model }}</span>
-                        <span class="flex-shrink-0 text-muted-foreground">→</span>
-                        <span class="truncate text-primary-200">{{ log.upstream_model }}</span>
+                      <span class="od-mono" style="font-size:10.5px;color:var(--ink-1,#97A0AF);display:flex;align-items:center;gap:3px;">
+                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ log.requested_model }}</span>
+                        <span style="color:var(--ink-2,#5C6470);flex-shrink:0;">→</span>
+                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ops-azure,#5CA8FF);">{{ log.upstream_model }}</span>
                       </span>
                     </el-tooltip>
                   </template>
                   <template v-else>
-                    <span v-if="displayModel(log)" class="truncate font-mono text-[11px] text-foreground/85" :title="displayModel(log)">
-                      {{ displayModel(log) }}
-                    </span>
-                    <span v-else class="text-xs text-muted-foreground">-</span>
+                    <span v-if="displayModel(log)" class="od-mono" style="font-size:10.5px;color:var(--ink-1,#97A0AF);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;" :title="displayModel(log)">{{ displayModel(log) }}</span>
+                    <span v-else style="color:var(--ink-2,#5C6470);">-</span>
                   </template>
                 </div>
               </td>
-
               <!-- Group -->
-              <td class="px-4 py-2">
-                 <el-tooltip v-if="log.group_id" :content="t('admin.ops.errorLog.id') + ' ' + log.group_id" placement="top" :show-after="500">
-                  <span class="max-w-[100px] truncate text-xs font-medium text-foreground">
-                    {{ log.group_name || '-' }}
-                  </span>
+              <td style="padding:7px 12px;">
+                <el-tooltip v-if="log.group_id" :content="t('admin.ops.errorLog.id') + ' ' + log.group_id" placement="top" :show-after="500">
+                  <span style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;font-size:11.5px;font-weight:500;color:var(--ink-0,#E8EBF0);">{{ log.group_name || '-' }}</span>
                 </el-tooltip>
-                <span v-else class="text-xs text-muted-foreground">-</span>
+                <span v-else style="color:var(--ink-2,#5C6470);">-</span>
               </td>
-
               <!-- User -->
-              <td class="px-4 py-2">
+              <td style="padding:7px 12px;">
                 <el-tooltip v-if="log.user_id" :content="t('admin.ops.errorLog.userId') + ' ' + log.user_id" placement="top" :show-after="500">
-                  <span class="block max-w-[140px] truncate text-xs font-medium text-foreground">
-                    {{ log.user_email || '-' }}
-                  </span>
+                  <span style="display:block;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;font-weight:500;color:var(--ink-0,#E8EBF0);">{{ log.user_email || '-' }}</span>
                 </el-tooltip>
-                <span v-else class="text-xs text-muted-foreground">-</span>
+                <span v-else style="color:var(--ink-2,#5C6470);">-</span>
               </td>
-
               <!-- API Key -->
-              <td class="px-4 py-2">
-                <div v-if="log.api_key_id || log.api_key_name" class="flex max-w-[140px] items-center gap-1">
-                  <span class="truncate text-xs font-medium text-foreground" :title="log.api_key_name || ('#' + log.api_key_id)">
-                    {{ log.api_key_name || ('#' + log.api_key_id) }}
-                  </span>
-                  <span
-                    v-if="log.api_key_deleted"
-                    class="flex-shrink-0 rounded px-1 py-0.5 text-[9px] font-bold ring-1 ring-inset bg-red-500/10 text-red-400 ring-red-500/30"
-                  >
-                    {{ t('admin.ops.errorLog.keyDeletedBadge') }}
-                  </span>
+              <td style="padding:7px 12px;">
+                <div v-if="log.api_key_id || log.api_key_name" style="display:flex;max-width:140px;align-items:center;gap:4px;">
+                  <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;font-weight:500;color:var(--ink-0,#E8EBF0);" :title="log.api_key_name || ('#' + log.api_key_id)">{{ log.api_key_name || ('#' + log.api_key_id) }}</span>
+                  <span v-if="log.api_key_deleted" class="od-badge od-badge-bad" style="flex-shrink:0;font-size:9px;">{{ t('admin.ops.errorLog.keyDeletedBadge') }}</span>
                 </div>
-                <span v-else class="text-xs text-muted-foreground">-</span>
+                <span v-else style="color:var(--ink-2,#5C6470);">-</span>
               </td>
-
               <!-- Account -->
-              <td class="px-4 py-2">
+              <td style="padding:7px 12px;">
                 <el-tooltip v-if="log.account_id" :content="t('admin.ops.errorLog.accountId') + ' ' + log.account_id" placement="top" :show-after="500">
-                  <span class="block max-w-[120px] truncate text-xs font-medium text-foreground">
-                    {{ log.account_name || '-' }}
-                  </span>
+                  <span style="display:block;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;font-weight:500;color:var(--ink-0,#E8EBF0);">{{ log.account_name || '-' }}</span>
                 </el-tooltip>
-                <span v-else class="text-xs text-muted-foreground">-</span>
+                <span v-else style="color:var(--ink-2,#5C6470);">-</span>
               </td>
-
               <!-- Status -->
-              <td class="whitespace-nowrap px-4 py-2">
-                <div class="flex items-center gap-1.5">
-                  <span
-                    :class="[
-                      'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset',
-                      getStatusClass(log.status_code)
-                    ]"
-                  >
-                    {{ log.status_code }}
-                  </span>
-                  <span
-                    v-if="log.severity"
-                    :class="['rounded px-1.5 py-0.5 text-[10px] font-bold', getSeverityClass(log.severity)]"
-                  >
-                    {{ log.severity }}
-                  </span>
-                  <span
-                    v-if="log.request_type != null && log.request_type > 0"
-                    class="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-bold text-foreground/85 border border-border"
-                  >
-                    {{ formatRequestType(log.request_type) }}
-                  </span>
+              <td style="padding:7px 12px;white-space:nowrap;">
+                <div style="display:flex;align-items:center;gap:4px;">
+                  <span :class="getStatusClass(log.status_code)">{{ log.status_code }}</span>
+                  <span v-if="log.severity" :class="['od-badge', getSeverityClass(log.severity)]">{{ log.severity }}</span>
+                  <span v-if="log.request_type != null && log.request_type > 0" class="od-badge od-badge-dim">{{ formatRequestType(log.request_type) }}</span>
                 </div>
               </td>
-
-              <!-- Message (Response Content) -->
-              <td class="px-4 py-2">
-                <div class="max-w-[200px]">
-                  <p class="truncate text-[11px] font-medium text-muted-foreground" :title="log.message">
-                    {{ formatSmartMessage(log.message) || '-' }}
-                  </p>
+              <!-- Message -->
+              <td style="padding:7px 12px;">
+                <div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  <p style="font-size:10.5px;font-weight:500;color:var(--ink-2,#5C6470);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="log.message">{{ formatSmartMessage(log.message) || '-' }}</p>
                 </div>
               </td>
-
               <!-- Actions -->
-              <td class="whitespace-nowrap px-4 py-2 text-right" @click.stop>
-                <div class="flex items-center justify-end gap-3">
-                  <button type="button" class="text-primary-200 hover:text-foreground text-xs font-bold" @click="emit('openErrorDetail', log.id)">
-                    {{ t('admin.ops.errorLog.details') }}
-                  </button>
-                </div>
+              <td style="padding:7px 12px;white-space:nowrap;text-align:right;" @click.stop>
+                <button type="button" class="od-btn" style="padding:2px 8px;font-size:10px;color:var(--ops-azure,#5CA8FF);" @click="emit('openErrorDetail', log.id)">{{ t('admin.ops.errorLog.details') }}</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Pagination -->
-      <div class="bg-muted">
-        <Pagination
-          v-if="total > 0"
-          :total="total"
-          :page="page"
-          :page-size="pageSize"
-          @update:page="emit('update:page', $event)"
-          @update:pageSize="emit('update:pageSize', $event)"
-        />
+      <div style="background:var(--bg-2,#171A20);">
+        <Pagination v-if="total > 0" :total="total" :page="page" :page-size="pageSize" @update:page="emit('update:page', $event)" @update:pageSize="emit('update:pageSize', $event)" />
       </div>
     </div>
   </div>
 </template>
+
+<style src="../ops-quench.css"></style>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
@@ -289,23 +187,23 @@ function getTypeBadge(log: OpsErrorLog): { label: string; className: string } {
   const owner = String(log.error_owner || '').toLowerCase()
 
   if (isUpstreamRow(log)) {
-    return { label: t('admin.ops.errorLog.typeUpstream'), className: 'bg-red-500/10 text-red-400 ring-red-500/30' }
+    return { label: t('admin.ops.errorLog.typeUpstream'), className: 'od-badge od-badge-bad' }
   }
   if (phase === 'request' && owner === 'client') {
-    return { label: t('admin.ops.errorLog.typeRequest'), className: 'bg-amber-500/10 text-amber-400 ring-amber-500/30' }
+    return { label: t('admin.ops.errorLog.typeRequest'), className: 'od-badge od-badge-warn' }
   }
   if (phase === 'auth' && owner === 'client') {
-    return { label: t('admin.ops.errorLog.typeAuth'), className: 'bg-blue-500/10 text-sky-400 ring-blue-500/30' }
+    return { label: t('admin.ops.errorLog.typeAuth'), className: 'od-badge od-badge-azure' }
   }
   if (phase === 'routing' && owner === 'platform') {
-    return { label: t('admin.ops.errorLog.typeRouting'), className: 'bg-purple-900/30 text-purple-400 ring-purple-500/30' }
+    return { label: t('admin.ops.errorLog.typeRouting'), className: 'od-badge od-badge-dim' }
   }
   if (phase === 'internal' && owner === 'platform') {
-    return { label: t('admin.ops.errorLog.typeInternal'), className: 'bg-accent text-foreground ring-ring/30' }
+    return { label: t('admin.ops.errorLog.typeInternal'), className: 'od-badge od-badge-dim' }
   }
 
-    const fallback = phase || owner || t('common.unknown')
-    return { label: fallback, className: 'bg-accent text-muted-foreground ring-ring/20' }
+  const fallback = phase || owner || t('common.unknown')
+  return { label: fallback, className: 'od-badge od-badge-dim' }
 }
 
 interface Props {
@@ -326,10 +224,10 @@ defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 function getStatusClass(code: number): string {
-  if (code >= 500) return 'bg-red-500/10 text-red-400 ring-red-500/30'
-  if (code === 429) return 'bg-purple-900/30 text-purple-400 ring-purple-500/30'
-  if (code >= 400) return 'bg-amber-500/10 text-amber-400 ring-amber-500/30'
-  return 'bg-accent text-muted-foreground ring-ring/30'
+  if (code >= 500) return 'od-badge od-badge-bad'
+  if (code === 429) return 'od-badge od-badge-warn'
+  if (code >= 400) return 'od-badge od-badge-warn'
+  return 'od-badge od-badge-dim'
 }
 
 function formatSmartMessage(msg: string): string {

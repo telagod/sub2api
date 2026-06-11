@@ -35,13 +35,13 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const colors = computed(() => ({
-  red: '#ef4444',
-  redAlpha: '#ef444420',
-  purple: '#8b5cf6',
-  purpleAlpha: '#8b5cf620',
-  gray: '#9ca3af',
-  grid: '#262626',
-  text: '#737373'
+  red: '#F25C69',         /* ops-bad */
+  redAlpha: 'rgba(242,92,105,.15)',
+  purple: '#97A0AF',      /* steel — 钢银次系代替紫 */
+  purpleAlpha: 'rgba(151,160,175,.15)',
+  gray: '#5C6470',        /* ink-2 */
+  grid: '#20242C',        /* line-0 */
+  text: '#5C6470'         /* ink-2 */
 }))
 
 const totalRequestErrors = computed(() => sumNumbers(props.points.map((p) => p.error_count_sla ?? 0)))
@@ -152,46 +152,33 @@ const options = computed(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col rounded-lg border border-border bg-card p-6 ">
-    <div class="mb-4 flex shrink-0 items-center justify-between">
-      <h3 class="flex items-center gap-2 text-sm font-bold text-foreground">
-        <svg class="h-4 w-4 text-primary-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-          />
+  <div class="od-chart-card">
+    <div class="od-chart-head">
+      <h3 class="od-chart-title">
+        <svg class="od-chart-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
         </svg>
         {{ t('admin.ops.errorTrend') }}
         <HelpTooltip :content="t('admin.ops.tooltips.errorTrend')" />
       </h3>
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent disabled:opacity-50"
-          :disabled="!hasRequestErrors"
-          @click="emit('openRequestErrors')"
-        >
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button type="button" class="od-btn" style="padding:3px 8px;font-size:11px;" :disabled="!hasRequestErrors" @click="emit('openRequestErrors')">
           {{ t('admin.ops.errorDetails.requestErrors') }}
         </button>
-        <button
-          type="button"
-          class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent disabled:opacity-50"
-          :disabled="!hasUpstreamErrors"
-          @click="emit('openUpstreamErrors')"
-        >
+        <button type="button" class="od-btn" style="padding:3px 8px;font-size:11px;" :disabled="!hasUpstreamErrors" @click="emit('openUpstreamErrors')">
           {{ t('admin.ops.errorDetails.upstreamErrors') }}
         </button>
       </div>
     </div>
 
-    <div class="min-h-0 flex-1">
+    <div style="flex:1;min-height:0;">
       <Line v-if="state === 'ready' && chartData" :data="chartData" :options="options" />
-      <div v-else class="flex h-full items-center justify-center">
-        <div v-if="state === 'loading'" class="animate-pulse text-sm text-muted-foreground">{{ t('common.loading') }}</div>
+      <div v-else style="display:flex;height:100%;align-items:center;justify-content:center;">
+        <div v-if="state === 'loading'" style="font-size:13px;color:var(--ink-2,#5C6470);" class="animate-pulse">{{ t('common.loading') }}</div>
         <EmptyState v-else :title="t('common.noData')" :description="t('admin.ops.charts.emptyError')" />
       </div>
     </div>
   </div>
 </template>
+
+<style src="../ops-quench.css"></style>

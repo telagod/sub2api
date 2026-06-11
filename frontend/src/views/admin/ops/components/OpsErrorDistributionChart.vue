@@ -22,11 +22,11 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const colors = computed(() => ({
-  blue: '#3b82f6',
-  red: '#ef4444',
-  orange: '#f59e0b',
-  gray: '#9ca3af',
-  text: '#737373'
+  blue: '#5CA8FF',     /* azure 主系 */
+  red: '#F25C69',      /* bad */
+  orange: '#E0B34E',   /* warn */
+  gray: '#97A0AF',     /* steel 次系 */
+  text: '#5C6470'      /* ink-2 */
 }))
 
 const totalSlaErrors = computed(() =>
@@ -108,53 +108,44 @@ const options = computed(() => ({
 </script>
 
 <template>
-  <div class="flex h-full flex-col rounded-lg border border-border bg-card p-6 ">
-    <div class="mb-4 flex items-center justify-between">
-      <h3 class="flex items-center gap-2 text-sm font-bold text-foreground">
-        <svg class="h-4 w-4 text-primary-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
+  <div class="od-chart-card">
+    <div class="od-chart-head">
+      <h3 class="od-chart-title">
+        <svg class="od-chart-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         {{ t('admin.ops.errorDistribution') }}
         <HelpTooltip :content="t('admin.ops.tooltips.errorDistribution')" />
       </h3>
-      <button
-        type="button"
-        class="inline-flex items-center rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground/85 hover:bg-accent disabled:opacity-50"
-        :disabled="state !== 'ready'"
-        :title="t('admin.ops.errorTrend')"
-        @click="emit('openDetails')"
-      >
+      <button type="button" class="od-btn" style="padding:3px 8px;font-size:11px;" :disabled="state !== 'ready'" :title="t('admin.ops.errorTrend')" @click="emit('openDetails')">
         {{ t('admin.ops.requestDetails.details') }}
       </button>
     </div>
 
-    <div class="relative min-h-0 flex-1">
-      <div v-if="state === 'ready' && chartData" class="flex h-full flex-col">
-        <div class="flex-1">
+    <div style="position:relative;flex:1;min-height:0;">
+      <div v-if="state === 'ready' && chartData" style="display:flex;flex-direction:column;height:100%;">
+        <div style="flex:1;">
           <Doughnut :data="chartData" :options="{ ...options, cutout: '65%' }" />
         </div>
-        <div class="mt-4 flex flex-col items-center gap-2">
-          <div v-if="topReason" class="text-xs font-bold text-foreground">
+        <div style="margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div v-if="topReason" style="font-size:11.5px;font-weight:700;color:var(--ink-0,#E8EBF0);">
             {{ t('admin.ops.top') }}: <span :style="{ color: topReason.color }">{{ topReason.label }}</span>
           </div>
-          <div class="flex flex-wrap justify-center gap-3">
-            <div v-for="item in categories" :key="item.label" class="flex items-center gap-1.5 text-xs">
-              <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: item.color }"></span>
-              <span class="text-muted-foreground">{{ item.count }}</span>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;">
+            <div v-for="item in categories" :key="item.label" style="display:flex;align-items:center;gap:5px;font-size:11px;">
+              <span style="width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;" :style="{ backgroundColor: item.color }"></span>
+              <span style="color:var(--ink-2,#5C6470);">{{ item.count }}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div v-else class="flex h-full items-center justify-center">
-        <div v-if="state === 'loading'" class="animate-pulse text-sm text-muted-foreground">{{ t('common.loading') }}</div>
+      <div v-else style="display:flex;height:100%;align-items:center;justify-content:center;">
+        <div v-if="state === 'loading'" style="font-size:13px;color:var(--ink-2,#5C6470);" class="animate-pulse">{{ t('common.loading') }}</div>
         <EmptyState v-else :title="t('common.noData')" :description="t('admin.ops.charts.emptyError')" />
       </div>
     </div>
   </div>
 </template>
+
+<style src="../ops-quench.css"></style>
