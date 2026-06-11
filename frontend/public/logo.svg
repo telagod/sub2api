@@ -1,24 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="subme">
   <defs>
     <linearGradient id="sm-plate" x1="32" y1="2" x2="32" y2="62" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#2a2d31"/>
-      <stop offset="1" stop-color="#141517"/>
-    </linearGradient>
-    <linearGradient id="sm-silver" x1="32" y1="13" x2="32" y2="51" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#f2f4f6"/>
-      <stop offset="0.5" stop-color="#c0c4cc"/>
-      <stop offset="1" stop-color="#9aa0a9"/>
+      <stop offset="0" stop-color="#171B21"/>
+      <stop offset="1" stop-color="#0D0F13"/>
     </linearGradient>
   </defs>
-  <!-- gunmetal plate -->
+  <!-- cold-steel plate -->
   <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#sm-plate)"/>
-  <rect x="2.5" y="2.5" width="59" height="59" rx="14.5" fill="none" stroke="#3a3f45" stroke-width="1"/>
-  <!-- top highlight edge -->
-  <rect x="3.5" y="3.5" width="57" height="57" rx="13.5" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="1"/>
-  <!-- metallic silver S -->
-  <path d="M44 24 C44 18 39 15 32 15 C25 15 20 18 20 24 C20 30 27 31 32 32 C37 33 44 34 44 40 C44 46 39 49 32 49 C25 49 20 46 20 40"
-        stroke="url(#sm-silver)" stroke-width="6.5" stroke-linecap="round" fill="none"/>
-  <!-- S top highlight -->
-  <path d="M44 24 C44 18 39 15 32 15 C25 15 20 18 20 24 C20 30 27 31 32 32 C37 33 44 34 44 40 C44 46 39 49 32 49 C25 49 20 46 20 40"
-        stroke="#ffffff" stroke-opacity="0.18" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+  <rect x="2.5" y="2.5" width="59" height="59" rx="14.5" fill="none" stroke="#2F3540" stroke-width="1"/>
+  <rect x="3.5" y="3.5" width="57" height="57" rx="13.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="1"/>
+  <!-- converge mark: many subscriptions -> one API -->
+  <path d="M15 21 C27 21 31 28.5 40.5 31" stroke="#E8EBF0" stroke-width="4" stroke-linecap="round"/>
+  <path d="M15 43 C27 43 31 35.5 40.5 33" stroke="#E8EBF0" stroke-width="4" stroke-linecap="round"/>
+  <path d="M15 32 L43 32" stroke="#E8EBF0" stroke-width="4" stroke-linecap="round"/>
+  <!-- endpoint: quench azure -->
+  <circle cx="50" cy="32" r="7.5" fill="#5CA8FF" fill-opacity="0.22"/>
+  <circle cx="50" cy="32" r="4" fill="#5CA8FF"/>
 </svg>

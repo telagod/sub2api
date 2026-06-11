@@ -19,9 +19,33 @@ export const getAdminSteps = (t: (key: string) => string, isSimpleMode = false):
     }
   },
 
+  // ========== 认识淬钢壳：业务域导航 ==========
+  {
+    element: '[data-tour="nav-root"]',
+    popover: {
+      title: t('onboarding.admin.domains.title'),
+      description: t('onboarding.admin.domains.description'),
+      side: 'right',
+      align: 'start',
+      showButtons: ['next', 'previous']
+    }
+  },
+
+  // ========== 认识淬钢壳：⌘K 命令面板 ==========
+  {
+    element: '[data-tour="cmdk"]',
+    popover: {
+      title: t('onboarding.admin.cmdk.title'),
+      description: t('onboarding.admin.cmdk.description'),
+      side: 'bottom',
+      align: 'end',
+      showButtons: ['next', 'previous']
+    }
+  },
+
   // ========== 第一部分：创建分组 ==========
   {
-    element: '#sidebar-group-manage',
+    element: '[data-tour="nav-groups"]',
     popover: {
       title: t('onboarding.admin.groupManage.title'),
       description: t('onboarding.admin.groupManage.description'),
@@ -91,9 +115,9 @@ export const getAdminSteps = (t: (key: string) => string, isSimpleMode = false):
     }
   },
 
-  // ========== 第二部分：创建账号授权 ==========
+  // ========== 第二部分：接入账号（账号池） ==========
   {
-    element: '#sidebar-channel-manage',
+    element: '[data-tour="nav-accounts"]',
     popover: {
       title: t('onboarding.admin.accountManage.title'),
       description: t('onboarding.admin.accountManage.description'),
@@ -173,55 +197,14 @@ export const getAdminSteps = (t: (key: string) => string, isSimpleMode = false):
     }
   },
 
-  // ========== 第三部分：创建API密钥 ==========
+  // ========== 收尾：API Key 与下一步 ==========
   {
-    element: '[data-tour="sidebar-my-keys"]',
     popover: {
-      title: t('onboarding.admin.keyManage.title'),
-      description: t('onboarding.admin.keyManage.description'),
-      side: 'right',
+      title: t('onboarding.admin.finish.title'),
+      description: t('onboarding.admin.finish.description'),
       align: 'center',
-      showButtons: ['close']
-    }
-  },
-  {
-    element: '[data-tour="keys-create-btn"]',
-    popover: {
-      title: t('onboarding.admin.createKey.title'),
-      description: t('onboarding.admin.createKey.description'),
-      side: 'bottom',
-      align: 'end',
-      showButtons: ['close']
-    }
-  },
-  {
-    element: '[data-tour="key-form-name"]',
-    popover: {
-      title: t('onboarding.admin.keyName.title'),
-      description: t('onboarding.admin.keyName.description'),
-      side: 'right',
-      align: 'start',
-      showButtons: ['next', 'previous']
-    }
-  },
-  {
-    element: '[data-tour="key-form-group"]',
-    popover: {
-      title: t('onboarding.admin.keyGroup.title'),
-      description: t('onboarding.admin.keyGroup.description'),
-      side: 'right',
-      align: 'start',
-      showButtons: ['next', 'previous']
-    }
-  },
-  {
-    element: '[data-tour="key-form-submit"]',
-    popover: {
-      title: t('onboarding.admin.keySubmit.title'),
-      description: t('onboarding.admin.keySubmit.description'),
-      side: 'left',
-      align: 'center',
-      showButtons: ['close']
+      showButtons: ['next', 'previous'],
+      nextBtnText: t('onboarding.admin.finish.doneBtn')
     }
   }
   ]
@@ -232,7 +215,7 @@ export const getAdminSteps = (t: (key: string) => string, isSimpleMode = false):
       const element = step.element as string | undefined
       // 过滤掉分组管理和账号分组选择相关步骤
       return !element || (
-        !element.includes('sidebar-group-manage') &&
+        !element.includes('nav-groups') &&
         !element.includes('groups-create-btn') &&
         !element.includes('group-form-') &&
         !element.includes('account-form-groups')
