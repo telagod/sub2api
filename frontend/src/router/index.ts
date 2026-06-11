@@ -404,7 +404,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin/users',
     name: 'AdminUsers',
-    component: () => import('@/views/admin/UsersView.vue'),
+    component: () => import('@/views/admin/users/UsersQuenchView.vue'),
     meta: {
       requiresAuth: true,
       requiresAdmin: true,
@@ -479,11 +479,23 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin/accounts',
     name: 'AdminAccounts',
-    component: () => import('@/views/admin/AccountsView.vue'),
+    component: () => import('@/views/admin/accounts/AccountsPoolView.vue'),
     meta: {
       requiresAuth: true,
       requiresAdmin: true,
       title: 'Account Management',
+      titleKey: 'admin.accounts.title',
+      descriptionKey: 'admin.accounts.description'
+    }
+  },
+  {
+    path: '/admin/accounts/legacy',
+    name: 'AdminAccountsLegacy',
+    component: () => import('@/views/admin/AccountsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Account Management (Legacy)',
       titleKey: 'admin.accounts.title',
       descriptionKey: 'admin.accounts.description'
     }

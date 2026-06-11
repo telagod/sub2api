@@ -1,0 +1,297 @@
+<template>
+  <AppLayout>
+    <div class="apv-root">
+      <!-- ── 工具栏 ── -->
+      <div class="apv-toolbar">
+        <input v-model="params.search" class="apv-search" placeholder="搜索账号名 / email..." @input="debouncedReload" />
+        <select v-model="params.platform" class="apv-select" @change="debouncedReload">
+          <option value="">全部平台</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="openai">OpenAI</option>
+          <option value="gemini">Gemini</option>
+          <option value="antigravity">Antigravity</option>
+        </select>
+        <select v-model="params.status" class="apv-select" @change="debouncedReload">
+          <option value="">全部状态</option>
+          <option value="active">活跃</option>
+          <option value="inactive">禁用</option>
+          <option value="error">错误</option>
+          <option value="rate_limited">限流</option>
+        </select>
+        <select v-model="params.group" class="apv-select" @change="debouncedReload">
+          <option value="">全部分组</option>
+          <option value="ungrouped">未分组</option>
+          <option v-for="g in groups" :key="g.id" :value="String(g.id)">{{ g.name }}</option>
+        </select>
+
+        <button class="apv-icon-btn" :class="{ 'apv-spin': loading }" title="刷新" @click="handleManualRefresh">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+        </button>
+
+        <!-- 工具菜单 -->
+        <div class="apv-menu-wrap" ref="toolsMenuRef">
+          <button class="apv-icon-btn" @click="showToolsMenu = !showToolsMenu">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+          </button>
+          <div v-if="showToolsMenu" class="apv-dropdown">
+            <button class="apv-ditem" @click="showToolsMenu=false; showSync=true">CRS 同步</button>
+            <button class="apv-ditem" @click="showToolsMenu=false; showImportData=true">导入数据</button>
+            <button class="apv-ditem" @click="showToolsMenu=false; showExportDialog=true">导出数据</button>
+            <div class="apv-dsep"></div>
+            <button class="apv-ditem" @click="showToolsMenu=false; showErrorPassthrough=true">错误透传规则</button>
+            <button class="apv-ditem" @click="showToolsMenu=false; showTLSProfiles=true">TLS 指纹配置</button>
+          </div>
+        </div>
+
+        <!-- 视图模式 -->
+        <div class="apv-seg">
+          <button class="apv-seg-btn" :class="{ 'apv-seg-on': viewMode === 'matrix' }" title="健康矩阵" @click="viewMode = 'matrix'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
+          <button class="apv-seg-btn" :class="{ 'apv-seg-on': viewMode === 'table' }" title="表格模式" @click="viewMode = 'table'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25M3.375 4.5h17.25M6 12h12"/></svg>
+          </button>
+        </div>
+
+        <button class="apv-btn-primary" @click="router.push('/admin/accounts/legacy')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          接入账号
+        </button>
+      </div>
+
+      <!-- ── 供给总览条 ── -->
+      <div class="apv-summary">
+        <div class="apv-stat"><span class="apv-num">{{ summary.total }}</span><span class="apv-lbl">总计</span></div>
+        <div class="apv-div"></div>
+        <div class="apv-stat"><span class="apv-num apv-ok">{{ summary.active }}</span><span class="apv-lbl">活跃</span></div>
+        <div class="apv-stat"><span class="apv-num apv-off">{{ summary.inactive }}</span><span class="apv-lbl">禁用</span></div>
+        <div class="apv-stat"><span class="apv-num apv-bad">{{ summary.error }}</span><span class="apv-lbl">错误</span></div>
+        <div class="apv-stat"><span class="apv-num apv-warn">{{ summary.rate_limited }}</span><span class="apv-lbl">限流</span></div>
+      </div>
+
+      <!-- ── 主体 ── -->
+      <div class="apv-body">
+        <AccountCardWall
+          v-if="viewMode === 'matrix'"
+          :accounts="accounts"
+          :groups="groups"
+          :loading="loading"
+          :operating="operatingSet"
+          @toggle-status="handleToggleStatus"
+          @refresh="handleRefreshOne"
+          @delete="openDeleteDialog"
+        />
+        <AccountPoolTablePanel
+          v-else
+          :accounts="accounts"
+          :groups="groups"
+          :total="pagination.total"
+          :loading="loading"
+          :page="pagination.page"
+          :page-size="pagination.page_size"
+          :sort-by="sortBy"
+          :sort-order="sortOrder"
+          :selected-ids="selectedIds"
+          :bulk-delete-progress="bulkDeleteProgress"
+          :today-stats-by-account-id="todayStatsByAccountId"
+          :today-stats-loading="todayStatsLoading"
+          :manual-refresh-token="manualRefreshToken"
+          :toggling-schedulable="togglingSchedulable"
+          @edit="openEdit"
+          @delete="openDeleteDialog"
+          @more="openActionMenu"
+          @show-temp-unsched="a => { tempUnschedAcc = a; showTempUnsched = true }"
+          @toggle-schedulable="handleToggleSchedulable"
+          @update:selected-ids="selectedIds = $event"
+          @update:page="handlePageChange"
+          @update:sort="sortBy = $event; load()"
+          @update:order="sortOrder = $event; load()"
+          @bulk-delete="handleBulkDelete(selectedIds, () => { selectedIds = [] }); reload()"
+          @bulk-reset-status="handleBulkResetStatus(selectedIds, () => { selectedIds = [] }); reload()"
+          @bulk-refresh-token="handleBulkRefreshToken(selectedIds, () => { selectedIds = [] }); reload()"
+          @bulk-toggle-schedulable="(v: boolean) => { handleBulkToggleSchedulable(selectedIds, v, () => { selectedIds = [] }); reload() }"
+          @bulk-edit-selected="handleBulkEditSelected(selectedIds)"
+          @select-page="selectedIds = accounts.map(a => a.id)"
+          @clear-selection="selectedIds = []"
+        />
+      </div>
+
+      <!-- 分页（表格模式） -->
+      <div v-if="viewMode === 'table' && pagination.total > pagination.page_size" class="apv-pg-row">
+        <button class="apv-pg" :disabled="pagination.page <= 1" @click="handlePageChange(pagination.page - 1)">‹</button>
+        <span class="apv-pg-info">{{ pagination.page }} / {{ Math.max(1, Math.ceil(pagination.total / pagination.page_size)) }}</span>
+        <button class="apv-pg" :disabled="pagination.page >= Math.ceil(pagination.total / pagination.page_size)" @click="handlePageChange(pagination.page + 1)">›</button>
+      </div>
+    </div>
+
+    <!-- ── 模态框 ── -->
+    <EditAccountModal    v-if="showEdit"     :show="showEdit"     :account="editingAcc"    :proxies="proxies" :groups="groups" @close="showEdit=false"     @updated="handleAccountUpdated" />
+    <ReAuthAccountModal  v-if="showReAuth"   :show="showReAuth"   :account="reAuthAcc"     @close="showReAuth=false; reAuthAcc=null" @reauthorized="handleAccountUpdated" />
+    <AccountTestModal    v-if="showTest"     :show="showTest"     :account="testingAcc"    @close="showTest=false; testingAcc=null" />
+    <AccountStatsModal   v-if="showStats"    :show="showStats"    :account="statsAcc"      @close="showStats=false; statsAcc=null" />
+    <TempUnschedModal    v-if="showTempUnsched" :show="showTempUnsched" :account="tempUnschedAcc" @close="showTempUnsched=false" @reset="a => { showTempUnsched=false; patchInList(a) }" />
+    <AccountActionMenu   :show="actionMenu.show" :account="actionMenu.acc" :position="actionMenu.pos" @close="actionMenu.show=false" @test="a=>{testingAcc=a;showTest=true}" @stats="a=>{statsAcc=a;showStats=true}" @reauth="a=>{reAuthAcc=a;showReAuth=true}" @refresh-token="handleRefreshOne" @recover-state="handleRecoverState" @reset-quota="handleResetQuota" @set-privacy="handleSetPrivacy" @schedule="a=>router.push({ path:'/admin/accounts/legacy', query:{ schedule_id: a.id } })" />
+    <SyncFromCrsModal    v-if="showSync"     :show="showSync"     @close="showSync=false"  @synced="reload" />
+    <ImportDataModal     v-if="showImportData" :show="showImportData" @close="showImportData=false" @imported="() => { showImportData=false; reload() }" />
+    <ConfirmDialog :show="showDeleteDialog" title="删除账号" :message="`确认删除账号「${deletingAcc?.name}」？`" confirm-text="删除" cancel-text="取消" :danger="true" @confirm="confirmDelete" @cancel="showDeleteDialog=false" />
+    <ConfirmDialog :show="showExportDialog" title="导出数据" message="将导出当前筛选账号数据。" confirm-text="确认导出" cancel-text="取消" @confirm="doExport" @cancel="showExportDialog=false" />
+    <ErrorPassthroughRulesModal v-if="showErrorPassthrough" :show="showErrorPassthrough" @close="showErrorPassthrough=false" />
+    <TLSFingerprintProfilesModal v-if="showTLSProfiles" :show="showTLSProfiles" @close="showTLSProfiles=false" />
+  </AppLayout>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { useRouter } from 'vue-router'
+import { adminAPI } from '@/api/admin'
+import { useTableLoader } from '@/composables/useTableLoader'
+import AppLayout from '@/components/layout/AppLayout.vue'
+import AccountCardWall from './AccountCardWall.vue'
+import AccountPoolTablePanel from './AccountPoolTablePanel.vue'
+import AccountActionMenu from '@/components/admin/account/AccountActionMenu.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import { useAccountPoolActions } from './useAccountPoolActions'
+import type { Account, Proxy as AccountProxy, AdminGroup } from '@/types'
+
+const EditAccountModal            = defineAsyncComponent(() => import('@/components/account/EditAccountModal.vue'))
+const ReAuthAccountModal          = defineAsyncComponent(() => import('@/components/admin/account/ReAuthAccountModal.vue'))
+const AccountTestModal            = defineAsyncComponent(() => import('@/components/admin/account/AccountTestModal.vue'))
+const AccountStatsModal           = defineAsyncComponent(() => import('@/components/admin/account/AccountStatsModal.vue'))
+const TempUnschedModal            = defineAsyncComponent(() => import('@/components/account/TempUnschedStatusModal.vue'))
+const SyncFromCrsModal            = defineAsyncComponent(() => import('@/components/account/SyncFromCrsModal.vue'))
+const ImportDataModal             = defineAsyncComponent(() => import('@/components/admin/account/ImportDataModal.vue'))
+const ErrorPassthroughRulesModal  = defineAsyncComponent(() => import('@/components/admin/ErrorPassthroughRulesModal.vue'))
+const TLSFingerprintProfilesModal = defineAsyncComponent(() => import('@/components/admin/TLSFingerprintProfilesModal.vue'))
+
+const router = useRouter()
+const viewMode = ref<'matrix' | 'table'>('matrix')
+const proxies = ref<AccountProxy[]>([]), groups = ref<AdminGroup[]>([])
+const selectedIds = ref<number[]>([]), sortBy = ref('name'), sortOrder = ref<'asc' | 'desc'>('asc')
+
+// 模态框开关
+const showEdit = ref(false), showReAuth = ref(false), showTest = ref(false)
+const showStats = ref(false), showTempUnsched = ref(false), showDeleteDialog = ref(false)
+const showExportDialog = ref(false), showSync = ref(false), showImportData = ref(false)
+const showErrorPassthrough = ref(false), showTLSProfiles = ref(false), showToolsMenu = ref(false)
+const toolsMenuRef = ref<HTMLElement | null>(null)
+
+// 当前操作指针
+const editingAcc = ref<Account | null>(null), reAuthAcc = ref<Account | null>(null)
+const testingAcc = ref<Account | null>(null), statsAcc = ref<Account | null>(null)
+const tempUnschedAcc = ref<Account | null>(null), deletingAcc = ref<Account | null>(null)
+
+const actionMenu = reactive<{ show: boolean; acc: Account | null; pos: any }>({ show: false, acc: null, pos: null })
+
+// 表格加载器
+const { items: accounts, loading, params, pagination, load: baseLoad, reload: baseReload, debouncedReload, handlePageChange: basePageChange } = useTableLoader<Account, any>({
+  fetchFn: adminAPI.accounts.list,
+  initialParams: { platform: '', type: '', status: '', group: '', search: '', sort_by: 'name', sort_order: 'asc' }
+})
+
+const {
+  operatingSet, togglingSchedulable, todayStatsByAccountId, todayStatsLoading, manualRefreshToken,
+  bulkDeleteProgress, refreshTodayStats, patchInList,
+  handleToggleStatus, handleRefreshOne, handleRecoverState, handleResetQuota, handleSetPrivacy,
+  handleToggleSchedulable, handleBulkDelete, handleBulkResetStatus, handleBulkRefreshToken,
+  handleBulkToggleSchedulable, handleBulkEditSelected, handleExportData
+} = useAccountPoolActions(accounts)
+
+const load = async () => { await baseLoad(); await refreshTodayStats() }
+const reload = async () => { await baseReload(); await refreshTodayStats() }
+const handleManualRefresh = async () => { await reload(); manualRefreshToken.value++ }
+const handlePageChange = (page: number) => { basePageChange(page) }
+
+const summary = computed(() => {
+  const now = Date.now()
+  let active = 0, inactive = 0, error = 0, rate_limited = 0
+  for (const a of accounts.value) {
+    const rl = a.rate_limit_reset_at ? new Date(a.rate_limit_reset_at).getTime() > now : false
+    if (rl) { rate_limited++; continue }
+    if (a.status === 'error') { error++; continue }
+    if (a.status === 'active' && a.schedulable) active++
+    else inactive++
+  }
+  return { total: accounts.value.length, active, inactive, error, rate_limited }
+})
+
+const openEdit = (a: Account) => { editingAcc.value = a; showEdit.value = true }
+const handleAccountUpdated = (updated?: Account) => {
+  showEdit.value = false; showReAuth.value = false; reAuthAcc.value = null
+  if (updated) patchInList(updated); else reload()
+}
+const openDeleteDialog = (a: Account) => { deletingAcc.value = a; showDeleteDialog.value = true }
+const confirmDelete = async () => {
+  if (!deletingAcc.value) return
+  try {
+    await adminAPI.accounts.delete(deletingAcc.value.id)
+    showDeleteDialog.value = false; deletingAcc.value = null; reload()
+  } catch { /* 静默 */ }
+}
+const openActionMenu = (a: Account, e: MouseEvent) => {
+  actionMenu.acc = a
+  const rect = (e.currentTarget as HTMLElement)?.getBoundingClientRect()
+  actionMenu.pos = rect ? { top: rect.bottom + 4, left: Math.max(8, rect.right - 200) } : { top: e.clientY, left: e.clientX - 200 }
+  actionMenu.show = true
+}
+const doExport = () => {
+  const p = params as any
+  handleExportData(
+    { platform: p.platform || undefined, type: p.type || undefined, status: p.status || undefined, group: p.group || undefined, search: p.search || undefined },
+    sortBy.value, sortOrder.value
+  )
+  showExportDialog.value = false
+}
+
+const onClickOutside = (e: MouseEvent) => {
+  const t = e.target as HTMLElement
+  if (toolsMenuRef.value && !toolsMenuRef.value.contains(t)) showToolsMenu.value = false
+  if (!t.closest('.apm-wrap')) actionMenu.show = false
+}
+
+onMounted(async () => {
+  load()
+  try {
+    const [p, g] = await Promise.all([adminAPI.proxies.getAll(), adminAPI.groups.getAll()])
+    proxies.value = p; groups.value = g
+  } catch { /* 静默 */ }
+  document.addEventListener('click', onClickOutside)
+})
+
+onUnmounted(() => document.removeEventListener('click', onClickOutside))
+</script>
+
+<style scoped>
+.apv-root  { display:flex; flex-direction:column; gap:12px; height:100%; padding:16px; }
+.apv-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.apv-search { flex:1; min-width:160px; max-width:240px; height:32px; padding:0 10px; font-size:13px; border-radius:8px; border:1px solid var(--line-0); background:var(--bg-1); color:var(--ink-0); outline:none; }
+.apv-search:focus { border-color:var(--azure); box-shadow:var(--glow-focus); }
+.apv-select { height:32px; padding:0 8px; font-size:12px; border-radius:8px; border:1px solid var(--line-0); background:var(--bg-1); color:var(--ink-0); outline:none; cursor:pointer; }
+.apv-icon-btn { display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; border:1px solid var(--line-0); background:var(--bg-1); color:var(--ink-1); cursor:pointer; }
+.apv-icon-btn:hover { background:var(--bg-2); color:var(--ink-0); }
+.apv-spin svg { animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.apv-menu-wrap { position:relative; }
+.apv-dropdown { position:absolute; right:0; top:calc(100% + 4px); z-index:60; min-width:150px; background:var(--bg-1); border:1px solid var(--line-1); border-radius:10px; padding:4px; box-shadow:0 8px 24px rgba(0,0,0,.28); }
+.apv-ditem { display:flex; align-items:center; gap:8px; width:100%; padding:7px 10px; font-size:13px; color:var(--ink-1); background:none; border:none; border-radius:6px; cursor:pointer; text-align:left; }
+.apv-ditem:hover { background:var(--bg-2); color:var(--ink-0); }
+.apv-dsep { height:1px; background:var(--line-0); margin:4px 0; }
+.apv-seg { display:flex; border:1px solid var(--line-0); border-radius:8px; overflow:hidden; }
+.apv-seg-btn { display:flex; align-items:center; justify-content:center; width:32px; height:32px; background:var(--bg-1); border:none; color:var(--ink-2); cursor:pointer; }
+.apv-seg-btn:first-child { border-right:1px solid var(--line-0); }
+.apv-seg-btn:hover { background:var(--bg-2); color:var(--ink-0); }
+.apv-seg-on { background:var(--azure-dim) !important; color:var(--azure) !important; }
+.apv-btn-primary { display:flex; align-items:center; gap:5px; height:32px; padding:0 14px; font-size:13px; font-weight:500; border-radius:8px; border:none; background:var(--azure); color:#fff; cursor:pointer; margin-left:auto; }
+.apv-btn-primary:hover { opacity:.88; }
+/* 总览条 */
+.apv-summary { display:flex; align-items:center; gap:2px; padding:10px 16px; background:var(--metal); border:1px solid var(--line-0); border-radius:10px; box-shadow:var(--edge-hi); }
+.apv-stat { display:flex; flex-direction:column; align-items:center; padding:0 14px; }
+.apv-div  { width:1px; height:28px; background:var(--line-0); margin:0 4px; }
+.apv-num  { font-size:20px; font-weight:700; font-family:monospace; color:var(--ink-0); line-height:1.2; }
+.apv-lbl  { font-size:10px; color:var(--ink-2); letter-spacing:.04em; }
+.apv-ok { color:var(--ok); } .apv-off { color:var(--ink-2); } .apv-bad { color:var(--bad); } .apv-warn { color:var(--warn); }
+.apv-body { flex:1; overflow-y:auto; min-height:0; }
+.apv-pg-row { display:flex; align-items:center; justify-content:center; gap:12px; padding:8px 0; }
+.apv-pg { width:28px; height:28px; border-radius:6px; border:1px solid var(--line-0); background:var(--bg-1); color:var(--ink-1); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
+.apv-pg:hover:not(:disabled) { background:var(--bg-2); } .apv-pg:disabled { opacity:.35; cursor:not-allowed; }
+.apv-pg-info { font-size:12px; color:var(--ink-2); font-family:monospace; }
+</style>
