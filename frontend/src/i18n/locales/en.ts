@@ -425,6 +425,7 @@ export default {
       dashboard: 'Dashboard',
       users: 'Users',
       affiliates: 'Invite Rebates',
+      pricingDesk: 'PayGo Pricing',
       subscriptions: 'Plans',
       orders: 'Orders',
       paymentDashboard: 'Payment Dashboard',

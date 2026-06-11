@@ -1,66 +1,41 @@
 <template>
   <AppLayout>
-    <div class="space-y-6">
-      <!-- Header with Day Switcher -->
-      <div class="flex items-center justify-end">
-        <div class="flex items-center gap-2">
-          <div class="flex rounded-md border border-border">
-            <button
-              v-for="d in DAYS_OPTIONS"
-              :key="d"
-              type="button"
-              class="px-3 py-1.5 text-xs font-medium transition-colors first:rounded-l-md last:rounded-r-md"
-              :class="days === d
-                ? 'bg-foreground text-foreground'
-                : 'text-muted-foreground hover:bg-accent hover:text-foreground'"
-              @click="days = d"
-            >
+    <div class="oq-root">
+      <!-- 页头 -->
+      <div class="oq-head">
+        <div>
+          <h1 class="oq-title">收入看板</h1>
+          <p class="oq-desc">收入域 · 实时统计 · 选择时间范围</p>
+        </div>
+        <div class="oq-head-acts">
+          <!-- 日期段选择 -->
+          <div class="oq-days-seg">
+            <button v-for="d in DAYS_OPTIONS" :key="d" :class="{ on: days === d }" @click="days = d">
               {{ d }}{{ t('payment.admin.daySuffix') }}
             </button>
           </div>
-          <button @click="loadDashboard" :disabled="loading" class="btn btn-secondary" :title="t('common.refresh')">
-            <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
+          <button class="oq-btn" :disabled="loading" @click="loadDashboard">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" :class="loading ? 'oq-spin-icon' : ''"><path d="M11 6.5A4.5 4.5 0 1 1 6.5 2a4.5 4.5 0 0 1 3.18 1.32" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M11 2v2.5H8.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
       </div>
 
-      <!-- Dashboard Content -->
-      <div v-if="loading" class="flex items-center justify-center py-12">
-        <LoadingSpinner />
+      <!-- Loading -->
+      <div v-if="loading" class="oq-loading">
+        <div class="oq-spinner"></div>
       </div>
+
       <template v-else-if="stats">
+        <!-- 统计卡片 -->
         <OrderStatsCards :stats="stats" />
-        <DailyRevenueChart :data="stats.daily_series || []" :loading="loading" />
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div class="card p-4">
-            <h3 class="mb-4 text-sm font-semibold text-foreground">{{ t('payment.admin.paymentDistribution') }}</h3>
-            <div v-if="!stats.payment_methods?.length" class="flex h-32 items-center justify-center text-sm text-muted-foreground">{{ t('payment.admin.noData') }}</div>
-            <div v-else class="space-y-3">
-              <div v-for="method in stats.payment_methods" :key="method.type" class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span :class="['inline-block h-3 w-3 rounded-full', methodColor(method.type)]"></span>
-                  <span class="text-sm text-foreground/85">{{ t('payment.methods.' + method.type, method.type) }}</span>
-                </div>
-                <div class="text-right">
-                  <span class="text-sm font-medium text-foreground">&yen;{{ method.amount.toFixed(2) }}</span>
-                  <span class="ml-2 text-xs text-muted-foreground">({{ method.count }})</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="card p-4">
-            <h3 class="mb-4 text-sm font-semibold text-foreground">{{ t('payment.admin.topUsers') }}</h3>
-            <div v-if="!stats.top_users?.length" class="flex h-32 items-center justify-center text-sm text-muted-foreground">{{ t('payment.admin.noData') }}</div>
-            <div v-else class="space-y-2">
-              <div v-for="(user, idx) in stats.top_users" :key="user.user_id" class="flex items-center justify-between rounded-md px-3 py-2 hover:bg-accent">
-                <div class="flex items-center gap-3">
-                  <span :class="['flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold', rankClass(idx)]">{{ idx + 1 }}</span>
-                  <span class="text-sm text-foreground/85">{{ user.email }}</span>
-                </div>
-                <span class="text-sm font-medium text-foreground">&yen;{{ user.amount.toFixed(2) }}</span>
-              </div>
-            </div>
-          </div>
+
+        <!-- 日收入折线图 -->
+        <DailyRevenueChart :data="stats.daily_series || []" :loading="loading" style="margin-bottom:16px" />
+
+        <!-- 支付方式 + Top 用户 -->
+        <div class="oq-grid-2">
+          <PaymentMethodChart :methods="stats.payment_methods || []" />
+          <TopUsersLeaderboard :users="stats.top_users || []" />
         </div>
       </template>
     </div>
@@ -75,10 +50,10 @@ import { adminPaymentAPI } from '@/api/admin/payment'
 import { extractI18nErrorMessage } from '@/utils/apiError'
 import type { DashboardStats } from '@/types/payment'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import Icon from '@/components/icons/Icon.vue'
 import OrderStatsCards from '@/components/admin/payment/OrderStatsCards.vue'
 import DailyRevenueChart from '@/components/admin/payment/DailyRevenueChart.vue'
+import PaymentMethodChart from '@/components/admin/payment/PaymentMethodChart.vue'
+import TopUsersLeaderboard from '@/components/admin/payment/TopUsersLeaderboard.vue'
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -87,22 +62,6 @@ const DAYS_OPTIONS = [7, 30, 90] as const
 const days = ref<number>(30)
 const loading = ref(false)
 const stats = ref<DashboardStats | null>(null)
-
-function methodColor(type: string): string {
-  const c: Record<string, string> = {
-    alipay: 'bg-blue-500', wxpay: 'bg-green-500',
-    alipay_direct: 'bg-blue-400', wxpay_direct: 'bg-green-400',
-    stripe: 'bg-purple-500',
-  }
-  return c[type] || 'bg-muted-foreground'
-}
-
-function rankClass(idx: number): string {
-  if (idx === 0) return 'bg-amber-500/10 text-amber-400'
-  if (idx === 1) return 'bg-accent text-muted-foreground'
-  if (idx === 2) return 'bg-amber-500/10 text-amber-400'
-  return 'bg-accent text-muted-foreground'
-}
 
 async function loadDashboard() {
   loading.value = true
@@ -119,3 +78,9 @@ async function loadDashboard() {
 watch(days, () => loadDashboard())
 onMounted(() => loadDashboard())
 </script>
+
+<style src="./orders-quench.css"></style>
+<style scoped>
+.oq-spin-icon { animation: oq-icon-spin .7s linear infinite; }
+@keyframes oq-icon-spin { to { transform: rotate(360deg); } }
+</style>

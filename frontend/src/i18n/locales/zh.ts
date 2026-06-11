@@ -425,6 +425,7 @@ export default {
       dashboard: '驾驶舱',
       users: '用户',
       affiliates: '邀请返利',
+      pricingDesk: 'PayGo 计价',
       subscriptions: '套餐',
       orders: '订单',
       paymentDashboard: '支付看板',

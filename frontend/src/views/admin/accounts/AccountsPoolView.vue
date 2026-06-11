@@ -280,8 +280,8 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside))
 .apv-seg-btn:first-child { border-right:1px solid var(--line-0); }
 .apv-seg-btn:hover { background:var(--bg-2); color:var(--ink-0); }
 .apv-seg-on { background:var(--azure-dim) !important; color:var(--azure) !important; }
-.apv-btn-primary { display:flex; align-items:center; gap:5px; height:32px; padding:0 14px; font-size:13px; font-weight:500; border-radius:8px; border:none; background:var(--azure); color:#fff; cursor:pointer; margin-left:auto; }
-.apv-btn-primary:hover { opacity:.88; }
+.apv-btn-primary { display:flex; align-items:center; gap:5px; height:32px; padding:0 14px; font-size:13px; font-weight:600; border-radius:8px; border:1px solid #3A4250; background:var(--metal-raised); color:var(--ink-0); cursor:pointer; margin-left:auto; box-shadow:var(--edge-hi), 0 2px 10px rgba(0,0,0,.4); }
+.apv-btn-primary:hover { border-color:rgba(92,168,255,.55); box-shadow:var(--edge-hi), 0 0 16px rgba(92,168,255,.22), 0 2px 10px rgba(0,0,0,.4); }
 /* 总览条 */
 .apv-summary { display:flex; align-items:center; gap:2px; padding:10px 16px; background:var(--metal); border:1px solid var(--line-0); border-radius:10px; box-shadow:var(--edge-hi); }
 .apv-stat { display:flex; flex-direction:column; align-items:center; padding:0 14px; }

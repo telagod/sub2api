@@ -22,6 +22,7 @@ import {
   ClipboardList,
   Settings,
   Megaphone,
+  Calculator,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
 
@@ -73,6 +74,12 @@ export const navGroups: NavGroup[] = [
     key: 'monetization',
     labelKey: 'nav.quench.group.monetization',
     items: [
+      {
+        key: 'pricingDesk',
+        labelKey: 'nav.quench.pricingDesk',
+        path: '/admin/pricing',
+        icon: Calculator,
+      },
       {
         key: 'subscriptions',
         labelKey: 'nav.quench.subscriptions',

@@ -1,34 +1,16 @@
 <template>
-  <div class="card p-4">
-    <h3 class="mb-4 text-sm font-semibold text-foreground">
-      {{ t('payment.admin.topUsers') }}
-    </h3>
-    <div
-      v-if="!users?.length"
-      class="flex h-32 items-center justify-center text-sm text-muted-foreground"
-    >
+  <div class="oq-chart-card">
+    <h3 class="oq-chart-title">{{ t('payment.admin.topUsers') }}</h3>
+    <div v-if="!users?.length" class="oq-no-data" style="min-height:120px">
       {{ t('payment.admin.noData') }}
     </div>
-    <div v-else class="space-y-2">
-      <div
-        v-for="(user, idx) in users"
-        :key="user.user_id"
-        class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-accent"
-      >
-        <div class="flex items-center gap-3">
-          <span
-            :class="[
-              'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
-              rankClass(idx),
-            ]"
-          >
-            {{ idx + 1 }}
-          </span>
-          <span class="text-sm text-foreground/85">{{ user.email }}</span>
+    <div v-else>
+      <div v-for="(user, idx) in users" :key="user.user_id" class="oq-rank-row">
+        <div class="oq-rank-left">
+          <span :class="['oq-rank-num', rankClass(idx)]">{{ idx + 1 }}</span>
+          <span class="oq-rank-email">{{ user.email }}</span>
         </div>
-        <span class="text-sm font-medium text-foreground">
-          ${{ user.amount.toFixed(2) }}
-        </span>
+        <span class="oq-rank-amt">${{ user.amount.toFixed(2) }}</span>
       </div>
     </div>
   </div>
@@ -43,10 +25,14 @@ defineProps<{
   users: { user_id: number; email: string; amount: number }[]
 }>()
 
+// ── QUENCH 排名配色（取自 tokens.css）──────────────────────────────────
+// rank 1/3: --warn-dim + --warn（琥珀金奖牌）
+// rank 2:   --bg-2 + --ink-1（钢银）
+// rest:     transparent + --ink-2（弱化）
 function rankClass(idx: number): string {
-  if (idx === 0) return 'bg-amber-500/10 text-amber-400'
-  if (idx === 1) return 'bg-accent text-muted-foreground'
-  if (idx === 2) return 'bg-amber-500/10 text-amber-400'
-  return 'bg-accent text-muted-foreground'
+  if (idx === 0) return 'oq-rank-gold'
+  if (idx === 1) return 'oq-rank-silver'
+  if (idx === 2) return 'oq-rank-gold'
+  return 'oq-rank-dim'
 }
 </script>

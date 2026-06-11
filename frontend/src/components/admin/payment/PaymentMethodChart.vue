@@ -1,37 +1,23 @@
 <template>
-  <div class="card p-4">
-    <h3 class="mb-4 text-sm font-semibold text-foreground">
-      {{ t('payment.admin.paymentDistribution') }}
-    </h3>
-    <div
-      v-if="!methods?.length"
-      class="flex h-32 items-center justify-center text-sm text-muted-foreground"
-    >
+  <div class="oq-chart-card">
+    <h3 class="oq-chart-title">{{ t('payment.admin.paymentDistribution') }}</h3>
+    <div v-if="!methods?.length" class="oq-no-data" style="min-height:120px">
       {{ t('payment.admin.noData') }}
     </div>
-    <div v-else class="space-y-3">
-      <div v-for="method in methods" :key="method.type" class="space-y-1">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span :class="['inline-block h-3 w-3 rounded-full', colorMap[method.type] || 'bg-muted-foreground']"></span>
-            <span class="text-sm text-foreground/85">
-              {{ t('payment.methods.' + method.type, method.type) }}
-            </span>
+    <div v-else>
+      <div v-for="method in methods" :key="method.type" class="oq-method-row">
+        <div class="oq-method-head">
+          <div class="oq-method-name">
+            <span class="oq-method-dot" :style="{ background: dotColor(method.type) }"></span>
+            {{ t('payment.methods.' + method.type, method.type) }}
           </div>
-          <div class="text-right">
-            <span class="text-sm font-medium text-foreground">
-              ${{ method.amount.toFixed(2) }}
-            </span>
-            <span class="ml-2 text-xs text-muted-foreground">
-              ({{ method.count }})
-            </span>
+          <div class="oq-method-right">
+            <span class="oq-method-amt">${{ method.amount.toFixed(2) }}</span>
+            <span class="oq-method-cnt">({{ method.count }})</span>
           </div>
         </div>
-        <div class="h-2 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            :class="['h-full rounded-full transition-all', barColorMap[method.type] || 'bg-muted-foreground']"
-            :style="{ width: barWidth(method.amount) + '%' }"
-          ></div>
+        <div class="oq-bar-track">
+          <div class="oq-bar-fill" :style="{ width: barWidth(method.amount) + '%', background: dotColor(method.type) }"></div>
         </div>
       </div>
     </div>
@@ -48,26 +34,30 @@ const props = defineProps<{
   methods: { type: string; amount: number; count: number }[]
 }>()
 
-const colorMap: Record<string, string> = {
-  alipay: 'bg-blue-500',
-  wxpay: 'bg-green-500',
-  alipay_direct: 'bg-blue-400',
-  wxpay_direct: 'bg-green-400',
-  stripe: 'bg-purple-500',
-}
-
-const barColorMap: Record<string, string> = {
-  alipay: 'bg-blue-500',
-  wxpay: 'bg-green-500',
-  alipay_direct: 'bg-blue-400',
-  wxpay_direct: 'bg-green-400',
-  stripe: 'bg-purple-500',
+// ── QUENCH 图表配色（取自 tokens.css + mockup）──────────────────────────
+// --azure: #5CA8FF  → alipay（主系蓝）
+// --ok:    #46C98C  → wxpay（绿）
+// #2E6FB8           → alipay_direct（深蓝，mockup .bar-fill）
+// #3DAF7A           → wxpay_direct（深绿降级）
+// --ink-1: #97A0AF  → stripe（钢银次系）
+// --warn:  #E0B34E  → airwallex（琥珀）
+const METHOD_COLORS: Record<string, string> = {
+  alipay:        '#5CA8FF',  // --azure
+  wxpay:         '#46C98C',  // --ok
+  alipay_direct: '#2E6FB8',  // mockup deep-blue
+  wxpay_direct:  '#3DAF7A',  // ok deep-green
+  stripe:        '#97A0AF',  // --ink-1 钢银
+  airwallex:     '#E0B34E',  // --warn
 }
 
 const maxAmount = computed(() => {
   if (!props.methods?.length) return 1
   return Math.max(...props.methods.map(m => m.amount), 1)
 })
+
+function dotColor(type: string): string {
+  return METHOD_COLORS[type] || '#5C6470'  // fallback --ink-2
+}
 
 function barWidth(amount: number): number {
   return Math.min((amount / maxAmount.value) * 100, 100)

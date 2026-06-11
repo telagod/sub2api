@@ -667,13 +667,24 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin/orders/plans',
     name: 'AdminPaymentPlans',
-    component: () => import('@/views/admin/orders/AdminPaymentPlansView.vue'),
+    component: () => import('@/views/admin/monetization/plans/PlansCatalogView.vue'),
     meta: {
       requiresAuth: true,
       requiresAdmin: true,
       title: 'Subscription Plans',
       titleKey: 'nav.paymentPlans',
       requiresPayment: true
+    }
+  },
+  {
+    path: '/admin/pricing',
+    name: 'AdminPricingDesk',
+    component: () => import('@/views/admin/monetization/pricing/PricingDeskView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'PayGo 计价',
+      titleKey: 'nav.quench.pricingDesk'
     }
   },
 
