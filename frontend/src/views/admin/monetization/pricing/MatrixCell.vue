@@ -260,11 +260,15 @@ function discountLabel(ratio: number): string {
   .mc-root { transition: none; }
 }
 
+/* 固定三列子栅格：标签 | 价格(右对齐) | 徽章(定宽)
+   —— IN/OUT 共享同一 template，价格小数与徽章竖直对齐；整块居中，落在居中列头下方 */
 .mc-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 18px minmax(58px, auto) 40px;
   align-items: center;
-  justify-content: flex-end;
-  gap: 3px;
+  gap: 4px;
+  width: fit-content;
+  margin: 0 auto;
 }
 .mc-label {
   font-size: 9px;
@@ -272,15 +276,17 @@ function discountLabel(ratio: number): string {
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--ink-2);
-  min-width: 16px;
+  text-align: left;
 }
-.mc-price { font-size: 11px; }
+.mc-price { font-size: 11px; text-align: right; white-space: nowrap; }
 .mc-badge {
   font-size: 9.5px;
   font-weight: 600;
   border-radius: 4px;
   padding: 0 3px;
   line-height: 1.5;
+  text-align: center;
+  justify-self: start;
 }
 
 .mc-tier-badge {

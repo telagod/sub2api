@@ -92,6 +92,6 @@ const options = computed(() => {
       </div>
     </div>
   </div>
+</template>
 
 <style src="../ops-quench.css"></style>
-</template>
