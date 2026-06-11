@@ -584,6 +584,7 @@ var ProviderSet = wire.NewSet(
 	NewGroupCapacityService,
 	NewChannelService,
 	NewModelPricingResolver,
+	ProvideOpenRouterCatalogService,
 	NewContentModerationService,
 	NewAffiliateService,
 	ProvidePaymentConfigService,
@@ -638,6 +639,29 @@ func ProvideChannelMonitorService(
 	encryptor SecretEncryptor,
 ) *ChannelMonitorService {
 	return NewChannelMonitorService(repo, encryptor)
+}
+
+// ProvideOpenRouterCatalogService 创建并初始化 OpenRouter 模型目录服务（从磁盘加载缓存）。
+// 复用 PricingRemoteClient（通用 JSON 拉取器，已含 SSRF 防护）。
+// 首次同步在后台非阻塞触发：失败仅记日志，不影响启动。
+func ProvideOpenRouterCatalogService(cfg *config.Config, remoteClient PricingRemoteClient) *OpenRouterCatalogService {
+	svc := NewOpenRouterCatalogService(cfg, remoteClient)
+	if err := svc.Initialize(); err != nil {
+		// 无本地缓存属正常情况（首次启动），不阻断启动流程。
+		println("[Service] Warning: Catalog service initialization failed:", err.Error())
+	}
+	// 启动后台同步（非阻塞）；目录为空时自动拉一次，有缓存则跳过也无妨。
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.LegacyPrintf("service.catalog", "[Catalog] background startup sync panic recovered: %v", r)
+			}
+		}()
+		if _, err := svc.SyncModels(context.Background()); err != nil {
+			logger.LegacyPrintf("service.catalog", "[Catalog] background startup sync failed: %v", err)
+		}
+	}()
+	return svc
 }
 
 // ProvideChannelMonitorRunner 创建并启动渠道监控调度器。

@@ -86,6 +86,9 @@ func RegisterAdminRoutes(
 		// 定时测试计划
 		registerScheduledTestRoutes(admin, h)
 
+		// 模型目录（OpenRouter 官方价，展示用途）
+		registerModelCatalogRoutes(admin, h)
+
 		// 渠道管理
 		registerChannelRoutes(admin, h)
 
@@ -591,6 +594,15 @@ func registerTLSFingerprintProfileRoutes(admin *gin.RouterGroup, h *handler.Hand
 		profiles.POST("", h.Admin.TLSFingerprintProfile.Create)
 		profiles.PUT("/:id", h.Admin.TLSFingerprintProfile.Update)
 		profiles.DELETE("/:id", h.Admin.TLSFingerprintProfile.Delete)
+	}
+}
+
+func registerModelCatalogRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	catalog := admin.Group("/model-catalog")
+	{
+		catalog.GET("", h.Admin.ModelCatalog.ListModels)
+		catalog.GET("/detail", h.Admin.ModelCatalog.GetModel)
+		catalog.POST("/sync", h.Admin.ModelCatalog.SyncCatalog)
 	}
 }
 

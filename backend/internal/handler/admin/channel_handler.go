@@ -18,11 +18,12 @@ type ChannelHandler struct {
 	channelService *service.ChannelService
 	billingService *service.BillingService
 	pricingService *service.PricingService
+	catalogService *service.OpenRouterCatalogService // 展示用途：前端自动填充官方价，绝不用于真实计费
 }
 
 // NewChannelHandler creates a new admin channel handler
-func NewChannelHandler(channelService *service.ChannelService, billingService *service.BillingService, pricingService *service.PricingService) *ChannelHandler {
-	return &ChannelHandler{channelService: channelService, billingService: billingService, pricingService: pricingService}
+func NewChannelHandler(channelService *service.ChannelService, billingService *service.BillingService, pricingService *service.PricingService, catalogService *service.OpenRouterCatalogService) *ChannelHandler {
+	return &ChannelHandler{channelService: channelService, billingService: billingService, pricingService: pricingService, catalogService: catalogService}
 }
 
 // --- Request / Response types ---
@@ -476,7 +477,10 @@ func (h *ChannelHandler) Delete(c *gin.Context) {
 }
 
 // GetModelDefaultPricing 获取模型的默认定价（用于前端自动填充）
-// GET /api/v1/admin/channels/model-pricing?model=claude-sonnet-4
+// GET /api/v1/admin/channels/model-pricing?model=claude-sonnet-4&platform=anthropic
+//
+// 优先级：OpenRouter 官方价（展示用途）→ 回退 LiteLLM 定价（billingService）。
+// 【绝不改动 billing 真实扣费语义：BillingService.GetModelPricing 只作兜底展示回退。】
 func (h *ChannelHandler) GetModelDefaultPricing(c *gin.Context) {
 	model := strings.TrimSpace(c.Query("model"))
 	if model == "" {
@@ -484,7 +488,42 @@ func (h *ChannelHandler) GetModelDefaultPricing(c *gin.Context) {
 			WithMetadata(map[string]string{"param": "model"}))
 		return
 	}
+	platform := strings.TrimSpace(c.Query("platform"))
 
+	// ── 优先路径：OpenRouter 官方价（展示用途）──
+	if h.catalogService != nil {
+		catalog := h.catalogService.List()
+		if len(catalog) > 0 {
+			if slug, ok := service.MatchModelSlug(model, platform, catalog); ok {
+				if entry := h.catalogService.Get(slug); entry != nil {
+					inp, out, cacheRead, cacheWrite, srcTag := entry.BaselinePrice()
+					// 整理 providers 摘要（精简列表，前端展示用）
+					providerSummary := make([]gin.H, 0, len(entry.Providers))
+					for _, p := range entry.Providers {
+						providerSummary = append(providerSummary, gin.H{
+							"provider": p.Provider,
+							"tag":      p.Tag,
+							"input":    p.Input,
+							"output":   p.Output,
+						})
+					}
+					response.Success(c, gin.H{
+						"found":             true,
+						"input_price":       inp,
+						"output_price":      out,
+						"cache_write_price": cacheWrite,
+						"cache_read_price":  cacheRead,
+						"source":            srcTag,
+						"description":       entry.Description,
+						"providers":         providerSummary,
+					})
+					return
+				}
+			}
+		}
+	}
+
+	// ── 回退路径：LiteLLM 定价（billingService，仅展示；不改计费语义）──
 	pricing, err := h.billingService.GetModelPricing(model)
 	if err != nil {
 		// 模型不在定价列表中
