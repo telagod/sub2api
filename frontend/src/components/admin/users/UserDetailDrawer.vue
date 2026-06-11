@@ -384,10 +384,11 @@ watch(
 .ud-kpi-strip {
   display: flex;
   align-items: stretch;
-  padding: 14px 22px;
+  padding: 12px 22px;
   border-bottom: 1px solid var(--line-0);
   gap: 0;
   flex-shrink: 0;
+  background: var(--metal,linear-gradient(180deg,#13161C,#0E1014));
 }
 .ud-kpi-item {
   flex: 1; display: flex; flex-direction: column; gap: 3px;
@@ -450,11 +451,15 @@ watch(
   font-family: inherit; transition: all 0.13s;
 }
 .ud-foot-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+/* 调余额：金属凸面主按钮（对齐 QUENCH 主动作规范） */
 .ud-foot-btn-primary {
-  background: var(--azure-dim); border-color: rgba(92,168,255,.4); color: var(--azure);
+  background: var(--metal-raised,linear-gradient(180deg,#272D37,#14171D));
+  border-color: rgba(255,255,255,.12); color: var(--ink-0,#E8EBF0);
+  box-shadow: var(--edge-hi,inset 0 1px 0 rgba(255,255,255,.07)), 0 2px 8px rgba(0,0,0,.3);
 }
 .ud-foot-btn-primary:hover {
-  background: rgba(92,168,255,.22); box-shadow: 0 0 14px rgba(92,168,255,.18);
+  border-color: rgba(92,168,255,.5);
+  box-shadow: var(--edge-hi,inset 0 1px 0 rgba(255,255,255,.07)), 0 0 14px rgba(92,168,255,.18);
 }
 .ud-foot-btn-danger {
   background: var(--bad-dim); border-color: rgba(242,92,105,.4); color: var(--bad);

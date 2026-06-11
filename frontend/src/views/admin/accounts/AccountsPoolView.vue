@@ -4,25 +4,28 @@
       <!-- ── 工具栏 ── -->
       <div class="apv-toolbar">
         <input v-model="params.search" class="apv-search" :placeholder="t('admin.accountsQuench.searchPlaceholder')" @input="debouncedReload" />
-        <select v-model="params.platform" class="apv-select" @change="debouncedReload">
-          <option value="">{{ t('admin.accountsQuench.allPlatforms') }}</option>
-          <option value="anthropic">Anthropic</option>
-          <option value="openai">OpenAI</option>
-          <option value="gemini">Gemini</option>
-          <option value="antigravity">Antigravity</option>
-        </select>
-        <select v-model="params.status" class="apv-select" @change="debouncedReload">
-          <option value="">{{ t('admin.accountsQuench.allStatuses') }}</option>
-          <option value="active">{{ t('admin.accountsQuench.statusActive') }}</option>
-          <option value="inactive">{{ t('admin.accountsQuench.statusInactive') }}</option>
-          <option value="error">{{ t('admin.accountsQuench.statusError') }}</option>
-          <option value="rate_limited">{{ t('admin.accountsQuench.statusRateLimited') }}</option>
-        </select>
-        <select v-model="params.group" class="apv-select" @change="debouncedReload">
-          <option value="">{{ t('admin.accountsQuench.allGroups') }}</option>
-          <option value="ungrouped">{{ t('admin.accountsQuench.ungrouped') }}</option>
-          <option v-for="g in groups" :key="g.id" :value="String(g.id)">{{ g.name }}</option>
-        </select>
+
+        <!-- QUENCH 风格下拉：平台 -->
+        <Select
+          v-model="params.platform"
+          :options="platformOpts"
+          class="apv-sel-q"
+          @change="debouncedReload"
+        />
+        <!-- QUENCH 风格下拉：状态 -->
+        <Select
+          v-model="params.status"
+          :options="statusOpts"
+          class="apv-sel-q"
+          @change="debouncedReload"
+        />
+        <!-- QUENCH 风格下拉：分组 -->
+        <Select
+          v-model="params.group"
+          :options="groupOpts"
+          class="apv-sel-q"
+          @change="debouncedReload"
+        />
 
         <button class="apv-icon-btn" :class="{ 'apv-spin': loading }" :title="t('admin.accountsQuench.refresh')" :aria-label="t('admin.accountsQuench.refresh')" @click="handleManualRefresh">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
@@ -59,14 +62,44 @@
         </button>
       </div>
 
-      <!-- ── 供给总览条 ── -->
+      <!-- ── 供给总览条（锻面卡）── -->
       <div class="apv-summary">
-        <div class="apv-stat"><span class="apv-num">{{ summary.total }}</span><span class="apv-lbl">{{ t('admin.accountsQuench.summaryTotal') }}</span></div>
+        <div class="apv-stat">
+          <span class="apv-sdot apv-sdot-total"></span>
+          <div class="apv-stat-inner">
+            <span class="apv-num">{{ summary.total }}</span>
+            <span class="apv-lbl">{{ t('admin.accountsQuench.summaryTotal') }}</span>
+          </div>
+        </div>
         <div class="apv-div"></div>
-        <div class="apv-stat"><span class="apv-num apv-ok">{{ summary.active }}</span><span class="apv-lbl">{{ t('admin.accountsQuench.summaryActive') }}</span></div>
-        <div class="apv-stat"><span class="apv-num apv-off">{{ summary.inactive }}</span><span class="apv-lbl">{{ t('admin.accountsQuench.summaryInactive') }}</span></div>
-        <div class="apv-stat"><span class="apv-num apv-bad">{{ summary.error }}</span><span class="apv-lbl">{{ t('admin.accountsQuench.summaryError') }}</span></div>
-        <div class="apv-stat"><span class="apv-num apv-warn">{{ summary.rate_limited }}</span><span class="apv-lbl">{{ t('admin.accountsQuench.summaryRateLimited') }}</span></div>
+        <div class="apv-stat">
+          <span class="apv-sdot apv-sdot-ok"></span>
+          <div class="apv-stat-inner">
+            <span class="apv-num apv-ok">{{ summary.active }}</span>
+            <span class="apv-lbl">{{ t('admin.accountsQuench.summaryActive') }}</span>
+          </div>
+        </div>
+        <div class="apv-stat">
+          <span class="apv-sdot apv-sdot-off"></span>
+          <div class="apv-stat-inner">
+            <span class="apv-num apv-off">{{ summary.inactive }}</span>
+            <span class="apv-lbl">{{ t('admin.accountsQuench.summaryInactive') }}</span>
+          </div>
+        </div>
+        <div class="apv-stat" :class="{ 'apv-stat-alert': summary.error > 0 }">
+          <span class="apv-sdot apv-sdot-bad" :class="{ 'apv-sdot-pulse': summary.error > 0 }"></span>
+          <div class="apv-stat-inner">
+            <span class="apv-num" :class="summary.error > 0 ? 'apv-bad' : 'apv-off'">{{ summary.error }}</span>
+            <span class="apv-lbl">{{ t('admin.accountsQuench.summaryError') }}</span>
+          </div>
+        </div>
+        <div class="apv-stat" :class="{ 'apv-stat-alert': summary.rate_limited > 0 }">
+          <span class="apv-sdot apv-sdot-warn" :class="{ 'apv-sdot-pulse': summary.rate_limited > 0 }"></span>
+          <div class="apv-stat-inner">
+            <span class="apv-num" :class="summary.rate_limited > 0 ? 'apv-warn' : 'apv-off'">{{ summary.rate_limited }}</span>
+            <span class="apv-lbl">{{ t('admin.accountsQuench.summaryRateLimited') }}</span>
+          </div>
+        </div>
       </div>
 
       <!-- ── 主体 ── -->
@@ -80,6 +113,7 @@
           @toggle-status="handleToggleStatus"
           @refresh="handleRefreshOne"
           @delete="openDeleteDialog"
+          @add-account="router.push('/admin/accounts/legacy')"
         />
         <AccountPoolTablePanel
           v-else
@@ -151,6 +185,7 @@ import AccountCardWall from './AccountCardWall.vue'
 import AccountPoolTablePanel from './AccountPoolTablePanel.vue'
 import AccountActionMenu from '@/components/admin/account/AccountActionMenu.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import Select from '@/components/common/Select.vue'
 import { useAccountPoolActions } from './useAccountPoolActions'
 import type { Account, Proxy as AccountProxy, AdminGroup } from '@/types'
 
@@ -216,6 +251,29 @@ const summary = computed(() => {
   return { total: accounts.value.length, active, inactive, error, rate_limited }
 })
 
+// QUENCH Select 选项数组（由 computed 驱动，groups 为异步加载）
+const platformOpts = computed(() => [
+  { value: '', label: t('admin.accountsQuench.allPlatforms') },
+  { value: 'anthropic', label: 'Anthropic' },
+  { value: 'openai', label: 'OpenAI' },
+  { value: 'gemini', label: 'Gemini' },
+  { value: 'antigravity', label: 'Antigravity' },
+])
+
+const statusOpts = computed(() => [
+  { value: '', label: t('admin.accountsQuench.allStatuses') },
+  { value: 'active', label: t('admin.accountsQuench.statusActive') },
+  { value: 'inactive', label: t('admin.accountsQuench.statusInactive') },
+  { value: 'error', label: t('admin.accountsQuench.statusError') },
+  { value: 'rate_limited', label: t('admin.accountsQuench.statusRateLimited') },
+])
+
+const groupOpts = computed(() => [
+  { value: '', label: t('admin.accountsQuench.allGroups') },
+  { value: 'ungrouped', label: t('admin.accountsQuench.ungrouped') },
+  ...groups.value.map(g => ({ value: String(g.id), label: g.name })),
+])
+
 const openEdit = (a: Account) => { editingAcc.value = a; showEdit.value = true }
 const handleAccountUpdated = (updated?: Account) => {
   showEdit.value = false; showReAuth.value = false; reAuthAcc.value = null
@@ -267,34 +325,58 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside))
 .apv-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .apv-search { flex:1; min-width:160px; max-width:240px; height:32px; padding:0 10px; font-size:13px; border-radius:8px; border:1px solid var(--line-0); background:var(--bg-1); color:var(--ink-0); outline:none; }
 .apv-search:focus { border-color:var(--azure); box-shadow:var(--glow-focus); }
-.apv-select { height:32px; padding:0 8px; font-size:12px; border-radius:8px; border:1px solid var(--line-0); background:var(--bg-1); color:var(--ink-0); outline:none; cursor:pointer; }
+.apv-search:focus-visible { border-color:var(--azure); box-shadow:var(--glow-focus); }
+/* QUENCH Select 宽度约束（覆盖默认 w-full）*/
+.apv-sel-q { width:130px; flex-shrink:0; }
 .apv-icon-btn { display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; border:1px solid var(--line-0); background:var(--bg-1); color:var(--ink-1); cursor:pointer; }
 .apv-icon-btn:hover { background:var(--bg-2); color:var(--ink-0); }
+.apv-icon-btn:focus-visible { outline:none; box-shadow:var(--glow-focus); }
 .apv-spin svg { animation:spin 1s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 .apv-menu-wrap { position:relative; }
 .apv-dropdown { position:absolute; right:0; top:calc(100% + 4px); z-index:60; min-width:150px; background:var(--bg-1); border:1px solid var(--line-1); border-radius:10px; padding:4px; box-shadow:0 8px 24px rgba(0,0,0,.28); }
 .apv-ditem { display:flex; align-items:center; gap:8px; width:100%; padding:7px 10px; font-size:13px; color:var(--ink-1); background:none; border:none; border-radius:6px; cursor:pointer; text-align:left; }
 .apv-ditem:hover { background:var(--bg-2); color:var(--ink-0); }
+.apv-ditem:focus-visible { outline:none; background:var(--bg-2); color:var(--ink-0); box-shadow:var(--glow-focus); }
 .apv-dsep { height:1px; background:var(--line-0); margin:4px 0; }
 .apv-seg { display:flex; border:1px solid var(--line-0); border-radius:8px; overflow:hidden; }
 .apv-seg-btn { display:flex; align-items:center; justify-content:center; width:32px; height:32px; background:var(--bg-1); border:none; color:var(--ink-2); cursor:pointer; }
 .apv-seg-btn:first-child { border-right:1px solid var(--line-0); }
 .apv-seg-btn:hover { background:var(--bg-2); color:var(--ink-0); }
+.apv-seg-btn:focus-visible { outline:none; box-shadow:var(--glow-focus); }
 .apv-seg-on { background:var(--azure-dim) !important; color:var(--azure) !important; }
 .apv-btn-primary { display:flex; align-items:center; gap:5px; height:32px; padding:0 14px; font-size:13px; font-weight:600; border-radius:8px; border:1px solid #3A4250; background:var(--metal-raised); color:var(--ink-0); cursor:pointer; margin-left:auto; box-shadow:var(--edge-hi), 0 2px 10px rgba(0,0,0,.4); }
 .apv-btn-primary:hover { border-color:rgba(92,168,255,.55); box-shadow:var(--edge-hi), 0 0 16px rgba(92,168,255,.22), 0 2px 10px rgba(0,0,0,.4); }
-/* 总览条 */
-.apv-summary { display:flex; align-items:center; gap:2px; padding:10px 16px; background:var(--metal); border:1px solid var(--line-0); border-radius:10px; box-shadow:var(--edge-hi); }
-.apv-stat { display:flex; flex-direction:column; align-items:center; padding:0 14px; }
-.apv-div  { width:1px; height:28px; background:var(--line-0); margin:0 4px; }
-.apv-num  { font-size:20px; font-weight:700; font-family:monospace; color:var(--ink-0); line-height:1.2; }
-.apv-lbl  { font-size:10px; color:var(--ink-2); letter-spacing:.04em; }
+.apv-btn-primary:focus-visible { outline:none; box-shadow:var(--glow-focus), 0 2px 10px rgba(0,0,0,.4); }
+/* 总览条（锻面卡）*/
+.apv-summary { display:flex; align-items:center; gap:2px; padding:10px 16px; background:var(--metal); border:1px solid var(--line-0); border-radius:10px; box-shadow:var(--edge-hi), 0 6px 18px rgba(0,0,0,.22); }
+.apv-stat { display:flex; flex-direction:row; align-items:center; gap:6px; padding:4px 14px; position:relative; }
+/* 告警态：background tint */
+.apv-stat-alert { background:rgba(242,92,105,.05); border-radius:8px; }
+.apv-stat-alert .apv-lbl { color:var(--ink-1); }
+.apv-div  { width:1px; height:28px; background:var(--line-0); margin:0 4px; align-self:center; }
+/* 语义色点 */
+.apv-sdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.apv-sdot-total { background:var(--ink-2); }
+.apv-sdot-ok    { background:var(--ok); }
+.apv-sdot-off   { background:var(--ink-2); }
+.apv-sdot-bad   { background:var(--bad); }
+.apv-sdot-warn  { background:var(--warn); }
+/* 告警脉冲（error/rate_limited > 0 时激活）*/
+.apv-sdot-pulse { animation:sdot-pulse 1.8s ease-in-out infinite; }
+@keyframes sdot-pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(242,92,105,.55);} 50%{ box-shadow:0 0 0 4px rgba(242,92,105,0);} }
+.apv-sdot-warn.apv-sdot-pulse { animation:sdot-pulse-w 1.8s ease-in-out infinite; }
+@keyframes sdot-pulse-w { 0%,100%{ box-shadow:0 0 0 0 rgba(224,179,78,.55);} 50%{ box-shadow:0 0 0 4px rgba(224,179,78,0);} }
+/* 数字与标签纵向叠 */
+.apv-stat-inner { display:flex; flex-direction:column; }
+.apv-num  { font-size:20px; font-weight:700; font-family:monospace; font-variant-numeric:tabular-nums; color:var(--ink-0); line-height:1.2; }
+.apv-lbl  { font-size:10px; color:var(--ink-2); letter-spacing:.04em; white-space:nowrap; }
 .apv-ok { color:var(--ok); } .apv-off { color:var(--ink-2); } .apv-bad { color:var(--bad); } .apv-warn { color:var(--warn); }
 .apv-body { flex:1; overflow-y:auto; min-height:0; }
 .apv-pg-row { display:flex; align-items:center; justify-content:center; gap:12px; padding:8px 0; }
 .apv-pg { width:28px; height:28px; border-radius:6px; border:1px solid var(--line-0); background:var(--bg-1); color:var(--ink-1); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
 .apv-pg:hover:not(:disabled) { background:var(--bg-2); } .apv-pg:disabled { opacity:.35; cursor:not-allowed; }
+.apv-pg:focus-visible { outline:none; box-shadow:var(--glow-focus); }
 .apv-pg-info { font-size:12px; color:var(--ink-2); font-family:monospace; }
-@media (prefers-reduced-motion: reduce) { .apv-spin svg { animation:none; } }
+@media (prefers-reduced-motion: reduce) { .apv-spin svg { animation:none; } .apv-sdot-pulse, .apv-sdot-warn.apv-sdot-pulse { animation:none; } }
 </style>

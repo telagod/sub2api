@@ -2,37 +2,44 @@
   <AppLayout>
     <div class="uq-root">
       <!-- 页头 -->
-      <div class="uq-head">
+      <div class="uq-head uq-rise" style="animation-delay:.02s">
         <div>
           <h1 class="uq-title">{{ t('admin.usersQuench.title') }}</h1>
           <p class="uq-desc">{{ t('admin.usersQuench.desc') }}</p>
         </div>
         <div class="uq-head-acts">
-          <button class="uq-btn" @click="loadUsers">{{ t('admin.usersQuench.refresh') }}</button>
+          <button class="uq-btn" :disabled="loading" @click="loadUsers">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M10.5 6A4.5 4.5 0 1 1 6 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8 1.5v2.5H5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            {{ t('admin.usersQuench.refresh') }}
+          </button>
           <button class="uq-btn uq-btn-metal" @click="openCreateDrawer">{{ t('admin.usersQuench.createBtn') }}</button>
         </div>
       </div>
 
       <!-- 视图页签 -->
-      <SavedViewTabs storage-key="admin_users" :current-state="savedViewState" :total-count="pagination.total" @apply="onApplyView" />
+      <div class="uq-rise" style="animation-delay:.06s">
+        <SavedViewTabs storage-key="admin_users" :current-state="savedViewState" :total-count="pagination.total" @apply="onApplyView" />
+      </div>
 
       <!-- 快速内置视图 -->
-      <div class="uq-qtabs">
+      <div class="uq-qtabs uq-rise" style="animation-delay:.10s">
         <button v-for="qv in QUICK_VIEWS" :key="qv.id" class="uq-qtab" :class="{ on: activeQuickView === qv.id }" @click="applyQuickView(qv as any)">{{ qv.label }}</button>
       </div>
 
       <!-- 筛选栏 -->
-      <UsersFilterBar
-        v-model:search="searchInput"
-        v-model:role="filterRole"
-        v-model:status="filterStatus"
-        v-model:density="density"
-        @commit-search="commitSearch"
-        @clear="clearFilters"
-      />
+      <div class="uq-rise" style="animation-delay:.14s">
+        <UsersFilterBar
+          v-model:search="searchInput"
+          v-model:role="filterRole"
+          v-model:status="filterStatus"
+          v-model:density="density"
+          @commit-search="commitSearch"
+          @clear="clearFilters"
+        />
+      </div>
 
       <!-- 表格卡片 -->
-      <div class="uq-card">
+      <div class="uq-card uq-rise" style="animation-delay:.18s">
         <DataTableV2
           :columns="(COLUMNS as any)"
           :rows="(users as unknown as Record<string, unknown>[])"
@@ -84,6 +91,18 @@
             <span class="uq-mono uq-muted uq-xs">{{ fmtDate(String(value)) }}</span>
           </template>
 
+          <template #empty>
+            <div class="uq-empty">
+              <svg class="uq-empty-ico" width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                <rect x="5" y="10" width="30" height="22" rx="4" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M12 16h16M12 21h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                <circle cx="30" cy="30" r="8" fill="var(--bg-0,#0A0C10)" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M27 30h6M30 27v6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+              <span class="uq-empty-text">{{ t('admin.usersQuench.emptyText') }}</span>
+            </div>
+          </template>
+
           <template #cell-_actions="{ row }">
             <div class="uq-acts">
               <button class="uq-ib" :title="t('admin.usersQuench.actionAdjustBalance')" @click.stop="openBalance(row as unknown as AdminUser, 'add')">
@@ -111,8 +130,8 @@
       <!-- 批量删除确认 -->
       <Teleport to="body">
         <div v-if="showBulkDel" class="uq-overlay" @click.self="showBulkDel = false">
-          <div class="uq-dialog">
-            <div class="uq-dlg-title">{{ t('admin.usersQuench.bulkDeleteTitle') }}</div>
+          <div class="uq-dialog" role="dialog" aria-modal="true" aria-labelledby="uq-dlg-heading">
+            <div id="uq-dlg-heading" class="uq-dlg-title">{{ t('admin.usersQuench.bulkDeleteTitle') }}</div>
             <p class="uq-dlg-body">{{ t('admin.usersQuench.bulkDeleteConfirm', { n: selected.length }) }}</p>
             <div class="uq-dlg-foot">
               <button class="uq-btn" @click="showBulkDel = false">{{ t('admin.usersQuench.bulkDeleteCancel') }}</button>

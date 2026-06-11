@@ -278,16 +278,17 @@ function onSelected(rows: Record<string, unknown>[]) {
   gap: 8px;
 }
 
-/* 批量操作 */
+/* 批量操作（锻面卡）*/
 .apt-bulk {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: var(--bg-1);
+  background: var(--metal);
   border: 1px solid var(--line-0);
   border-radius: 10px;
+  box-shadow: var(--edge-hi), 0 4px 12px rgba(0,0,0,.18);
 }
 
 .apt-bulk-info {
@@ -308,6 +309,7 @@ function onSelected(rows: Record<string, unknown>[]) {
 }
 
 .apt-bulk-link:hover { text-decoration: underline; }
+.apt-bulk-link:focus-visible { outline: none; box-shadow: var(--glow-focus); border-radius: 3px; }
 
 .apt-bulk-actions {
   display: flex;
@@ -328,6 +330,7 @@ function onSelected(rows: Record<string, unknown>[]) {
 }
 
 .apt-btn:hover { background: var(--line-0); }
+.apt-btn:focus-visible { outline: none; box-shadow: var(--glow-focus); }
 .apt-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .apt-btn-danger  { color: var(--bad); border-color: var(--bad-dim); }
@@ -391,6 +394,7 @@ function onSelected(rows: Record<string, unknown>[]) {
 
 .apt-toggle-on  { background: var(--ok); }
 .apt-toggle-off { background: var(--bg-2); border-color: var(--line-1); }
+.apt-toggle:focus-visible { outline: none; box-shadow: var(--glow-focus); }
 .apt-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .apt-toggle-thumb {
@@ -424,5 +428,14 @@ function onSelected(rows: Record<string, unknown>[]) {
 }
 
 .apt-icon-btn:hover { background: var(--bg-2); color: var(--ink-0); }
+.apt-icon-btn:focus-visible { outline: none; box-shadow: var(--glow-focus); }
 .apt-icon-btn-danger:hover { background: var(--bad-dim); color: var(--bad); }
+
+@media (prefers-reduced-motion: reduce) {
+  .apt-progress-fill { transition: none; }
+  .apt-toggle-thumb  { transition: none; }
+  .apt-toggle        { transition: none; }
+  .apt-btn           { transition: none; }
+  .apt-icon-btn      { transition: none; }
+}
 </style>

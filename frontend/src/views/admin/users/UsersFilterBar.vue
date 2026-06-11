@@ -214,6 +214,15 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 .ufb-seg button.on { background: var(--bg-2,#171A20); color: var(--ink-0,#E8EBF0); }
 
+.ufb-chip:focus-visible,
+.ufb-clear-all:focus-visible,
+.ufb-menu-item:focus-visible,
+.ufb-seg button:focus-visible {
+  outline: none;
+  box-shadow: var(--glow-focus, 0 0 0 1.5px rgba(92,168,255,.65), 0 0 20px rgba(92,168,255,.28));
+  border-color: rgba(92,168,255,.5);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ufb-search, .ufb-chip, .ufb-menu-item, .ufb-seg button { transition: none; }
 }

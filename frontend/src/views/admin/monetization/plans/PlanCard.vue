@@ -4,24 +4,45 @@
     :class="{
       'pcard--off': !plan.for_sale,
       'pcard--missing': groupMissing,
+      'pcard--has-order': plan.sort_order != null,
     }"
   >
-    <!-- Platform accent bar -->
-    <div class="pcard-accent" :class="accentBarClass" />
+    <!-- QUENCH accent bar: azure for platform groups, neutral for none -->
+    <div
+      class="pcard-accent"
+      :class="group ? '' : 'pcard-accent--neutral'"
+    />
 
-    <!-- Header row: name + status badge + sort buttons -->
+    <!-- Order tag — top-left, avoids overlapping header controls -->
+    <div v-if="plan.sort_order != null" class="pcard-order-tag">
+      #{{ plan.sort_order + 1 }}
+    </div>
+
+    <!-- Header row: name + status badge | sort arrows -->
     <div class="pcard-hdr">
       <div class="pcard-hdr-left">
-        <span class="pcard-name" :class="nameTextClass">{{ plan.name }}</span>
+        <span class="pcard-name">{{ plan.name }}</span>
         <span class="pcard-sale-badge" :class="plan.for_sale ? 'badge-on' : 'badge-off'">
           {{ plan.for_sale ? t('admin.plansCatalog.onSale') : t('admin.plansCatalog.offSale') }}
         </span>
       </div>
       <div class="pcard-sort">
-        <button class="pcard-sort-btn" :disabled="isFirst" @click="emit('move-up')" :title="t('admin.plansCatalog.moveUp')">
+        <button
+          type="button"
+          class="pcard-sort-btn"
+          :disabled="isFirst"
+          @click="emit('move-up')"
+          :title="t('admin.plansCatalog.moveUp')"
+        >
           <Icon name="chevronUp" size="xs" />
         </button>
-        <button class="pcard-sort-btn" :disabled="isLast" @click="emit('move-down')" :title="t('admin.plansCatalog.moveDown')">
+        <button
+          type="button"
+          class="pcard-sort-btn"
+          :disabled="isLast"
+          @click="emit('move-down')"
+          :title="t('admin.plansCatalog.moveDown')"
+        >
           <Icon name="chevronDown" size="xs" />
         </button>
       </div>
@@ -70,36 +91,36 @@
       </li>
     </ul>
 
-    <!-- Footer: toggle + edit/delete -->
+    <!-- Footer: on-sale toggle | separator | edit / delete -->
     <div class="pcard-footer">
       <button
         type="button"
+        role="switch"
+        :aria-checked="plan.for_sale"
         class="pcard-toggle"
         :class="plan.for_sale ? 'pcard-toggle--on' : 'pcard-toggle--off'"
         @click="emit('toggle-sale')"
         :title="plan.for_sale ? t('admin.plansCatalog.toggleOnTitle') : t('admin.plansCatalog.toggleOffTitle')"
       >
-        <span
-          class="pcard-toggle-knob"
-          :style="{ transform: plan.for_sale ? 'translateX(16px)' : 'translateX(0)' }"
-        />
+        <span class="pcard-toggle-knob" />
       </button>
-      <span class="pcard-toggle-lbl">{{ plan.for_sale ? t('admin.plansCatalog.onSale') : t('admin.plansCatalog.offSale') }}</span>
+      <span class="pcard-toggle-lbl">
+        {{ plan.for_sale ? t('admin.plansCatalog.onSale') : t('admin.plansCatalog.offSale') }}
+      </span>
+
+      <span class="pcard-acts-sep" aria-hidden="true" />
 
       <div class="pcard-acts">
-        <button class="pcard-act" @click="emit('edit')">
+        <button type="button" class="pcard-act" @click="emit('edit')" :title="t('common.edit')">
           <Icon name="edit" size="sm" />
           <span>{{ t('common.edit') }}</span>
         </button>
-        <button class="pcard-act pcard-act-del" @click="emit('delete')">
+        <button type="button" class="pcard-act pcard-act-del" @click="emit('delete')" :title="t('common.delete')">
           <Icon name="trash" size="sm" />
           <span>{{ t('common.delete') }}</span>
         </button>
       </div>
     </div>
-
-    <!-- Sort order indicator -->
-    <div v-if="plan.sort_order != null" class="pcard-order-tag">#{{ plan.sort_order + 1 }}</div>
   </div>
 </template>
 
@@ -111,7 +132,6 @@ import type { SubscriptionPlan } from '@/types/payment'
 import type { AdminGroup } from '@/types'
 import Icon from '@/components/icons/Icon.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
-import { platformAccentBarClass, platformTextClass } from '@/utils/platformColors'
 
 const props = defineProps<{
   plan: SubscriptionPlan
@@ -130,16 +150,6 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-
-const accentBarClass = computed(() =>
-  props.group
-    ? platformAccentBarClass(props.group.platform)
-    : 'pcard-accent--neutral'
-)
-
-const nameTextClass = computed(() =>
-  props.group ? platformTextClass(props.group.platform) : 'text-foreground'
-)
 
 const periodLabel = computed(() => {
   const unit = props.plan.validity_unit || 'days'

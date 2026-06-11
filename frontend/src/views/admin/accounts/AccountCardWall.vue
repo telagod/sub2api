@@ -1,14 +1,24 @@
 <template>
   <!-- 按分组分区的账号卡片墙 -->
   <div class="acp-wall">
-    <!-- 无数据 -->
+    <!-- 无数据：体面空态 -->
     <div v-if="!loading && accounts.length === 0" class="acp-empty">
-      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-        <rect x="6" y="8" width="28" height="24" rx="4" stroke="currentColor" stroke-width="1.5"/>
-        <line x1="12" y1="16" x2="28" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="12" y1="22" x2="22" y2="22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-      <span>{{ t('admin.accountCardWall.noAccounts') }}</span>
+      <div class="acp-empty-icon">
+        <svg width="32" height="32" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <rect x="5" y="7" width="30" height="26" rx="5" stroke="currentColor" stroke-width="1.5"/>
+          <path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M12 16h16M12 22h10"/>
+          <circle cx="30" cy="30" r="7" fill="var(--bg-1)" stroke="var(--line-1)" stroke-width="1.5"/>
+          <path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M30 27v3m0 0v3m0-3h-3m3 0h3"/>
+        </svg>
+      </div>
+      <div class="acp-empty-text">
+        <span class="acp-empty-title">{{ t('admin.accountCardWall.emptyTitle') }}</span>
+        <span class="acp-empty-desc">{{ t('admin.accountCardWall.emptyDesc') }}</span>
+      </div>
+      <button class="acp-empty-cta" @click="$emit('add-account')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        {{ t('admin.accountCardWall.addAccountCta') }}
+      </button>
     </div>
 
     <!-- 骨架 -->
@@ -127,6 +137,7 @@ defineEmits<{
   'toggle-status': [account: Account]
   'refresh': [account: Account]
   'delete': [account: Account]
+  'add-account': []
 }>()
 
 const { t } = useI18n()
@@ -217,10 +228,73 @@ function utilBarClass(account: Account): string {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 48px 0;
+  gap: 20px;
+  padding: 64px 24px;
   color: var(--ink-2);
   font-size: 13px;
+}
+
+.acp-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: var(--metal);
+  border: 1px solid var(--line-1);
+  box-shadow: var(--edge-hi), 0 8px 24px rgba(0,0,0,.24);
+  color: var(--ink-1);
+}
+
+.acp-empty-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.acp-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-0);
+  letter-spacing: .01em;
+}
+
+.acp-empty-desc {
+  font-size: 12px;
+  color: var(--ink-2);
+  max-width: 280px;
+  line-height: 1.6;
+}
+
+/* 空态 CTA：金属主按钮（与工具栏 apv-btn-primary 同规格）*/
+.acp-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #3A4250;
+  background: var(--metal-raised);
+  color: var(--ink-0);
+  cursor: pointer;
+  box-shadow: var(--edge-hi), 0 2px 10px rgba(0,0,0,.4);
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.acp-empty-cta:hover {
+  border-color: rgba(92,168,255,.55);
+  box-shadow: var(--edge-hi), 0 0 16px rgba(92,168,255,.22), 0 2px 10px rgba(0,0,0,.4);
+}
+
+.acp-empty-cta:focus-visible {
+  outline: none;
+  box-shadow: var(--glow-focus), 0 2px 10px rgba(0,0,0,.4);
 }
 
 /* 分组区块 */
@@ -255,21 +329,22 @@ function utilBarClass(account: Account): string {
   gap: 10px;
 }
 
-/* 卡片本体 */
+/* 卡片本体（锻面卡）*/
 .acp-card {
   background: var(--metal);
   border: 1px solid var(--line-0);
   border-radius: var(--q-radius, 12px);
-  box-shadow: var(--edge-hi);
+  box-shadow: var(--edge-hi), 0 4px 14px rgba(0,0,0,.22);
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: border-color 0.15s;
+  transition: border-color .15s, box-shadow .15s;
 }
 
 .acp-card:hover {
   border-color: var(--line-1);
+  box-shadow: var(--edge-hi), 0 6px 20px rgba(0,0,0,.3);
 }
 
 .acp-card-error {
@@ -370,7 +445,8 @@ function utilBarClass(account: Account): string {
   transition: width 0.3s;
 }
 
-.acp-util-bar-ok   { background: var(--ok); }
+/* 利用率条：正常用 azure 冷蓝（活性），高/满用语义色 */
+.acp-util-bar-ok   { background: linear-gradient(90deg, var(--azure), rgba(92,168,255,.6)); }
 .acp-util-bar-high { background: var(--warn); }
 .acp-util-bar-full { background: var(--bad); }
 
@@ -406,6 +482,11 @@ function utilBarClass(account: Account): string {
   background: var(--bg-2);
   border-color: var(--line-1);
   color: var(--ink-0);
+}
+
+.acp-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--glow-focus);
 }
 
 .acp-btn:disabled {

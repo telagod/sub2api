@@ -5733,6 +5733,7 @@ export default {
         title: 'Cloudflare Turnstile',
         description: '登录和注册的机器人防护',
         enableTurnstile: '启用 Turnstile',
+        enabled: '启用 Turnstile',
         enableTurnstileHint: '需要 Cloudflare Turnstile 验证',
         siteKey: '站点密钥',
         secretKey: '私密密钥',
@@ -5748,10 +5749,37 @@ export default {
         trustForwardedIpHint:
           '默认关闭。仅在源站只允许 Cloudflare 或 Nginx 反代访问时开启；开启后 API Key IP 白/黑名单会使用 CF-Connecting-IP、X-Real-IP 或 X-Forwarded-For，与使用记录中的请求 IP 保持一致。'
       },
+      github: {
+        title: 'GitHub 登录',
+        description: '配置 GitHub OAuth，用于用户登录',
+        enabled: '启用 GitHub 登录',
+        clientId: 'Client ID',
+        clientSecret: 'Client Secret',
+        redirectUrl: '回调地址',
+        frontendRedirectUrl: '前端回调地址'
+      },
+      google: {
+        title: 'Google 登录',
+        description: '配置 Google OAuth，用于用户登录',
+        enabled: '启用 Google 登录',
+        clientId: 'Client ID',
+        clientSecret: 'Client Secret',
+        redirectUrl: '回调地址',
+        frontendRedirectUrl: '前端回调地址'
+      },
+      security: {
+        totp: '强制双因素认证（TOTP）',
+        totpHint: '开启后管理员账号必须绑定 TOTP 才能登录',
+        trustForwardedIp: '信任反代传递的客户端 IP',
+        trustForwardedIpHint:
+          '默认关闭。仅在源站只允许 Cloudflare 或 Nginx 反代访问时开启；开启后将使用 CF-Connecting-IP、X-Real-IP 或 X-Forwarded-For 判定客户端 IP。',
+        forceEmailOnThirdPartySignup: '第三方注册强制绑定邮箱'
+      },
       linuxdo: {
         title: 'LinuxDo Connect 登录',
         description: '配置 LinuxDo Connect OAuth，用于 subme 用户登录',
         enable: '启用 LinuxDo 登录',
+        enabled: '启用 LinuxDo 登录',
         enableHint: '在登录/注册页面显示 LinuxDo 登录入口',
         clientId: 'Client ID',
         clientIdPlaceholder: '例如：hprJ5pC3...',
@@ -6835,6 +6863,8 @@ export default {
       colConcurrency: '并发',
       colStatus: '状态',
       colCreatedAt: '注册时间',
+      // 空态
+      emptyText: '暂无用户',
       // 通用
       loadFailed: '加载失败',
       operationFailed: '操作失败',
@@ -6961,6 +6991,8 @@ export default {
       kpiBalance: '余额',
       kpiMonthCost: '本月消耗',
       kpiMonthRequests: '本月请求',
+      kpiMonthTokens: '本月 Tokens',
+      kpiConcurrency: '并发占用',
       chart30dTitle: '近 30 日消耗趋势',
       chartLoading: '加载中…',
       chartNoData: '暂无数据',
@@ -7052,6 +7084,9 @@ export default {
 
     accountCardWall: {
       noAccounts: '暂无账号',
+      emptyTitle: '暂无账号',
+      emptyDesc: '接入第一个账号，开始供给调度',
+      addAccountCta: '接入账号',
       ungrouped: '未分组',
       rateLimited: '限流中',
       toggleDisable: '禁用',
@@ -7112,6 +7147,16 @@ export default {
       tieredColTier: '档位',
       tieredFromChannel: '来自渠道：',
       officialPrice: '=官价',
+      dblClickToEdit: '双击编辑倍率',
+      legendBelow: '低于官方价',
+      legendEqual: '等于官方价',
+      legendAbove: '高于官方价',
+      ttInput: 'Input',
+      ttOutput: 'Output',
+      ttCacheRead: 'Cache 读',
+      ttCacheWrite: 'Cache 写',
+      ttOfficialRef: '官方参考价',
+      ttLoadingOfficial: '官方价加载中…',
       simTitle: '价格模拟器',
       simModelLabel: '模型',
       simModelPlaceholder: '— 请选择模型 —',

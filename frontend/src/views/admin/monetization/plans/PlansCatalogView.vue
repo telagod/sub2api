@@ -8,10 +8,10 @@
           <p class="pc-desc">{{ t('admin.plansCatalog.desc') }}</p>
         </div>
         <div class="pc-head-acts">
-          <button class="pc-btn" @click="loadAll" :disabled="loading" :title="t('common.refresh')">
+          <button type="button" class="pc-btn" @click="loadAll" :disabled="loading" :title="t('common.refresh')">
             <Icon name="refresh" size="sm" :class="loading ? 'animate-spin' : ''" />
           </button>
-          <button class="pc-btn pc-btn-metal" @click="openCreate">
+          <button type="button" class="pc-btn pc-btn-metal" @click="openCreate">
             <Icon name="plus" size="sm" />
             {{ t('payment.admin.createPlan') }}
           </button>
@@ -66,7 +66,7 @@
 
       <!-- Empty state -->
       <div v-else class="pc-empty">
-        <div class="pc-empty-icon">📦</div>
+        <Icon name="cube" size="xl" class="pc-empty-icon" />
         <p class="pc-empty-text">{{ t('admin.plansCatalog.emptyText') }}</p>
       </div>
     </div>

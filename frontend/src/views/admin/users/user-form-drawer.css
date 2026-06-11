@@ -14,7 +14,7 @@
 .ufd-req { color: var(--bad,#F25C69); }
 .ufd-hint-inline { font-weight: 400; color: var(--ink-2,#5C6470); }
 .ufd-input { background: var(--bg-2,#171A20); border: 1px solid var(--line-1,#2F3540); border-radius: 9px; padding: 8px 12px; color: var(--ink-0,#E8EBF0); font-size: 13px; font-family: inherit; outline: none; width: 100%; transition: border-color .15s, box-shadow .15s; box-sizing: border-box; }
-.ufd-input:focus { border-color: rgba(92,168,255,.5); box-shadow: var(--glow-focus,0 0 0 1.5px rgba(92,168,255,.65),0 0 20px rgba(92,168,255,.28)); }
+.ufd-input:focus-visible { border-color: rgba(92,168,255,.5); box-shadow: var(--glow-focus,0 0 0 1.5px rgba(92,168,255,.65),0 0 20px rgba(92,168,255,.28)); outline: none; }
 .ufd-input::placeholder { color: var(--ink-2,#5C6470); }
 .ufd-textarea { resize: vertical; min-height: 72px; }
 .ufd-row { display: flex; gap: 8px; }
@@ -25,7 +25,11 @@
 .ufd-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: auto; padding-top: 8px; }
 .ufd-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 9px; border: 1px solid var(--line-1,#2F3540); background: var(--bg-2,#171A20); color: var(--ink-1,#97A0AF); font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all .12s; }
 .ufd-btn:hover { border-color: #3D4554; color: var(--ink-0,#E8EBF0); }
-.ufd-btn-primary { background: var(--metal-raised,linear-gradient(180deg,#272D37,#14171D)); border-color: rgba(92,168,255,.35); color: var(--azure,#5CA8FF); box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
-.ufd-btn-primary:hover:not(:disabled) { border-color: rgba(92,168,255,.6); color: var(--azure-hi,#8CC4FF); }
+.ufd-btn-primary { background: var(--metal-raised,linear-gradient(180deg,#272D37,#14171D)); border-color: rgba(92,168,255,.35); color: var(--ink-0,#E8EBF0); box-shadow: var(--edge-hi,inset 0 1px 0 rgba(255,255,255,.06)), 0 2px 8px rgba(0,0,0,.3); }
+.ufd-btn-primary:hover:not(:disabled) { border-color: rgba(92,168,255,.6); box-shadow: var(--edge-hi,inset 0 1px 0 rgba(255,255,255,.06)), 0 0 14px rgba(92,168,255,.18); }
+.ufd-btn-primary:focus-visible { outline: none; box-shadow: var(--glow-focus,0 0 0 1.5px rgba(92,168,255,.65),0 0 20px rgba(92,168,255,.28)); border-color: rgba(92,168,255,.5); }
 .ufd-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.ufd-btn:focus-visible,
+.ufd-close:focus-visible,
+.ufd-gen-btn:focus-visible { outline: none; box-shadow: var(--glow-focus,0 0 0 1.5px rgba(92,168,255,.65),0 0 20px rgba(92,168,255,.28)); border-color: rgba(92,168,255,.5); }
 @media (prefers-reduced-motion: reduce) { .ufd-slide-enter-active, .ufd-slide-leave-active, .ufd-input, .ufd-btn, .ufd-close, .ufd-gen-btn { transition: none; } }

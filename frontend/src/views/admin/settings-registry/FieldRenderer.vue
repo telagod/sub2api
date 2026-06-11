@@ -205,10 +205,11 @@ function handleJsonChange(raw: string) {
   font-size: 13px;
   font-family: inherit;
   outline: none;
-  transition: border-color .15s;
+  transition: border-color .15s, box-shadow .15s;
   box-sizing: border-box;
 }
-.sr-input:focus { border-color: var(--azure, #5CA8FF); box-shadow: 0 0 0 3px rgba(92,168,255,.12); }
+.sr-input:focus,
+.sr-input:focus-visible { border-color: var(--azure, #5CA8FF); box-shadow: 0 0 0 3px rgba(92,168,255,.14); }
 .sr-input-num { width: 120px; }
 .sr-mono { font-family: var(--font-mono, "IBM Plex Mono", monospace); font-size: 12px; resize: vertical; }
 
@@ -218,10 +219,11 @@ function handleJsonChange(raw: string) {
 .sr-pw-eye {
   position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
   background: none; border: none; cursor: pointer;
-  color: var(--ink-2, #5C6470); padding: 2px;
+  color: var(--ink-2, #5C6470); padding: 2px; border-radius: 4px;
   transition: color .12s;
 }
 .sr-pw-eye:hover { color: var(--ink-0, #E8EBF0); }
+.sr-pw-eye:focus-visible { outline: 2px solid var(--azure, #5CA8FF); outline-offset: 2px; }
 .sr-icon { width: 16px; height: 16px; }
 
 /* toggle */
@@ -233,8 +235,13 @@ function handleJsonChange(raw: string) {
   background: var(--bg-2, #171A20);
   cursor: pointer;
   position: relative;
-  transition: background .15s, border-color .15s;
+  transition: background .15s, border-color .15s, box-shadow .15s;
   padding: 0;
+  outline: none;
+}
+.sr-toggle:focus-visible {
+  box-shadow: 0 0 0 3px rgba(92,168,255,.3);
+  border-color: var(--azure, #5CA8FF);
 }
 .sr-toggle.on {
   background: var(--azure, #5CA8FF);
@@ -251,5 +258,8 @@ function handleJsonChange(raw: string) {
 .sr-toggle.on .sr-toggle-thumb {
   transform: translateX(18px);
   background: var(--bg-00, var(--bg-0, #0E1014));
+}
+@media (prefers-reduced-motion: reduce) {
+  .sr-toggle, .sr-toggle-thumb { transition: none; }
 }
 </style>

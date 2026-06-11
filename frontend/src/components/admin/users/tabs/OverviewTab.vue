@@ -1,46 +1,73 @@
 <template>
   <div class="ud-tab-content">
-    <!-- KPI 三格 -->
+    <!-- KPI 三格（去重：余额/消耗已在抽屉顶部 KPI 条展示，此处放更有信息量的活动指标） -->
     <div class="ud-kpi-row">
-      <div class="ud-kpi-card">
-        <span class="ud-kpi-label">{{ t('admin.userTabs.kpiBalance') }}</span>
-        <span class="ud-kpi-value q-money">${{ formatBal(user.balance) }}</span>
-      </div>
-      <div class="ud-kpi-card">
-        <span class="ud-kpi-label">{{ t('admin.userTabs.kpiMonthCost') }}</span>
-        <span class="ud-kpi-value q-money" v-if="!statsLoading">${{ formatBal(monthStats.total_cost) }}</span>
-        <span class="ud-kpi-value ud-muted" v-else>…</span>
-      </div>
       <div class="ud-kpi-card">
         <span class="ud-kpi-label">{{ t('admin.userTabs.kpiMonthRequests') }}</span>
         <span class="ud-kpi-value" v-if="!statsLoading">{{ monthStats.total_requests.toLocaleString() }}</span>
         <span class="ud-kpi-value ud-muted" v-else>…</span>
+      </div>
+      <div class="ud-kpi-card">
+        <span class="ud-kpi-label">{{ t('admin.userTabs.kpiMonthTokens') }}</span>
+        <span class="ud-kpi-value ud-mono" v-if="!statsLoading">{{ fmtTok(monthStats.total_tokens) }}</span>
+        <span class="ud-kpi-value ud-muted" v-else>…</span>
+      </div>
+      <div class="ud-kpi-card">
+        <span class="ud-kpi-label">{{ t('admin.userTabs.kpiConcurrency') }}</span>
+        <span class="ud-kpi-value ud-mono">{{ user.current_concurrency ?? 0 }}<span class="ud-kpi-sub-inline">/{{ user.concurrency }}</span></span>
       </div>
     </div>
 
     <!-- 近 30 日消耗折线图（SVG 简版） -->
     <div class="ud-chart-wrap">
       <p class="ud-section-label">{{ t('admin.userTabs.chart30dTitle') }}</p>
-      <div v-if="chartLoading" class="ud-chart-placeholder">{{ t('admin.userTabs.loading') }}</div>
-      <div v-else-if="chartError" class="ud-chart-placeholder ud-muted">{{ chartError }}</div>
-      <svg
-        v-else
-        class="ud-chart-svg"
-        viewBox="0 0 480 100"
-        preserveAspectRatio="none"
-        :aria-label="t('admin.userTabs.chart30dTitle')"
-      >
-        <!-- 网格线 -->
-        <line x1="0" y1="25" x2="480" y2="25" stroke="var(--line-0)" stroke-width="1"/>
-        <line x1="0" y1="50" x2="480" y2="50" stroke="var(--line-0)" stroke-width="1"/>
-        <line x1="0" y1="75" x2="480" y2="75" stroke="var(--line-0)" stroke-width="1"/>
-        <!-- 面积填充 -->
-        <path v-if="chartPath" :d="chartFillPath" fill="rgba(92,168,255,0.08)" />
-        <!-- 折线 -->
-        <path v-if="chartPath" :d="chartPath" fill="none" stroke="var(--azure)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-        <!-- 无数据占位 -->
-        <text v-if="!chartPath" x="240" y="55" text-anchor="middle" fill="var(--ink-2)" font-size="11">{{ t('admin.userTabs.chartNoData') }}</text>
-      </svg>
+      <div v-if="chartLoading" class="ud-chart-placeholder">
+        <svg class="ud-chart-empty-ico" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <rect x="3" y="6" width="22" height="16" rx="3" stroke="currentColor" stroke-width="1.3"/>
+          <circle cx="14" cy="14" r="3" stroke="currentColor" stroke-width="1.3"/>
+        </svg>
+        {{ t('admin.userTabs.loading') }}
+      </div>
+      <div v-else-if="chartError" class="ud-chart-placeholder">
+        <svg class="ud-chart-empty-ico" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <circle cx="14" cy="14" r="10" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M14 9v6M14 18v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="ud-muted">{{ chartError }}</span>
+      </div>
+      <template v-else>
+        <!-- 无数据体面空态 -->
+        <div v-if="!chartPath" class="ud-chart-placeholder">
+          <svg class="ud-chart-empty-ico" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <path d="M4 22L10 14L15 18L20 10L24 14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 2"/>
+            <rect x="3" y="6" width="22" height="16" rx="3" stroke="currentColor" stroke-width="1.3" opacity=".4"/>
+          </svg>
+          <span>{{ t('admin.userTabs.chartNoData') }}</span>
+        </div>
+        <!-- 有数据：azure 折线 + 渐变填充 -->
+        <svg
+          v-else
+          class="ud-chart-svg"
+          viewBox="0 0 480 100"
+          preserveAspectRatio="none"
+          :aria-label="t('admin.userTabs.chart30dTitle')"
+        >
+          <defs>
+            <linearGradient id="ud-chart-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--azure,#5CA8FF)" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="var(--azure,#5CA8FF)" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- 网格线 -->
+          <line x1="0" y1="25" x2="480" y2="25" stroke="var(--line-0)" stroke-width="1"/>
+          <line x1="0" y1="50" x2="480" y2="50" stroke="var(--line-0)" stroke-width="1"/>
+          <line x1="0" y1="75" x2="480" y2="75" stroke="var(--line-0)" stroke-width="1"/>
+          <!-- 面积填充（渐变） -->
+          <path :d="chartFillPath" fill="url(#ud-chart-grad)"/>
+          <!-- 折线 azure -->
+          <path :d="chartPath" fill="none" stroke="var(--azure,#5CA8FF)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      </template>
     </div>
 
     <!-- 基础信息 -->
@@ -99,13 +126,12 @@ const monthStats = ref({ total_cost: 0, total_requests: 0, total_tokens: 0 })
 // 日粒度数据点 [{date, cost}]
 const dailyPoints = ref<{ date: string; cost: number }[]>([])
 
-function formatBal(v: number) {
-  if (!v) return '0.00'
-  const s = v.toFixed(8).replace(/\.?0+$/, '')
-  const parts = s.split('.')
-  if (parts.length === 1) return s + '.00'
-  if (parts[1].length < 2) return s + '0'
-  return s
+
+function fmtTok(v: number) {
+  if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B'
+  if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M'
+  if (v >= 1e3) return (v / 1e3).toFixed(2) + 'K'
+  return Math.round(v).toLocaleString()
 }
 
 function fmt(iso: string | null | undefined) {
@@ -197,27 +223,29 @@ onMounted(() => { loadStats(); loadChart() })
   flex-direction: column;
   gap: 4px;
   padding: 14px 16px;
-  background: var(--bg-2);
+  background: var(--metal,linear-gradient(180deg,#15181E,#0E1014));
   border: 1px solid var(--line-0);
   border-radius: 10px;
+  box-shadow: var(--edge-hi,inset 0 1px 0 rgba(255,255,255,.04));
 }
-.ud-kpi-label { font-size: 11px; color: var(--ink-2); letter-spacing: 0.03em; }
-.ud-kpi-value { font-size: 16px; font-weight: 700; color: var(--ink-0); }
+.ud-kpi-label { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.ud-kpi-value { font-family: var(--font-mono,"IBM Plex Mono",monospace); font-size: 18px; font-weight: 700; color: var(--ink-0); font-variant-numeric: tabular-nums; }
+.ud-kpi-sub-inline { font-size: 12px; color: var(--ink-2); margin-left: 2px; font-weight: 400; }
 
 .ud-chart-wrap { display: flex; flex-direction: column; gap: 8px; }
 .ud-section-label { font-size: 11.5px; color: var(--ink-2); margin: 0; }
 .ud-chart-svg { width: 100%; height: 100px; display: block; }
 .ud-chart-placeholder {
   height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  color: var(--ink-2);
-  background: var(--bg-2);
-  border-radius: 8px;
-  border: 1px solid var(--line-0);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px;
+  font-size: 12px; color: var(--ink-2);
+  background: var(--metal,linear-gradient(180deg,#15181E,#0E1014));
+  border-radius: 8px; border: 1px solid var(--line-0);
+  box-shadow: var(--edge-hi,inset 0 1px 0 rgba(255,255,255,.04));
 }
+.ud-chart-empty-ico { opacity: .3; color: var(--ink-2); }
 
 .ud-info-grid { display: flex; flex-direction: column; gap: 0; }
 .ud-info-row {

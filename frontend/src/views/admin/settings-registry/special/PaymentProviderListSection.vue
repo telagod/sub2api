@@ -1,27 +1,21 @@
 <template>
-  <div class="space-y-4 p-5">
+  <div class="ppl-body">
     <!-- payment_enabled_types badge toggles -->
-    <div>
-      <label class="input-label">{{ t('admin.settings.payment.enabledPaymentTypes') }}</label>
-      <div class="mt-2 flex flex-wrap gap-2">
+    <div class="ppl-type-section">
+      <label class="ppl-label">{{ t('admin.settings.payment.enabledPaymentTypes') }}</label>
+      <div class="ppl-badges">
         <button
           v-for="pt in allPaymentTypes"
           :key="pt.value"
           type="button"
-          :class="[
-            'rounded-lg border px-3 py-1.5 text-sm font-medium transition-all',
-            isEnabled(pt.value)
-              ? 'border-primary-500 bg-primary-500 text-white shadow-sm'
-              : 'border-border bg-card text-muted-foreground hover:border-dark-500 hover:bg-muted',
-          ]"
+          class="ppl-badge"
+          :class="{ active: isEnabled(pt.value) }"
           @click="toggleType(pt.value)"
         >
           {{ pt.label }}
         </button>
       </div>
-      <p class="mt-2 text-xs text-muted-foreground">
-        {{ t('admin.settings.payment.enabledPaymentTypesHint') }}
-      </p>
+      <p class="ppl-hint">{{ t('admin.settings.payment.enabledPaymentTypesHint') }}</p>
     </div>
 
     <!-- Existing PaymentProviderList (reused as-is) -->
@@ -237,3 +231,35 @@ onMounted(() => {
   if (paymentEnabled.value) load()
 })
 </script>
+
+<style scoped>
+.ppl-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+
+/* type section */
+.ppl-type-section { display: flex; flex-direction: column; gap: 8px; }
+.ppl-label { font-size: 13px; font-weight: 500; color: var(--ink-0, #E8EBF0); }
+.ppl-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* badge toggle buttons */
+.ppl-badge {
+  padding: 5px 12px; border-radius: 8px;
+  border: 1px solid var(--line-1, #2F3540);
+  background: var(--bg-1, #101216);
+  color: var(--ink-1, #97A0AF);
+  font-size: 12.5px; font-weight: 500; font-family: inherit;
+  cursor: pointer; transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
+}
+.ppl-badge:hover:not(.active) {
+  border-color: rgba(92,168,255,.35); color: var(--ink-0, #E8EBF0); background: var(--bg-2, #171A20);
+}
+.ppl-badge.active {
+  border-color: var(--azure, #5CA8FF);
+  background: rgba(92,168,255,.12);
+  color: var(--azure, #5CA8FF);
+  box-shadow: 0 0 0 1px rgba(92,168,255,.2);
+}
+.ppl-badge:focus-visible { outline: 2px solid var(--azure, #5CA8FF); outline-offset: 2px; }
+
+/* hint */
+.ppl-hint { font-size: 11.5px; color: var(--ink-2, #5C6470); line-height: 1.5; margin: 0; }
+</style>

@@ -5560,6 +5560,7 @@ export default {
         title: 'Cloudflare Turnstile',
         description: 'Bot protection for login and registration',
         enableTurnstile: 'Enable Turnstile',
+        enabled: 'Enable Turnstile',
         enableTurnstileHint: 'Require Cloudflare Turnstile verification',
         siteKey: 'Site Key',
         secretKey: 'Secret Key',
@@ -5575,10 +5576,37 @@ export default {
         trustForwardedIpHint:
           'Disabled by default. Enable only when the origin is reachable only through Cloudflare or Nginx reverse proxy. When enabled, API Key IP allowlists and denylists use CF-Connecting-IP, X-Real-IP, or X-Forwarded-For, matching the request IP shown in usage records.'
       },
+      github: {
+        title: 'GitHub Login',
+        description: 'Configure GitHub OAuth for user login',
+        enabled: 'Enable GitHub Login',
+        clientId: 'Client ID',
+        clientSecret: 'Client Secret',
+        redirectUrl: 'Redirect URL',
+        frontendRedirectUrl: 'Frontend Redirect URL'
+      },
+      google: {
+        title: 'Google Login',
+        description: 'Configure Google OAuth for user login',
+        enabled: 'Enable Google Login',
+        clientId: 'Client ID',
+        clientSecret: 'Client Secret',
+        redirectUrl: 'Redirect URL',
+        frontendRedirectUrl: 'Frontend Redirect URL'
+      },
+      security: {
+        totp: 'Enforce Two-Factor Auth (TOTP)',
+        totpHint: 'When enabled, admin accounts must bind TOTP to sign in',
+        trustForwardedIp: 'Trust forwarded client IP',
+        trustForwardedIpHint:
+          'Disabled by default. Enable only when the origin is reachable solely through Cloudflare or Nginx reverse proxy; client IP is then derived from CF-Connecting-IP, X-Real-IP, or X-Forwarded-For.',
+        forceEmailOnThirdPartySignup: 'Require email binding on third-party signup'
+      },
       linuxdo: {
         title: 'LinuxDo Connect Login',
         description: 'Configure LinuxDo Connect OAuth for subme end-user login',
         enable: 'Enable LinuxDo Login',
+        enabled: 'Enable LinuxDo Login',
         enableHint: 'Show LinuxDo login on the login/register pages',
         clientId: 'Client ID',
         clientIdPlaceholder: 'e.g., hprJ5pC3...',
@@ -6661,6 +6689,7 @@ export default {
       colConcurrency: 'Concurrency',
       colStatus: 'Status',
       colCreatedAt: 'Registered',
+      emptyText: 'No users found',
       loadFailed: 'Load failed',
       operationFailed: 'Operation failed',
       enabled: 'Enabled',
@@ -6781,6 +6810,8 @@ export default {
       kpiBalance: 'Balance',
       kpiMonthCost: 'Month Cost',
       kpiMonthRequests: 'Month Requests',
+      kpiMonthTokens: 'Monthly Tokens',
+      kpiConcurrency: 'Concurrency',
       chart30dTitle: '30-Day Cost Trend',
       chartLoading: 'Loading…',
       chartNoData: 'No data',
@@ -6871,6 +6902,9 @@ export default {
 
     accountCardWall: {
       noAccounts: 'No accounts',
+      emptyTitle: 'No accounts yet',
+      emptyDesc: 'Connect your first account to start routing',
+      addAccountCta: 'Add account',
       ungrouped: 'Ungrouped',
       rateLimited: 'Rate limited',
       toggleDisable: 'Disable',
@@ -6930,6 +6964,16 @@ export default {
       tieredColTier: 'Tier',
       tieredFromChannel: 'From channel: ',
       officialPrice: '=Official',
+      dblClickToEdit: 'Double-click to edit multiplier',
+      legendBelow: 'Below official',
+      legendEqual: 'At official',
+      legendAbove: 'Above official',
+      ttInput: 'Input',
+      ttOutput: 'Output',
+      ttCacheRead: 'Cache read',
+      ttCacheWrite: 'Cache write',
+      ttOfficialRef: 'Official ref price',
+      ttLoadingOfficial: 'Loading official price…',
       simTitle: 'Price Simulator',
       simModelLabel: 'Model',
       simModelPlaceholder: '— Select model —',

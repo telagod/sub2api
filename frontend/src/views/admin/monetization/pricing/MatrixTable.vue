@@ -2,147 +2,144 @@
   <!-- 空态 -->
   <div
     v-if="!loading && platforms.length === 0"
-    class="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed py-20"
-    :style="{ borderColor: 'var(--line-1)', background: 'var(--bg-1)' }"
+    class="mt-empty rise"
   >
-    <div class="text-5xl opacity-30">💰</div>
-    <p class="text-base" :style="{ color: 'var(--ink-1)' }">{{ t('admin.pricingDesk.noData') }}</p>
-    <p class="text-sm" :style="{ color: 'var(--ink-2)' }">{{ t('admin.pricingDesk.noDataHint') }}</p>
+    <div class="mt-empty-ico">⬡</div>
+    <p class="mt-empty-title">{{ t('admin.pricingDesk.noData') }}</p>
+    <p class="mt-empty-hint">{{ t('admin.pricingDesk.noDataHint') }}</p>
     <RouterLink
       to="/admin/channels/pricing"
-      class="mt-2 inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-      :style="{ background: 'var(--metal-raised)', color: 'var(--ink-0)', border: '1px solid var(--line-1)', boxShadow: 'var(--edge-hi)' }"
+      class="mt-empty-btn"
     >
-      <CalculatorIcon class="h-4 w-4" />
+      <CalculatorIcon class="mt-empty-btn-ico" />
       {{ t('admin.pricingDesk.goConfigBtn') }}
     </RouterLink>
   </div>
 
-  <!-- 矩阵表 -->
-  <div v-else class="overflow-x-auto rounded-xl" :style="{ background: 'var(--bg-1)', border: '1px solid var(--line-0)' }">
-    <table class="w-full text-sm border-collapse">
-      <!-- 表头 -->
-      <thead>
-        <tr :style="{ background: 'var(--bg-2)', borderBottom: '1px solid var(--line-0)' }">
-          <th
-            class="sticky left-0 z-10 px-4 py-3 text-left font-medium"
-            :style="{ background: 'var(--bg-2)', color: 'var(--ink-1)', minWidth: '200px' }"
-          >
-            {{ t('admin.pricingDesk.colModel') }}
-          </th>
-          <th
-            v-for="group in activeGroups"
-            :key="group.id"
-            class="px-3 py-3 text-center font-medium whitespace-nowrap"
-            :style="{ color: 'var(--ink-1)', minWidth: '140px' }"
-          >
-            <div class="flex flex-col items-center gap-1">
-              <span>{{ group.name }}</span>
-              <!-- 列头倍率就地编辑 -->
-              <div
-                class="flex items-center gap-1"
-                :style="{ color: 'var(--azure)' }"
-              >
-                <span v-if="editingGroupId !== group.id" class="text-xs cursor-pointer hover:underline" @dblclick="startEditMultiplier(group)">
-                  ×{{ group.rate_multiplier.toFixed(2) }}
-                </span>
-                <template v-else>
-                  <input
-                    :ref="(el) => { if (group.id === editingGroupId) { multiplierInputRef = el as HTMLInputElement } }"
-                    v-model.number="editingMultiplierValue"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    class="w-16 rounded px-1 py-0.5 text-xs text-center"
-                    :style="{
-                      background: 'var(--bg-0)',
-                      border: '1px solid var(--azure)',
-                      color: 'var(--ink-0)',
-                      outline: 'none'
-                    }"
-                    @keydown.enter="commitMultiplier(group.id)"
-                    @keydown.esc="cancelEditMultiplier"
-                    @blur="commitMultiplier(group.id)"
-                  />
-                </template>
-              </div>
-            </div>
-          </th>
-        </tr>
-      </thead>
+  <!-- 矩阵面板 -->
+  <div v-else class="mt-panel rise">
+    <!-- 折扣图例 -->
+    <div class="mt-legend">
+      <span class="mt-legend-item">
+        <span class="mt-legend-dot mt-ok"></span>
+        {{ t('admin.pricingDesk.legendBelow') }}
+      </span>
+      <span class="mt-legend-sep">·</span>
+      <span class="mt-legend-item">
+        <span class="mt-legend-dot mt-neutral"></span>
+        {{ t('admin.pricingDesk.legendEqual') }}
+      </span>
+      <span class="mt-legend-sep">·</span>
+      <span class="mt-legend-item">
+        <span class="mt-legend-dot mt-bad"></span>
+        {{ t('admin.pricingDesk.legendAbove') }}
+      </span>
+    </div>
 
-      <!-- 按 platform 分组折叠 -->
-      <tbody>
-        <template v-for="platform in platforms" :key="platform">
-          <!-- platform 行组标题 -->
-          <tr
-            class="cursor-pointer select-none"
-            :style="{ background: 'var(--bg-2)', borderTop: '1px solid var(--line-0)' }"
-            @click="togglePlatform(platform)"
-          >
-            <td
-              :colspan="activeGroups.length + 1"
-              class="px-4 py-2"
-              :style="{ color: 'var(--ink-1)' }"
+    <div class="mt-scroll-wrap">
+      <table class="mt-table">
+        <!-- 表头 -->
+        <thead>
+          <tr class="mt-head-row">
+            <th class="mt-th mt-th-model mt-sticky">
+              {{ t('admin.pricingDesk.colModel') }}
+            </th>
+            <th
+              v-for="group in activeGroups"
+              :key="group.id"
+              class="mt-th mt-th-group"
             >
-              <div class="flex items-center gap-2">
-                <ChevronDownIcon
-                  class="h-4 w-4 transition-transform"
-                  :class="collapsedPlatforms.has(platform) ? '-rotate-90' : ''"
-                />
-                <span class="text-xs font-semibold uppercase tracking-wider">{{ platform }}</span>
-                <span class="text-xs" :style="{ color: 'var(--ink-2)' }">
-                  {{ t('admin.pricingDesk.modelCount', { n: rowsByPlatform[platform]?.length ?? 0 }) }}
-                </span>
+              <div class="mt-th-inner">
+                <span class="mt-group-name">{{ group.name }}</span>
+                <!-- ×倍率就地编辑 -->
+                <div class="mt-multiplier-wrap">
+                  <span
+                    v-if="editingGroupId !== group.id"
+                    class="mt-multiplier"
+                    :title="t('admin.pricingDesk.dblClickToEdit')"
+                    @dblclick="startEditMultiplier(group)"
+                  >×{{ group.rate_multiplier.toFixed(2) }}</span>
+                  <template v-else>
+                    <input
+                      :ref="(el) => { if (group.id === editingGroupId) { multiplierInputRef = el as HTMLInputElement } }"
+                      v-model.number="editingMultiplierValue"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="mt-multiplier-input q-focus-glow"
+                      @keydown.enter="commitMultiplier(group.id)"
+                      @keydown.esc="cancelEditMultiplier"
+                      @blur="commitMultiplier(group.id)"
+                    />
+                  </template>
+                </div>
               </div>
-            </td>
+            </th>
           </tr>
+        </thead>
 
-          <!-- 模型行 -->
-          <template v-if="!collapsedPlatforms.has(platform)">
+        <!-- 按 platform 分组折叠 -->
+        <tbody>
+          <template v-for="platform in platforms" :key="platform">
+            <!-- platform 行组标题 -->
             <tr
-              v-for="row in rowsByPlatform[platform]"
-              :key="row.model"
-              class="group border-b transition-colors"
-              :style="{ borderColor: 'var(--line-0)' }"
-              @mouseenter="onRowHover(row.model)"
+              class="mt-platform-row"
+              @click="togglePlatform(platform)"
             >
-              <!-- 模型名列 -->
               <td
-                class="sticky left-0 z-10 px-4 py-2 font-mono text-xs"
-                :style="{ background: 'var(--bg-1)', color: 'var(--ink-0)' }"
+                :colspan="activeGroups.length + 1"
+                class="mt-platform-cell"
               >
-                {{ row.model }}
-              </td>
-
-              <!-- 每个分组的单元格 -->
-              <td
-                v-for="group in activeGroups"
-                :key="group.id"
-                class="px-3 py-2 text-center align-top"
-              >
-                <MatrixCell
-                  v-if="row.cells[group.id]"
-                  :cell="row.cells[group.id]"
-                  :model="row.model"
-                  :official-pricing="officialPricingCache[row.model]"
-                />
-                <span v-else class="text-xs" :style="{ color: 'var(--ink-2)' }">—</span>
+                <div class="mt-platform-inner">
+                  <ChevronDownIcon
+                    class="mt-chevron"
+                    :class="collapsedPlatforms.has(platform) ? 'mt-collapsed' : ''"
+                  />
+                  <span class="mt-platform-name">{{ platform }}</span>
+                  <span class="mt-platform-count">
+                    {{ t('admin.pricingDesk.modelCount', { n: rowsByPlatform[platform]?.length ?? 0 }) }}
+                  </span>
+                </div>
               </td>
             </tr>
-          </template>
-        </template>
-      </tbody>
-    </table>
 
-    <!-- 加载骨架 -->
-    <div v-if="loading" class="space-y-2 p-4">
-      <div
-        v-for="i in 6"
-        :key="i"
-        class="h-10 animate-pulse rounded"
-        :style="{ background: 'var(--bg-2)' }"
-      />
+            <!-- 模型行 -->
+            <template v-if="!collapsedPlatforms.has(platform)">
+              <tr
+                v-for="row in rowsByPlatform[platform]"
+                :key="row.model"
+                class="mt-model-row"
+                @mouseenter="onRowHover(row.model)"
+              >
+                <!-- 模型名列 -->
+                <td class="mt-td mt-td-model mt-sticky">
+                  {{ row.model }}
+                </td>
+
+                <!-- 每个分组的单元格 -->
+                <td
+                  v-for="group in activeGroups"
+                  :key="group.id"
+                  class="mt-td mt-td-cell"
+                >
+                  <MatrixCell
+                    v-if="row.cells[group.id]"
+                    :cell="row.cells[group.id]"
+                    :model="row.model"
+                    :official-pricing="officialPricingCache[row.model]"
+                  />
+                  <span v-else class="mt-empty-cell">—</span>
+                </td>
+              </tr>
+            </template>
+          </template>
+        </tbody>
+      </table>
+
+      <!-- 加载骨架 -->
+      <div v-if="loading" class="mt-skeleton">
+        <div v-for="i in 6" :key="i" class="mt-skel-row"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -171,7 +168,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-// platform 折叠状态
 const collapsedPlatforms = ref(new Set<string>())
 function togglePlatform(p: string) {
   if (collapsedPlatforms.value.has(p)) {
@@ -190,14 +186,10 @@ const rowsByPlatform = computed(() => {
   return map
 })
 
-// hover 触发官方价懒加载
 function onRowHover(model: string) {
   emit('hover-model', model)
 }
 
-// 倍率就地编辑
-// Major fix: multiplierInputRef cannot be a template ref inside v-for (Vue 3 collects into array).
-// Use a plain variable and a function ref binding (:ref="...") in the template instead.
 const editingGroupId = ref<number | null>(null)
 const editingMultiplierValue = ref(1)
 const multiplierInputRef = ref<HTMLInputElement | null>(null)
@@ -221,3 +213,140 @@ async function commitMultiplier(groupId: number) {
   }
 }
 </script>
+
+<style scoped>
+/* ── 入场动画 ── */
+.rise { opacity: 0; transform: translateY(8px); animation: rise .45s cubic-bezier(.22,.68,0,1.2) forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rise { animation: none; opacity: 1; transform: none; } }
+
+/* ── 空态 ── */
+.mt-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 72px 24px;
+  background: var(--metal, linear-gradient(180deg,#15181E,#0E1014));
+  border: 1px dashed var(--line-1); border-radius: var(--q-radius, 12px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+.mt-empty-ico { font-size: 36px; opacity: .2; line-height: 1; }
+.mt-empty-title { font-size: 14px; font-weight: 600; color: var(--ink-1); margin: 0; }
+.mt-empty-hint { font-size: 12px; color: var(--ink-2); margin: 0; text-align: center; }
+.mt-empty-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 6px; padding: 7px 16px; border-radius: 10px;
+  font-size: 12.5px; font-weight: 600; text-decoration: none;
+  background: var(--metal-raised, linear-gradient(180deg,#272D37,#14171D));
+  border: 1px solid var(--line-1);
+  color: var(--ink-0);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 2px 8px rgba(0,0,0,.3);
+  transition: border-color .18s, box-shadow .18s;
+}
+.mt-empty-btn:hover { border-color: rgba(92,168,255,.45); box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 0 12px rgba(92,168,255,.18); }
+.mt-empty-btn:focus-visible { outline: none; box-shadow: var(--glow-focus); }
+.mt-empty-btn-ico { width: 14px; height: 14px; color: var(--azure); }
+
+/* ── 矩阵面板 ── */
+.mt-panel {
+  display: flex; flex-direction: column; gap: 0;
+  background: var(--metal, linear-gradient(180deg,#15181E,#0E1014));
+  border: 1px solid var(--line-0); border-radius: var(--q-radius, 12px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 22px rgba(0,0,0,.28);
+  overflow: hidden;
+}
+
+/* ── 图例 ── */
+.mt-legend {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px 7px;
+  border-bottom: 1px solid var(--line-0);
+  background: var(--bg-2);
+}
+.mt-legend-item { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--ink-2); }
+.mt-legend-sep { color: var(--ink-2); opacity: .4; font-size: 10px; }
+.mt-legend-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.mt-ok { background: var(--ok); }
+.mt-neutral { background: var(--ink-2); }
+.mt-bad { background: var(--bad); }
+
+/* ── 表格滚动容器 ── */
+.mt-scroll-wrap { overflow-x: auto; }
+
+/* ── 表格 ── */
+.mt-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mt-sticky {
+  position: sticky; left: 0; z-index: 2;
+  background: var(--metal, linear-gradient(180deg,#15181E,#0E1014));
+}
+
+/* 表头行 */
+.mt-head-row { background: var(--bg-2); border-bottom: 1px solid var(--line-0); }
+.mt-th {
+  padding: 10px 12px; font-size: 10.5px; font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase;
+  color: var(--ink-2); white-space: nowrap;
+}
+.mt-th-model { text-align: left; min-width: 200px; background: var(--bg-2); }
+.mt-th-group { text-align: center; min-width: 130px; }
+.mt-th-inner { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mt-group-name { color: var(--ink-0); font-size: 11px; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.mt-multiplier {
+  color: var(--azure); font-size: 10.5px; cursor: pointer;
+  padding: 1px 5px; border-radius: 4px;
+  border: 1px solid transparent;
+  transition: border-color .15s, background .15s;
+}
+.mt-multiplier:hover { border-color: rgba(92,168,255,.4); background: var(--azure-dim); }
+.mt-multiplier-wrap { display: flex; align-items: center; justify-content: center; }
+.mt-multiplier-input {
+  width: 62px; padding: 2px 4px; border-radius: 5px;
+  font-size: 11px; text-align: center; font-family: inherit;
+  background: var(--bg-0); border: 1px solid var(--azure);
+  color: var(--ink-0); outline: none;
+}
+
+/* platform 行组标题 */
+.mt-platform-row {
+  cursor: pointer; user-select: none;
+  background: var(--bg-2); border-top: 1px solid var(--line-0);
+}
+.mt-platform-row:hover { background: var(--bg-1); }
+.mt-platform-cell { padding: 7px 16px; }
+.mt-platform-inner { display: flex; align-items: center; gap: 8px; }
+.mt-chevron {
+  width: 14px; height: 14px; color: var(--ink-2);
+  transition: transform .2s cubic-bezier(.22,.68,0,1.2);
+  flex-shrink: 0;
+}
+@media (prefers-reduced-motion: reduce) { .mt-chevron { transition: none; } }
+.mt-collapsed { transform: rotate(-90deg); }
+.mt-platform-name {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-1);
+}
+.mt-platform-count { font-size: 10.5px; color: var(--ink-2); }
+
+/* 模型行 */
+.mt-model-row {
+  border-bottom: 1px solid var(--line-0);
+  transition: background .12s;
+}
+.mt-model-row:hover { background: rgba(255,255,255,.015); }
+.mt-model-row:hover .mt-sticky { background: rgba(22,26,33,.98); }
+.mt-td { padding: 5px 8px; vertical-align: middle; }
+.mt-td-model {
+  padding: 7px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px;
+  color: var(--ink-0); white-space: nowrap;
+}
+.mt-td-cell { text-align: center; }
+.mt-empty-cell { font-size: 11px; color: var(--ink-2); }
+
+/* 骨架 */
+.mt-skeleton { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.mt-skel-row {
+  height: 38px; border-radius: 6px;
+  background: var(--bg-2);
+  animation: skel-pulse 1.4s ease-in-out infinite;
+}
+@keyframes skel-pulse { 0%,100%{ opacity:.6 } 50%{ opacity:1 } }
+@media (prefers-reduced-motion: reduce) { .mt-skel-row { animation: none; } }
+</style>

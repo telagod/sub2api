@@ -75,6 +75,27 @@ export function usePricingMatrix() {
     } finally {
       loading.value = false
     }
+
+    // 矩阵加载后立即并发拉取所有 model 官方价（去重，并发上限 5）
+    // 这是折扣染色的数据基础，不能懒加载等 hover
+    void prefetchAllOfficialPricing()
+  }
+
+  /**
+   * 进入视口后并发预拉取所有 model 的官方价
+   * 并发上限 CONCURRENCY，去重（已缓存的跳过）
+   */
+  async function prefetchAllOfficialPricing() {
+    const CONCURRENCY = 5
+    // 收集矩阵中所有不重复 model
+    const models = [...new Set(channels.value.flatMap(c => c.model_pricing.flatMap(mp => mp.models)))]
+    // 过滤掉已缓存的
+    const todo = models.filter(m => !officialPricingCache.value[m])
+    // 分批并发
+    for (let i = 0; i < todo.length; i += CONCURRENCY) {
+      const batch = todo.slice(i, i + CONCURRENCY)
+      await Promise.allSettled(batch.map(m => ensureOfficialPricing(m)))
+    }
   }
 
   /**

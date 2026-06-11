@@ -245,20 +245,28 @@ function tabLabel(tab: string): string {
   color: var(--ink-0, #E8EBF0); font-size: 12.5px; font-family: inherit; outline: none;
   transition: border-color .15s; box-sizing: border-box;
 }
-.srg-search:focus { border-color: var(--azure, #5CA8FF); }
+.srg-search:focus,
+.srg-search:focus-visible { border-color: var(--azure, #5CA8FF); box-shadow: 0 0 0 3px rgba(92,168,255,.12); }
 
 /* toc */
 .srg-toc { display: flex; flex-direction: column; gap: 4px; }
 .srg-toc-group { display: flex; flex-direction: column; gap: 1px; margin-bottom: 8px; }
 .srg-toc-tab { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2, #5C6470); padding: 0 8px 4px; }
 .srg-toc-item {
-  display: block; padding: 5px 8px; border-radius: 6px;
+  display: block; padding: 5px 8px 5px 10px; border-radius: 6px;
   font-size: 12px; color: var(--ink-1, #97A0AF); text-decoration: none;
-  transition: background .1s, color .1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-left: 2px solid transparent;
+  transition: background .12s, color .12s, border-color .12s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .srg-toc-item:hover { background: var(--bg-2, #171A20); color: var(--ink-0, #E8EBF0); }
-.srg-toc-item.active { background: var(--bg-2, #171A20); color: var(--ink-0, #E8EBF0); }
-.srg-toc-item.highlight { color: var(--azure, #5CA8FF); }
+.srg-toc-item:focus-visible { outline: 2px solid var(--azure, #5CA8FF); outline-offset: 1px; }
+.srg-toc-item.active {
+  background: rgba(92,168,255,.08);
+  color: var(--ink-0, #E8EBF0);
+  border-left-color: var(--azure, #5CA8FF);
+}
+.srg-toc-item.highlight { color: var(--azure, #5CA8FF); font-weight: 500; }
+.srg-toc-item.active.highlight { color: var(--azure, #5CA8FF); }
 
 /* section highlight on search */
 .srg-section { transition: outline .15s; }
@@ -269,34 +277,45 @@ function tabLabel(tab: string): string {
 .srg-spinner { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line-1, #2F3540); border-top-color: var(--azure, #5CA8FF); animation: srg-spin .7s linear infinite; }
 .srg-spinner-sm { display: inline-block; width: 14px; height: 14px; border-width: 2px; vertical-align: -3px; margin-right: 6px; }
 @keyframes srg-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .srg-spinner, .srg-spinner-sm { animation: none; border-top-color: var(--azure, #5CA8FF); opacity: .7; }
+  .srg-bar-enter-active, .srg-bar-leave-active { transition: none; }
+}
 
-/* save bar */
+/* save bar — QUENCH metal surface */
 .srg-save-bar {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 16px;
-  background: var(--bg-1, #101216); border: 1px solid var(--line-1, #2F3540);
+  background: var(--metal, linear-gradient(180deg,#15181E,#0E1014));
+  border: 1px solid var(--line-1, #2F3540);
   border-radius: 12px; padding: 10px 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
+  box-shadow: var(--edge-hi, inset 0 1px 0 rgba(255,255,255,.06)), 0 12px 40px rgba(0,0,0,.65);
   z-index: 50; white-space: nowrap;
 }
-.srg-dirty-count { font-size: 12.5px; color: var(--ink-1, #97A0AF); }
+.srg-dirty-count {
+  font-size: 12.5px; color: var(--ink-1, #97A0AF);
+  font-family: var(--font-mono, "IBM Plex Mono", monospace);
+  font-variant-numeric: tabular-nums;
+}
 .srg-mono { font-family: var(--font-mono, "IBM Plex Mono", monospace); color: var(--azure, #5CA8FF); }
 .srg-bar-acts { display: flex; gap: 8px; }
 .srg-btn {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 6px 14px; border-radius: 8px;
-  border: 1px solid var(--line-1, #2F3540); background: var(--bg-2, #171A20);
-  color: var(--ink-1, #97A0AF); font-size: 12.5px; font-weight: 500;
-  cursor: pointer; font-family: inherit; transition: border-color .15s, color .15s;
+  border: 1px solid transparent; background: transparent;
+  color: var(--ink-2, #5C6470); font-size: 12.5px; font-weight: 500;
+  cursor: pointer; font-family: inherit; transition: border-color .15s, color .15s, background .15s;
 }
-.srg-btn:hover:not(:disabled) { border-color: #3D4554; color: var(--ink-0, #E8EBF0); }
-.srg-btn:disabled { opacity: .5; cursor: not-allowed; }
+.srg-btn:hover:not(:disabled) { border-color: var(--line-1, #2F3540); color: var(--ink-0, #E8EBF0); background: var(--bg-2, #171A20); }
+.srg-btn:focus-visible { outline: 2px solid var(--azure, #5CA8FF); outline-offset: 2px; }
+.srg-btn:disabled { opacity: .4; cursor: not-allowed; }
 .srg-btn-metal {
   background: var(--metal-raised, linear-gradient(180deg,#272D37,#14171D));
   border-color: rgba(255,255,255,.1); color: var(--ink-0, #E8EBF0);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  box-shadow: var(--edge-hi, inset 0 1px 0 rgba(255,255,255,.06));
 }
-.srg-btn-metal:hover:not(:disabled) { border-color: rgba(92,168,255,.4); }
+.srg-btn-metal:hover:not(:disabled) { border-color: rgba(92,168,255,.4); box-shadow: var(--edge-hi), 0 0 12px rgba(92,168,255,.14); }
+.srg-btn-metal:focus-visible { outline: 2px solid var(--azure, #5CA8FF); outline-offset: 2px; }
 
 /* bar transition */
 .srg-bar-enter-active, .srg-bar-leave-active { transition: opacity .2s, transform .2s; }
@@ -311,7 +330,8 @@ function tabLabel(tab: string): string {
   border: 1px solid rgba(92,168,255,.25);
 }
 .srg-legacy-link {
-  flex: none; font-weight: 600; color: var(--azure, #5CA8FF); text-decoration: none;
+  flex: none; font-weight: 600; color: var(--azure, #5CA8FF); text-decoration: none; border-radius: 4px;
 }
 .srg-legacy-link:hover { color: #8CC4FF; }
+.srg-legacy-link:focus-visible { outline: 2px solid var(--azure, #5CA8FF); outline-offset: 2px; }
 </style>
