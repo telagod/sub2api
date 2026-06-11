@@ -83,6 +83,12 @@ func (s *OpenAIGatewayService) ForwardAsChatCompletions(
 	upstreamModel := normalizeOpenAIModelForUpstream(account, billingModel)
 
 	promptCacheKey = strings.TrimSpace(promptCacheKey)
+	if promptCacheKey == "" {
+		// 客户端在 body 里带的 prompt_cache_key 必须存活：调用方未经
+		// header/body 提取传入时，从已解析的请求兜底，保证缓存路由与
+		// session 亲和都拿到同一把 key。
+		promptCacheKey = strings.TrimSpace(chatReq.PromptCacheKey)
+	}
 	compatPromptCacheInjected := false
 	if promptCacheKey == "" && account.Type == AccountTypeOAuth && shouldAutoInjectPromptCacheKeyForCompat(upstreamModel) {
 		promptCacheKey = deriveCompatPromptCacheKey(&chatReq, upstreamModel)
