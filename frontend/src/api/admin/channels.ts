@@ -148,6 +148,13 @@ export async function remove(id: number): Promise<void> {
   await apiClient.delete(`/admin/channels/${id}`)
 }
 
+export interface ModelDefaultPricingProvider {
+  provider: string
+  tag: string
+  input: number
+  output: number
+}
+
 export interface ModelDefaultPricing {
   found: boolean
   input_price?: number    // per-token price
@@ -155,6 +162,18 @@ export interface ModelDefaultPricing {
   cache_write_price?: number
   cache_read_price?: number
   image_output_price?: number
+  /** Price source tag, e.g. "openrouter", "litellm" */
+  source?: string
+  /** OpenRouter model slug, e.g. "openai/gpt-4o" */
+  slug?: string
+  /** Short model description */
+  description?: string
+  /** Capability tags, e.g. ["tools", "vision"] */
+  capabilities?: string[]
+  /** Maximum context window in tokens */
+  context_len?: number
+  /** Multi-provider pricing comparison (populated when source is openrouter) */
+  providers?: ModelDefaultPricingProvider[]
 }
 
 export async function getModelDefaultPricing(model: string): Promise<ModelDefaultPricing> {

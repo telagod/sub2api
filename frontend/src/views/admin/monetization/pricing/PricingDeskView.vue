@@ -29,6 +29,13 @@
         </div>
       </div>
 
+      <!-- 同步成功 toast -->
+      <Transition name="pd-toast">
+        <div v-if="syncToast" class="pd-toast rise">
+          {{ t('admin.pricingDesk.syncSuccess', { n: syncToast }) }}
+        </div>
+      </Transition>
+
       <!-- 错误提示 -->
       <div v-if="error" class="pd-error rise">
         {{ t('admin.pricingDesk.loadFailed') }}{{ error }}
@@ -41,8 +48,11 @@
         :active-groups="activeGroups"
         :matrix="matrix"
         :official-pricing-cache="officialPricingCache as Record<string, OfficialPricing | 'loading'>"
+        :sync-loading="syncLoading"
         @hover-model="ensureOfficialPricing"
         @update-multiplier="handleUpdateMultiplier"
+        @sync-catalog="handleSyncCatalog"
+        @open-detail="handleOpenDetail"
       />
 
       <!-- 价格模拟器抽屉 -->
@@ -55,6 +65,14 @@
         @close="simulatorVisible = false"
         @need-official-pricing="ensureOfficialPricing"
       />
+
+      <!-- 供应商核对抽屉 -->
+      <ProviderVerifyDrawer
+        :open="detailDrawerVisible"
+        :slug="detailSlug"
+        :model-name="detailModel"
+        @close="detailDrawerVisible = false"
+      />
     </div>
   </AppLayout>
 </template>
@@ -66,6 +84,7 @@ import { RefreshCwIcon, CalculatorIcon } from 'lucide-vue-next'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import MatrixTable from './MatrixTable.vue'
 import PriceSimulator from './PriceSimulator.vue'
+import ProviderVerifyDrawer from './ProviderVerifyDrawer.vue'
 import { usePricingMatrix } from './usePricingMatrix'
 import type { OfficialPricing } from './usePricingMatrix'
 
@@ -79,10 +98,21 @@ const {
   officialPricingCache,
   fetchAll,
   ensureOfficialPricing,
-  updateGroupMultiplier
+  updateGroupMultiplier,
+  syncCatalog
 } = usePricingMatrix()
 
 const simulatorVisible = ref(false)
+
+// 供应商核对抽屉状态
+const detailDrawerVisible = ref(false)
+const detailSlug = ref('')
+const detailModel = ref('')
+
+// 同步目录状态
+const syncLoading = ref(false)
+const syncToast = ref<number | null>(null)
+let syncToastTimer: ReturnType<typeof setTimeout> | null = null
 
 onMounted(() => fetchAll())
 
@@ -92,6 +122,28 @@ async function handleUpdateMultiplier(groupId: number, value: number) {
   } catch (e) {
     console.error('更新倍率失败', e)
   }
+}
+
+async function handleSyncCatalog() {
+  if (syncLoading.value) return
+  syncLoading.value = true
+  try {
+    const result = await syncCatalog()
+    // 展示 toast
+    syncToast.value = result.synced
+    if (syncToastTimer) clearTimeout(syncToastTimer)
+    syncToastTimer = setTimeout(() => { syncToast.value = null }, 3500)
+  } catch (e) {
+    console.error('同步目录失败', e)
+  } finally {
+    syncLoading.value = false
+  }
+}
+
+function handleOpenDetail(payload: { slug: string; model: string }) {
+  detailSlug.value = payload.slug
+  detailModel.value = payload.model
+  detailDrawerVisible.value = true
 }
 </script>
 
@@ -139,4 +191,15 @@ async function handleUpdateMultiplier(groupId: number, value: number) {
   padding: 10px 14px; border-radius: 10px; font-size: 12.5px;
   background: var(--bad-dim); border: 1px solid var(--bad); color: var(--bad);
 }
+
+/* ── 同步成功 toast ── */
+.pd-toast {
+  padding: 9px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+  background: var(--ok-dim, rgba(52,199,89,.12)); border: 1px solid var(--ok, #34c759);
+  color: var(--ok, #34c759);
+}
+.pd-toast-enter-active { transition: opacity .22s, transform .22s; }
+.pd-toast-leave-active { transition: opacity .35s; }
+.pd-toast-enter-from { opacity: 0; transform: translateY(-6px); }
+.pd-toast-leave-to { opacity: 0; }
 </style>

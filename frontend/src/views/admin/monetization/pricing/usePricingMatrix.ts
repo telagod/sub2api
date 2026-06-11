@@ -13,6 +13,7 @@
 import { ref, computed } from 'vue'
 import channelsAPI from '@/api/admin/channels'
 import groupsAPI from '@/api/admin/groups'
+import modelCatalogAPI from '@/api/admin/modelCatalog'
 import type { Channel, ChannelModelPricing } from '@/api/admin/channels'
 import type { AdminGroup } from '@/types'
 
@@ -41,6 +42,14 @@ export interface OfficialPricing {
   outputPrice?: number
   cacheWritePrice?: number
   cacheReadPrice?: number
+  /** Price source tag, e.g. "openrouter", "litellm" */
+  source?: string
+  /** OpenRouter model slug, e.g. "openai/gpt-4o" */
+  slug?: string
+  /** Short model description */
+  description?: string
+  /** Number of providers available (from providers array length) */
+  providerCount?: number
 }
 
 export function usePricingMatrix() {
@@ -121,7 +130,11 @@ export function usePricingMatrix() {
         inputPrice: resp.input_price,
         outputPrice: resp.output_price,
         cacheWritePrice: resp.cache_write_price,
-        cacheReadPrice: resp.cache_read_price
+        cacheReadPrice: resp.cache_read_price,
+        source: resp.source,
+        slug: resp.slug,
+        description: resp.description,
+        providerCount: resp.providers?.length ?? 0
       }
       officialPricingCache.value[model] = result
       return result
@@ -130,6 +143,18 @@ export function usePricingMatrix() {
       officialPricingCache.value[model] = result
       return result
     }
+  }
+
+  /**
+   * 同步全目录多供应商价格（POST /admin/model-catalog/sync）
+   * 成功后失效当前官方价缓存，触发重新拉取
+   */
+  async function syncCatalog(): Promise<{ synced: number }> {
+    const result = await modelCatalogAPI.syncCatalog()
+    // 失效缓存：强制下次 hover/prefetch 时重新拉取
+    officialPricingCache.value = {}
+    void prefetchAllOfficialPricing()
+    return result
   }
 
   /**
@@ -252,6 +277,7 @@ export function usePricingMatrix() {
     officialPricingCache,
     fetchAll,
     ensureOfficialPricing,
-    updateGroupMultiplier
+    updateGroupMultiplier,
+    syncCatalog
   }
 }
