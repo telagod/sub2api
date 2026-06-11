@@ -504,7 +504,7 @@ func (s *PaymentService) buildPaymentSubject(plan *dbent.SubscriptionPlan, limit
 	if plan != nil {
 		productName := plan.ProductName
 		if productName == "" {
-			productName = "Sub2API Subscription " + plan.Name
+			productName = "subme Subscription " + plan.Name
 		}
 		return affixProductName(productName, cfg)
 	}
@@ -516,7 +516,7 @@ func (s *PaymentService) buildPaymentSubject(plan *dbent.SubscriptionPlan, limit
 	if hasPaymentProductNameAffixV2(cfg) {
 		return affixProductName(amountStr, cfg)
 	}
-	return "Sub2API " + amountStr + " " + currency
+	return "subme " + amountStr + " " + currency
 }
 
 func hasPaymentProductNameAffixV2(cfg *PaymentConfig) bool {

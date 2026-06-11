@@ -1818,11 +1818,11 @@ func buildNotificationVars(entry *ContentModerationLog, conf *ContentModerationC
 // resolveSiteName retrieves the configured site name, falling back to a default.
 func (s *ContentModerationService) resolveSiteName(ctx context.Context) string {
 	if s == nil || s.settingRepo == nil {
-		return "Sub2API"
+		return "subme"
 	}
 	val, fetchErr := s.settingRepo.GetValue(ctx, SettingKeySiteName)
 	if fetchErr != nil || strings.TrimSpace(val) == "" {
-		return "Sub2API"
+		return "subme"
 	}
 	return strings.TrimSpace(val)
 }

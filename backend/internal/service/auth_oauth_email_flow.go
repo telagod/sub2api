@@ -41,7 +41,7 @@ func (s *AuthService) SendPendingOAuthVerifyCode(ctx context.Context, email stri
 		return nil, ErrServiceUnavailable
 	}
 
-	displayName := "Sub2API"
+	displayName := "subme"
 	if s.settingService != nil {
 		displayName = s.settingService.GetSiteName(ctx)
 	}
