@@ -514,7 +514,10 @@ func (h *ChannelHandler) GetModelDefaultPricing(c *gin.Context) {
 						"cache_write_price": cacheWrite,
 						"cache_read_price":  cacheRead,
 						"source":            srcTag,
+						"slug":              entry.ID, // 供前端深链 /model-catalog/detail?model=slug
 						"description":       entry.Description,
+						"capabilities":      entry.Capabilities,
+						"context_len":       entry.ContextLen,
 						"providers":         providerSummary,
 					})
 					return
