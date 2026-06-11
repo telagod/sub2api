@@ -81,10 +81,28 @@ export default {
           800: '#1a1c1e', // surface
           900: '#121315', // elevated bg
           950: '#0a0a0b' // page bg
+        },
+
+        // ── QUENCH: 淬火蓝色阶（焦点 / 活性 / 实时） ──
+        azure: {
+          50: '#eef6ff',
+          100: '#d8ecff',
+          200: '#b3d9ff',
+          300: '#8CC4FF',
+          400: '#6eb5ff',
+          DEFAULT: '#5CA8FF',
+          500: '#5CA8FF',
+          600: '#3D91F0',
+          700: '#2676d6',
+          800: '#1a5cad',
+          900: '#154a8a',
+          950: '#0c2d57',
+          dim: 'rgba(92,168,255,.12)'
         }
       },
       fontFamily: {
         sans: [
+          'Archivo',
           'Inter',
           'system-ui',
           '-apple-system',
@@ -98,7 +116,7 @@ export default {
           'Microsoft YaHei',
           'sans-serif'
         ],
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+        mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
       },
       borderRadius: {
         // 收紧圆角，硬朗金属感；lg/md/sm 绑定 --radius 供 shadcn 组件
@@ -122,7 +140,11 @@ export default {
         'glow-lg': '0 0 0 1px rgba(255,255,255,.12)',
         card: '0 1px 2px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.4)',
         'card-hover': '0 2px 4px rgba(0,0,0,.6), 0 12px 32px rgba(0,0,0,.5)',
-        'inner-glow': 'inset 0 1px 0 rgba(255,255,255,.10)'
+        'inner-glow': 'inset 0 1px 0 rgba(255,255,255,.10)',
+
+        // ── QUENCH: 淬火焦点光晕 & 边缘高光 ──
+        'glow-focus': '0 0 0 1.5px rgba(92,168,255,.65), 0 0 20px rgba(92,168,255,.28)',
+        'edge-hi': 'inset 0 1px 0 rgba(255,255,255,.06)'
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

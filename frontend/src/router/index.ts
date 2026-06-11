@@ -513,6 +513,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/proxies-v2',
+    name: 'AdminProxiesV2',
+    component: () => import('@/views/admin/ProxiesV2View.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: '代理管理 V2',
+      titleKey: 'admin.proxies.title',
+      descriptionKey: 'admin.proxies.description'
+    }
+  },
+  {
     path: '/admin/redeem',
     name: 'AdminRedeem',
     component: () => import('@/views/admin/RedeemView.vue'),
