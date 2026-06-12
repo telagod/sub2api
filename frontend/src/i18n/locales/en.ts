@@ -6465,7 +6465,33 @@ export default {
         redirectUrlSetAndCopied: 'Redirect URL generated and copied to clipboard',
         frontendRedirectUrlLabel: 'Frontend redirect URL',
         frontendRedirectUrlPlaceholder: '/auth/wechat/callback',
-        frontendRedirectUrlHint: 'Usually the frontend route callback path; keep it aligned with the backend.'
+        frontendRedirectUrlHint: 'Usually the frontend route callback path; keep it aligned with the backend.',
+        redirectUrlHint: 'Used by PC App and Official Account browser callbacks. Native mobile SDK flows do not start from this browser callback directly.',
+        unionIdWarning: 'When PC App is enabled together with Official Account or Mobile App, they should belong to the same WeChat Open Platform account so UnionID can merge identities reliably.',
+        open: {
+          title: 'PC App',
+          description: 'Desktop browsers sign in through WeChat Open Platform QR login. This can coexist with Official Account or Mobile App.',
+          appId: 'PC App ID',
+          appIdPlaceholder: 'WeChat Open Platform PC App ID',
+          appSecret: 'PC App Secret',
+          appSecretPlaceholder: 'WeChat Open Platform PC App Secret'
+        },
+        mp: {
+          title: 'Official Account',
+          description: 'Only available inside the WeChat browser. It is shown as unavailable outside WeChat.',
+          appId: 'Official Account App ID',
+          appIdPlaceholder: 'Official Account App ID',
+          appSecret: 'Official Account App Secret',
+          appSecretPlaceholder: 'Official Account App Secret'
+        },
+        mobile: {
+          title: 'Mobile App',
+          description: 'Native mobile clients start authorization through the WeChat SDK. The web UI does not launch this flow directly.',
+          appId: 'Mobile App ID',
+          appIdPlaceholder: 'Mobile App ID',
+          appSecret: 'Mobile App Secret',
+          appSecretPlaceholder: 'Mobile App Secret'
+        }
       },
       authSourceDefaults: {
         title: 'Auth Source Defaults',
@@ -7167,7 +7193,7 @@ export default {
 
     settingsRegistry: {
       searchPlaceholder: 'Search settings...',
-      legacyNote: 'Some advanced settings (WeChat/DingTalk/OIDC integration, gateway cooldown & rate-limit policies, custom menu, Admin API Key, etc.) have not yet been migrated to the new settings center.',
+      legacyNote: 'Some advanced settings (gateway cooldown & rate-limit policies, Admin API Key, Web Search providers, full auth-source defaults matrix, affiliate custom users, etc.) have not yet been migrated to the new settings center.',
       legacyLink: 'Go to Legacy Settings →',
       dirtyCount: '{n} unsaved change(s)',
       discardBtn: 'Discard',

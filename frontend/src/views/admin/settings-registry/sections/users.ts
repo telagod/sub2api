@@ -4,6 +4,7 @@
  *
  * Flat form. bindings in this tab:
  *   default_balance, default_concurrency, default_user_rpm_limit              ✓ migrated
+ *   force_email_on_third_party_signup                                         ✓ migrated (authSourceDefaults card)
  *
  * Backlog — not schema-able:
  *   form.default_subscriptions          — dynamic multi-item list with custom GroupBadge/GroupOptionItem Select widgets
@@ -43,9 +44,27 @@ const userDefaults: SettingsSection = {
   ],
 }
 
-// force_email_on_third_party_signup is managed by security.ts (security.registration section).
-// The authSourceDefaults card (grant_on_signup, per-source balance /
-// concurrency / subscriptions / platform_quotas) is non-flat reactive state and
-// is backlogged for a section.component migration.
+/**
+ * Auth source defaults — flat gate that controls whether third-party signups
+ * must supply an email address.
+ *
+ * Sources: SettingsView.vue activeTab === 'users', authSourceDefaults card (line 3356).
+ * The per-auth-source reactive matrix (grant_on_signup, balance, concurrency,
+ * subscriptions, platform_quotas) is non-flat and backlogged for section.component.
+ */
+const authSourceDefaults: SettingsSection = {
+  id: 'users.authSourceDefaults',
+  tab: 'users',
+  title: 'admin.settings.authSourceDefaults.title',
+  description: 'admin.settings.authSourceDefaults.description',
+  fields: [
+    {
+      key: 'force_email_on_third_party_signup',
+      label: 'admin.settings.authSourceDefaults.requireEmailLabel',
+      type: 'switch',
+      help: 'admin.settings.authSourceDefaults.requireEmailHint',
+    },
+  ],
+}
 
-export default [userDefaults] as SettingsSection[]
+export default [userDefaults, authSourceDefaults] as SettingsSection[]

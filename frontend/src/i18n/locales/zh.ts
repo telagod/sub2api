@@ -6633,7 +6633,33 @@ export default {
         redirectUrlSetAndCopied: '已使用当前站点生成回调地址并复制到剪贴板',
         frontendRedirectUrlLabel: '前端回调地址',
         frontendRedirectUrlPlaceholder: '/auth/wechat/callback',
-        frontendRedirectUrlHint: '通常用于前端路由回调地址，需与后端配置保持一致。'
+        frontendRedirectUrlHint: '通常用于前端路由回调地址，需与后端配置保持一致。',
+        redirectUrlHint: '用于 PC 应用和公众号的网页回调。移动应用走原生 SDK 时不直接使用这个浏览器回调。',
+        unionIdWarning: '如果同时启用 PC 应用和公众号/移动应用，这些应用需要挂在同一个微信开放平台主体下，否则 UnionID 无法稳定归并账号。',
+        open: {
+          title: 'PC 应用',
+          description: '桌面浏览器通过微信开放平台扫码登录。可与公众号或移动应用同时存在。',
+          appId: 'PC AppID',
+          appIdPlaceholder: '微信开放平台 PC 应用 AppID',
+          appSecret: 'PC AppSecret',
+          appSecretPlaceholder: '微信开放平台 PC 应用 AppSecret'
+        },
+        mp: {
+          title: '公众号',
+          description: '仅在微信内浏览器可用；非微信环境下会显示不可用。',
+          appId: '公众号 AppID',
+          appIdPlaceholder: '公众号 AppID',
+          appSecret: '公众号 AppSecret',
+          appSecretPlaceholder: '公众号 AppSecret'
+        },
+        mobile: {
+          title: '移动应用',
+          description: '原生移动端通过微信 SDK 唤起授权，网页端不会直接发起该流程。',
+          appId: '移动应用 AppID',
+          appIdPlaceholder: '移动应用 AppID',
+          appSecret: '移动应用 AppSecret',
+          appSecretPlaceholder: '移动应用 AppSecret'
+        }
       },
       authSourceDefaults: {
         title: '认证来源默认值',
@@ -7350,7 +7376,7 @@ export default {
 
     settingsRegistry: {
       searchPlaceholder: '搜索设置...',
-      legacyNote: '部分高级配置（微信/钉钉/OIDC 接入、网关冷却与限流策略、自定义菜单、Admin API Key 等）尚未迁入新设置中心。',
+      legacyNote: '部分高级配置（网关冷却与限流策略、Admin API Key、Web Search 搜索服务商、认证来源默认值完整矩阵、邀请返利自定义用户等）尚未迁入新设置中心。',
       legacyLink: '前往旧版设置 →',
       dirtyCount: '已修改 {n} 项',
       discardBtn: '放弃',

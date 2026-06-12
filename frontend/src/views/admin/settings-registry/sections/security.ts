@@ -25,40 +25,35 @@ const registration: SettingsSection = {
       type: 'switch',
       help: 'admin.settings.registration.emailVerificationHint',
     },
-    {
-      // Tag-input widget — FieldRenderer renders a plain textarea; the full tag
-      // UI is backlogged for a custom field component.
-      key: 'registration_email_suffix_whitelist',
-      label: 'admin.settings.registration.emailSuffixWhitelist',
-      type: 'json',
-      help: 'admin.settings.registration.emailSuffixWhitelistHint',
-    },
+    // registration_email_suffix_whitelist is rendered by security.emailWhitelist
+    // (EmailSuffixWhitelistSection.vue) registered in sections/emailWhitelist.ts.
     {
       key: 'promo_code_enabled',
       label: 'admin.settings.registration.promoCode',
       type: 'switch',
+      help: 'admin.settings.registration.promoCodeHint',
     },
     {
       key: 'invitation_code_enabled',
       label: 'admin.settings.registration.invitationCode',
       type: 'switch',
+      help: 'admin.settings.registration.invitationCodeHint',
     },
     {
       key: 'password_reset_enabled',
       label: 'admin.settings.registration.passwordReset',
       type: 'switch',
+      help: 'admin.settings.registration.passwordResetHint',
+      showWhen: (v) => !!v['email_verify_enabled'],
     },
     {
       key: 'totp_enabled',
-      label: 'admin.settings.security.totp',
+      label: 'admin.settings.registration.totp',
       type: 'switch',
-      help: 'admin.settings.security.totpHint',
+      help: 'admin.settings.registration.totpHint',
     },
-    {
-      key: 'force_email_on_third_party_signup',
-      label: 'admin.settings.security.forceEmailOnThirdPartySignup',
-      type: 'switch',
-    },
+    // force_email_on_third_party_signup lives in the Users tab in SettingsView
+    // (authSourceDefaults card, line 3356) — registered in sections/users.ts.
     {
       key: 'api_key_acl_trust_forwarded_ip',
       label: 'admin.settings.security.trustForwardedIp',

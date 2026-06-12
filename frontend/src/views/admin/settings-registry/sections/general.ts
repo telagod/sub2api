@@ -103,7 +103,7 @@ const tablePreferences: SettingsSection = {
   ],
 }
 
-// custom_menu_items and custom_endpoints have complex interactive UIs;
-// they are kept in SettingsView.vue and backlogged for custom component migration.
+// custom_menu_items and custom_endpoints are handled by general.customMenu
+// (CustomMenuSection.vue) which is registered in sections/customMenu.ts.
 
 export default [siteBranding, tablePreferences] as SettingsSection[]
