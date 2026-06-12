@@ -20,6 +20,7 @@ import (
 	"github.com/telagod/subme/ent/group"
 	"github.com/telagod/subme/ent/idempotencyrecord"
 	"github.com/telagod/subme/ent/identityadoptiondecision"
+	"github.com/telagod/subme/ent/modelpriceoverride"
 	"github.com/telagod/subme/ent/paymentauditlog"
 	"github.com/telagod/subme/ent/paymentorder"
 	"github.com/telagod/subme/ent/paymentproviderinstance"
@@ -948,6 +949,44 @@ func init() {
 	identityadoptiondecisionDescDecidedAt := identityadoptiondecisionFields[4].Descriptor()
 	// identityadoptiondecision.DefaultDecidedAt holds the default value on creation for the decided_at field.
 	identityadoptiondecision.DefaultDecidedAt = identityadoptiondecisionDescDecidedAt.Default.(func() time.Time)
+	modelpriceoverrideFields := schema.ModelPriceOverride{}.Fields()
+	_ = modelpriceoverrideFields
+	// modelpriceoverrideDescModelID is the schema descriptor for model_id field.
+	modelpriceoverrideDescModelID := modelpriceoverrideFields[0].Descriptor()
+	// modelpriceoverride.ModelIDValidator is a validator for the "model_id" field. It is called by the builders before save.
+	modelpriceoverride.ModelIDValidator = func() func(string) error {
+		validators := modelpriceoverrideDescModelID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(model_id string) error {
+			for _, fn := range fns {
+				if err := fn(model_id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// modelpriceoverrideDescPinnedProviderTag is the schema descriptor for pinned_provider_tag field.
+	modelpriceoverrideDescPinnedProviderTag := modelpriceoverrideFields[1].Descriptor()
+	// modelpriceoverride.PinnedProviderTagValidator is a validator for the "pinned_provider_tag" field. It is called by the builders before save.
+	modelpriceoverride.PinnedProviderTagValidator = modelpriceoverrideDescPinnedProviderTag.Validators[0].(func(string) error)
+	// modelpriceoverrideDescNote is the schema descriptor for note field.
+	modelpriceoverrideDescNote := modelpriceoverrideFields[6].Descriptor()
+	// modelpriceoverride.NoteValidator is a validator for the "note" field. It is called by the builders before save.
+	modelpriceoverride.NoteValidator = modelpriceoverrideDescNote.Validators[0].(func(string) error)
+	// modelpriceoverrideDescCreatedAt is the schema descriptor for created_at field.
+	modelpriceoverrideDescCreatedAt := modelpriceoverrideFields[8].Descriptor()
+	// modelpriceoverride.DefaultCreatedAt holds the default value on creation for the created_at field.
+	modelpriceoverride.DefaultCreatedAt = modelpriceoverrideDescCreatedAt.Default.(func() time.Time)
+	// modelpriceoverrideDescUpdatedAt is the schema descriptor for updated_at field.
+	modelpriceoverrideDescUpdatedAt := modelpriceoverrideFields[9].Descriptor()
+	// modelpriceoverride.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	modelpriceoverride.DefaultUpdatedAt = modelpriceoverrideDescUpdatedAt.Default.(func() time.Time)
+	// modelpriceoverride.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	modelpriceoverride.UpdateDefaultUpdatedAt = modelpriceoverrideDescUpdatedAt.UpdateDefault.(func() time.Time)
 	paymentauditlogFields := schema.PaymentAuditLog{}.Fields()
 	_ = paymentauditlogFields
 	// paymentauditlogDescOrderID is the schema descriptor for order_id field.

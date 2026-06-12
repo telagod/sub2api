@@ -27,6 +27,7 @@ import (
 	"github.com/telagod/subme/ent/group"
 	"github.com/telagod/subme/ent/idempotencyrecord"
 	"github.com/telagod/subme/ent/identityadoptiondecision"
+	"github.com/telagod/subme/ent/modelpriceoverride"
 	"github.com/telagod/subme/ent/paymentauditlog"
 	"github.com/telagod/subme/ent/paymentorder"
 	"github.com/telagod/subme/ent/paymentproviderinstance"
@@ -122,6 +123,7 @@ func checkColumn(t, c string) error {
 			group.Table:                         group.ValidColumn,
 			idempotencyrecord.Table:             idempotencyrecord.ValidColumn,
 			identityadoptiondecision.Table:      identityadoptiondecision.ValidColumn,
+			modelpriceoverride.Table:            modelpriceoverride.ValidColumn,
 			paymentauditlog.Table:               paymentauditlog.ValidColumn,
 			paymentorder.Table:                  paymentorder.ValidColumn,
 			paymentproviderinstance.Table:       paymentproviderinstance.ValidColumn,

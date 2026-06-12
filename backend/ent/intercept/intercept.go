@@ -23,6 +23,7 @@ import (
 	"github.com/telagod/subme/ent/group"
 	"github.com/telagod/subme/ent/idempotencyrecord"
 	"github.com/telagod/subme/ent/identityadoptiondecision"
+	"github.com/telagod/subme/ent/modelpriceoverride"
 	"github.com/telagod/subme/ent/paymentauditlog"
 	"github.com/telagod/subme/ent/paymentorder"
 	"github.com/telagod/subme/ent/paymentproviderinstance"
@@ -505,6 +506,33 @@ func (f TraverseIdentityAdoptionDecision) Traverse(ctx context.Context, q ent.Qu
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.IdentityAdoptionDecisionQuery", q)
+}
+
+// The ModelPriceOverrideFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ModelPriceOverrideFunc func(context.Context, *ent.ModelPriceOverrideQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ModelPriceOverrideFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ModelPriceOverrideQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ModelPriceOverrideQuery", q)
+}
+
+// The TraverseModelPriceOverride type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseModelPriceOverride func(context.Context, *ent.ModelPriceOverrideQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseModelPriceOverride) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseModelPriceOverride) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ModelPriceOverrideQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ModelPriceOverrideQuery", q)
 }
 
 // The PaymentAuditLogFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -1080,6 +1108,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.IdempotencyRecordQuery, predicate.IdempotencyRecord, idempotencyrecord.OrderOption]{typ: ent.TypeIdempotencyRecord, tq: q}, nil
 	case *ent.IdentityAdoptionDecisionQuery:
 		return &query[*ent.IdentityAdoptionDecisionQuery, predicate.IdentityAdoptionDecision, identityadoptiondecision.OrderOption]{typ: ent.TypeIdentityAdoptionDecision, tq: q}, nil
+	case *ent.ModelPriceOverrideQuery:
+		return &query[*ent.ModelPriceOverrideQuery, predicate.ModelPriceOverride, modelpriceoverride.OrderOption]{typ: ent.TypeModelPriceOverride, tq: q}, nil
 	case *ent.PaymentAuditLogQuery:
 		return &query[*ent.PaymentAuditLogQuery, predicate.PaymentAuditLog, paymentauditlog.OrderOption]{typ: ent.TypePaymentAuditLog, tq: q}, nil
 	case *ent.PaymentOrderQuery:

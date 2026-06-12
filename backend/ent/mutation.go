@@ -27,6 +27,7 @@ import (
 	"github.com/telagod/subme/ent/group"
 	"github.com/telagod/subme/ent/idempotencyrecord"
 	"github.com/telagod/subme/ent/identityadoptiondecision"
+	"github.com/telagod/subme/ent/modelpriceoverride"
 	"github.com/telagod/subme/ent/paymentauditlog"
 	"github.com/telagod/subme/ent/paymentorder"
 	"github.com/telagod/subme/ent/paymentproviderinstance"
@@ -75,6 +76,7 @@ const (
 	TypeGroup                         = "Group"
 	TypeIdempotencyRecord             = "IdempotencyRecord"
 	TypeIdentityAdoptionDecision      = "IdentityAdoptionDecision"
+	TypeModelPriceOverride            = "ModelPriceOverride"
 	TypePaymentAuditLog               = "PaymentAuditLog"
 	TypePaymentOrder                  = "PaymentOrder"
 	TypePaymentProviderInstance       = "PaymentProviderInstance"
@@ -20195,6 +20197,1127 @@ func (m *IdentityAdoptionDecisionMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown IdentityAdoptionDecision edge %s", name)
+}
+
+// ModelPriceOverrideMutation represents an operation that mutates the ModelPriceOverride nodes in the graph.
+type ModelPriceOverrideMutation struct {
+	config
+	op                    Op
+	typ                   string
+	id                    *int64
+	model_id              *string
+	pinned_provider_tag   *string
+	manual_input          *float64
+	addmanual_input       *float64
+	manual_output         *float64
+	addmanual_output      *float64
+	manual_cache_read     *float64
+	addmanual_cache_read  *float64
+	manual_cache_write    *float64
+	addmanual_cache_write *float64
+	note                  *string
+	updated_by            *int64
+	addupdated_by         *int64
+	created_at            *time.Time
+	updated_at            *time.Time
+	clearedFields         map[string]struct{}
+	done                  bool
+	oldValue              func(context.Context) (*ModelPriceOverride, error)
+	predicates            []predicate.ModelPriceOverride
+}
+
+var _ ent.Mutation = (*ModelPriceOverrideMutation)(nil)
+
+// modelpriceoverrideOption allows management of the mutation configuration using functional options.
+type modelpriceoverrideOption func(*ModelPriceOverrideMutation)
+
+// newModelPriceOverrideMutation creates new mutation for the ModelPriceOverride entity.
+func newModelPriceOverrideMutation(c config, op Op, opts ...modelpriceoverrideOption) *ModelPriceOverrideMutation {
+	m := &ModelPriceOverrideMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeModelPriceOverride,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withModelPriceOverrideID sets the ID field of the mutation.
+func withModelPriceOverrideID(id int64) modelpriceoverrideOption {
+	return func(m *ModelPriceOverrideMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ModelPriceOverride
+		)
+		m.oldValue = func(ctx context.Context) (*ModelPriceOverride, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ModelPriceOverride.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withModelPriceOverride sets the old ModelPriceOverride of the mutation.
+func withModelPriceOverride(node *ModelPriceOverride) modelpriceoverrideOption {
+	return func(m *ModelPriceOverrideMutation) {
+		m.oldValue = func(context.Context) (*ModelPriceOverride, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ModelPriceOverrideMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ModelPriceOverrideMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ModelPriceOverrideMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ModelPriceOverrideMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ModelPriceOverride.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetModelID sets the "model_id" field.
+func (m *ModelPriceOverrideMutation) SetModelID(s string) {
+	m.model_id = &s
+}
+
+// ModelID returns the value of the "model_id" field in the mutation.
+func (m *ModelPriceOverrideMutation) ModelID() (r string, exists bool) {
+	v := m.model_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModelID returns the old "model_id" field's value of the ModelPriceOverride entity.
+// If the ModelPriceOverride object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelPriceOverrideMutation) OldModelID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModelID: %w", err)
+	}
+	return oldValue.ModelID, nil
+}
+
+// ResetModelID resets all changes to the "model_id" field.
+func (m *ModelPriceOverrideMutation) ResetModelID() {
+	m.model_id = nil
+}
+
+// SetPinnedProviderTag sets the "pinned_provider_tag" field.
+func (m *ModelPriceOverrideMutation) SetPinnedProviderTag(s string) {
+	m.pinned_provider_tag = &s
+}
+
+// PinnedProviderTag returns the value of the "pinned_provider_tag" field in the mutation.
+func (m *ModelPriceOverrideMutation) PinnedProviderTag() (r string, exists bool) {
+	v := m.pinned_provider_tag
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPinnedProviderTag returns the old "pinned_provider_tag" field's value of the ModelPriceOverride entity.
+// If the ModelPriceOverride object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelPriceOverrideMutation) OldPinnedProviderTag(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPinnedProviderTag is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPinnedProviderTag requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPinnedProviderTag: %w", err)
+	}
+	return oldValue.PinnedProviderTag, nil
+}
+
+// ClearPinnedProviderTag clears the value of the "pinned_provider_tag" field.
+func (m *ModelPriceOverrideMutation) ClearPinnedProviderTag() {
+	m.pinned_provider_tag = nil
+	m.clearedFields[modelpriceoverride.FieldPinnedProviderTag] = struct{}{}
+}
+
+// PinnedProviderTagCleared returns if the "pinned_provider_tag" field was cleared in this mutation.
+func (m *ModelPriceOverrideMutation) PinnedProviderTagCleared() bool {
+	_, ok := m.clearedFields[modelpriceoverride.FieldPinnedProviderTag]
+	return ok
+}
+
+// ResetPinnedProviderTag resets all changes to the "pinned_provider_tag" field.
+func (m *ModelPriceOverrideMutation) ResetPinnedProviderTag() {
+	m.pinned_provider_tag = nil
+	delete(m.clearedFields, modelpriceoverride.FieldPinnedProviderTag)
+}
+
+// SetManualInput sets the "manual_input" field.
+func (m *ModelPriceOverrideMutation) SetManualInput(f float64) {
+	m.manual_input = &f
+	m.addmanual_input = nil
+}
+
+// ManualInput returns the value of the "manual_input" field in the mutation.
+func (m *ModelPriceOverrideMutation) ManualInput() (r float64, exists bool) {
+	v := m.manual_input
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldManualInput returns the old "manual_input" field's value of the ModelPriceOverride entity.
+// If the ModelPriceOverride object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelPriceOverrideMutation) OldManualInput(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldManualInput is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldManualInput requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldManualInput: %w", err)
+	}
+	return oldValue.ManualInput, nil
+}
+
+// AddManualInput adds f to the "manual_input" field.
+func (m *ModelPriceOverrideMutation) AddManualInput(f float64) {
+	if m.addmanual_input != nil {
+		*m.addmanual_input += f
+	} else {
+		m.addmanual_input = &f
+	}
+}
+
+// AddedManualInput returns the value that was added to the "manual_input" field in this mutation.
+func (m *ModelPriceOverrideMutation) AddedManualInput() (r float64, exists bool) {
+	v := m.addmanual_input
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearManualInput clears the value of the "manual_input" field.
+func (m *ModelPriceOverrideMutation) ClearManualInput() {
+	m.manual_input = nil
+	m.addmanual_input = nil
+	m.clearedFields[modelpriceoverride.FieldManualInput] = struct{}{}
+}
+
+// ManualInputCleared returns if the "manual_input" field was cleared in this mutation.
+func (m *ModelPriceOverrideMutation) ManualInputCleared() bool {
+	_, ok := m.clearedFields[modelpriceoverride.FieldManualInput]
+	return ok
+}
+
+// ResetManualInput resets all changes to the "manual_input" field.
+func (m *ModelPriceOverrideMutation) ResetManualInput() {
+	m.manual_input = nil
+	m.addmanual_input = nil
+	delete(m.clearedFields, modelpriceoverride.FieldManualInput)
+}
+
+// SetManualOutput sets the "manual_output" field.
+func (m *ModelPriceOverrideMutation) SetManualOutput(f float64) {
+	m.manual_output = &f
+	m.addmanual_output = nil
+}
+
+// ManualOutput returns the value of the "manual_output" field in the mutation.
+func (m *ModelPriceOverrideMutation) ManualOutput() (r float64, exists bool) {
+	v := m.manual_output
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldManualOutput returns the old "manual_output" field's value of the ModelPriceOverride entity.
+// If the ModelPriceOverride object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelPriceOverrideMutation) OldManualOutput(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldManualOutput is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldManualOutput requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldManualOutput: %w", err)
+	}
+	return oldValue.ManualOutput, nil
+}
+
+// AddManualOutput adds f to the "manual_output" field.
+func (m *ModelPriceOverrideMutation) AddManualOutput(f float64) {
+	if m.addmanual_output != nil {
+		*m.addmanual_output += f
+	} else {
+		m.addmanual_output = &f
+	}
+}
+
+// AddedManualOutput returns the value that was added to the "manual_output" field in this mutation.
+func (m *ModelPriceOverrideMutation) AddedManualOutput() (r float64, exists bool) {
+	v := m.addmanual_output
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearManualOutput clears the value of the "manual_output" field.
+func (m *ModelPriceOverrideMutation) ClearManualOutput() {
+	m.manual_output = nil
+	m.addmanual_output = nil
+	m.clearedFields[modelpriceoverride.FieldManualOutput] = struct{}{}
+}
+
+// ManualOutputCleared returns if the "manual_output" field was cleared in this mutation.
+func (m *ModelPriceOverrideMutation) ManualOutputCleared() bool {
+	_, ok := m.clearedFields[modelpriceoverride.FieldManualOutput]
+	return ok
+}
+
+// ResetManualOutput resets all changes to the "manual_output" field.
+func (m *ModelPriceOverrideMutation) ResetManualOutput() {
+	m.manual_output = nil
+	m.addmanual_output = nil
+	delete(m.clearedFields, modelpriceoverride.FieldManualOutput)
+}
+
+// SetManualCacheRead sets the "manual_cache_read" field.
+func (m *ModelPriceOverrideMutation) SetManualCacheRead(f float64) {
+	m.manual_cache_read = &f
+	m.addmanual_cache_read = nil
+}
+
+// ManualCacheRead returns the value of the "manual_cache_read" field in the mutation.
+func (m *ModelPriceOverrideMutation) ManualCacheRead() (r float64, exists bool) {
+	v := m.manual_cache_read
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldManualCacheRead returns the old "manual_cache_read" field's value of the ModelPriceOverride entity.
+// If the ModelPriceOverride object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelPriceOverrideMutation) OldManualCacheRead(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldManualCacheRead is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldManualCacheRead requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldManualCacheRead: %w", err)
+	}
+	return oldValue.ManualCacheRead, nil
+}
+
+// AddManualCacheRead adds f to the "manual_cache_read" field.
+func (m *ModelPriceOverrideMutation) AddManualCacheRead(f float64) {
+	if m.addmanual_cache_read != nil {
+		*m.addmanual_cache_read += f
+	} else {
+		m.addmanual_cache_read = &f
+	}
+}
+
+// AddedManualCacheRead returns the value that was added to the "manual_cache_read" field in this mutation.
+func (m *ModelPriceOverrideMutation) AddedManualCacheRead() (r float64, exists bool) {
+	v := m.addmanual_cache_read
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearManualCacheRead clears the value of the "manual_cache_read" field.
+func (m *ModelPriceOverrideMutation) ClearManualCacheRead() {
+	m.manual_cache_read = nil
+	m.addmanual_cache_read = nil
+	m.clearedFields[modelpriceoverride.FieldManualCacheRead] = struct{}{}
+}
+
+// ManualCacheReadCleared returns if the "manual_cache_read" field was cleared in this mutation.
+func (m *ModelPriceOverrideMutation) ManualCacheReadCleared() bool {
+	_, ok := m.clearedFields[modelpriceoverride.FieldManualCacheRead]
+	return ok
+}
+
+// ResetManualCacheRead resets all changes to the "manual_cache_read" field.
+func (m *ModelPriceOverrideMutation) ResetManualCacheRead() {
+	m.manual_cache_read = nil
+	m.addmanual_cache_read = nil
+	delete(m.clearedFields, modelpriceoverride.FieldManualCacheRead)
+}
+
+// SetManualCacheWrite sets the "manual_cache_write" field.
+func (m *ModelPriceOverrideMutation) SetManualCacheWrite(f float64) {
+	m.manual_cache_write = &f
+	m.addmanual_cache_write = nil
+}
+
+// ManualCacheWrite returns the value of the "manual_cache_write" field in the mutation.
+func (m *ModelPriceOverrideMutation) ManualCacheWrite() (r float64, exists bool) {
+	v := m.manual_cache_write
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldManualCacheWrite returns the old "manual_cache_write" field's value of the ModelPriceOverride entity.
+// If the ModelPriceOverride object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelPriceOverrideMutation) OldManualCacheWrite(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldManualCacheWrite is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldManualCacheWrite requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldManualCacheWrite: %w", err)
+	}
+	return oldValue.ManualCacheWrite, nil
+}
+
+// AddManualCacheWrite adds f to the "manual_cache_write" field.
+func (m *ModelPriceOverrideMutation) AddManualCacheWrite(f float64) {
+	if m.addmanual_cache_write != nil {
+		*m.addmanual_cache_write += f
+	} else {
+		m.addmanual_cache_write = &f
+	}
+}
+
+// AddedManualCacheWrite returns the value that was added to the "manual_cache_write" field in this mutation.
+func (m *ModelPriceOverrideMutation) AddedManualCacheWrite() (r float64, exists bool) {
+	v := m.addmanual_cache_write
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearManualCacheWrite clears the value of the "manual_cache_write" field.
+func (m *ModelPriceOverrideMutation) ClearManualCacheWrite() {
+	m.manual_cache_write = nil
+	m.addmanual_cache_write = nil
+	m.clearedFields[modelpriceoverride.FieldManualCacheWrite] = struct{}{}
+}
+
+// ManualCacheWriteCleared returns if the "manual_cache_write" field was cleared in this mutation.
+func (m *ModelPriceOverrideMutation) ManualCacheWriteCleared() bool {
+	_, ok := m.clearedFields[modelpriceoverride.FieldManualCacheWrite]
+	return ok
+}
+
+// ResetManualCacheWrite resets all changes to the "manual_cache_write" field.
+func (m *ModelPriceOverrideMutation) ResetManualCacheWrite() {
+	m.manual_cache_write = nil
+	m.addmanual_cache_write = nil
+	delete(m.clearedFields, modelpriceoverride.FieldManualCacheWrite)
+}
+
+// SetNote sets the "note" field.
+func (m *ModelPriceOverrideMutation) SetNote(s string) {
+	m.note = &s
+}
+
+// Note returns the value of the "note" field in the mutation.
+func (m *ModelPriceOverrideMutation) Note() (r string, exists bool) {
+	v := m.note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNote returns the old "note" field's value of the ModelPriceOverride entity.
+// If the ModelPriceOverride object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelPriceOverrideMutation) OldNote(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNote: %w", err)
+	}
+	return oldValue.Note, nil
+}
+
+// ClearNote clears the value of the "note" field.
+func (m *ModelPriceOverrideMutation) ClearNote() {
+	m.note = nil
+	m.clearedFields[modelpriceoverride.FieldNote] = struct{}{}
+}
+
+// NoteCleared returns if the "note" field was cleared in this mutation.
+func (m *ModelPriceOverrideMutation) NoteCleared() bool {
+	_, ok := m.clearedFields[modelpriceoverride.FieldNote]
+	return ok
+}
+
+// ResetNote resets all changes to the "note" field.
+func (m *ModelPriceOverrideMutation) ResetNote() {
+	m.note = nil
+	delete(m.clearedFields, modelpriceoverride.FieldNote)
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *ModelPriceOverrideMutation) SetUpdatedBy(i int64) {
+	m.updated_by = &i
+	m.addupdated_by = nil
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *ModelPriceOverrideMutation) UpdatedBy() (r int64, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the ModelPriceOverride entity.
+// If the ModelPriceOverride object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelPriceOverrideMutation) OldUpdatedBy(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// AddUpdatedBy adds i to the "updated_by" field.
+func (m *ModelPriceOverrideMutation) AddUpdatedBy(i int64) {
+	if m.addupdated_by != nil {
+		*m.addupdated_by += i
+	} else {
+		m.addupdated_by = &i
+	}
+}
+
+// AddedUpdatedBy returns the value that was added to the "updated_by" field in this mutation.
+func (m *ModelPriceOverrideMutation) AddedUpdatedBy() (r int64, exists bool) {
+	v := m.addupdated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *ModelPriceOverrideMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.addupdated_by = nil
+	m.clearedFields[modelpriceoverride.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *ModelPriceOverrideMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[modelpriceoverride.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *ModelPriceOverrideMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	m.addupdated_by = nil
+	delete(m.clearedFields, modelpriceoverride.FieldUpdatedBy)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ModelPriceOverrideMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ModelPriceOverrideMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ModelPriceOverride entity.
+// If the ModelPriceOverride object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelPriceOverrideMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ModelPriceOverrideMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ModelPriceOverrideMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ModelPriceOverrideMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ModelPriceOverride entity.
+// If the ModelPriceOverride object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelPriceOverrideMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ModelPriceOverrideMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the ModelPriceOverrideMutation builder.
+func (m *ModelPriceOverrideMutation) Where(ps ...predicate.ModelPriceOverride) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ModelPriceOverrideMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ModelPriceOverrideMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ModelPriceOverride, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ModelPriceOverrideMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ModelPriceOverrideMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ModelPriceOverride).
+func (m *ModelPriceOverrideMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ModelPriceOverrideMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.model_id != nil {
+		fields = append(fields, modelpriceoverride.FieldModelID)
+	}
+	if m.pinned_provider_tag != nil {
+		fields = append(fields, modelpriceoverride.FieldPinnedProviderTag)
+	}
+	if m.manual_input != nil {
+		fields = append(fields, modelpriceoverride.FieldManualInput)
+	}
+	if m.manual_output != nil {
+		fields = append(fields, modelpriceoverride.FieldManualOutput)
+	}
+	if m.manual_cache_read != nil {
+		fields = append(fields, modelpriceoverride.FieldManualCacheRead)
+	}
+	if m.manual_cache_write != nil {
+		fields = append(fields, modelpriceoverride.FieldManualCacheWrite)
+	}
+	if m.note != nil {
+		fields = append(fields, modelpriceoverride.FieldNote)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, modelpriceoverride.FieldUpdatedBy)
+	}
+	if m.created_at != nil {
+		fields = append(fields, modelpriceoverride.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, modelpriceoverride.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ModelPriceOverrideMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case modelpriceoverride.FieldModelID:
+		return m.ModelID()
+	case modelpriceoverride.FieldPinnedProviderTag:
+		return m.PinnedProviderTag()
+	case modelpriceoverride.FieldManualInput:
+		return m.ManualInput()
+	case modelpriceoverride.FieldManualOutput:
+		return m.ManualOutput()
+	case modelpriceoverride.FieldManualCacheRead:
+		return m.ManualCacheRead()
+	case modelpriceoverride.FieldManualCacheWrite:
+		return m.ManualCacheWrite()
+	case modelpriceoverride.FieldNote:
+		return m.Note()
+	case modelpriceoverride.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case modelpriceoverride.FieldCreatedAt:
+		return m.CreatedAt()
+	case modelpriceoverride.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ModelPriceOverrideMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case modelpriceoverride.FieldModelID:
+		return m.OldModelID(ctx)
+	case modelpriceoverride.FieldPinnedProviderTag:
+		return m.OldPinnedProviderTag(ctx)
+	case modelpriceoverride.FieldManualInput:
+		return m.OldManualInput(ctx)
+	case modelpriceoverride.FieldManualOutput:
+		return m.OldManualOutput(ctx)
+	case modelpriceoverride.FieldManualCacheRead:
+		return m.OldManualCacheRead(ctx)
+	case modelpriceoverride.FieldManualCacheWrite:
+		return m.OldManualCacheWrite(ctx)
+	case modelpriceoverride.FieldNote:
+		return m.OldNote(ctx)
+	case modelpriceoverride.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case modelpriceoverride.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case modelpriceoverride.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ModelPriceOverride field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModelPriceOverrideMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case modelpriceoverride.FieldModelID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModelID(v)
+		return nil
+	case modelpriceoverride.FieldPinnedProviderTag:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPinnedProviderTag(v)
+		return nil
+	case modelpriceoverride.FieldManualInput:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetManualInput(v)
+		return nil
+	case modelpriceoverride.FieldManualOutput:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetManualOutput(v)
+		return nil
+	case modelpriceoverride.FieldManualCacheRead:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetManualCacheRead(v)
+		return nil
+	case modelpriceoverride.FieldManualCacheWrite:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetManualCacheWrite(v)
+		return nil
+	case modelpriceoverride.FieldNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNote(v)
+		return nil
+	case modelpriceoverride.FieldUpdatedBy:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case modelpriceoverride.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case modelpriceoverride.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ModelPriceOverride field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ModelPriceOverrideMutation) AddedFields() []string {
+	var fields []string
+	if m.addmanual_input != nil {
+		fields = append(fields, modelpriceoverride.FieldManualInput)
+	}
+	if m.addmanual_output != nil {
+		fields = append(fields, modelpriceoverride.FieldManualOutput)
+	}
+	if m.addmanual_cache_read != nil {
+		fields = append(fields, modelpriceoverride.FieldManualCacheRead)
+	}
+	if m.addmanual_cache_write != nil {
+		fields = append(fields, modelpriceoverride.FieldManualCacheWrite)
+	}
+	if m.addupdated_by != nil {
+		fields = append(fields, modelpriceoverride.FieldUpdatedBy)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ModelPriceOverrideMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case modelpriceoverride.FieldManualInput:
+		return m.AddedManualInput()
+	case modelpriceoverride.FieldManualOutput:
+		return m.AddedManualOutput()
+	case modelpriceoverride.FieldManualCacheRead:
+		return m.AddedManualCacheRead()
+	case modelpriceoverride.FieldManualCacheWrite:
+		return m.AddedManualCacheWrite()
+	case modelpriceoverride.FieldUpdatedBy:
+		return m.AddedUpdatedBy()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModelPriceOverrideMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case modelpriceoverride.FieldManualInput:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddManualInput(v)
+		return nil
+	case modelpriceoverride.FieldManualOutput:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddManualOutput(v)
+		return nil
+	case modelpriceoverride.FieldManualCacheRead:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddManualCacheRead(v)
+		return nil
+	case modelpriceoverride.FieldManualCacheWrite:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddManualCacheWrite(v)
+		return nil
+	case modelpriceoverride.FieldUpdatedBy:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUpdatedBy(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ModelPriceOverride numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ModelPriceOverrideMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(modelpriceoverride.FieldPinnedProviderTag) {
+		fields = append(fields, modelpriceoverride.FieldPinnedProviderTag)
+	}
+	if m.FieldCleared(modelpriceoverride.FieldManualInput) {
+		fields = append(fields, modelpriceoverride.FieldManualInput)
+	}
+	if m.FieldCleared(modelpriceoverride.FieldManualOutput) {
+		fields = append(fields, modelpriceoverride.FieldManualOutput)
+	}
+	if m.FieldCleared(modelpriceoverride.FieldManualCacheRead) {
+		fields = append(fields, modelpriceoverride.FieldManualCacheRead)
+	}
+	if m.FieldCleared(modelpriceoverride.FieldManualCacheWrite) {
+		fields = append(fields, modelpriceoverride.FieldManualCacheWrite)
+	}
+	if m.FieldCleared(modelpriceoverride.FieldNote) {
+		fields = append(fields, modelpriceoverride.FieldNote)
+	}
+	if m.FieldCleared(modelpriceoverride.FieldUpdatedBy) {
+		fields = append(fields, modelpriceoverride.FieldUpdatedBy)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ModelPriceOverrideMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ModelPriceOverrideMutation) ClearField(name string) error {
+	switch name {
+	case modelpriceoverride.FieldPinnedProviderTag:
+		m.ClearPinnedProviderTag()
+		return nil
+	case modelpriceoverride.FieldManualInput:
+		m.ClearManualInput()
+		return nil
+	case modelpriceoverride.FieldManualOutput:
+		m.ClearManualOutput()
+		return nil
+	case modelpriceoverride.FieldManualCacheRead:
+		m.ClearManualCacheRead()
+		return nil
+	case modelpriceoverride.FieldManualCacheWrite:
+		m.ClearManualCacheWrite()
+		return nil
+	case modelpriceoverride.FieldNote:
+		m.ClearNote()
+		return nil
+	case modelpriceoverride.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	}
+	return fmt.Errorf("unknown ModelPriceOverride nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ModelPriceOverrideMutation) ResetField(name string) error {
+	switch name {
+	case modelpriceoverride.FieldModelID:
+		m.ResetModelID()
+		return nil
+	case modelpriceoverride.FieldPinnedProviderTag:
+		m.ResetPinnedProviderTag()
+		return nil
+	case modelpriceoverride.FieldManualInput:
+		m.ResetManualInput()
+		return nil
+	case modelpriceoverride.FieldManualOutput:
+		m.ResetManualOutput()
+		return nil
+	case modelpriceoverride.FieldManualCacheRead:
+		m.ResetManualCacheRead()
+		return nil
+	case modelpriceoverride.FieldManualCacheWrite:
+		m.ResetManualCacheWrite()
+		return nil
+	case modelpriceoverride.FieldNote:
+		m.ResetNote()
+		return nil
+	case modelpriceoverride.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case modelpriceoverride.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case modelpriceoverride.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ModelPriceOverride field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ModelPriceOverrideMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ModelPriceOverrideMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ModelPriceOverrideMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ModelPriceOverrideMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ModelPriceOverrideMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ModelPriceOverrideMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ModelPriceOverrideMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown ModelPriceOverride unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ModelPriceOverrideMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown ModelPriceOverride edge %s", name)
 }
 
 // PaymentAuditLogMutation represents an operation that mutates the PaymentAuditLog nodes in the graph.
