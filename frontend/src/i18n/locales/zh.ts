@@ -5680,6 +5680,7 @@ export default {
           customUsers: {
             title: '专属用户配置',
             description: '为指定用户设置专属邀请码或专属返利比例。仅展示已设置过专属配置的用户。',
+            disabledHint: '请先启用返利功能，再管理专属用户配置。',
             addButton: '添加专属用户',
             searchPlaceholder: '搜索邮箱或用户名',
             batchButton: '批量设置比例（已选 {count}）',
@@ -7392,8 +7393,6 @@ export default {
 
     settingsRegistry: {
       searchPlaceholder: '搜索设置...',
-      legacyNote: '部分复杂面板（默认订阅列表、平台配额矩阵、认证来源各源完整配额矩阵、返利自定义用户 CRUD）尚未迁入新设置中心。',
-      legacyLink: '前往旧版设置 →',
       dirtyCount: '已修改 {n} 项',
       discardBtn: '放弃',
       savingBtn: '保存中…',

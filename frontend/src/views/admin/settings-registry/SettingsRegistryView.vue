@@ -38,11 +38,6 @@
 
           <!-- Right scroll area -->
           <main class="srg-main" ref="mainEl" @scroll="onMainScroll">
-            <!-- 未迁移配置的 legacy 入口（迁移完成后移除） -->
-            <div class="srg-legacy-note">
-              <span>{{ t('admin.settingsRegistry.legacyNote') }}</span>
-              <router-link to="/admin/settings/legacy" class="srg-legacy-link">{{ t('admin.settingsRegistry.legacyLink') }}</router-link>
-            </div>
             <template v-for="[, sections] in visibleSectionsByTab" :key="sections[0]?.tab">
               <SectionRenderer
                 v-for="section in sections"
@@ -130,8 +125,32 @@ function onFieldUpdate(key: string, value: unknown) {
   form.value = { ...form.value, [key]: value }
 }
 
+// 默认订阅/认证源订阅：同一分组不可重复（迁自旧 SettingsView 的
+// findDuplicateDefaultSubscription 保存前校验，重复则拦截不提交）。
+function duplicateGroupId(list: unknown): unknown {
+  if (!Array.isArray(list)) return undefined
+  const seen = new Set<unknown>()
+  for (const item of list) {
+    const gid = (item as { group_id?: unknown } | null)?.group_id
+    if (gid == null) continue
+    if (seen.has(gid)) return gid
+    seen.add(gid)
+  }
+  return undefined
+}
+
 // ── save / discard ─────────────────────────────────────────────────────────
 async function saveChanges() {
+  // 重复订阅校验：default_subscriptions 与各认证源 *_subscriptions 数组。
+  for (const key of Object.keys(form.value)) {
+    if (key === 'default_subscriptions' || key.endsWith('_subscriptions')) {
+      const dup = duplicateGroupId(form.value[key])
+      if (dup != null) {
+        appStore.showError(t('admin.settings.defaults.defaultSubscriptionsDuplicate', { groupId: dup }))
+        return
+      }
+    }
+  }
   const patch: Record<string, unknown> = {}
   for (const key of Object.keys(form.value)) {
     if (JSON.stringify(form.value[key]) !== JSON.stringify(savedSettings.value[key])) {
@@ -151,7 +170,11 @@ async function saveChanges() {
 }
 
 function discardChanges() {
-  form.value = { ...savedSettings.value }
+  // Reassign both refs so that components watching props.settings also re-sync
+  // (their watch fires only when the savedSettings reference changes).
+  const snapshot = { ...savedSettings.value }
+  savedSettings.value = snapshot
+  form.value = snapshot
 }
 
 // ── search ─────────────────────────────────────────────────────────────────
@@ -321,17 +344,4 @@ function tabLabel(tab: string): string {
 .srg-bar-enter-active, .srg-bar-leave-active { transition: opacity .2s, transform .2s; }
 .srg-bar-enter-from, .srg-bar-leave-to { opacity: 0; transform: translateX(-50%) translateY(8px); }
 
-/* legacy 入口横幅（迁移完成后随入口一并移除） */
-.srg-legacy-note {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  padding: 10px 16px; margin-bottom: 16px; border-radius: 10px;
-  font-size: 12.5px; color: var(--ink-1, #97A0AF);
-  background: var(--info-dim, rgba(92,168,255,.12));
-  border: 1px solid rgba(92,168,255,.25);
-}
-.srg-legacy-link {
-  flex: none; font-weight: 600; color: var(--azure, #5CA8FF); text-decoration: none; border-radius: 4px;
-}
-.srg-legacy-link:hover { color: #8CC4FF; }
-.srg-legacy-link:focus-visible { outline: 2px solid var(--azure, #5CA8FF); outline-offset: 2px; }
 </style>

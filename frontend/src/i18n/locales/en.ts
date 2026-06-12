@@ -5507,6 +5507,7 @@ export default {
           customUsers: {
             title: 'Per-User Overrides',
             description: 'Set a custom invite code or exclusive rebate rate for specific users. Lists only users that have an override applied.',
+            disabledHint: 'Enable the Affiliate feature first to manage per-user overrides.',
             addButton: 'Add Custom User',
             searchPlaceholder: 'Search by email or username',
             batchButton: 'Batch Set Rate ({count} selected)',
@@ -7209,8 +7210,6 @@ export default {
 
     settingsRegistry: {
       searchPlaceholder: 'Search settings...',
-      legacyNote: 'A few complex panels (default subscription list, platform quota matrix, per-auth-source defaults matrix, affiliate custom-users CRUD) have not yet been migrated to the new settings center.',
-      legacyLink: 'Go to Legacy Settings →',
       dirtyCount: '{n} unsaved change(s)',
       discardBtn: 'Discard',
       savingBtn: 'Saving…',
