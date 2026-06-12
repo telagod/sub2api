@@ -39,6 +39,19 @@ export interface CatalogModelBaseline {
   source?: string
 }
 
+/** Current override record for a model (returned by GET /detail and PUT /override) */
+export interface ModelPriceOverride {
+  model_id: string
+  pinned_provider_tag?: string
+  manual_input?: number | null
+  manual_output?: number | null
+  manual_cache_read?: number | null
+  manual_cache_write?: number | null
+  note?: string
+  updated_by?: number
+  updated_at: string
+}
+
 export interface CatalogModelDetail {
   /** OpenRouter model slug (e.g. "openai/gpt-4o") */
   id: string
@@ -54,8 +67,12 @@ export interface CatalogModelDetail {
   capabilities?: string[]
   /** All available providers for this model */
   providers: CatalogProvider[]
-  /** Baseline (official) pricing from OpenRouter */
+  /** Baseline (official) pricing — override-applied final value */
   baseline?: CatalogModelBaseline
+  /** Whether an override record exists in the DB */
+  overridden?: boolean
+  /** Current override record (null/absent = no override) */
+  override?: ModelPriceOverride | null
 }
 
 export interface SyncModelCatalogResult {
@@ -111,11 +128,42 @@ export async function listModelCatalog(): Promise<CatalogModelListItem[]> {
   return data
 }
 
+/** PUT /admin/model-catalog/override — create or update a price override */
+export interface UpsertOverridePayload {
+  model_id: string
+  pinned_provider_tag?: string
+  /** per-token (USD) — UI collects per-MTok, divide by 1e6 before sending */
+  manual_input?: number | null
+  manual_output?: number | null
+  manual_cache_read?: number | null
+  manual_cache_write?: number | null
+  note?: string
+}
+
+/**
+ * Create or update a model price override.
+ * Returns the saved override record.
+ */
+export async function putModelOverride(payload: UpsertOverridePayload): Promise<ModelPriceOverride> {
+  const { data } = await apiClient.put<ModelPriceOverride>('/admin/model-catalog/override', payload)
+  return data
+}
+
+/**
+ * Delete a model price override, restoring auto pricing.
+ * @param model_id - OpenRouter model slug / model_id
+ */
+export async function deleteModelOverride(model_id: string): Promise<void> {
+  await apiClient.delete('/admin/model-catalog/override', { params: { model: model_id } })
+}
+
 const modelCatalogAPI = {
   getModelCatalogDetail,
   syncModelEndpoints,
   syncCatalog,
-  listModelCatalog
+  listModelCatalog,
+  putModelOverride,
+  deleteModelOverride
 }
 
 export default modelCatalogAPI

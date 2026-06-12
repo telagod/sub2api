@@ -158,6 +158,16 @@ export function usePricingMatrix() {
   }
 
   /**
+   * 失效单个 model 的官方价缓存并立即重新拉取
+   * 在覆盖保存 / 删除后调用，确保计价台展示最新基准。
+   */
+  async function invalidateOfficialPricingForModel(model: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete officialPricingCache.value[model]
+    await ensureOfficialPricing(model)
+  }
+
+  /**
    * 矩阵行列计算：行=model，列=group
    * 一个 model 可能被多个渠道覆盖；取最后一个匹配渠道（与渠道列表顺序一致）
    */
@@ -278,6 +288,7 @@ export function usePricingMatrix() {
     fetchAll,
     ensureOfficialPricing,
     updateGroupMultiplier,
-    syncCatalog
+    syncCatalog,
+    invalidateOfficialPricingForModel
   }
 }

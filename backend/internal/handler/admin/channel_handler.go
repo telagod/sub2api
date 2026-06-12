@@ -15,15 +15,16 @@ import (
 
 // ChannelHandler handles admin channel management
 type ChannelHandler struct {
-	channelService *service.ChannelService
-	billingService *service.BillingService
-	pricingService *service.PricingService
-	catalogService *service.OpenRouterCatalogService // 展示用途：前端自动填充官方价，绝不用于真实计费
+	channelService  *service.ChannelService
+	billingService  *service.BillingService
+	pricingService  *service.PricingService
+	catalogService  *service.OpenRouterCatalogService // 展示用途：前端自动填充官方价，绝不用于真实计费
+	overResolver    *service.OverrideResolver         // 覆盖解析器（展示用途）
 }
 
 // NewChannelHandler creates a new admin channel handler
-func NewChannelHandler(channelService *service.ChannelService, billingService *service.BillingService, pricingService *service.PricingService, catalogService *service.OpenRouterCatalogService) *ChannelHandler {
-	return &ChannelHandler{channelService: channelService, billingService: billingService, pricingService: pricingService, catalogService: catalogService}
+func NewChannelHandler(channelService *service.ChannelService, billingService *service.BillingService, pricingService *service.PricingService, catalogService *service.OpenRouterCatalogService, overResolver *service.OverrideResolver) *ChannelHandler {
+	return &ChannelHandler{channelService: channelService, billingService: billingService, pricingService: pricingService, catalogService: catalogService, overResolver: overResolver}
 }
 
 // --- Request / Response types ---
@@ -490,13 +491,33 @@ func (h *ChannelHandler) GetModelDefaultPricing(c *gin.Context) {
 	}
 	platform := strings.TrimSpace(c.Query("platform"))
 
-	// ── 优先路径：OpenRouter 官方价（展示用途）──
+	// ── 优先路径：OpenRouter 官方价（含覆盖，展示用途）──
 	if h.catalogService != nil {
 		catalog := h.catalogService.List()
 		if len(catalog) > 0 {
 			if slug, ok := service.MatchModelSlug(model, platform, catalog); ok {
 				if entry := h.catalogService.Get(slug); entry != nil {
-					inp, out, cacheRead, cacheWrite, srcTag := entry.BaselinePrice()
+					// 通过 resolver 应用覆盖（若无覆盖，resolver 直接返回 auto baseline）
+					var inp, out, cacheRead, cacheWrite float64
+					var srcTag string
+					var overridden bool
+
+					if h.overResolver != nil {
+						resolved, err := h.overResolver.ResolveBaseline(c.Request.Context(), slug, platform)
+						if err == nil && resolved != nil {
+							inp = resolved.Input
+							out = resolved.Output
+							cacheRead = resolved.CacheRead
+							cacheWrite = resolved.CacheWrite
+							srcTag = resolved.Source
+							overridden = resolved.Overridden
+						} else {
+							inp, out, cacheRead, cacheWrite, srcTag = entry.BaselinePrice()
+						}
+					} else {
+						inp, out, cacheRead, cacheWrite, srcTag = entry.BaselinePrice()
+					}
+
 					// 整理 providers 摘要（精简列表，前端展示用）
 					providerSummary := make([]gin.H, 0, len(entry.Providers))
 					for _, p := range entry.Providers {
@@ -514,6 +535,7 @@ func (h *ChannelHandler) GetModelDefaultPricing(c *gin.Context) {
 						"cache_write_price": cacheWrite,
 						"cache_read_price":  cacheRead,
 						"source":            srcTag,
+						"overridden":        overridden,
 						"slug":              entry.ID, // 供前端深链 /model-catalog/detail?model=slug
 						"description":       entry.Description,
 						"capabilities":      entry.Capabilities,

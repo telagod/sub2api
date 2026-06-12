@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/telagod/subme/internal/pkg/response"
+	"github.com/telagod/subme/internal/server/middleware"
 	"github.com/telagod/subme/internal/service"
 )
 
@@ -21,14 +22,20 @@ type catalogProvider interface {
 	LastUpdated() time.Time
 }
 
-// ModelCatalogHandler 处理模型目录的只读查询与同步触发。
+// ModelCatalogHandler 处理模型目录的只读查询与同步触发，以及价格覆盖管理。
 type ModelCatalogHandler struct {
-	catalog catalogProvider
+	catalog   catalogProvider
+	overRepo  service.ModelOverrideRepository
+	resolver  *service.OverrideResolver
 }
 
 // NewModelCatalogHandler 构造函数；catalog 参数为 *service.OpenRouterCatalogService。
-func NewModelCatalogHandler(catalog *service.OpenRouterCatalogService) *ModelCatalogHandler {
-	return &ModelCatalogHandler{catalog: catalog}
+func NewModelCatalogHandler(
+	catalog *service.OpenRouterCatalogService,
+	overRepo service.ModelOverrideRepository,
+	resolver *service.OverrideResolver,
+) *ModelCatalogHandler {
+	return &ModelCatalogHandler{catalog: catalog, overRepo: overRepo, resolver: resolver}
 }
 
 // ── DTO ──
@@ -51,7 +58,7 @@ type catalogListItemDTO struct {
 	Capabilities  []string           `json:"capabilities"`
 	Baseline      catalogBaselineDTO `json:"baseline"`
 	ProviderCount int                `json:"provider_count"`
-	HasOverride   bool               `json:"has_override"` // 占位，当前恒 false
+	HasOverride   bool               `json:"has_override"` // 是否存在价格覆盖记录
 }
 
 // catalogProviderDTO 供应商价格（详情页）。
@@ -74,8 +81,34 @@ type catalogDetailDTO struct {
 	ContextLen   int                  `json:"context_len"`
 	Modalities   []string             `json:"modalities"`
 	Capabilities []string             `json:"capabilities"`
-	Baseline     catalogBaselineDTO   `json:"baseline"`
+	Baseline     catalogBaselineDTO   `json:"baseline"`    // 已应用覆盖后的最终基准
 	Providers    []catalogProviderDTO `json:"providers"`
+	Overridden   bool                 `json:"overridden"`            // 是否存在覆盖记录
+	Override     *overrideDTO         `json:"override,omitempty"`    // 当前覆盖记录（nil = 无）
+}
+
+// overrideDTO 覆盖记录摘要（展示用）。
+type overrideDTO struct {
+	ModelID           string   `json:"model_id"`
+	PinnedProviderTag string   `json:"pinned_provider_tag,omitempty"`
+	ManualInput       *float64 `json:"manual_input,omitempty"`
+	ManualOutput      *float64 `json:"manual_output,omitempty"`
+	ManualCacheRead   *float64 `json:"manual_cache_read,omitempty"`
+	ManualCacheWrite  *float64 `json:"manual_cache_write,omitempty"`
+	Note              string   `json:"note,omitempty"`
+	UpdatedBy         int64    `json:"updated_by,omitempty"`
+	UpdatedAt         string   `json:"updated_at"`
+}
+
+// upsertOverrideRequest PUT /admin/model-catalog/override 请求体。
+type upsertOverrideRequest struct {
+	ModelID           string   `json:"model_id" binding:"required,max=200"`
+	PinnedProviderTag string   `json:"pinned_provider_tag,omitempty"`
+	ManualInput       *float64 `json:"manual_input,omitempty"`
+	ManualOutput      *float64 `json:"manual_output,omitempty"`
+	ManualCacheRead   *float64 `json:"manual_cache_read,omitempty"`
+	ManualCacheWrite  *float64 `json:"manual_cache_write,omitempty"`
+	Note              string   `json:"note,omitempty"`
 }
 
 // catalogListResponse GET /admin/model-catalog 响应体。
@@ -135,6 +168,17 @@ func toProviderDTO(p service.CatalogProviderPrice) catalogProviderDTO {
 // ListModels GET /admin/model-catalog
 // 返回全量目录摘要列表 + last_updated。
 func (h *ModelCatalogHandler) ListModels(c *gin.Context) {
+	// 预加载所有 override 记录，构建 model_id → bool 快查集合，避免 N+1。
+	overrideSet := make(map[string]bool)
+	if h.overRepo != nil {
+		if overrides, err := h.overRepo.List(c.Request.Context()); err == nil {
+			for _, o := range overrides {
+				overrideSet[o.ModelID] = true
+			}
+		}
+		// List 失败时静默降级：has_override 均为 false，不阻断目录展示。
+	}
+
 	models := h.catalog.List()
 	items := make([]catalogListItemDTO, 0, len(models))
 	for i := range models {
@@ -147,7 +191,7 @@ func (h *ModelCatalogHandler) ListModels(c *gin.Context) {
 			Capabilities:  m.Capabilities,
 			Baseline:      toBaselineDTO(m),
 			ProviderCount: len(m.Providers),
-			HasOverride:   false,
+			HasOverride:   overrideSet[m.ID],
 		})
 	}
 
@@ -164,7 +208,7 @@ func (h *ModelCatalogHandler) ListModels(c *gin.Context) {
 }
 
 // GetModel GET /admin/model-catalog/detail?model=<slug>
-// 返回单模型全量详情；slug 走 query 参数（slug 含斜杠，gin 路径段不能承载 %2F）。
+// 返回单模型全量详情，含覆盖应用后的最终基准 + override 当前值。
 func (h *ModelCatalogHandler) GetModel(c *gin.Context) {
 	slug := strings.TrimSpace(c.Query("model"))
 	if slug == "" {
@@ -183,6 +227,28 @@ func (h *ModelCatalogHandler) GetModel(c *gin.Context) {
 		providers = append(providers, toProviderDTO(p))
 	}
 
+	// 尝试应用覆盖（resolver 内部做 catalog 命中校验，失败降级为原始 baseline）
+	baseline := toBaselineDTO(m)
+	overridden := false
+	var overDTO *overrideDTO
+
+	if h.resolver != nil {
+		resolved, err := h.resolver.ResolveBaseline(c.Request.Context(), slug, "")
+		if err == nil && resolved != nil {
+			baseline = catalogBaselineDTO{
+				Input:      resolved.Input,
+				Output:     resolved.Output,
+				CacheRead:  resolved.CacheRead,
+				CacheWrite: resolved.CacheWrite,
+				Source:     resolved.Source,
+			}
+			overridden = resolved.Overridden
+			if resolved.Override != nil {
+				overDTO = toOverrideDTO(resolved.Override)
+			}
+		}
+	}
+
 	response.Success(c, catalogDetailDTO{
 		ID:           m.ID,
 		Name:         m.Name,
@@ -190,9 +256,83 @@ func (h *ModelCatalogHandler) GetModel(c *gin.Context) {
 		ContextLen:   m.ContextLen,
 		Modalities:   m.Modalities,
 		Capabilities: m.Capabilities,
-		Baseline:     toBaselineDTO(m),
+		Baseline:     baseline,
 		Providers:    providers,
+		Overridden:   overridden,
+		Override:     overDTO,
 	})
+}
+
+// UpsertOverride PUT /admin/model-catalog/override
+// 创建或更新模型价格覆盖；updated_by 取当前 admin 用户 ID。
+func (h *ModelCatalogHandler) UpsertOverride(c *gin.Context) {
+	var req upsertOverrideRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request: "+err.Error())
+		return
+	}
+
+	var updatedBy int64
+	if subj, ok := middleware.GetAuthSubjectFromContext(c); ok {
+		updatedBy = subj.UserID
+	}
+
+	o := &service.ModelPriceOverride{
+		ModelID:           req.ModelID,
+		PinnedProviderTag: req.PinnedProviderTag,
+		ManualInput:       req.ManualInput,
+		ManualOutput:      req.ManualOutput,
+		ManualCacheRead:   req.ManualCacheRead,
+		ManualCacheWrite:  req.ManualCacheWrite,
+		Note:              req.Note,
+		UpdatedBy:         updatedBy,
+	}
+
+	if err := h.overRepo.Upsert(c.Request.Context(), o); err != nil {
+		response.Error(c, http.StatusInternalServerError, "upsert override failed: "+err.Error())
+		return
+	}
+
+	// 返回最新记录
+	saved, err := h.overRepo.Get(c.Request.Context(), req.ModelID)
+	if err != nil || saved == nil {
+		response.Success(c, gin.H{"ok": true})
+		return
+	}
+	response.Success(c, toOverrideDTO(saved))
+}
+
+// DeleteOverride DELETE /admin/model-catalog/override?model=<id>
+// 删除覆盖，恢复自动定价。
+func (h *ModelCatalogHandler) DeleteOverride(c *gin.Context) {
+	modelID := strings.TrimSpace(c.Query("model"))
+	if modelID == "" {
+		response.Error(c, http.StatusBadRequest, "model query parameter is required")
+		return
+	}
+
+	if err := h.overRepo.Delete(c.Request.Context(), modelID); err != nil {
+		response.Error(c, http.StatusInternalServerError, "delete override failed: "+err.Error())
+		return
+	}
+	response.Success(c, gin.H{"ok": true})
+}
+
+func toOverrideDTO(o *service.ModelPriceOverride) *overrideDTO {
+	if o == nil {
+		return nil
+	}
+	return &overrideDTO{
+		ModelID:           o.ModelID,
+		PinnedProviderTag: o.PinnedProviderTag,
+		ManualInput:       o.ManualInput,
+		ManualOutput:      o.ManualOutput,
+		ManualCacheRead:   o.ManualCacheRead,
+		ManualCacheWrite:  o.ManualCacheWrite,
+		Note:              o.Note,
+		UpdatedBy:         o.UpdatedBy,
+		UpdatedAt:         o.UpdatedAt.Format(time.RFC3339),
+	}
 }
 
 // SyncCatalog POST /admin/model-catalog/sync

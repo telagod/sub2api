@@ -181,7 +181,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewAdminAPIKeyHandler,
 	admin.NewScheduledTestHandler,
 	admin.NewChannelHandler,
-	admin.NewModelCatalogHandler,
+	admin.NewModelCatalogHandler, // 依赖 OverrideResolver + ModelOverrideRepository
 	admin.NewChannelMonitorHandler,
 	admin.NewChannelMonitorRequestTemplateHandler,
 	admin.NewContentModerationHandler,

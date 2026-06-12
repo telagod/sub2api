@@ -603,6 +603,9 @@ func registerModelCatalogRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		catalog.GET("", h.Admin.ModelCatalog.ListModels)
 		catalog.GET("/detail", h.Admin.ModelCatalog.GetModel)
 		catalog.POST("/sync", h.Admin.ModelCatalog.SyncCatalog)
+		// 覆盖管理（P3）
+		catalog.PUT("/override", h.Admin.ModelCatalog.UpsertOverride)
+		catalog.DELETE("/override", h.Admin.ModelCatalog.DeleteOverride)
 	}
 }
 

@@ -72,6 +72,7 @@
         :slug="detailSlug"
         :model-name="detailModel"
         @close="detailDrawerVisible = false"
+        @override-saved="handleOverrideSaved"
       />
     </div>
   </AppLayout>
@@ -99,7 +100,8 @@ const {
   fetchAll,
   ensureOfficialPricing,
   updateGroupMultiplier,
-  syncCatalog
+  syncCatalog,
+  invalidateOfficialPricingForModel
 } = usePricingMatrix()
 
 const simulatorVisible = ref(false)
@@ -144,6 +146,11 @@ function handleOpenDetail(payload: { slug: string; model: string }) {
   detailSlug.value = payload.slug
   detailModel.value = payload.model
   detailDrawerVisible.value = true
+}
+
+/** 覆盖保存/删除后失效官方价缓存，刷新计价台的基准价展示 */
+function handleOverrideSaved(modelId: string) {
+  void invalidateOfficialPricingForModel(modelId)
 }
 </script>
 
