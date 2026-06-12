@@ -17,8 +17,8 @@ import type { SettingsSection } from '../types'
 const backupView: SettingsSection = {
   id: 'backup.view',
   tab: 'backup',
-  title: '数据备份与恢复',
-  description: '管理系统数据的备份与还原操作。',
+  title: 'admin.backup.sectionTitle',
+  description: 'admin.backup.sectionDescription',
   fields: [],
   component: defineAsyncComponent(
     () => import('@/views/admin/BackupView.vue'),

@@ -106,8 +106,8 @@ const subscriptionExpiry: SettingsSection = {
 const emailTemplates: SettingsSection = {
   id: 'email.templates',
   tab: 'email',
-  title: '邮件模板',
-  description: '自定义发送给用户的各类邮件内容。',
+  title: 'admin.settings.emailTemplates.title',
+  description: 'admin.settings.emailTemplates.description',
   fields: [],
   component: defineAsyncComponent(
     () => import('@/views/admin/settings/EmailTemplateEditor.vue'),

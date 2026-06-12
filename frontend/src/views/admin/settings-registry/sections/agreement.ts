@@ -23,33 +23,32 @@ import type { SettingsSection } from '../types'
 const agreementConfig: SettingsSection = {
   id: 'agreement.config',
   tab: 'agreement',
-  title: '登录条款确认',
-  description:
-    '控制登录页是否要求用户先阅读并同意服务条款、隐私政策或其他 Markdown 文档。',
+  title: 'admin.settings.agreement.configTitle',
+  description: 'admin.settings.agreement.configDescription',
   fields: [
     {
       key: 'login_agreement_enabled',
-      label: '启用登录条款确认',
+      label: 'admin.settings.agreement.enabledLabel',
       type: 'switch',
-      help: '开启后，登录页会在用户操作前显示条款确认。',
+      help: 'admin.settings.agreement.enabledHint',
     },
     {
       key: 'login_agreement_mode',
-      label: '展示形式',
+      label: 'admin.settings.agreement.modeLabel',
       type: 'select',
       options: [
-        { value: 'modal', label: '弹窗' },
-        { value: 'checkbox', label: '复选框' },
+        { value: 'modal', label: 'admin.settings.agreement.modeModal' },
+        { value: 'checkbox', label: 'admin.settings.agreement.modeCheckbox' },
       ],
-      help: '弹窗：打开后用户拒绝则所有登录入口禁用；复选框：显示在登录按钮下方，未勾选前禁用。',
+      help: 'admin.settings.agreement.modeHint',
       showWhen: (v) => !!v['login_agreement_enabled'],
     },
     {
       key: 'login_agreement_updated_at',
-      label: '条款更新日期',
+      label: 'admin.settings.agreement.updatedAtLabel',
       type: 'text',
       placeholder: 'YYYY-MM-DD',
-      help: '日期或文档内容变化后，用户需重新同意。',
+      help: 'admin.settings.agreement.updatedAtHint',
       showWhen: (v) => !!v['login_agreement_enabled'],
     },
   ],
@@ -63,9 +62,8 @@ const agreementConfig: SettingsSection = {
 const agreementDocuments: SettingsSection = {
   id: 'agreement.documents',
   tab: 'agreement',
-  title: '协议文档',
-  description:
-    '文档名称可自定义，内容按 Markdown 保存。可参考：服务条款、使用政策、支持的国家和地区、服务特定条款。',
+  title: 'admin.settings.agreement.documentsTitle',
+  description: 'admin.settings.agreement.documentsDescription',
   fields: [],
   component: defineAsyncComponent(
     () => import('../special/AgreementDocumentsSection.vue'),

@@ -1564,6 +1564,9 @@ export default {
     backup: {
       title: '数据库备份',
       description: '全量数据库备份到 S3 兼容存储，支持定时备份与恢复',
+      // 设置注册表 section 卡片头（backup.ts）
+      sectionTitle: '数据备份与恢复',
+      sectionDescription: '管理系统数据的备份与还原操作。',
       s3: {
         title: 'S3 存储配置',
         description: '配置 S3 兼容存储（支持 Cloudflare R2）',
@@ -6014,6 +6017,19 @@ export default {
         docContent: 'Markdown 内容',
         docContentPlaceholder: '在这里填写正式 Markdown 内容。',
         noDocs: '暂无协议文档，点击「添加文档」创建第一个。',
+        // 设置注册表 section 卡片头（agreement.ts）
+        configTitle: '登录条款确认',
+        configDescription: '控制登录页是否要求用户先阅读并同意服务条款、隐私政策或其他 Markdown 文档后才能操作。',
+        enabledLabel: '启用登录条款确认',
+        enabledHint: '开启后，登录页会在用户执行任何登录操作前显示条款确认。',
+        modeLabel: '展示形式',
+        modeModal: '弹窗',
+        modeCheckbox: '复选框',
+        modeHint: '弹窗：用户拒绝则所有登录入口禁用；复选框：显示在登录按钮下方，未勾选前禁用。',
+        updatedAtLabel: '条款更新日期',
+        updatedAtHint: '日期或文档内容变化后，用户需重新同意。',
+        documentsTitle: '协议文档',
+        documentsDescription: '文档名称可自定义，内容按 Markdown 保存。可参考：服务条款、使用政策、支持的国家和地区、服务特定条款。',
       },
       site: {
         title: '站点设置',
@@ -7376,7 +7392,7 @@ export default {
 
     settingsRegistry: {
       searchPlaceholder: '搜索设置...',
-      legacyNote: '部分高级配置（网关冷却与限流策略、Admin API Key、Web Search 搜索服务商、认证来源默认值完整矩阵、邀请返利自定义用户等）尚未迁入新设置中心。',
+      legacyNote: '部分复杂面板（默认订阅列表、平台配额矩阵、认证来源各源完整配额矩阵、返利自定义用户 CRUD）尚未迁入新设置中心。',
       legacyLink: '前往旧版设置 →',
       dirtyCount: '已修改 {n} 项',
       discardBtn: '放弃',

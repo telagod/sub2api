@@ -24,7 +24,7 @@
     <template v-else-if="field.type === 'select'">
       <label class="sr-label mb-1 block">{{ resolveLabel(field.label) }}</label>
       <select class="sr-input" :value="modelValue" @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)">
-        <option v-for="opt in field.options" :key="String(opt.value)" :value="opt.value">{{ opt.label }}</option>
+        <option v-for="opt in field.options" :key="String(opt.value)" :value="opt.value">{{ resolveLabel(opt.label) }}</option>
       </select>
       <p v-if="field.help" class="sr-help mt-1">{{ resolveLabel(field.help) }}</p>
     </template>

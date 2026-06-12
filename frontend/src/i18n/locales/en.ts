@@ -1537,6 +1537,9 @@ export default {
     backup: {
       title: 'Database Backup',
       description: 'Full database backup to S3-compatible storage with scheduled backup and restore',
+      // Settings-registry section card header (backup.ts)
+      sectionTitle: 'Data Backup & Recovery',
+      sectionDescription: 'Manage system data backup and restore operations.',
       s3: {
         title: 'S3 Storage Configuration',
         description: 'Configure S3-compatible storage (supports Cloudflare R2)',
@@ -5847,6 +5850,19 @@ export default {
         docContent: 'Markdown content',
         docContentPlaceholder: 'Write the final Markdown content here.',
         noDocs: 'No documents yet. Click "Add document" to create one.',
+        // Section registry keys (agreement.ts section cards)
+        configTitle: 'Login Agreement',
+        configDescription: 'Control whether the login page requires users to read and accept Terms of Service, Privacy Policy, or other Markdown documents before proceeding.',
+        enabledLabel: 'Enable Login Agreement',
+        enabledHint: 'When enabled, a Terms confirmation will appear before any login action.',
+        modeLabel: 'Display Mode',
+        modeModal: 'Modal',
+        modeCheckbox: 'Checkbox',
+        modeHint: 'Modal: all login entries are disabled until the user accepts. Checkbox: displayed below the login button and must be ticked first.',
+        updatedAtLabel: 'Terms Updated At',
+        updatedAtHint: 'When the date or document content changes, users must re-accept the agreement.',
+        documentsTitle: 'Agreement Documents',
+        documentsDescription: 'Document titles are customisable; content is saved as Markdown. Examples: Terms of Service, Usage Policy, Supported Regions, Service-Specific Terms.',
       },
       site: {
         title: 'Site Settings',
@@ -7193,7 +7209,7 @@ export default {
 
     settingsRegistry: {
       searchPlaceholder: 'Search settings...',
-      legacyNote: 'Some advanced settings (gateway cooldown & rate-limit policies, Admin API Key, Web Search providers, full auth-source defaults matrix, affiliate custom users, etc.) have not yet been migrated to the new settings center.',
+      legacyNote: 'A few complex panels (default subscription list, platform quota matrix, per-auth-source defaults matrix, affiliate custom-users CRUD) have not yet been migrated to the new settings center.',
       legacyLink: 'Go to Legacy Settings →',
       dirtyCount: '{n} unsaved change(s)',
       discardBtn: 'Discard',
